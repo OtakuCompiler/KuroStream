@@ -1,0 +1,237 @@
+name: Release
+
+# Triggered by a version tag:  git tag v1.2.3 && git push --tags
+# Pre-release tags:             v1.2.3-alpha, v1.2.3-beta, v1.2.3-rc1
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag to release (e.g. v1.2.3)'
+        required: true
+
+defaults:
+  run:
+    working-directory: kuro-stream
+
+env:
+  JAVA_VERSION: '17'
+  JAVA_DIST: 'temurin'
+  GRADLE_OPTS: >-
+    -Dorg.gradle.daemon=false
+    -Dorg.gradle.parallel=true
+    -Dorg.gradle.workers.max=4
+    -Dkotlin.incremental=false
+
+jobs:
+
+  # ── 1. Lint + tests must pass before a release APK is built ─────────────────
+  pre-release-checks:
+    name: Pre-release Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: gradle/actions/wrapper-validation@v3
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DIST }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: >-
+            platform-tools
+            build-tools;35.0.0
+            platforms;android-35
+            cmdline-tools;latest
+          accept-android-sdk-licenses: true
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: Lint
+        run: ./gradlew lintRelease --stacktrace
+
+      - name: Unit tests
+        run: ./gradlew testReleaseUnitTest --stacktrace --continue
+
+      - name: Upload pre-release lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-release-lint-${{ github.ref_name }}
+          path: kuro-stream/app/build/reports/lint-results-release.html
+          retention-days: 30
+
+  # ── 2. Build, sign, and publish signed release APKs ─────────────────────────
+  build-release:
+    name: Build & Sign Release APK
+    runs-on: ubuntu-latest
+    needs: pre-release-checks
+    permissions:
+      contents: write   # needed to create the GitHub Release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DIST }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: >-
+            platform-tools
+            build-tools;35.0.0
+            platforms;android-35
+            cmdline-tools;latest
+          accept-android-sdk-licenses: true
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      # ── Extract version info from tag ────────────────────────────────────────
+      - name: Extract version info
+        id: version
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ -z "$TAG" ]; then TAG="${{ github.event.inputs.tag }}"; fi
+          VERSION="${TAG#v}"                          # strip leading 'v'
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3 | cut -d- -f1)
+          # versionCode = MAJOR*10000 + MINOR*100 + PATCH  (max 999.99.99)
+          # build.gradle.kts multiplies this by 1000 and adds the ABI offset,
+          # so the final per-ABI code fits comfortably under the 2.1B Play limit.
+          CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          IS_PRE="false"
+          if echo "$TAG" | grep -qE '\-(alpha|beta|rc)'; then IS_PRE="true"; fi
+          echo "tag=$TAG"            >> $GITHUB_OUTPUT
+          echo "version=$VERSION"   >> $GITHUB_OUTPUT
+          echo "code=$CODE"         >> $GITHUB_OUTPUT
+          echo "prerelease=$IS_PRE" >> $GITHUB_OUTPUT
+
+      # ── Write keystore to a temp location outside the repo tree ─────────────
+      - name: Decode signing keystore
+        run: |
+          KEYSTORE_PATH="${RUNNER_TEMP}/kuro-stream.jks"
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > "$KEYSTORE_PATH"
+          echo "KEYSTORE_PATH=$KEYSTORE_PATH" >> $GITHUB_ENV
+
+      # ── Build signed release APKs for all ABI splits ─────────────────────────
+      - name: Build signed release APKs
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+          VERSION_NAME: ${{ steps.version.outputs.version }}
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file="$KEYSTORE_PATH" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            -PversionCode="$VERSION_CODE" \
+            -PversionName="$VERSION_NAME" \
+            --stacktrace
+
+      # ── Shred keystore immediately after signing ──────────────────────────────
+      - name: Securely delete keystore
+        if: always()
+        run: shred -u "$KEYSTORE_PATH" 2>/dev/null || rm -f "$KEYSTORE_PATH"
+
+      # ── Rename APKs to include version, compute checksums ────────────────────
+      - name: Rename APKs and compute SHA-256 checksums
+        id: apks
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          OUT_DIR="app/build/outputs/apk/release"
+          STAGED="${RUNNER_TEMP}/release-apks"
+          mkdir -p "$STAGED"
+
+          # ABI list matches splits config: armeabi-v7a, arm64-v8a, x86_64, universal
+          for ABI in armeabi-v7a arm64-v8a x86_64 universal; do
+            SRC="$OUT_DIR/app-${ABI}-release.apk"
+            [ -f "$SRC" ] || continue
+            DST="$STAGED/KuroStream-${VERSION}-${ABI}.apk"
+            cp "$SRC" "$DST"
+            sha256sum "$DST" | awk '{print $1}' > "${DST}.sha256"
+            echo "Packaged: $(basename $DST) ($(du -sh $DST | cut -f1))"
+          done
+
+          echo "staged_dir=$STAGED" >> $GITHUB_OUTPUT
+
+          echo "### Release APKs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size | SHA-256 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|---------|" >> $GITHUB_STEP_SUMMARY
+          for f in "$STAGED"/*.apk; do
+            size=$(du -sh "$f" | cut -f1)
+            sha=$(cat "${f}.sha256")
+            echo "| \`$(basename $f)\` | $size | \`${sha:0:16}…\` |" >> $GITHUB_STEP_SUMMARY
+          done
+
+      # ── Upload signed APKs as workflow artifact ───────────────────────────────
+      - name: Upload release APKs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-stream-release-${{ steps.version.outputs.tag }}
+          path: |
+            ${{ steps.apks.outputs.staged_dir }}/*.apk
+            ${{ steps.apks.outputs.staged_dir }}/*.sha256
+          retention-days: 90
+
+      # ── Create GitHub Release with auto-generated changelog ──────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Kuro Stream ${{ steps.version.outputs.tag }}"
+          draft: false
+          prerelease: ${{ steps.version.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.apks.outputs.staged_dir }}/*.apk
+            ${{ steps.apks.outputs.staged_dir }}/*.sha256
+          body: |
+            ## Kuro Stream ${{ steps.version.outputs.tag }}
+
+            > Native Android TV / Fire TV anime streaming app.
+
+            ### Download the right APK for your device
+
+            | Device | APK file |
+            |--------|----------|
+            | Fire TV Stick 4K / Fire TV Cube (2019+) | `KuroStream-${{ steps.version.outputs.version }}-arm64-v8a.apk` |
+            | Fire TV Stick HD / older Fire TV | `KuroStream-${{ steps.version.outputs.version }}-armeabi-v7a.apk` |
+            | Android TV box (x86_64) | `KuroStream-${{ steps.version.outputs.version }}-x86_64.apk` |
+            | All devices (larger file) | `KuroStream-${{ steps.version.outputs.version }}-universal.apk` |
+
+            ### Install via ADB (sideload)
+            ```bash
+            # Enable ADB debugging on your Fire TV:  Settings → My Fire TV → Developer Options
+            adb connect <FIRE_TV_IP>:5555
+            adb install KuroStream-${{ steps.version.outputs.version }}-arm64-v8a.apk
+            ```
+
+            ### Verify integrity
+            ```bash
+            sha256sum -c KuroStream-${{ steps.version.outputs.version }}-arm64-v8a.apk.sha256
+            ```
+
+            ### GitHub Actions secrets required for signing
+            | Secret | Description |
+            |--------|-------------|
+            | `KEYSTORE_FILE` | Base64-encoded `.jks` keystore |
+            | `KEYSTORE_PASSWORD` | Keystore password |
+            | `KEY_ALIAS` | Key alias inside the keystore |
+            | `KEY_PASSWORD` | Key password |
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

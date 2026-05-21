@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    FileProvider paths for Kuro Stream.
+    Used by androidx.core.content.FileProvider to share subtitle files,
+    downloaded covers, and temporary APK updates via content:// URIs.
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- App-internal cache (subtitles, artwork cache) -->
+    <cache-path
+        name="cache"
+        path="." />
+
+    <!-- App-internal files (plugin downloads, exported data) -->
+    <files-path
+        name="files"
+        path="." />
+
+    <!-- External cache directory (shared media with other apps) -->
+    <external-cache-path
+        name="external_cache"
+        path="." />
+
+    <!-- External files directory -->
+    <external-files-path
+        name="external_files"
+        path="." />
+</paths>

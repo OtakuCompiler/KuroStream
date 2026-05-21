@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android Search Framework configuration for Kuro Stream.
+    Registered in AndroidManifest on the SearchActivity (or MainActivity).
+    Enables voice search via the TV remote's search button.
+-->
+<searchable xmlns:android="http://schemas.android.com/apk/res/android"
+    android:label="@string/app_name"
+    android:hint="@string/search_hint"
+    android:searchSuggestAuthority="com.kurostream.tv.search"
+    android:searchSuggestIntentAction="android.intent.action.VIEW"
+    android:voiceSearchMode="showVoiceSearchButton|launchRecognizer"
+    android:includeInGlobalSearch="false" />

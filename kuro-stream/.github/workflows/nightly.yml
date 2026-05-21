@@ -1,0 +1,146 @@
+name: Nightly Build
+
+# Runs every night at 02:00 UTC on the develop branch.
+# Can also be triggered manually via Actions → "Run workflow".
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build (default: develop)'
+        required: false
+        default: 'develop'
+
+defaults:
+  run:
+    working-directory: kuro-stream
+
+env:
+  JAVA_VERSION: '17'
+  JAVA_DIST: 'temurin'
+  GRADLE_OPTS: >-
+    -Dorg.gradle.daemon=false
+    -Dorg.gradle.parallel=true
+    -Dorg.gradle.workers.max=4
+    -Dkotlin.incremental=false
+
+jobs:
+  nightly:
+    name: Nightly Debug Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || 'develop' }}
+
+      - uses: gradle/actions/wrapper-validation@v3
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DIST }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: >-
+            platform-tools
+            build-tools;35.0.0
+            platforms;android-35
+            cmdline-tools;latest
+          accept-android-sdk-licenses: true
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      # ── Build ────────────────────────────────────────────────────────────────
+      - name: Assemble debug APKs (all ABI splits)
+        run: ./gradlew assembleDebug --stacktrace
+
+      # ── Test ─────────────────────────────────────────────────────────────────
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --continue
+
+      - name: Publish nightly test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Nightly Test Results
+          path: kuro-stream/app/build/test-results/testDebugUnitTest/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      # ── Date stamp & summary ──────────────────────────────────────────────────
+      - name: Get build date
+        id: date
+        run: |
+          echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "datetime=$(date -u +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Write build summary
+        run: |
+          echo "## Nightly Build — ${{ steps.date.outputs.datetime }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.event.inputs.branch || 'develop' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ steps.date.outputs.short_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### APK sizes" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          find app/build/outputs/apk/debug -name "*.apk" | sort | while read f; do
+            echo "| \`$(basename $f)\` | $(du -sh $f | cut -f1) |" >> $GITHUB_STEP_SUMMARY
+          done
+
+      # ── Upload APKs ───────────────────────────────────────────────────────────
+      - name: Upload nightly APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-stream-nightly-${{ steps.date.outputs.date }}-${{ steps.date.outputs.short_sha }}
+          path: kuro-stream/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      # ── Upload test report ────────────────────────────────────────────────────
+      - name: Upload test HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-test-report-${{ steps.date.outputs.date }}
+          path: kuro-stream/app/build/reports/tests/testDebugUnitTest/
+          retention-days: 14
+
+      # ── File a bug on failure (once per night, not per re-run) ───────────────
+      - name: Open issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['nightly-failure'],
+              state: 'open',
+            });
+
+            const today = '${{ steps.date.outputs.date }}';
+            const alreadyOpen = issues.some(i => i.title.includes(today));
+            if (alreadyOpen) return;   // don't file duplicates
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🌙 Nightly build failed — ${today}`,
+              body: [
+                '## Nightly build failure',
+                '',
+                `**Date:** ${today}`,
+                `**Branch:** ${{ github.event.inputs.branch || 'develop' }}`,
+                `**Commit:** ${{ steps.date.outputs.short_sha }}`,
+                '',
+                `**Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                '',
+                'Please investigate and resolve before the next nightly.',
+              ].join('\n'),
+              labels: ['bug', 'ci', 'nightly-failure'],
+            });

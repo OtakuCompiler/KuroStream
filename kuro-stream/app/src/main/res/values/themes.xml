@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Kuro Stream TV theme.
+        Pure Compose for TV app — no AppCompat dependency.
+        Uses the minimal Android framework theme; Jetpack Compose draws
+        everything, so the XML theme just sets the window background
+        and disables the title bar / action bar.
+    -->
+    <style name="Theme.KuroStream" parent="android:Theme.NoTitleBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:colorPrimary">@color/primary</item>
+    </style>
+
+    <style name="Theme.KuroStream.Splash" parent="Theme.KuroStream">
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- TV Feature Declaration -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <!-- Network Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- Storage Permissions (for subtitle downloads, etc.) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"
+        tools:ignore="ScopedStorage" />
+
+    <!-- Media Permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Bluetooth for remote controls -->
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <application
+        android:name=".KuroStreamApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:banner="@drawable/tv_banner"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.KuroStream"
+        android:largeHeap="false"
+        android:hardwareAccelerated="true"
+        tools:targetApi="34">
+
+        <!-- Main TV Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|smallestScreenSize|orientation"
+            android:screenOrientation="landscape"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustPan">
+            
+            <!-- Leanback Launcher Intent -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+
+            <!-- Standard Launcher Intent (for development) -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Deep Link Support -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="kurostream"
+                    android:host="anime" />
+            </intent-filter>
+        </activity>
+
+        <!-- Media Playback Service -->
+        <service
+            android:name=".core.player.PlaybackService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+
+        <!-- Sync Service for AniList -->
+        <service
+            android:name=".data.remote.anilist.AniListSyncService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- Content Provider for sharing -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Recommendations Channel -->
+        <receiver
+            android:name=".tv.recommendation.RecommendationReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.media.tv.action.INITIALIZE_PROGRAMS" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Global Search Provider -->
+        <provider
+            android:name=".tv.search.GlobalSearchProvider"
+            android:authorities="${applicationId}.search"
+            android:exported="true"
+            android:readPermission="android.permission.GLOBAL_SEARCH">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </provider>
+
+    </application>
+
+</manifest>

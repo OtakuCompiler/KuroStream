@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary palette (matches KuroStreamColors in Kotlin) -->
+    <color name="background">#0D0D0F</color>
+    <color name="surface">#1A1A1F</color>
+    <color name="surface_variant">#252530</color>
+    <color name="primary">#7C4DFF</color>
+    <color name="primary_variant">#6039CC</color>
+    <color name="secondary">#03DAC6</color>
+    <color name="error">#CF6679</color>
+
+    <!-- Text -->
+    <color name="on_background">#FFFFFF</color>
+    <color name="on_surface">#E0E0E0</color>
+    <color name="on_surface_variant">#A0A0B0</color>
+
+    <!-- Focus ring -->
+    <color name="focus_border">#7C4DFF</color>
+
+    <!-- Transparent black for gradients -->
+    <color name="scrim_bottom">#CC000000</color>
+    <color name="scrim_left">#99000000</color>
+</resources>
