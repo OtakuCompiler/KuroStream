@@ -14,24 +14,16 @@
 @rem limitations under the License.
 @rem
 
-@if "%DEBUG%"=="" @echo off
-@rem ##########################################################################
-@rem
-@rem  Gradle startup script for Windows
-@rem
-@rem ##########################################################################
-
-@rem Set local scope for the variables with windows NT shell
-if "%OS%"=="Windows_NT" setlocal
+@if "%DEBUG%"==" "@echo off
+@setlocal enabledelayedexpansion
 
 set DIRNAME=%~dp0
-if "%DIRNAME%"=="" set DIRNAME=.
-@rem This is normally unused
+if "%DIRNAME%"==" "set DIRNAME=.
 set APP_BASE_NAME=%~n0
 set APP_HOME=%DIRNAME%
 
 @rem Resolve any "." and ".." in APP_HOME to make it shorter.
-for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+for %%i in ("%APP_HOME%") do @set APP_HOME=%%~fi
 
 @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
@@ -40,7 +32,7 @@ set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
 if defined JAVA_HOME goto findJavaFromJavaHome
 
 set JAVA_EXE=java.exe
-%JAVA_EXE% -version >NUL 2>&1
+%JAVA_EXE% -version >nul 2>&1
 if %ERRORLEVEL% equ 0 goto execute
 
 echo.
@@ -68,8 +60,7 @@ goto fail
 :execute
 @rem Setup the command line
 
-set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
-
+set CLASSPATH=%APP_HOME%/gradle/wrapper/gradle-wrapper.jar
 
 @rem Execute Gradle
 "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
@@ -77,9 +68,28 @@ set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
 :end
 @endlocal & set ERROR_CODE=%ERRORLEVEL%
 
-if not "%ERROR_CODE%"=="0" goto fail
+if not "%JAVA_HOME%" == "" goto removeJavaHome
+
+if %ERROR_CODE% equ 0 goto mainEnd
 
 :fail
+rem Set variable GRADLE_EXIT_CONSOLE to error code if GRADLE_EXIT_CONSOLE env var is set.
+if  not "" == "%GRADLE_EXIT_CONSOLE%" exit %GRADLE_EXIT_CONSOLE%
+
 exit /b %ERROR_CODE%
 
-:omega
+:removeJavaHome
+if "%JAVA_HOME%" == "" goto mainEnd
+
+if not "%JAVA_HOME:~-1%" == "\" goto addClasspath
+
+set JAVA_HOME=%JAVA_HOME:~0,-1%
+goto removeJavaHome
+
+:addClasspath
+set CLASSPATH=%APP_HOME%/gradle/wrapper/gradle-wrapper.jar
+
+:mainEnd
+if "%OS%"=="Windows_NT" endlocal
+
+endlocal & exit /b %ERROR_CODE%
