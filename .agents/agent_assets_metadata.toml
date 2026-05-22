@@ -1,0 +1,14 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "bf07kcZ0iSagf_SsY6QSD"
+uri = "file://kuro-stream-android.tar.gz"
+type = "unspecified"
+title = "kuro-stream-android.tar.gz — fixed GitHub Actions workflow"
+
+[[outputs]]
+id = "0msSkjSv45-i3_sA1LyY6"
+uri = "file://kuro-stream-android.zip"
+type = "unspecified"
+title = "kuro-stream-android.zip — with APK signing"
