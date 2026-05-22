@@ -1,0 +1,115 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Paste this into your app/build.gradle (Groovy DSL)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Place this block BEFORE the android {} block, at the top of app/build.gradle:
+
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inside android {} add:
+
+android {
+
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.yourorg.kurostream"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            // CI supplies values via -P Gradle properties (see workflow).
+            // Local builds use keystore.properties (never commit that file).
+            storeFile file(
+                project.findProperty("android.injected.signing.store.file")
+                ?: keystoreProperties.getProperty("storeFile")
+                ?: "keystore.jks"
+            )
+            storePassword (
+                project.findProperty("android.injected.signing.store.password")
+                ?: keystoreProperties.getProperty("storePassword")
+                ?: ""
+            )
+            keyAlias (
+                project.findProperty("android.injected.signing.key.alias")
+                ?: keystoreProperties.getProperty("keyAlias")
+                ?: ""
+            )
+            keyPassword (
+                project.findProperty("android.injected.signing.key.password")
+                ?: keystoreProperties.getProperty("keyPassword")
+                ?: ""
+            )
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// If using Kotlin DSL (app/build.gradle.kts) instead, use this equivalent:
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// import java.util.Properties
+// import java.io.FileInputStream
+//
+// val keystorePropertiesFile = rootProject.file("keystore.properties")
+// val keystoreProperties = Properties().apply {
+//     if (keystorePropertiesFile.exists()) load(FileInputStream(keystorePropertiesFile))
+// }
+//
+// android {
+//     signingConfigs {
+//         create("release") {
+//             storeFile = file(
+//                 findProperty("android.injected.signing.store.file") as String?
+//                     ?: keystoreProperties.getProperty("storeFile")
+//                     ?: "keystore.jks"
+//             )
+//             storePassword = (
+//                 findProperty("android.injected.signing.store.password") as String?
+//                     ?: keystoreProperties.getProperty("storePassword")
+//             )
+//             keyAlias = (
+//                 findProperty("android.injected.signing.key.alias") as String?
+//                     ?: keystoreProperties.getProperty("keyAlias")
+//             )
+//             keyPassword = (
+//                 findProperty("android.injected.signing.key.password") as String?
+//                     ?: keystoreProperties.getProperty("keyPassword")
+//             )
+//         }
+//     }
+//     buildTypes {
+//         release {
+//             signingConfig = signingConfigs.getByName("release")
+//             isMinifyEnabled = true
+//             isShrinkResources = true
+//             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+//         }
+//     }
+// }

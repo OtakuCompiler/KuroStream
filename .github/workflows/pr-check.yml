@@ -1,0 +1,68 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  pr-check:
+    name: Quick PR Validation
+    runs-on: ubuntu-latest
+
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+
+    steps:
+      # ── Checkout ─────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Java 17 ──────────────────────────────────────────────────────────────
+      - name: Set up Java 17 (Temurin LTS)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      # ── Android SDK ──────────────────────────────────────────────────────────
+      # ubuntu-latest already ships with the Android SDK at $ANDROID_SDK_ROOT.
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
+
+      # ── Gradlew permissions ───────────────────────────────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      # ── Lint ──────────────────────────────────────────────────────────────────
+      - name: Run Lint
+        run: ./gradlew lint --stacktrace
+
+      # ── Unit tests ────────────────────────────────────────────────────────────
+      - name: Run Unit Tests
+        run: ./gradlew test --stacktrace
+
+      # ── Compile check (debug build) ───────────────────────────────────────────
+      - name: Build Debug APK (compile check)
+        run: ./gradlew assembleDebug --stacktrace
+
+      # ── Upload reports ────────────────────────────────────────────────────────
+      - name: Upload Lint & Test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-reports-${{ github.event.pull_request.number }}-${{ github.sha }}
+          path: |
+            **/build/reports/lint-results*.html
+            **/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,178 @@
+name: Android CI Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    name: Lint, Test & Build APK
+    runs-on: ubuntu-latest
+
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+
+    steps:
+      # ── Checkout ─────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Java 17 ──────────────────────────────────────────────────────────────
+      # 'cache: gradle' here handles ~/.gradle/caches + ~/.gradle/wrapper
+      # No separate actions/cache step needed.
+      - name: Set up Java 17 (Temurin LTS)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      # ── Android SDK ──────────────────────────────────────────────────────────
+      # ubuntu-latest already ships with the Android SDK at $ANDROID_SDK_ROOT.
+      # We only need to accept licenses and install the extra components we need.
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install Android SDK & NDK components
+        run: |
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "ndk;25.1.8937393"
+
+      # ── Gradlew permissions ───────────────────────────────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      # ── Check signing secrets ─────────────────────────────────────────────────
+      # Sets output 'available=true' only when the secret is non-empty.
+      # Subsequent steps reference steps.signing.outputs.available == 'true'.
+      - name: Check if signing secrets are available
+        id: signing
+        env:
+          _SECRET: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$_SECRET" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️  KEYSTORE_BASE64 secret not set — release APK will be skipped."
+          fi
+
+      # ── Lint ──────────────────────────────────────────────────────────────────
+      - name: Run Lint
+        run: ./gradlew lint --stacktrace
+
+      - name: Upload Lint results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results-${{ github.sha }}
+          path: '**/build/reports/lint-results*.html'
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # ── Unit tests ────────────────────────────────────────────────────────────
+      - name: Run Unit Tests
+        run: ./gradlew test --stacktrace
+
+      - name: Upload Test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.sha }}
+          path: '**/build/reports/tests/'
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # ── Build debug APK ───────────────────────────────────────────────────────
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      # ── Decode keystore ───────────────────────────────────────────────────────
+      - name: Decode keystore from secret
+        if: steps.signing.outputs.available == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > app/keystore.jks
+          echo "Keystore decoded successfully."
+
+      # ── Build release (signed) APK ────────────────────────────────────────────
+      - name: Build Release APK (signed)
+        if: steps.signing.outputs.available == 'true'
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/app/keystore.jks" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            --stacktrace
+
+      # ── Collect build outputs ─────────────────────────────────────────────────
+      - name: Collect APK outputs
+        run: |
+          mkdir -p build-outputs
+          find . -name "*.apk" -not -path "*/intermediates/*" | while IFS= read -r f; do
+            cp "$f" build-outputs/
+          done
+          find . -name "lint-results*.html" | while IFS= read -r f; do
+            cp "$f" build-outputs/ 2>/dev/null || true
+          done
+          {
+            echo "Build SHA: ${{ github.sha }}"
+            echo "Branch:    ${{ github.ref_name }}"
+            echo "Run ID:    ${{ github.run_id }}"
+            echo "Timestamp: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          } > build-outputs/build-info.txt
+          ls -lh build-outputs/
+
+      # ── ZIP archive ───────────────────────────────────────────────────────────
+      - name: Create ZIP archive
+        run: zip -r "kuro-stream-build-${{ github.sha }}.zip" build-outputs/
+
+      - name: Upload ZIP archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-stream-build-${{ github.sha }}
+          path: kuro-stream-build-${{ github.sha }}.zip
+          retention-days: 30
+
+      # ── Upload debug APK ──────────────────────────────────────────────────────
+      - name: Upload Debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-stream-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 30
+
+      # ── Upload signed release APK ─────────────────────────────────────────────
+      - name: Upload Release APK artifact
+        if: steps.signing.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-stream-release-signed-${{ github.sha }}
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+          retention-days: 30
+
+      # ── Cleanup keystore ──────────────────────────────────────────────────────
+      - name: Remove keystore file
+        if: always()
+        run: rm -f app/keystore.jks

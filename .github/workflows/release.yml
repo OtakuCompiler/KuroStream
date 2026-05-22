@@ -1,0 +1,198 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+
+    steps:
+      # ── Checkout ─────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Extract version from tag ──────────────────────────────────────────────
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG"     >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building release for tag: $TAG (version: $VERSION)"
+
+      # ── Java 17 ──────────────────────────────────────────────────────────────
+      - name: Set up Java 17 (Temurin LTS)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      # ── Android SDK ──────────────────────────────────────────────────────────
+      # ubuntu-latest already ships with the Android SDK at $ANDROID_SDK_ROOT.
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install Android SDK & NDK components
+        run: |
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "ndk;25.1.8937393"
+
+      # ── Gradlew permissions ───────────────────────────────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      # ── Lint & Tests ──────────────────────────────────────────────────────────
+      - name: Run Lint
+        run: ./gradlew lint --stacktrace
+
+      - name: Run Unit Tests
+        run: ./gradlew test --stacktrace
+
+      # ── Build debug APK ───────────────────────────────────────────────────────
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      # ── Decode keystore ───────────────────────────────────────────────────────
+      # Release workflow always requires signing — fail fast if secret is missing.
+      - name: Decode keystore from secret
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::KEYSTORE_BASE64 secret is not set. Cannot sign release APK."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > app/keystore.jks
+          echo "Keystore decoded successfully."
+
+      # ── Build release (signed) APK ────────────────────────────────────────────
+      - name: Build Release APK (signed)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/app/keystore.jks" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            --stacktrace
+
+      # ── Rename APKs with version ──────────────────────────────────────────────
+      - name: Rename APKs
+        id: apks
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DEBUG_SRC="app/build/outputs/apk/debug/app-debug.apk"
+          RELEASE_SRC="app/build/outputs/apk/release/app-release.apk"
+          DEBUG_OUT="kuro-stream-${VERSION}-debug.apk"
+          RELEASE_OUT="kuro-stream-${VERSION}-release-signed.apk"
+
+          if [ -f "$DEBUG_SRC" ]; then
+            cp "$DEBUG_SRC" "$DEBUG_OUT"
+            echo "debug_apk=$DEBUG_OUT" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ -f "$RELEASE_SRC" ]; then
+            cp "$RELEASE_SRC" "$RELEASE_OUT"
+            echo "release_apk=$RELEASE_OUT" >> "$GITHUB_OUTPUT"
+          fi
+
+          ls -lh kuro-stream-*.apk 2>/dev/null || true
+
+      # ── Create ZIP archive ────────────────────────────────────────────────────
+      - name: Collect build outputs & create ZIP
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p bundle
+          cp kuro-stream-*.apk bundle/ 2>/dev/null || true
+          find . -name "lint-results*.html" | while IFS= read -r f; do
+            cp "$f" bundle/ 2>/dev/null || true
+          done
+          find . -name "TEST-*.xml" -path "*/test-results/*" | while IFS= read -r f; do
+            cp "$f" bundle/ 2>/dev/null || true
+          done
+          cat > bundle/release-info.txt <<EOF
+kuro-stream Release ${VERSION}
+Tag:       ${{ steps.version.outputs.tag }}
+Commit:    ${{ github.sha }}
+Run ID:    ${{ github.run_id }}
+Timestamp: $(date -u '+%Y-%m-%dT%H:%M:%SZ')
+EOF
+          ZIP_NAME="kuro-stream-${VERSION}-${{ github.sha }}.zip"
+          zip -r "$ZIP_NAME" bundle/
+          echo "zip_name=$ZIP_NAME" >> "$GITHUB_ENV"
+          ls -lh "$ZIP_NAME"
+
+      # ── Upload artifacts ──────────────────────────────────────────────────────
+      - name: Upload Debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-stream-debug-${{ steps.version.outputs.version }}
+          path: kuro-stream-*-debug.apk
+          if-no-files-found: warn
+
+      - name: Upload Release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-stream-release-${{ steps.version.outputs.version }}
+          path: kuro-stream-*-release-signed.apk
+          if-no-files-found: warn
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-stream-bundle-${{ steps.version.outputs.version }}
+          path: kuro-stream-*.zip
+
+      # ── Create GitHub Release ─────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "kuro-stream ${{ steps.version.outputs.tag }}"
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
+          generate_release_notes: true
+          body: |
+            ## kuro-stream ${{ steps.version.outputs.tag }}
+
+            ### Downloads
+            | File | Description |
+            |------|-------------|
+            | `kuro-stream-*-release-signed.apk` | Production-signed APK |
+            | `kuro-stream-*-debug.apk` | Debug APK |
+            | `kuro-stream-*.zip` | Full build bundle (APKs + logs) |
+
+            ### Build Info
+            - **Commit:** `${{ github.sha }}`
+            - **Run ID:** `${{ github.run_id }}`
+
+            > To install: enable **Install from unknown sources** in Android Settings, then open the APK.
+          files: |
+            kuro-stream-*-release-signed.apk
+            kuro-stream-*-debug.apk
+            kuro-stream-*.zip
+
+      # ── Cleanup keystore ──────────────────────────────────────────────────────
+      - name: Remove keystore file
+        if: always()
+        run: rm -f app/keystore.jks
