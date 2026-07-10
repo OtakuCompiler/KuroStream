@@ -1,0 +1,267 @@
+<!--
+  This file is part of KuroStream.
+
+  KuroStream is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  KuroStream is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.kurostream.app">
+
+    <!-- Core Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- Storage (Scoped Storage for Android 10+) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
+    <!-- Foreground Service for Downloads/Playback -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
+    <!-- Wake Lock for Background Playback -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Media Projection for Screen Recording (Watch Party) -->
+    <uses-permission android:name="android.permission.MEDIA_PROJECTION" />
+
+    <!-- Bluetooth for Remote/Controller -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- Audio Focus -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- Vibration for Haptic Feedback -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Microphone for Voice Search/ASR -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Camera for QR Code Login (optional) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Leanback Launcher Required -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.faketouch"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false" />
+
+    <!-- OpenGL ES 3.0 Required for libplacebo -->
+    <uses-feature
+        android:name="android.hardware.opengles.aep"
+        android:required="true" />
+    <uses-feature
+        android:glEsVersion="0x00030000"
+        android:required="true" />
+
+    <application
+        android:name="com.kurostream.app.AnimeStreamTvApplication"
+        android:allowBackup="true"
+        android:backupAgent="com.kurostream.app.BackupAgent"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AnimeStreamTV"
+        android:usesCleartextTraffic="false"
+        tools:replace="android:allowBackup,android:icon,android:label,android:theme">
+
+        <!-- Leanback Launcher Activity -->
+        <activity
+            android:name="com.kurostream.app.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AnimeStreamTV.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Player Activity -->
+        <activity
+            android:name="com.kurostream.app.player.PlayerActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboard|keyboardHidden|navigation"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AnimeStreamTV.Fullscreen" />
+
+        <!-- Settings Activity (for system settings integration) -->
+        <activity
+            android:name="com.kurostream.app.ui.screens.settings.SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AnimeStreamTV.NoActionBar" />
+
+        <!-- Benchmark Activity (developer only) -->
+        <activity
+            android:name="com.kurostream.app.benchmark.BenchmarkActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AnimeStreamTV.NoActionBar" />
+
+        <!-- External Player Intent Handler -->
+        <activity
+            android:name="com.kurostream.app.ExternalPlayerActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AnimeStreamTV.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kurostream" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="application/x-mpegURL" />
+                <data android:mimeType="application/vnd.apple.mpegurl" />
+                <data android:mimeType="application/dash+xml" />
+            </intent-filter>
+        </activity>
+
+        <!-- File Provider for Sharing -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Media Session Service -->
+        <service
+            android:name="com.kurostream.players.MediaPlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+
+        <!-- Download Worker -->
+        <service
+            android:name="com.kurostream.data.worker.DownloadWorker"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- Sync Worker -->
+        <service
+            android:name="com.kurostream.data.worker.SyncWorker"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- Torrent Service -->
+        <service
+            android:name="com.kurostream.torrent.service.TorrentService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- Extension Sandbox Service -->
+        <service
+            android:name="com.kurostream.players.advanced.extensions.sandbox.IsolatedExtensionService"
+            android:exported="false"
+            android:permission="com.kurostream.permission.RUN_EXTENSION"
+            android:process=":extension_sandbox" />
+
+        <!-- Boot Receiver for Auto-start Downloads -->
+        <receiver
+            android:name="com.kurostream.data.receiver.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Network Change Receiver -->
+        <receiver
+            android:name="com.kurostream.data.receiver.NetworkChangeReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Metadata for Native Libraries -->
+        <meta-data
+            android:name="com.kurostream.native.libmpv"
+            android:value="enabled" />
+        <meta-data
+            android:name="com.kurostream.native.libvlc"
+            android:value="enabled" />
+        <meta-data
+            android:name="com.kurostream.native.libplacebo"
+            android:value="enabled" />
+        <meta-data
+            android:name="com.kurostream.native.libass"
+            android:value="enabled" />
+        <meta-data
+            android:name="com.kurostream.native.oboe"
+            android:value="enabled" />
+        <meta-data
+            android:name="com.kurostream.native.pytorch"
+            android:value="enabled" />
+
+        <!-- App Startup Provider -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="com.kurostream.app.startup.KuroStreamInitializer"
+                android:value="androidx.startup" />
+        </provider>
+
+    </application>
+
+</manifest>
