@@ -175,11 +175,15 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
         // Use reflection to avoid compile-time dependency on HardwarePropertiesManager
         val manager = hwPropertiesManager as android.os.HardwarePropertiesManager
         try {
-            val temps = manager.deviceTemperatures
+            val temps = manager.getDeviceTemperatures(
+                android.os.HardwarePropertiesManager.TEMPERATURE_TYPE_CPU,
+                android.os.HardwarePropertiesManager.TEMPERATURE_SOURCE_TEMPERATURE_CURRENT
+            )
+            if (temps.isEmpty()) return 0.0
             var max = 0.0
             for (temp in temps) {
                 // Temperature in millikelvin → Celsius
-                val celsius = (temp.value / 1000.0) - 273.15
+                val celsius = (temp.toDouble() / 1000.0) - 273.15
                 if (celsius > max && celsius < 150.0) max = celsius
             }
             return max

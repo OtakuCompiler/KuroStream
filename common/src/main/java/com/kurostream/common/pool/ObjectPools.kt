@@ -240,7 +240,7 @@ class SubtitleStyle(
     var primaryColor: Int = 0xFFFFFFFF.toInt(),
     var secondaryColor: Int = 0xFF000000.toInt(),
     var outlineColor: Int = 0xFF000000.toInt(),
-    var backColor: Int = 0x80000000,
+    var backColor: Int = 0x80000000.toInt(),
     var bold: Boolean = false,
     var italic: Boolean = false,
     var underline: Boolean = false,
