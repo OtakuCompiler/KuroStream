@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.hilt) apply false
 
     alias(libs.plugins.spotless)
-    alias(libs.plugins.detekt)
+    alias(libs.plugins.detekt) apply false
     alias(libs.plugins.dependencycheck) apply false
 }
 
@@ -21,7 +21,7 @@ subprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
 
     detekt {
-        toolVersion = libs.versions.detekt.get()
+        toolVersion = "1.23.6"
         config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
         buildUponDefaultConfig = true
         allRules = true
