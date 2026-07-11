@@ -75,7 +75,6 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            isDebuggable = true
         }
     }
 
