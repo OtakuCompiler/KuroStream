@@ -9,7 +9,7 @@ appcompat = "1.7.0"
 activityCompose = "1.9.3"
 composeBom = "2023.08.00"
 tvFoundation = "1.0.0-alpha11"
-tvMaterial = "1.0.0-alpha11"
+tvMaterial3 = "1.0.0-alpha04"
 navigationCompose = "2.8.3"
 hiltNavigation = "1.2.0"
 lifecycle = "2.8.6"
@@ -63,6 +63,7 @@ mockkAndroid = "1.13.13"
 documentfile = "1.0.1"
 startup = "1.2.0"
 benchmarkMacro = "1.2.4"
+kmp = "1.9.20"
 detekt = "1.23.6"
 ktlint = "1.3.0"
 spotless = "6.25.0"
@@ -90,7 +91,7 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 androidx-tv-foundation = { group = "androidx.tv", name = "tv-foundation", version.ref = "tvFoundation" }
-androidx-tv-material = { group = "androidx.tv", name = "tv-material", version.ref = "tvMaterial" }
+androidx-tv-material3 = { group = "androidx.tv", name = "tv-material", version.ref = "tvMaterial3" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigation" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -188,10 +189,6 @@ github-api-converter = { group = "com.squareup.retrofit2", name = "converter-gso
 
 # Security
 security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
-
-[versions]
-# ... existing versions ...
-kmp = "1.9.20"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

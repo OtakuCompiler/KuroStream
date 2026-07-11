@@ -72,14 +72,11 @@ dependencies {
     // libtorrent4j - using a popular JNI wrapper for libtorrent
     implementation(libs.libtorrent.android)
 
-    // OkHttp for tracker communication
+    // OkHttp for tracker/metadata fetching
     implementation(libs.okhttp)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
-
-    // OkHttp for tracker/metadata fetching
-    implementation(libs.okhttp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
