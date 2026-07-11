@@ -51,6 +51,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
+                implementation(libs.okhttp)
             }
         }
         val jsMain by getting {

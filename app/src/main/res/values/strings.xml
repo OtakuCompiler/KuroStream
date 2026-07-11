@@ -24,7 +24,7 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="open_source_licenses">Open Source Licenses</string>
     <string name="report_bug">Report a Bug</string>
-    <string name="version_format">Version %s (Build %d)</string>
+    <string name="version_format" formatted="false">Version %s (Build %d)</string>
     <string name="cache_size_format">%s</string>
     <string name="no_results">No results found</string>
     <string name="search_hint">Search anime, movies, shows…</string>
