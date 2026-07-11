@@ -24,12 +24,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import coil.Coil
+import coil.ImageLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -240,11 +243,14 @@ class MemoryMonitor private constructor(
         
         // 1. Clear Coil image memory cache
         try {
-            val imageLoader = coil.ImageLoader.get(context)
-            val memCacheSizeBefore = imageLoader.memoryCache.size
-            imageLoader.memoryCache.clear()
-            freedBytes += memCacheSizeBefore
-            actions.add("Coil memory cache: ${formatBytes(memCacheSizeBefore)}")
+            val imageLoader = Coil.imageLoader(context)
+            val memCache = imageLoader.memoryCache
+            if (memCache != null) {
+                val memCacheSizeBefore = memCache.size
+                memCache.clear()
+                freedBytes += memCacheSizeBefore
+                actions.add("Coil memory cache: ${formatBytes(memCacheSizeBefore)}")
+            }
         } catch (e: Exception) {
             Timber.e(e, "Failed to clear Coil memory cache")
         }
@@ -286,11 +292,14 @@ class MemoryMonitor private constructor(
         if (pressure == MemoryPressure.EMERGENCY) {
             try {
                 // Clear Coil disk cache
-                val imageLoader = coil.ImageLoader.get(context)
-                val diskCacheSizeBefore = imageLoader.diskCache.size
-                scope.launch { imageLoader.diskCache.clear() }
-                freedBytes += diskCacheSizeBefore
-                actions.add("Coil disk cache: ${formatBytes(diskCacheSizeBefore)}")
+                val imageLoader = Coil.imageLoader(context)
+                val diskCache = imageLoader.diskCache
+                if (diskCache != null) {
+                    val diskCacheSizeBefore = diskCache.size
+                    scope.launch { diskCache.clear() }
+                    freedBytes += diskCacheSizeBefore
+                    actions.add("Coil disk cache: ${formatBytes(diskCacheSizeBefore)}")
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to clear Coil disk cache")
             }
@@ -357,6 +366,7 @@ enum class MemoryPressure(
     val description: String
 ) {
     NORMAL(200, "Normal - plenty of memory"),
+    LOW(175, "Low - minor pressure"),
     MODERATE(150, "Moderate - some pressure"),
     HIGH(100, "High - aggressive cleanup needed"),
     CRITICAL(50, "Critical - emergency measures"),

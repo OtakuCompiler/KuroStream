@@ -35,13 +35,11 @@ object MappedFileBufferPool {
         activeBuffers.remove(key)?.let { buffer ->
             try {
                 val cleanerMethod = MappedByteBuffer::class.java.getDeclaredMethod("cleaner")
-                cleanerMethod.trySetAccessible()
-                val cleaner = cleanerMethod.invoke(buffer)
-                if (cleaner != null) {
-                    val cleanMethod = cleaner.javaClass.getDeclaredMethod("clean")
-                    cleanMethod.trySetAccessible()
-                    cleanMethod.invoke(cleaner)
-                }
+                cleanerMethod.isAccessible = true
+                val cleaner = cleanerMethod.invoke(buffer) ?: return@let
+                val cleanMethod = cleaner.javaClass.getDeclaredMethod("clean")
+                cleanMethod.isAccessible = true
+                cleanMethod.invoke(cleaner)
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to clean MappedByteBuffer", e)
             }
