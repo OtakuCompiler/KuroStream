@@ -17,7 +17,7 @@ on:
       abi-splits:
         description: 'Build ABI splits'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 env:

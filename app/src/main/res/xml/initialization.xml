@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   This file is part of KuroStream.
 
@@ -14,8 +15,6 @@
   You should have received a copy of the GNU General Public License
   along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 -->
-
-<?xml version="1.0" encoding="utf-8"?>
 <startup>
     <initializer
         android:name="com.kurostream.app.startup.KuroStreamInitializer" />
