@@ -247,9 +247,9 @@ object BufferPool {
     /**
      * Public handle for acquired buffer with automatic release.
      */
-    class PooledBuffer(
-        private val pooled: PooledByteBuffer,
-        private val pool: BufferPoolImpl,
+    class PooledBuffer internal constructor(
+        internal val pooled: PooledByteBuffer,
+        internal val pool: BufferPoolImpl,
         val sizeClass: Int
     ) {
         private var released = false
@@ -364,7 +364,7 @@ object BufferPool {
         val allocatedBytes: Long,
         val pools: Map<Int, PoolStats>
     ) {
-        fun toString(): String {
+        override fun toString(): String {
             return "BufferPoolStats(allocated=${allocatedBytes/1024/1024}MB, " +
                    "current=$currentConcurrent, peak=$peakConcurrent, " +
                    "pools=${pools.map { "${it.key/1024}KB:${it.value.available}" }.joinToString(", ")})"

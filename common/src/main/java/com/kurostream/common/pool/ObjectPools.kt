@@ -237,9 +237,9 @@ class SubtitleEvent {
 class SubtitleStyle(
     var fontName: String = "NotoSans-Regular",
     var fontSize: Float = 24f,
-    var primaryColor: Int = 0xFFFFFFFF,
-    var secondaryColor: Int = 0xFF000000,
-    var outlineColor: Int = 0xFF000000,
+    var primaryColor: Int = 0xFFFFFFFF.toInt(),
+    var secondaryColor: Int = 0xFF000000.toInt(),
+    var outlineColor: Int = 0xFF000000.toInt(),
     var backColor: Int = 0x80000000,
     var bold: Boolean = false,
     var italic: Boolean = false,
