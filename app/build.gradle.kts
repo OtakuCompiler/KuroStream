@@ -18,7 +18,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.compose.compiler)
+
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -96,6 +96,9 @@ android {
     buildFeatures {
         compose = true
         viewBinding = false
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
     packaging {
         resources.excludes += "/META-INF/*.kotlin_module"
