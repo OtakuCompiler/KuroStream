@@ -19,6 +19,8 @@ on:
         required: false
         default: true
         type: boolean
+  push:
+    branches: [main]
 
 env:
   GRADLE_OPTS: "-Xmx8g -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.configureondemand=true"
@@ -29,7 +31,7 @@ jobs:
     name: Build All ABI Splits
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.abi-splits == 'true')
+    if: github.event_name != 'push' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.abi-splits == 'true'))
     strategy:
       fail-fast: false
       matrix:
@@ -81,6 +83,7 @@ jobs:
   build-app-bundle:
     name: Build App Bundle (Universal)
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     timeout-minutes: 60
     steps:
       - name: Checkout
@@ -140,6 +143,7 @@ jobs:
   build-fat-apk:
     name: Build Fat APK (All ABIs)
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     timeout-minutes: 60
     steps:
       - name: Checkout
@@ -194,6 +198,7 @@ jobs:
   instrumentation-tests:
     name: Instrumentation Tests (API ${{ matrix.api-level }})
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -251,6 +256,7 @@ jobs:
   macrobenchmarks:
     name: Macrobenchmarks
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -304,6 +310,7 @@ jobs:
   startup-timing:
     name: Startup Timing Benchmark
     runs-on: ubuntu-latest
+    if: github.event_name != 'push'
     timeout-minutes: 30
     steps:
       - name: Checkout
