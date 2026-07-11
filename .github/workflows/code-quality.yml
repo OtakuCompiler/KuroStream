@@ -94,7 +94,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run ArchUnit Tests
-        run: ./gradlew test --tests "*ArchitectureTest*" --no-daemon
+        run: ./gradlew :domain:test --tests "*ArchitectureTest*" --no-daemon
 
       - name: Upload ArchUnit Report
         if: always()
