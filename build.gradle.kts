@@ -26,10 +26,4 @@ plugins {
     id("org.owasp.dependencycheck") version "9.0.1" apply false
 }
 
-repositories {
-    google()
-    mavenCentral()
-    gradlePluginPortal()
-}
-
 apply(plugin = "org.owasp.dependencycheck")
