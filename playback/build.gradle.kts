@@ -88,6 +88,9 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.4"
+    }
 
     packaging {
         resources.pickFirsts.add("lib/arm64-v8a/libc++_shared.so")
