@@ -76,6 +76,14 @@ class SettingsRepositoryImpl @Inject constructor(
         val SEED_RATIO_LIMIT = floatPreferencesKey("seed_ratio_limit", 2.0f)
         val GLOBAL_DOWNLOAD_LIMIT_KBPS = longPreferencesKey("global_download_limit_kbps", -1L)
         val GLOBAL_UPLOAD_LIMIT_KBPS = longPreferencesKey("global_upload_limit_kbps", -1L)
+
+        // AI Features
+        val AI_UPSCALING = booleanPreferencesKey("ai_upscaling", false)
+        val FRAME_INTERPOLATION = booleanPreferencesKey("frame_interpolation", false)
+        val LOW_LATENCY_UPSCALING = booleanPreferencesKey("low_latency_upscaling", false)
+
+        // VOD Cache
+        val VOD_CACHE_COMPRESSION = booleanPreferencesKey("vod_cache_compression", true)
     }
 
     override fun getSettings(): Settings {
@@ -109,6 +117,10 @@ class SettingsRepositoryImpl @Inject constructor(
                 seedRatioLimit = prefs[Keys.SEED_RATIO_LIMIT] ?: 2.0f,
                 globalDownloadLimitKbps = prefs[Keys.GLOBAL_DOWNLOAD_LIMIT_KBPS] ?: -1L,
                 globalUploadLimitKbps = prefs[Keys.GLOBAL_UPLOAD_LIMIT_KBPS] ?: -1L,
+                aiUpscalingEnabled = prefs[Keys.AI_UPSCALING] ?: false,
+                frameInterpolationEnabled = prefs[Keys.FRAME_INTERPOLATION] ?: false,
+                lowLatencyUpscalingEnabled = prefs[Keys.LOW_LATENCY_UPSCALING] ?: false,
+                vodCacheCompressionEnabled = prefs[Keys.VOD_CACHE_COMPRESSION] ?: true,
             )
         }.blockingFirst()
     }
@@ -144,6 +156,10 @@ class SettingsRepositoryImpl @Inject constructor(
                 seedRatioLimit = prefs[Keys.SEED_RATIO_LIMIT] ?: 2.0f,
                 globalDownloadLimitKbps = prefs[Keys.GLOBAL_DOWNLOAD_LIMIT_KBPS] ?: -1L,
                 globalUploadLimitKbps = prefs[Keys.GLOBAL_UPLOAD_LIMIT_KBPS] ?: -1L,
+                aiUpscalingEnabled = prefs[Keys.AI_UPSCALING] ?: false,
+                frameInterpolationEnabled = prefs[Keys.FRAME_INTERPOLATION] ?: false,
+                lowLatencyUpscalingEnabled = prefs[Keys.LOW_LATENCY_UPSCALING] ?: false,
+                vodCacheCompressionEnabled = prefs[Keys.VOD_CACHE_COMPRESSION] ?: true,
             )
         }
     }
@@ -278,6 +294,22 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun clearAllSourceLocks() {
         // Implementation for clearing all source locks
+    }
+
+    override suspend fun setAiUpscalingEnabled(enabled: Boolean) {
+        dataStore.updateDataAsync { it[Keys.AI_UPSCALING] = enabled }
+    }
+
+    override suspend fun setFrameInterpolationEnabled(enabled: Boolean) {
+        dataStore.updateDataAsync { it[Keys.FRAME_INTERPOLATION] = enabled }
+    }
+
+    override suspend fun setLowLatencyUpscalingEnabled(enabled: Boolean) {
+        dataStore.updateDataAsync { it[Keys.LOW_LATENCY_UPSCALING] = enabled }
+    }
+
+    override suspend fun setVodCacheCompressionEnabled(enabled: Boolean) {
+        dataStore.updateDataAsync { it[Keys.VOD_CACHE_COMPRESSION] = enabled }
     }
 
     private fun formatCacheSize(bytes: Long): String {

@@ -451,8 +451,7 @@ private fun evictOldest() {
             providerMapping.values.forEach { (set: MutableSet<String>) -> set.remove(itKey) }
         }
     }
-    }
-    
+
     fun getCacheStats(): CacheStats {
         return CacheStats(
             totalEntries = metadataCache.size,

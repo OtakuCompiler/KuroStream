@@ -150,6 +150,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setLowLatencyUpscalingEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setLowLatencyUpscalingEnabled(enabled)
+            _uiState.update { it.copy(lowLatencyUpscalingEnabled = enabled) }
+        }
+    }
+
+    fun setVodCacheCompressionEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setVodCacheCompressionEnabled(enabled)
+            _uiState.update { it.copy(vodCacheCompressionEnabled = enabled) }
+        }
+    }
+
     fun setDiskBufferSizeMb(sizeMb: Int) {
         viewModelScope.launch {
             settingsRepository.setDiskBufferSizeMb(sizeMb)
@@ -243,4 +257,6 @@ data class SettingsUiState(
     val seedRatioLimit: Float = 2.0f,
     val globalDownloadLimitKbps: Long = -1,
     val globalUploadLimitKbps: Long = -1,
+    val lowLatencyUpscalingEnabled: Boolean = false,
+    val vodCacheCompressionEnabled: Boolean = true,
 )

@@ -170,10 +170,14 @@ fun AdvancedSettingsScreen(
                 predictivePrecache = settings.predictivePrecacheEnabled,
                 aiUpscaling = settings.aiUpscalingEnabled,
                 frameInterpolation = settings.frameInterpolationEnabled,
+                lowLatencyUpscaling = settings.lowLatencyUpscalingEnabled,
+                vodCacheCompression = settings.vodCacheCompressionEnabled,
                 onOfflineTranslationChange = { settingsViewModel.setOfflineTranslationEnabled(it) },
                 onPredictivePrecacheChange = { settingsViewModel.setPredictivePrecacheEnabled(it) },
                 onAiUpscalingChange = { settingsViewModel.setAiUpscalingEnabled(it) },
                 onFrameInterpolationChange = { settingsViewModel.setFrameInterpolationEnabled(it) },
+                onLowLatencyUpscalingChange = { settingsViewModel.setLowLatencyUpscalingEnabled(it) },
+                onVodCacheCompressionChange = { settingsViewModel.setVodCacheCompressionEnabled(it) },
             )
         }
     }
@@ -579,17 +583,23 @@ fun AiFeaturesCard(
     predictivePrecache: Boolean,
     aiUpscaling: Boolean,
     frameInterpolation: Boolean,
+    lowLatencyUpscaling: Boolean = false,
+    vodCacheCompression: Boolean = true,
     onOfflineTranslationChange: (Boolean) -> Unit,
     onPredictivePrecacheChange: (Boolean) -> Unit,
     onAiUpscalingChange: (Boolean) -> Unit,
     onFrameInterpolationChange: (Boolean) -> Unit,
+    onLowLatencyUpscalingChange: (Boolean) -> Unit = {},
+    onVodCacheCompressionChange: (Boolean) -> Unit = {},
 ) {
     FocusableCard(modifier = Modifier.fillMaxWidth(), onClick = { }) {
         Column(modifier = Modifier.padding(24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             SettingsToggle("Offline Subtitle Translation", "Translate subtitles locally using on-device AI model (<30MB)", offlineTranslation, onOfflineTranslationChange)
             SettingsToggle("Predictive Pre-caching", "Pre-load next episode based on viewing patterns", predictivePrecache, onPredictivePrecacheChange)
             SettingsToggle("AI Upscaling", "Enhance video quality using on-device upscaling (requires supported hardware)", aiUpscaling, onAiUpscalingChange)
+            SettingsToggle("Low Latency Upscaling", "Use reduced model complexity (ESPCN) for faster upscaling on low-end devices", lowLatencyUpscaling, onLowLatencyUpscalingChange)
             SettingsToggle("Frame Interpolation", "Generate intermediate frames for smoother motion (requires supported hardware)", frameInterpolation, onFrameInterpolationChange)
+            SettingsToggle("VOD Cache Compression", "Compress cached video with Zstandard to store 2x more in same disk space", vodCacheCompression, onVodCacheCompressionChange)
         }
     }
 }

@@ -43,6 +43,12 @@ interface SettingsRepository {
         val seedRatioLimit: Float = 2.0f,
         val globalDownloadLimitKbps: Long = -1L,
         val globalUploadLimitKbps: Long = -1L,
+        // AI Features
+        val aiUpscalingEnabled: Boolean = false,
+        val frameInterpolationEnabled: Boolean = false,
+        val lowLatencyUpscalingEnabled: Boolean = false,
+        // VOD Cache
+        val vodCacheCompressionEnabled: Boolean = true,
     )
 
     fun getSettings(): Settings
@@ -83,4 +89,12 @@ interface SettingsRepository {
     suspend fun setSourceLockPersist(persist: Boolean)
     suspend fun setSourceLockNotifyFallback(notify: Boolean)
     suspend fun clearAllSourceLocks()
+
+    // AI Features
+    suspend fun setAiUpscalingEnabled(enabled: Boolean)
+    suspend fun setFrameInterpolationEnabled(enabled: Boolean)
+    suspend fun setLowLatencyUpscalingEnabled(enabled: Boolean)
+
+    // VOD Cache
+    suspend fun setVodCacheCompressionEnabled(enabled: Boolean)
 }

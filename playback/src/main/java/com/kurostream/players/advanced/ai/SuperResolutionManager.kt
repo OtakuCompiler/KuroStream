@@ -182,6 +182,8 @@ class SuperResolutionManager private constructor(
             return
         }
         
+        lowLatencyEnabled.set(settings.lowLatencyEnabledValue)
+        
         // Create GPU thread
         gpuThread = HandlerThread("SuperResolutionGPU").apply {
             start()

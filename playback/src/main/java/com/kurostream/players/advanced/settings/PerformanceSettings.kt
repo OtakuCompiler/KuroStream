@@ -41,6 +41,9 @@ class PerformanceSettings(context: Context) {
     private val _nnapiEnabled = MutableStateFlow(prefs.getBoolean(KEY_NNAPI_ENABLED, true))
     val nnapiEnabled: StateFlow<Boolean> = _nnapiEnabled.asStateFlow()
 
+    private val _lowLatencyEnabled = MutableStateFlow(prefs.getBoolean(KEY_LOW_LATENCY, false))
+    val lowLatencyEnabled: StateFlow<Boolean> = _lowLatencyEnabled.asStateFlow()
+
     var superResolutionEnabledValue: Boolean
         get() = _superResolutionEnabled.value
         set(value) {
@@ -62,11 +65,19 @@ class PerformanceSettings(context: Context) {
             prefs.edit { putBoolean(KEY_NNAPI_ENABLED, value) }
         }
 
+    var lowLatencyEnabledValue: Boolean
+        get() = _lowLatencyEnabled.value
+        set(value) {
+            _lowLatencyEnabled.value = value
+            prefs.edit { putBoolean(KEY_LOW_LATENCY, value) }
+        }
+
     companion object {
         private const val PREFS_NAME = "kurostream_performance"
         private const val KEY_SR_ENABLED = "super_resolution_enabled"
         private const val KEY_FI_ENABLED = "frame_interpolation_enabled"
         private const val KEY_TARGET_QUALITY = "target_quality"
         private const val KEY_NNAPI_ENABLED = "nnapi_enabled"
+        private const val KEY_LOW_LATENCY = "low_latency_enabled"
     }
 }
