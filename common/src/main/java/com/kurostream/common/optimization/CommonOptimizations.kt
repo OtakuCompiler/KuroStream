@@ -435,7 +435,7 @@ class GlobalMetadataDeduplicator(
     
     fun findByCanonicalId(canonicalId: String): UnifiedMetadata? {
         val key = canonicalIds[canonicalId]
-        return key?.let { (k: String) -> metadataCache[k]?.also { accessTime[k] = System.currentTimeMillis() } }
+        return key?.let { k: String -> metadataCache[k]?.also { accessTime[k] = System.currentTimeMillis() } }
     }
     
     fun getAllForProvider(providerId: String): List<UnifiedMetadata> {
@@ -444,11 +444,11 @@ class GlobalMetadataDeduplicator(
     
 private fun evictOldest() {
         val oldest = accessTime.minByOrNull { it.value }?.key
-        oldest?.let { (itKey: String) ->
+        oldest?.let { itKey: String ->
             metadataCache.remove(itKey)
             canonicalIds.remove(itKey)
             accessTime.remove(itKey)
-            providerMapping.values.forEach { (set: MutableSet<String>) -> set.remove(itKey) }
+            providerMapping.values.forEach { set: MutableSet<String> -> set.remove(itKey) }
         }
     }
 
