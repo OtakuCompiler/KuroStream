@@ -33,20 +33,17 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
+        val commonTest by getting {
+            dependencies {
+                implementation(libs.junit)
+                implementation("com.tngtech.archunit:archunit-junit5:1.2.1")
+                implementation("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+            }
+        }
         val jsMain by getting {
             dependencies {
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
     }
-}
-
-dependencies {
-    testImplementation(libs.junit)
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.2.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
 }
