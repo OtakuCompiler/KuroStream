@@ -30,6 +30,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -62,7 +63,7 @@ class BatteryAwareManager private constructor(
 
                     onBatteryStateChanged()
                 }
-                Intent.ACTION_POWER_SAVE_MODE_CHANGED -> {
+                PowerManager.ACTION_POWER_SAVE_MODE_CHANGED -> {
                     val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
                     isBatterySaverEnabled = powerManager.isPowerSaveMode
                     onBatteryStateChanged()
@@ -78,7 +79,7 @@ class BatteryAwareManager private constructor(
     private fun registerReceiver() {
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_BATTERY_CHANGED)
-            addAction(Intent.ACTION_POWER_SAVE_MODE_CHANGED)
+            addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
         }
         context.registerReceiver(batteryReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
     }
@@ -248,8 +249,10 @@ class BitmapPoolManager {
     fun putBitmap(bitmap: android.graphics.Bitmap) {
         val key = (bitmap.width * bitmap.height * 4).hashCode()
         val pool = pools.getOrPut(key) {
-            android.util.LruCache<Int, android.graphics.Bitmap>(maxPoolSize / 4) { _, old ->
-                old.byteCount.toLong()
+            object : android.util.LruCache<Int, android.graphics.Bitmap>(maxPoolSize / 4) {
+                override fun sizeOf(key: Int, value: android.graphics.Bitmap): Int {
+                    return value.byteCount
+                }
             }
         }
         pool.put(key, bitmap)

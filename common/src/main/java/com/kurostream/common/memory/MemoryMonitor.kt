@@ -247,7 +247,7 @@ class MemoryMonitor private constructor(
             val imageLoader = Coil.imageLoader(context)
             val memCache = imageLoader.memoryCache
             if (memCache != null) {
-                val memCacheSizeBefore = memCache.size
+                val memCacheSizeBefore = memCache.size.toLong()
                 memCache.clear()
                 freedBytes += memCacheSizeBefore
                 actions.add("Coil memory cache: ${formatBytes(memCacheSizeBefore)}")
