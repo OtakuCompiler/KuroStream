@@ -189,6 +189,7 @@ dependencies {
     // Image Loading
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+    implementation(libs.coil.video)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
@@ -201,11 +202,7 @@ dependencies {
     // Timber
     implementation(libs.timber)
 
-    // Coil adaptive image loading interceptor
-    implementation(libs.coil.compose)
-    implementation(libs.coil.svg)
-    // Additional Coil adapters for video frames
-    implementation(libs.coil.video)
+    
 
     // Room (from data module transitively, but adding for compile-time)
     implementation(libs.room.runtime)

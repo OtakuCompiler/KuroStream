@@ -1,18 +1,3 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.domain.network
 
 import kotlinx.coroutines.flow.Flow
@@ -25,37 +10,44 @@ interface NetworkMonitorRepository {
     fun observeConnectionQuality(): Flow<ConnectionQuality>
     fun observeActiveConnections(): Flow<List<ActiveConnection>>
     suspend fun runSpeedTest(): SpeedTestResult
-    suspend fun runPingTest(host: String): PingTestResult
+    suspend fun runPingTest(host: String = "8.8.8.8"): PingTestResult
     suspend fun getNetworkInterfaceInfo(): List<NetworkInterfaceInfo>
 }
 
 @Serializable
 data class NetworkStats(
     val timestamp: Long = System.currentTimeMillis(),
-    val downloadSpeedMbps: Double,
-    val uploadSpeedMbps: Double,
-    val latencyMs: Double,
-    val jitterMs: Double,
-    val packetLossPercent: Double,
-    val wifiSignalStrengthDbm: Int?,
-    val wifiLinkSpeedMbps: Int?,
-    val networkType: NetworkType,
-    val isMetered: Boolean,
-    val totalBytesReceived: Long,
-    val totalBytesSent: Long,
+    val downloadSpeedMbps: Double = 0.0,
+    val uploadSpeedMbps: Double = 0.0,
+    val latencyMs: Double = 0.0,
+    val jitterMs: Double = 0.0,
+    val packetLossPercent: Double = 0.0,
+    val wifiSignalStrengthDbm: Int? = null,
+    val wifiLinkSpeedMbps: Int? = null,
+    val wifiFrequencyMhz: Int? = null,
+    val networkType: NetworkType = NetworkType.UNKNOWN,
+    val connectionType: ConnectionType = ConnectionType.UNKNOWN,
+    val isMetered: Boolean = false,
+    val isVpnActive: Boolean = false,
+    val dnsLatencyMs: Double = 0.0,
+    val tcpRetransmits: Long = 0,
+    val totalBytesReceived: Long = 0,
+    val totalBytesSent: Long = 0,
 )
 
 @Serializable
 data class ConnectionQuality(
-    val overallScore: Int, // 0-100
-    val latencyScore: Int,
-    val throughputScore: Int,
-    val stabilityScore: Int,
-    val rating: QualityRating,
+    val overallScore: Int = 0,
+    val latencyScore: Int = 0,
+    val throughputScore: Int = 0,
+    val stabilityScore: Int = 0,
+    val rating: QualityRating = QualityRating.UNKNOWN,
     val issues: List<String> = emptyList(),
 )
 
-enum class QualityRating { EXCELLENT, GOOD, FAIR, POOR, UNUSABLE }
+enum class QualityRating { EXCELLENT, GOOD, FAIR, POOR, UNUSABLE, UNKNOWN }
+
+enum class ConnectionType { WIFI, ETHERNET, MOBILE, VPN, UNKNOWN }
 
 @Serializable
 data class ActiveConnection(
@@ -68,7 +60,7 @@ data class ActiveConnection(
     val bytesSent: Long,
     val bytesReceived: Long,
     val startTime: Long,
-    val processName: String?,
+    val processName: String? = null,
 )
 
 @Serializable
@@ -98,11 +90,11 @@ data class NetworkInterfaceInfo(
     val displayName: String,
     val type: NetworkType,
     val ipAddress: String,
-    val gateway: String?,
-    val dnsServers: List<String>,
+    val gateway: String? = null,
+    val dnsServers: List<String> = emptyList(),
     val isUp: Boolean,
-    val speedMbps: Long?,
-    val mtu: Int,
+    val speedMbps: Int? = null,
+    val mtu: Int = 1500,
 )
 
 enum class NetworkType { WIFI, ETHERNET, MOBILE, VPN, UNKNOWN }
