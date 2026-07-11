@@ -37,7 +37,7 @@ android {
 
         // Multi-arch ABI splits
         ndk {
-            abiFilters = listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
         }
 
         // App Bundle configuration
@@ -57,10 +57,10 @@ android {
     // ABI Split Configuration for Universal APKs
     splits {
         abi {
-            enable = true
+            isEnabled = true
             reset()
-            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-            universalApk = true
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
         }
     }
 
@@ -75,7 +75,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             
             // R8 Full Mode
-            matchingFallbacks = listOf("release")
+            matchingFallbacks.addAll(listOf("release"))
         }
         debug {
             isMinifyEnabled = false
@@ -128,13 +128,10 @@ android {
     @Suppress("UnstableApiUsage")
     androidResources {
         @Suppress("UnstableApiUsage")
-        additionalParameters = listOf("--no-version-vectors", "--no-version-transitions")
+        additionalParameters.addAll(listOf("--no-version-vectors", "--no-version-transitions"))
     }
 
     // Resource optimization
-    aaptOptions {
-        cruncherEnabled = false
-    }
 
     signingConfigs {
         create("release") {
