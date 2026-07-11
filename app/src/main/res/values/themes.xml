@@ -17,9 +17,6 @@
 -->
 
 <resources>
-    <string name="app_name">KuroStream</string>
-    <string name="browse_title">KuroStream</string>
-
     <style name="Theme.AnimeStreamTV" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/tv_background</item>
         <item name="android:colorPrimary">@color/tv_primary</item>
