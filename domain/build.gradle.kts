@@ -16,6 +16,7 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.android.library)
 }
 
 kotlin {
@@ -34,6 +35,13 @@ kotlin {
                 implementation(project(":common"))
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(libs.junit)
+                implementation("com.tngtech.archunit:archunit-junit5:1.2.1")
+                implementation("org.junit.jupiter:junit-jupiter-engine:5.10.2")
             }
         }
         val androidMain by getting {
@@ -63,12 +71,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-}
-
-dependencies {
-    testImplementation(libs.junit)
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.2.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
 }
 
 tasks.withType<Test> {
