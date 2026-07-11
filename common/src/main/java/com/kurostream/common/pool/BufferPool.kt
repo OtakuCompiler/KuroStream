@@ -165,7 +165,7 @@ object BufferPool {
         private fun createBuffer(): PooledByteBuffer {
             val byteBuffer = ByteBuffer.allocateDirect(bufferSize)
             val pooled = PooledByteBuffer(byteBuffer, this)
-            cleaner.register(pooled) { releaseNative(byteBuffer) }
+            pooled.cleaner = cleaner.register(pooled) { releaseNative(byteBuffer) }
             return pooled
         }
         
@@ -336,11 +336,11 @@ object BufferPool {
         if (buffer.isDirect) {
             try {
                 val cleanerMethod = ByteBuffer::class.java.getDeclaredMethod("cleaner")
-                cleanerMethod.trySetAccessible()
+                cleanerMethod.isAccessible = true
                 val cleaner = cleanerMethod.invoke(buffer)
                 if (cleaner != null) {
                     val cleanMethod = cleaner.javaClass.getDeclaredMethod("clean")
-                    cleanMethod.trySetAccessible()
+                    cleanMethod.isAccessible = true
                     cleanMethod.invoke(cleaner)
                 }
             } catch (e: Exception) {

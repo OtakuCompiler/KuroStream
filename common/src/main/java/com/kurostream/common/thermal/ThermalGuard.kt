@@ -32,10 +32,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
 import java.io.File
-import java.io.FileReader
 import java.lang.ref.WeakReference
 
 /**
@@ -325,9 +325,9 @@ interface ThermalThrottleCallback {
             listener = null
         }
 
-        private fun onWarningStage() = listener?.onWarningStage()
-        private fun onCriticalStage() = listener?.onCriticalStage()
-        private fun onNormalized() = listener?.onNormalized()
+        fun onWarningStage() = listener?.onWarningStage()
+        fun onCriticalStage() = listener?.onCriticalStage()
+        fun onNormalized() = listener?.onNormalized()
     }
 
     fun onWarningStage()
