@@ -74,7 +74,7 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
             
-            // R8 Full Mode
+            // R8 Full Mode - Aggressive optimization for AOT-like performance
             matchingFallbacks.addAll(listOf("release"))
         }
         debug {
@@ -204,7 +204,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
     // Additional Coil adapters for video frames
-    implementation("io.coil-kt:coil-video:${libs.versions.coil}")
+    implementation(libs.coil.video)
 
     // Room (from data module transitively, but adding for compile-time)
     implementation(libs.room.runtime)

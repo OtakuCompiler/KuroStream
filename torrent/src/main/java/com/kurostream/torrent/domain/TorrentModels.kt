@@ -50,6 +50,23 @@ data class TorrentInfo(
     val seedingTime: Long = 0L,
     val numPieces: Int = 0,
     val pieceSize: Int = 0,
+    val peersConnected: Int = 0,
+    val trackerCount: Int = 0,
+    val swarmHealthScore: Int = 0,
+    val dhtNodes: Int = 0,
+    val utpEnabled: Boolean = true,
+    val connectionQuality: Float = 1.0f,
+)
+
+@Serializable
+data class SwarmHealth(
+    val seedCount: Int = 0,
+    val peerCount: Int = 0,
+    val dhtNodeCount: Int = 0,
+    val avgPeerSpeedBps: Long = 0,
+    val pieceAvailability: Map<Int, Int> = emptyMap(),
+    val healthScore: Int = 0,
+    val connectedSince: Long = 0L,
 )
 
 @Serializable
@@ -108,6 +125,10 @@ interface TorrentRepository {
     suspend fun moveTorrentData(infoHash: String, newPath: String): TorrentResult
     suspend fun reannounceTorrent(infoHash: String)
     suspend fun scrapeTracker(infoHash: String)
+    suspend fun getTorrentStreamUrl(infoHash: String, fileIndex: Int): String?
+    suspend fun setSessionSettings(settings: TorrentSessionSettings)
+    suspend fun getSessionSettings(): TorrentSessionSettings
+    suspend fun getSwarmHealth(infoHash: String): SwarmHealth
 }
 
 @Serializable
@@ -121,6 +142,9 @@ data class GlobalStats(
     val totalDownload: Long = 0L,
     val totalUpload: Long = 0L,
     val sessionTime: Long = 0L,
+    val trackerCount: Int = 0,
+    val totalPeersConnected: Int = 0,
+    val portMapped: Boolean = false,
 )
 
 @Serializable
@@ -130,10 +154,13 @@ data class TorrentSessionSettings(
     val enableLsd: Boolean = true,
     val enableUpnp: Boolean = true,
     val enableNatpmp: Boolean = true,
+    val enablePeX: Boolean = true,
+    val enableUtp: Boolean = true,
     val encryptionMode: EncryptionMode = EncryptionMode.PREFER_ENCRYPTION,
     val maxConnections: Int = 200,
     val maxUploadSlots: Int = 50,
     val maxHalfOpenConnections: Int = 8,
+    val connectionsPer_torrent: Int = 50,
     val maxConnectionsPerTorrent: Int = 50,
     val maxUploadSlotsPerTorrent: Int = 10,
     val alertMask: Long = -1L,
@@ -146,6 +173,13 @@ data class TorrentSessionSettings(
     val announceToAllTiers: Boolean = true,
     val preferUdpTrackers: Boolean = true,
     val strictEndGameMode: Boolean = true,
+    val utpTargetDelayMs: Int = 50,
+    val utpGain: Int = 10000,
+    val utpLostSeed: Int = 10,
+    val announceIntervalSec: Int = 30,
+    val minAnnounceIntervalSec: Int = 15,
+    val pieceCacheSizeMb: Int = 64,
+    val lazyVerificationEnabled: Boolean = true,
 )
 
 enum class EncryptionMode {

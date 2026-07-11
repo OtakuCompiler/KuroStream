@@ -160,4 +160,15 @@ class TorrentRepositoryImpl @Inject constructor(
     override suspend fun getSessionSettings(): TorrentSessionSettings {
         return engine.getSessionSettings()
     }
+
+    override suspend fun getSwarmHealth(infoHash: String): SwarmHealth {
+        val torrent = engine.getTorrent(infoHash) ?: return SwarmHealth()
+        return SwarmHealth(
+            seedCount = torrent.seeds,
+            peerCount = torrent.peers,
+            dhtNodeCount = torrent.dhtNodes,
+            avgPeerSpeedBps = if (torrent.peers > 0) torrent.downloadSpeed / torrent.peers else 0,
+            healthScore = torrent.swarmHealthScore,
+        )
+    }
 }

@@ -7,6 +7,22 @@
 -allowaccessmodification
 -mergeinterfacesaggressively
 
+# R8 Full Mode - AOT-like optimizations
+-forceinlineall
+-optimizationpasses 7
+-overloadaggressively
+-repackageclasses 'k0'
+-allowaccessmodification
+-mergeinterfacesaggressively
+-useuniqueclassmembernames
+-fixdescriptors
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*,!method/propagation/*,class/inlining/short
+
+# Remove unused code aggressively
+-keepattributes *Annotation*, Signature, Exceptions, InnerClasses, EnclosingMethod, SourceFile, LineNumberTable, LocalVariableTable, LocalVariableTypeTable, MethodParameters, Module, ModulePackages, NestMembers, NestHost, Record, PermittedSubclasses
+-keepattributes RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations, RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations
+-keepattributes AnnotationDefault
+
 # Kotlin Serialization
 -keepattributes *Annotation*, Signature, Exceptions, InnerClasses, EnclosingMethod
 -keepclassmembers class * {

@@ -14,9 +14,38 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
+}
+
+kotlin {
+    androidTarget {
+        publishLibraryVariants("release", "debug")
+    }
+    js {
+        browser()
+        nodejs()
+        binaries.executable()
+    }
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(project(":common"))
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+            }
+        }
+        val jsMain by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+    }
 }
 
 android {
@@ -37,9 +66,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":common"))
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
     testImplementation("com.tngtech.archunit:archunit-junit5:1.2.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")

@@ -190,6 +190,19 @@ class DiagnosticsOverlay @JvmOverloads constructor(
         canvas.drawText("Refresh: ${diagnostics.displayRefreshRate.roundToInt()}Hz", x, y, textPaint)
         y += lineHeight
         canvas.drawText("Audio: ${diagnostics.audioCodec}", x, y, textPaint)
+        y += lineHeight * 1.5f
+
+        canvas.drawText("=== P2P SWARM ===", x, y, textPaint)
+        y += lineHeight
+        canvas.drawText("Seeds: $p2pSeeds | Peers: $p2pPeers | DHT: $p2pDhtNodes", x, y, textPaint)
+        y += lineHeight
+        val healthColor = when {
+            p2pSwarmHealth >= 70 -> Color.GREEN
+            p2pSwarmHealth >= 40 -> Color.YELLOW
+            else -> Color.RED
+        }
+        warningPaint.color = healthColor
+        canvas.drawText("Swarm Health: $p2pSwarmHealth/100", x, y, warningPaint)
         y += lineHeight
 
         if (diagnostics.droppedFrames > 10) {
@@ -334,8 +347,25 @@ class DiagnosticsManager(
             appendLine("  \"video_codec\": \"${diag.videoCodec}\",")
             appendLine("  \"audio_codec\": \"${diag.audioCodec}\",")
             appendLine("  \"video_resolution\": \"${diag.videoResolution}\",")
-            appendLine("  \"hardware_decoding\": ${diag.isHardwareDecoding}")
+            appendLine("  \"hardware_decoding\": ${diag.isHardwareDecoding},")
+            appendLine("  \"p2p_seeds\": ${p2pSeeds},")
+            appendLine("  \"p2p_peers\": ${p2pPeers},")
+            appendLine("  \"p2p_dht_nodes\": ${p2pDhtNodes},")
+            appendLine("  \"p2p_swarm_health\": ${p2pSwarmHealth}")
             appendLine("}")
         }
+    }
+
+    private var p2pSeeds: Int = 0
+    private var p2pPeers: Int = 0
+    private var p2pDhtNodes: Int = 0
+    private var p2pSwarmHealth: Int = 0
+
+    fun updateP2PStats(seeds: Int, peers: Int, dhtNodes: Int, swarmHealth: Int) {
+        p2pSeeds = seeds
+        p2pPeers = peers
+        p2pDhtNodes = dhtNodes
+        p2pSwarmHealth = swarmHealth
+        invalidate()
     }
 }
