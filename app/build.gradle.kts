@@ -1,24 +1,8 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -36,12 +20,10 @@ android {
         vectorDrawables.useSupportLibrary = true
         manifestPlaceholders["appAuthRedirectScheme"] = "kurostream"
 
-        // Multi-arch ABI splits
         ndk {
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
         }
 
-        // App Bundle configuration
         bundle {
             language {
                 enableSplit = true
@@ -54,7 +36,6 @@ android {
             }
         }
     }
-
 
     signingConfigs {
         create("release") {
@@ -74,8 +55,6 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
-            
-            // R8 Full Mode - Aggressive optimization for AOT-like performance
             matchingFallbacks.addAll(listOf("release"))
         }
         debug {
@@ -103,43 +82,25 @@ android {
     }
     packaging {
         resources.excludes += "/META-INF/*.kotlin_module"
-        // Native library packaging
         jniLibs {
             useLegacyPackaging = true
         }
-        // Pick first for libc++_shared.so conflicts
-        pickFirsts += listOf(
-            "lib/armeabi-v7a/libc++_shared.so",
-            "lib/arm64-v8a/libc++_shared.so",
-            "lib/x86/libc++_shared.so",
-            "lib/x86_64/libc++_shared.so"
-        )
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libc++_shared.so")
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libc++_shared.so")
+        jniLibs.pickFirsts.add("lib/x86/libc++_shared.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libc++_shared.so")
     }
 
-    // Dex options for large apps
-    dexOptions {
-        javaMaxHeapSize = "4g"
-        preDexLibraries = true
-    }
-
-    // App Startup library
-    // Will be added via dependencies
-
-    // Enable WebP and aggressive resource optimization
     @Suppress("UnstableApiUsage")
     androidResources {
         @Suppress("UnstableApiUsage")
         additionalParameters.addAll(listOf("--no-version-vectors", "--no-version-transitions"))
     }
-
-    // Resource optimization
 }
 
 dependencies {
-    // App Startup for deferred initialization
     implementation(libs.androidx.startup.runtime)
-    
-    // Core modules
+
     implementation(project(":common"))
     implementation(project(":domain"))
     implementation(project(":data"))
@@ -148,10 +109,8 @@ dependencies {
     implementation(project(":playback"))
     implementation(project(":extensions"))
     implementation(project(":launcher"))
-    // implementation(project(":torrent")) // TODO: Fix libtorrent dependency
     implementation(project(":backup"))
 
-    // AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
@@ -172,13 +131,11 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.navigation.fragment)
 
-    // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
 
-    // Networking
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.moshi)
@@ -186,30 +143,22 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
 
-    // Image Loading
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
     implementation(libs.coil.video)
 
-    // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    // Serialization
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit.serialization)
 
-    // Timber
     implementation(libs.timber)
 
-    
-
-    // Room (from data module transitively, but adding for compile-time)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
-    // Media3
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.exoplayer.dash)
     implementation(libs.media3.exoplayer.hls)
@@ -219,47 +168,35 @@ dependencies {
     implementation(libs.media3.common)
     implementation(libs.media3.decoder)
 
-    // Native Libraries
     implementation(libs.libvlc.all)
-    // implementation(libs.mpv.android) // Requires manual AAR placement
 
-    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
 
-    // Ktor
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.gson)
 
-    // Auth
     implementation(libs.appauth)
     implementation(libs.play.services.auth)
 
-    // AI/ML
     implementation(libs.pytorch.android.lite)
     implementation(libs.tensorflow.lite)
 
-    // Audio
     implementation(libs.oboe)
 
-    // Speech Recognition
     implementation(libs.vosk.android)
 
-    // WebRTC
     implementation(libs.webrtc.android)
 
-    // Web Server
     implementation(libs.nanohttpd)
     implementation(libs.nanohttpd.websocket)
 
-    // Compose Tooling (Debug)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 
-    // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)

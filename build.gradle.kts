@@ -14,15 +14,15 @@ plugins {
 
 apply(plugin = "org.owasp.dependencycheck")
 
-val jsOnlyModules = setOf(":tizenApp", ":webosApp")
+val excludedDetektModules = setOf("", ":tizenApp", ":webosApp")
 
 subprojects {
-    if (name in jsOnlyModules) return@subprojects
+    if (name in excludedDetektModules) return@subprojects
     apply(plugin = "io.gitlab.arturbosch.detekt")
 
     detekt {
-        toolVersion = "1.23.6"
-        config = files("${rootProject.projectDir}/config/detekt/detekt.yml")
+        toolVersion = libs.versions.detekt.get()
+        config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
         buildUponDefaultConfig = true
         allRules = true
         parallel = true

@@ -22,7 +22,7 @@ plugins {
 android {
     namespace = "com.kurostream.common"
     compileSdk = 35
-    defaultConfig { minSdk = 21; targetSdk = 35 }
+    defaultConfig { minSdk = 21 }
     buildTypes {
         release {
             isMinifyEnabled = false
