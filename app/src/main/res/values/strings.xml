@@ -114,7 +114,7 @@
     <string name="save">Save</string>
     <string name="apply">Apply</string>
     <string name="reset">Reset</string>
-    <string name="default">Default</string>
+    <string name="default_value">Default</string>
     <string name="custom">Custom</string>
     <string name="enabled">Enabled</string>
     <string name="disabled">Disabled</string>
