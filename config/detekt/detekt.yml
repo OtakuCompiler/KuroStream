@@ -1,0 +1,228 @@
+# Detekt Configuration for KuroStream
+# Based on recommended Android/Compose rules
+
+build:
+  maxIssues: 0
+  weights:
+    complexity: 2
+    LongParameterList: 1
+    style: 1
+    comments: 1
+
+formatting:
+  active: true
+  autoCorrect: true
+  Indentation:
+    active: true
+    indentSize: 4
+    continuationIndentSize: 4
+  MaximumLineLength:
+    active: true
+    maxLineLength: 120
+    excludePackageStatements: true
+    excludeImportStatements: true
+  NoWildcardImports:
+    active: true
+  TrailingComma:
+    active: true
+    functions:
+      multiLine: ALWAYS
+      singleLine: NEVER
+    destructuringDeclarations:
+      multiLine: ALWAYS
+      singleLine: NEVER
+    annotations:
+      multiLine: ALWAYS
+      singleLine: NEVER
+
+style:
+  active: true
+  ForbiddenComment:
+    active: true
+    values: ["TODO:", "FIXME:", "STOP!", "HACK:", "XXX:"]
+    ignoreOverridden: false
+  ForbiddenImport:
+    active: true
+    imports: []
+  FunctionOnlyReturningConstant:
+    active: true
+    ignoreOverridden: true
+  MagicNumber:
+    active: true
+    ignoreNumbers: [-1, 0, 1, 2, 3, 4, 5, 10, 100, 1000]
+    ignoreConstantDeclaration: true
+    ignorePropertyDeclaration: true
+    ignoreLocalVariableDeclaration: true
+    ignoreFunctionArgument: true
+    ignoreNamedArgument: true
+    ignoreEnum: true
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+  ReturnCount:
+    active: true
+    max: 5
+  ThrowsCount:
+    active: true
+    max: 3
+  WildcardImport:
+    active: true
+    excludes: ["java.util.*", "kotlinx.coroutines.*", "androidx.compose.*"]
+
+complexity:
+  active: true
+  ComplexInterface:
+    active: true
+    threshold: 10
+  ComplexMethod:
+    active: true
+    threshold: 15
+    ignoreSingleWhenExpression: true
+    ignoreSimpleWhenEntries: true
+  LongMethod:
+    active: true
+    threshold: 60
+  LongParameterList:
+    active: true
+    threshold: 6
+    ignoreDefaultValues: true
+    function: true
+    lambda: true
+    constructor: true
+  MethodOverloading:
+    active: true
+    threshold: 6
+  NestedBlockDepth:
+    active: true
+    threshold: 4
+  StringLiteralDuplication:
+    active: true
+    threshold: 3
+    ignoreAnnotations: true
+    excludeStringsWithLessThan5Characters: true
+    ignoreOverridden: true
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 15
+    thresholdInClasses: 15
+    thresholdInInterfaces: 10
+    thresholdInObjects: 15
+    thresholdInEnums: 10
+    ignoreDeprecated: false
+    ignorePrivate: false
+    ignoreOverridden: false
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: true
+  ExceptionRaisedInUnexpectedLocation:
+    active: true
+  SwallowedException:
+    active: true
+    ignoredExceptionTypes: []
+    allowedExceptionNameRegex: "^(ignored|expected).*"
+  ThrowingExceptionFromFinally:
+    active: true
+  ThrowingExceptionsWithoutMessageOrCause:
+    active: true
+  ThrowingNewInstanceOfSameException:
+    active: true
+
+potential-bugs:
+  active: true
+  BinaryOperatorInEqualsNullCheck:
+    active: true
+  DoubleNegative:
+    active: true
+  EqualsAlwaysReturnsTrueOrFalse:
+    active: true
+  EqualsNullCall:
+    active: true
+  ExplicitGarbageCollectionCall:
+    active: true
+  FloatAndDoubleLiteralEqualityCheck:
+    active: true
+  InvalidRange:
+    active: true
+  IteratorHasNext:
+    active: true
+  LateinitUsage:
+    active: true
+  NullSafeCallOnNullableReceiver:
+    active: true
+  ReturnFromFinally:
+    active: true
+  SameParameterValue:
+    active: true
+  UnsafeCallOnNullableType:
+    active: true
+  UnusedPrivateMember:
+    active: true
+    allowedNames: ["onCreate", "onStart", "onResume", "onPause", "onStop", "onDestroy", "onSaveInstanceState"]
+
+performance:
+  active: true
+  ArrayPrimitive:
+    active: true
+  CollectionSize:
+    active: true
+  ForEachOnRange:
+    active: true
+  SpreadOperator:
+    active: true
+
+naming:
+  active: true
+  ClassName:
+    active: true
+    pattern: "^[A-Z][a-zA-Z0-9]*$"
+  FunctionName:
+    active: true
+    pattern: "^[a-z][a-zA-Z0-9]*$"
+  FunctionParameterName:
+    active: true
+    pattern: "^[a-z][a-zA-Z0-9]*$"
+  VariableName:
+    active: true
+    pattern: "^[a-z][a-zA-Z0-9]*$"
+    excludeClassPattern: "^[A-Z][a-zA-Z0-9]*$"
+  ConstantName:
+    active: true
+    pattern: "^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"
+  MatchingDeclarationName:
+    active: true
+
+comments:
+  active: true
+  CommentOverPrivateFunction:
+    active: false
+  CommentOverPrivateProperty:
+    active: false
+  EndOfSentenceFormat:
+    active: true
+    endOfSentenceFormat: "([.!?]\\s+|[.!?]$)"
+  KDocStyle:
+    active: true
+
+console-reports:
+  active: true
+  exclude:
+    - "ProjectStatisticsReport"
+    - "ComplexityReport"
+    - "NotificationReport"
+    - "FindingsReport"
+  output-format: "text"
+
+output-reports:
+  active: true
+  exclude:
+    - "FindingsReport"
+  xml:
+    enabled: true
+    output: "build/reports/detekt/detekt.xml"
+  html:
+    enabled: true
+    output: "build/reports/detekt/detekt.html"
+  txt:
+    enabled: false

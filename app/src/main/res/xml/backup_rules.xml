@@ -1,0 +1,44 @@
+<!--
+  This file is part of KuroStream.
+
+  KuroStream is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  KuroStream is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Include preferences -->
+    <include domain="sharedpref" path="." />
+
+    <!-- Include DataStore preferences -->
+    <include domain="file" path="datastore/" />
+
+    <!-- Include Room databases -->
+    <include domain="database" path="." />
+
+    <!-- Include downloaded media (user may want to backup) -->
+    <include domain="file" path="Download/" />
+    <include domain="file" path="Movies/" />
+    <include domain="file" path="TV Shows/" />
+
+    <!-- Exclude cache and temporary files -->
+    <exclude domain="file" path="cache/" />
+    <exclude domain="file" path="code_cache/" />
+    <exclude domain="file" path="no_backup/" />
+    <exclude domain="file" path="image_cache/" />
+    <exclude domain="file" path="subtitles/" />
+    <exclude domain="file" path="fonts/" />
+
+    <!-- Exclude logs -->
+    <exclude domain="file" path="logs/" />
+</full-backup-content>

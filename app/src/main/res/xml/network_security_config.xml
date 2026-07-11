@@ -1,0 +1,61 @@
+<!--
+  This file is part of KuroStream.
+
+  KuroStream is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  KuroStream is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.anilist.co</domain>
+        <domain includeSubdomains="true">api.myanimelist.net</domain>
+        <domain includeSubdomains="true">v2.api.anilist.co</domain>
+        <domain includeSubdomains="true">graphql.anilist.co</domain>
+        <domain includeSubdomains="true">myanimelist.net</domain>
+        <domain includeSubdomains="true">api.allorigins.win</domain>
+        <domain includeSubdomains="true">opensubtitles.org</domain>
+        <domain includeSubdomains="true">v2.opensubtitles.com</domain>
+        <domain includeSubdomains="true">api.fixer.io</domain>
+        <domain includeSubdomains="true">raw.githubusercontent.com</domain>
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">api.github.com</domain>
+        <domain includeSubdomains="true">kurostream.app</domain>
+        <domain includeSubdomains="true">play.kurostream.app</domain>
+
+        <!-- Certificate pinning for critical APIs -->
+        <pin-set expiration="2026-12-31">
+            <!-- AniList pins -->
+            <pin digest="SHA-256">YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=</pin>
+            <pin digest="SHA-256">sRHdihwgkaib1P1gxX8HFszlD+7/gTfNvuAybgLPNis=</pin>
+        </pin-set>
+
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Debug overrides (only in debug builds) -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

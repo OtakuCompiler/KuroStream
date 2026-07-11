@@ -1,0 +1,210 @@
+// This file is part of KuroStream.
+//
+// KuroStream is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KuroStream is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
+
+package com.kurostream.app
+
+import android.app.Application
+import android.content.ComponentCallbacks2
+import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
+import androidx.lifecycle.ProcessLifecycleOwner
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.decode.VideoFrameDecoder
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
+import coil.request.ImageRequest
+import coil.transform.Transformation
+import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import timber.log.Timber
+
+@HiltAndroidApp
+class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCallbacks2 {
+
+    private var isInBackground = false
+    private var memoryMonitor: com.kurostream.common.memory.MemoryMonitor? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+
+        // Initialize memory monitor early
+        memoryMonitor = com.kurostream.common.memory.MemoryMonitor.getInstance(this)
+
+        // Register for lifecycle events
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : androidx.lifecycle.DefaultLifecycleObserver {
+            override fun onStart(owner: androidx.lifecycle.LifecycleOwner) {
+                isInBackground = false
+            }
+
+            override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
+                isInBackground = true
+                trimMemory(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN)
+            }
+        })
+
+        // Startup performance monitoring
+        monitorStartupPerformance()
+        
+        // Pre-intern common strings
+        com.kurostream.common.util.StringInterner.preloadCommonStrings()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        when (level) {
+            ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
+                Timber.d("TRIM_MEMORY_UI_HIDDEN - clearing image caches")
+                clearImageCaches()
+            }
+            ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> {
+                Timber.d("TRIM_MEMORY_RUNNING_LOW - reducing memory")
+                reduceMemoryFootprint()
+            }
+            ComponentCallbacks2.TRIM_MEMORY_BACKGROUND -> {
+                Timber.d("TRIM_MEMORY_BACKGROUND - aggressive cleanup")
+                aggressiveMemoryCleanup()
+            }
+            ComponentCallbacks2.TRIM_MEMORY_MODERATE,
+            ComponentCallbacks2.TRIM_MEMORY_COMPLETE -> {
+                Timber.d("TRIM_MEMORY_MODERATE/COMPLETE - moderate cleanup")
+                moderateMemoryCleanup()
+            }
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Handle config changes without recreating
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        Timber.w("onLowMemory - emergency cleanup")
+        aggressiveMemoryCleanup()
+    }
+
+    private fun clearImageCaches() {
+        // Clear Coil memory cache
+        try {
+            val imageLoader = ImageLoader.get(this)
+            imageLoader.memoryCache.clear()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to clear Coil memory cache")
+        }
+    }
+
+    private fun reduceMemoryFootprint() {
+        clearImageCaches()
+        // Reduce playback buffer
+        try {
+            // PlaybackManager.getInstance()?.reduceBuffer()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to reduce playback buffer")
+        }
+        
+        // Clear object pools
+        try {
+            com.kurostream.common.pool.ObjectPools.clearAll()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to clear object pools")
+        }
+    }
+
+    private fun moderateMemoryCleanup() {
+        reduceMemoryFootprint()
+        // Clear Coil disk cache if needed
+        try {
+            val imageLoader = ImageLoader.get(this)
+            CoroutineScope(Dispatchers.IO).launch {
+                imageLoader.diskCache.clear()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to clear Coil disk cache")
+        }
+    }
+
+    private fun aggressiveMemoryCleanup() {
+        moderateMemoryCleanup()
+        // Force GC hint
+        System.gc()
+        Runtime.getRuntime().gc()
+        
+        // Clear string interner
+        com.kurostream.common.util.StringInterner.clear()
+        
+        // Clear buffer pools
+        try {
+            com.kurostream.common.pool.BufferPool.clearAll()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to clear buffer pools")
+        }
+    }
+
+    private fun monitorStartupPerformance() {
+        if (BuildConfig.DEBUG) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val startTime = System.currentTimeMillis()
+                // Track startup metrics
+            }
+        }
+    }
+
+    override fun newImageLoader(): ImageLoader {
+        val availableMemory = Runtime.getRuntime().maxMemory()
+        val memoryCacheSize = (availableMemory / 20).coerceAtMost(10 * 1024 * 1024) // 10MB max, was 25% = ~64MB
+        
+        return ImageLoader.Builder(this)
+            .components {
+                add(VideoFrameDecoder.Factory())
+            }
+            .memoryCache {
+                MemoryCache.Builder(this)
+                    .maxSize(memoryCacheSize.toLong())
+                    .weakReferenceEnabled(true)
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(cacheDir.resolve("image_cache"))
+                    .maxSizeBytes(100L * 1024 * 1024) // 100MB disk, was 256MB
+                    .build()
+            }
+            .defaultRequestOptions {
+                // Use RGB_565 for large images to halve memory
+                crossfade(true)
+                transformations = listOf(
+                    Transformation { request, pool ->
+                        if (request.data.diskCacheKey?.length ?: 0 > 512 * 1024) {
+                            // Large image - use RGB_565
+                            request.newBuilder()
+                                .bitmapConfig(android.graphics.Bitmap.Config.RGB_565)
+                                .build()
+                        } else {
+                            request
+                        }
+                    }
+                )
+            }
+            .respectCacheHeaders(false)
+            .build()
+    }
+}

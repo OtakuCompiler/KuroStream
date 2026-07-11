@@ -1,0 +1,37 @@
+<!--
+  This file is part of KuroStream.
+
+  KuroStream is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  KuroStream is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- External files for downloads -->
+    <external-files-path name="downloads" path="Download/" />
+    <external-files-path name="movies" path="Movies/" />
+    <external-files-path name="tv_shows" path="TV Shows/" />
+
+    <!-- Cache files -->
+    <cache-path name="cache" path="." />
+    <external-cache-path name="external_cache" path="." />
+
+    <!-- Internal files -->
+    <files-path name="files" path="." />
+    <files-path name="images" path="images/" />
+    <files-path name="subtitles" path="subtitles/" />
+    <files-path name="fonts" path="fonts/" />
+
+    <!-- Media store -->
+    <external-path name="external" path="." />
+</paths>

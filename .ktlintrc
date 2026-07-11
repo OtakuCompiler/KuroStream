@@ -1,0 +1,42 @@
+# ktlint configuration for KuroStream
+
+# Standard rules
+standard: true
+
+# Android rules
+android: true
+
+# Compose rules
+compose: true
+
+# Disable specific rules
+disabled_rules:
+  # Allow trailing commas in multi-line
+  - trailing-comma
+  # Allow longer lines for Compose
+  - max-line-length
+  # Allow wildcard imports for some libraries
+  - no-wildcard-imports
+
+# Override rule settings
+rules:
+  max-line-length:
+    max-line-length: 120
+    exclude-package-statements: true
+    exclude-import-statements: true
+  trailing-comma:
+    multi-line: always
+    single-line: never
+  no-wildcard-imports:
+    allowed-packages:
+      - "kotlinx.coroutines.*"
+      - "androidx.compose.*"
+      - "androidx.lifecycle.*"
+      - "kotlinx.serialization.*"
+
+# Exclude generated files
+excluded:
+  - "**/build/**"
+  - "**/generated/**"
+  - "**/generated/**"
+  - "**/*.g.kt"
