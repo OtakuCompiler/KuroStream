@@ -60,6 +60,7 @@ composeUiTest = "1.7.0"
 mockkAndroid = "1.13.13"
 
 # New dependencies
+documentfile = "1.0.1"
 startup = "1.2.0"
 benchmarkMacro = "1.2.4"
 detekt = "1.23.6"
@@ -169,6 +170,7 @@ compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "composeUiTest" }
 
 # New libraries
+androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
 detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-gradle-plugin", version.ref = "spotless" }
