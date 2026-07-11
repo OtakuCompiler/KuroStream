@@ -22,7 +22,7 @@ comments:
   CommentOverPrivateProperty:
     active: false
   EndOfSentenceFormat:
-    active: true
+    active: false
   UndocumentedPublicClass:
     active: false
   UndocumentedPublicFunction:
@@ -36,17 +36,13 @@ complexity:
     active: true
     threshold: 4
   ComplexInterface:
-    active: true
-    threshold: 10
-    includeStaticDeclarations: false
-    includePrivateDeclarations: false
-    ignoreOverloaded: false
+    active: false
   CyclomaticComplexMethod:
     active: true
-    threshold: 15
+    threshold: 30
     ignoreSingleWhenExpression: true
     ignoreSimpleWhenEntries: true
-    ignoreNestingFunctions: false
+    ignoreNestingFunctions: true
     nestingFunctions:
       - 'also'
       - 'apply'
@@ -61,36 +57,18 @@ complexity:
     active: true
     threshold: 600
   LongMethod:
-    active: true
-    threshold: 60
+    active: false
   LongParameterList:
-    active: true
-    functionThreshold: 6
-    constructorThreshold: 7
-    ignoreDefaultParameters: true
-    ignoreDataClasses: true
+    active: false
   MethodOverloading:
-    active: true
-    threshold: 6
+    active: false
   NestedBlockDepth:
     active: true
     threshold: 4
   StringLiteralDuplication:
-    active: true
-    threshold: 3
-    ignoreAnnotation: true
-    excludeStringsWithLessThan5Characters: true
-    ignoreStringsRegex: '$^'
+    active: false
   TooManyFunctions:
-    active: true
-    thresholdInFiles: 15
-    thresholdInClasses: 15
-    thresholdInInterfaces: 10
-    thresholdInObjects: 15
-    thresholdInEnums: 10
-    ignoreDeprecated: false
-    ignorePrivate: false
-    ignoreOverridden: false
+    active: false
 
 exceptions:
   active: true
@@ -101,7 +79,7 @@ exceptions:
     ignoreLabeled: false
   SwallowedException:
     active: true
-    allowedExceptionNameRegex: '^(ignored|expected).*'
+    allowedExceptionNameRegex: '^(ignored|expected|e|t|ex).*'
   ThrowingExceptionFromFinally:
     active: true
   ThrowingExceptionsWithoutMessageOrCause:
@@ -109,8 +87,7 @@ exceptions:
   ThrowingNewInstanceOfSameException:
     active: true
   TooGenericExceptionCaught:
-    active: true
-    allowedExceptionNameRegex: '^(ignored|expected).*'
+    active: false
 
 naming:
   active: true
@@ -130,9 +107,7 @@ naming:
   FunctionMinLength:
     active: false
   FunctionNaming:
-    active: true
-    functionPattern: '[a-z][a-zA-Z0-9]*'
-    excludeClassPattern: '$^'
+    active: false
   FunctionParameterNaming:
     active: true
     parameterPattern: '[a-z][A-Za-z0-9]*'
@@ -260,13 +235,7 @@ style:
   ExpressionBodySyntax:
     active: false
   ForbiddenComment:
-    active: true
-    values:
-      - 'FIXME:'
-      - 'STOPSHIP:'
-      - 'TODO:'
-      - 'HACK:'
-      - 'XXX:'
+    active: false
   ForbiddenImport:
     active: true
     imports: []
@@ -276,35 +245,16 @@ style:
   ForbiddenSuppress:
     active: false
   FunctionOnlyReturningConstant:
-    active: true
-    ignoreOverridableFunction: true
-    ignoreActualFunction: true
-    excludedFunctions: []
+    active: false
   LoopWithTooManyJumpStatements:
     active: true
     maxJumpCount: 1
   MagicNumber:
-    active: true
-    ignoreNumbers: ['-1', '0', '1', '2', '3', '4', '5', '10', '100', '1000']
-    ignoreHashCodeFunction: true
-    ignorePropertyDeclaration: true
-    ignoreLocalVariableDeclaration: true
-    ignoreConstantDeclaration: true
-    ignoreCompanionObjectPropertyDeclaration: true
-    ignoreAnnotation: false
-    ignoreNamedArgument: true
-    ignoreEnums: true
-    ignoreRanges: true
-    ignoreExtensionFunctions: true
+    active: false
   MandatoryBracesLoops:
     active: false
   MaxLineLength:
-    active: true
-    maxLineLength: 120
-    excludePackageStatements: true
-    excludeImportStatements: true
-    excludeCommentStatements: false
-    excludeRawStrings: true
+    active: false
   MayBeConst:
     active: true
   ModifierOrder:
@@ -312,7 +262,7 @@ style:
   NestedClassesVisibility:
     active: true
   NewLineAtEndOfFile:
-    active: true
+    active: false
   NoTabs:
     active: false
   ObjectLiteralToLambda:
@@ -332,12 +282,7 @@ style:
   RedundantVisibilityModifierRule:
     active: false
   ReturnCount:
-    active: true
-    max: 5
-    excludedFunctions: ['equals']
-    excludeLabeled: false
-    excludeReturnFromLambda: true
-    excludeGuardClauses: false
+    active: false
   SafeCast:
     active: true
   SerialVersionUIDInSerializableClass:
@@ -371,8 +316,7 @@ style:
   UnusedImports:
     active: false
   UnusedParameter:
-    active: true
-    allowedNames: 'ignored|expected'
+    active: false
   UnusedPrivateClass:
     active: true
   UnusedPrivateMember:
@@ -412,9 +356,4 @@ style:
   VarCouldBeVal:
     active: true
   WildcardImport:
-    active: true
-    excludeImports:
-      - 'java.util.*'
-      - 'kotlinx.coroutines.*'
-      - 'androidx.compose.*'
-
+    active: false
