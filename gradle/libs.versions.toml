@@ -80,6 +80,9 @@ githubApi = "1.0.0"
 # Security
 securityCrypto = "1.1.0-alpha06"
 
+# Compression
+zstd = "1.5.6-3"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -189,6 +192,9 @@ github-api-converter = { group = "com.squareup.retrofit2", name = "converter-gso
 
 # Security
 security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
+
+# Compression
+zstd-jni = { group = "com.github.luben", name = "zstd-jni", version.ref = "zstd" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
