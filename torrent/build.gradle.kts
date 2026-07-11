@@ -70,7 +70,7 @@ dependencies {
     implementation(libs.work.runtime.ktx)
 
     // libtorrent4j - using a popular JNI wrapper for libtorrent
-    implementation("com.frostwire:libtorrent-android:2.0.10")
+    implementation(libs.libtorrent.android)
 
     // OkHttp for tracker communication
     implementation(libs.okhttp)
