@@ -199,7 +199,7 @@ object ThreadScheduler {
  * Network call deduplication manager
  */
 class NetworkDeduplicator {
-    private val inFlightRequests = mutableMapOf<String, kotlinx.coroutines.Deferred<Any>>()
+    private val inFlightRequests = mutableMapOf<String, kotlinx.coroutines.Deferred<*>>()
     private val lock = Any()
 
     suspend fun <T> execute(key: String, request: suspend () -> T): T {
@@ -267,7 +267,7 @@ class BitmapPoolManager {
  * Lazy layout optimization helpers
  */
 object LazyLayoutOptimizations {
-    fun <T> stableKey(item: T): Any = item
+    fun <T : Any> stableKey(item: T): Any = item
 
     fun <T> generateStableKeys(items: List<T>, keySelector: (T) -> Any): List<Any> {
         return items.map(keySelector)

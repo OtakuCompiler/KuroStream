@@ -109,8 +109,8 @@ object BufferPool {
             peakConcurrent = peakConcurrent,
             currentConcurrent = currentConcurrent,
             allocatedBytes = getAllocatedBytes(),
-            pools = pools.mapValues { (size, pool) ->
-                size to pool.stats
+            pools = pools.mapValues { (_, pool) ->
+                pool.stats
             }
         )
     }
@@ -141,7 +141,7 @@ object BufferPool {
     
     // ===== Internal Pool Implementation =====
     
-    private class BufferPoolImpl(private val bufferSize: Int) {
+    internal class BufferPoolImpl(private val bufferSize: Int) {
         private val available = java.util.concurrent.ConcurrentLinkedQueue<PooledByteBuffer>()
         private val cleaner = Cleaner.create()
         private val lock = Any()
@@ -218,7 +218,7 @@ object BufferPool {
     /**
      * Wrapper for DirectByteBuffer with pool reference and reference counting.
      */
-    private class PooledByteBuffer(
+    internal class PooledByteBuffer(
         val buffer: ByteBuffer,
         private val pool: BufferPoolImpl
     ) {
@@ -273,7 +273,7 @@ object BufferPool {
             if (!released) {
                 released = true
                 pooled.release()
-                synchronized(BufferPool.this) {
+                synchronized(BufferPool) {
                     currentConcurrent--
                     totalReleased++
                 }
