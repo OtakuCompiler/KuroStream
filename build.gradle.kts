@@ -8,24 +8,31 @@ plugins {
     alias(libs.plugins.hilt) apply false
 
     alias(libs.plugins.spotless)
-    alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.detekt)
     alias(libs.plugins.dependencycheck) apply false
 }
 
 apply(plugin = "org.owasp.dependencycheck")
 
-val excludedDetektModules = setOf("", ":tizenApp", ":webosApp")
+val excludedDetektModules = setOf("tizenApp", "webosApp")
+
+allprojects {
+    afterEvaluate {
+        if (plugins.hasPlugin("io.gitlab.arturbosch.detekt")) {
+            configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+                toolVersion = "1.23.6"
+                config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
+                buildUponDefaultConfig = true
+                allRules = true
+                parallel = true
+            }
+        }
+    }
+}
 
 subprojects {
-    if (name in excludedDetektModules) return@subprojects
-    apply(plugin = "io.gitlab.arturbosch.detekt")
-
-    detekt {
-        toolVersion = "1.23.6"
-        config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
-        buildUponDefaultConfig = true
-        allRules = true
-        parallel = true
+    if (name !in excludedDetektModules) {
+        apply(plugin = "io.gitlab.arturbosch.detekt")
     }
 
     tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
