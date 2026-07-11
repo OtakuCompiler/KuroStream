@@ -134,8 +134,6 @@ android {
     }
 }
 
-// R8 optimization via proguard config - full mode enabled in gradle.properties
-
 dependencies {
     // App Startup for deferred initialization
     implementation(libs.androidx.startup.runtime)

@@ -14,8 +14,8 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 plugins {
-    kotlin("jvm") version "2.0.21"
-    kotlin("plugin.serialization") version "2.0.21"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
 }
 group = "com.kurostream.domain"
 version = "1.0.0"
