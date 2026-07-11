@@ -49,4 +49,14 @@ abstract class KuroStreamDatabase : RoomDatabase() {
     abstract fun homeRowDao(): HomeRowDao
     abstract fun bookmarkDao(): BookmarkDao
     abstract fun addonDao(): AddonDao
+
+    companion object {
+        fun enableWaldMode(database: androidx.room.RoomDatabase) {
+            database.query("PRAGMA journal_mode=WAL", null)
+            database.query("PRAGMA foreign_keys=ON", null)
+            database.query("PRAGMA synchronous=NORMAL", null)
+            database.query("PRAGMA cache_size=-8000", null)
+            database.query("PRAGMA temp_store=MEMORY", null)
+        }
+    }
 }

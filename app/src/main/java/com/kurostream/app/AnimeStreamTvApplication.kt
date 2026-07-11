@@ -39,9 +39,14 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
     private var isInBackground = false
     private var memoryMonitor: com.kurostream.common.memory.MemoryMonitor? = null
+    private var batteryAwareManager: com.kurostream.common.optimization.BatteryAwareManager? = null
+    private var startupProfiler: com.kurostream.common.optimization.StartupProfiler? = null
 
     override fun onCreate() {
         super.onCreate()
+        startupProfiler = com.kurostream.common.optimization.StartupProfiler()
+        startupProfiler?.markProcessStart()
+
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
@@ -49,10 +54,14 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         // Initialize memory monitor early
         memoryMonitor = com.kurostream.common.memory.MemoryMonitor.getInstance(this)
 
+        // Initialize battery-aware manager for scheduling decisions
+        batteryAwareManager = com.kurostream.common.optimization.BatteryAwareManager.create(this)
+
         // Register for lifecycle events
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : androidx.lifecycle.DefaultLifecycleObserver {
             override fun onStart(owner: androidx.lifecycle.LifecycleOwner) {
                 isInBackground = false
+                startupProfiler?.markFirstDraw()
             }
 
             override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
@@ -64,8 +73,35 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         // Startup performance monitoring
         monitorStartupPerformance()
         
-        // Pre-intern common strings
-        com.kurostream.common.util.StringInterner.preloadCommonStrings()
+        // Pre-intern common strings after first frame
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            android.os.Looper.myQueue().addIdleHandler {
+                com.kurostream.common.util.StringInterner.preloadCommonStrings()
+                false
+            }
+        } else {
+            com.kurostream.common.util.StringInterner.preloadCommonStrings()
+        }
+
+        // Report fully drawn
+        startupProfiler?.markFullyDrawn()
+
+        // Add thermal-aware UI rendering callback
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            registerActivityLifecycleCallbacks(object : android.app.Application.ActivityLifecycleCallbacks {
+                override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) {}
+                override fun onActivityStarted(activity: android.app.Activity) {}
+                override fun onActivityResumed(activity: android.app.Activity) {
+                    com.kurostream.common.thermal.ThermalGuard.getInstance(this@AnimeStreamTvApplication).startMonitoring()
+                }
+                override fun onActivityPaused(activity: android.app.Activity) {}
+                override fun onActivityStopped(activity: android.app.Activity) {
+                    com.kurostream.common.thermal.ThermalGuard.getInstance(this@AnimeStreamTvApplication).stopMonitoring()
+                }
+                override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: android.os.Bundle) {}
+                override fun onActivityDestroyed(activity: android.app.Activity) {}
+            })
+        }
     }
 
     override fun onTrimMemory(level: Int) {

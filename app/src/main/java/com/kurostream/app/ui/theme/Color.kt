@@ -17,6 +17,24 @@ package com.kurostream.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// Base color constants
+val TvPrimary = Color(0xFF7C4DFF)
+val TvOnPrimary = Color(0xFFFFFFFF)
+val TvSecondary = Color(0xFF00E5FF)
+val TvOnSecondary = Color(0xFF000000)
+val TvSecondaryVariant = Color(0xFF00E5FF)
+val TvBackground = Color(0xFF0A0A0F)
+val TvOnBackground = Color(0xFFE0E0E0)
+val TvSurface = Color(0xFF14141F)
+val TvOnSurface = Color(0xFFE0E0E0)
+val TvSurfaceVariant = Color(0xFF1E1E2E)
+val TvOnSurfaceVariant = Color(0xFFB0B0C0)
+val TvSurfaceHighlight = Color(0xFF1A1A2E)
+val TvError = Color(0xFFCF6679)
+val TvFocusBorder = Color(0xFF7C4DFF)
+val TvSkeletonBase = Color(0xFF2A2A3A)
+val TvSkeletonShimmer = Color(0xFF3A3A4A)
+
 /**
  * High contrast color scheme for accessibility.
  * Meets WCAG 2.1 AA contrast requirements (4.5:1 for normal text, 3:1 for large text).

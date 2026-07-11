@@ -16,6 +16,8 @@
 package com.kurostream.app.startup
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.startup.Initializer
 import com.kurostream.common.thermal.ThermalGuard
 import com.kurostream.app.player.PlayerInitializer
@@ -28,30 +30,32 @@ import timber.log.Timber
 
 /**
  * App Startup initializer for KuroStream.
- * Defines initialization order for heavy components to run after first draw.
+ * Uses IdleHandler to defer non-critical initialization until after first frame.
  */
 class KuroStreamInitializer : Initializer<Unit> {
 
     override fun create(context: Context): Unit {
-        // Initialize thermal monitoring early
-        ThermalGuard.initialize(context)
+        // Critical: Initialize thermal monitoring early
+        ThermalGuard.getInstance(context)
 
-        // Deferred initialization after first draw
-        CoroutineScope(Dispatchers.IO).launch {
-            // Initialize plugin SDK
-            initPluginSdk(context)
-
-            // Initialize Firebase if not already done
-            initFirebase(context)
-
-            // Initialize sync manager
-            initSyncManager(context)
-
-            // Initialize predictive pre-caching
-            initPreCacheManager(context)
-
-            Timber.d("KuroStream deferred initialization complete")
+        // Defer everything else to idle handler (after first frame)
+        Looper.myQueue().addIdleHandler {
+            CoroutineScope(Dispatchers.Default).launch {
+                initPluginSdk(context)
+                initFirebase(context)
+                initSyncManager(context)
+                initPreCacheManager(context)
+                Timber.d("KuroStream deferred initialization complete")
+            }
+            false // Run once
         }
+
+        // Second-level deferral for lowest priority tasks
+        Handler(Looper.getMainLooper()).postDelayed({
+            CoroutineScope(Dispatchers.Default).launch {
+                initLowPriority(context)
+            }
+        }, 5000)
     }
 
     override fun dependencies(): List<Class<out Initializer<*>>> = listOf(
@@ -93,6 +97,19 @@ class KuroStreamInitializer : Initializer<Unit> {
             // com.kurostream.launcher.cache.PreCacheWorker.schedulePreCache(context)
         } catch (e: Exception) {
             Timber.e(e, "Failed to initialize pre-cache manager")
+        }
+    }
+
+    private fun initLowPriority(context: Context) {
+        try {
+            // Warm up string interner
+            com.kurostream.common.util.StringInterner.preloadCommonStrings()
+            // Pre-allocate buffer pool
+            com.kurostream.common.pool.BufferPool.preallocate(4 * 1024 * 1024, 4)
+            com.kurostream.common.pool.BufferPool.preallocate(8 * 1024 * 1024, 2)
+            Timber.d("KuroStream low-priority initialization complete")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed low-priority initialization")
         }
     }
 }

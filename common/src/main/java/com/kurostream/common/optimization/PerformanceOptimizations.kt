@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
-package com.kurostream.app.optimization
+package com.kurostream.common.optimization
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -268,7 +268,6 @@ class BitmapPoolManager {
  * Lazy layout optimization helpers
  */
 object LazyLayoutOptimizations {
-    @Stable
     fun <T> stableKey(item: T): Any = item
 
     fun <T> generateStableKeys(items: List<T>, keySelector: (T) -> Any): List<Any> {

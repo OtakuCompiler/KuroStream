@@ -15,6 +15,9 @@
 
 package com.kurostream.app.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class MediaItem(
     val id: String,
     val title: String,
@@ -35,6 +38,7 @@ data class MediaItem(
     val watchProgressPercent: Float = 0f
 )
 
+@Immutable
 data class Episode(
     val id: String,
     val number: Int,
@@ -43,12 +47,14 @@ data class Episode(
     val durationMinutes: Int?
 )
 
+@Immutable
 data class PlaybackUrl(
     val url: String,
     val title: String,
     val subtitles: List<SubtitleTrack> = emptyList()
 )
 
+@Immutable
 data class SubtitleTrack(
     val language: String,
     val url: String,

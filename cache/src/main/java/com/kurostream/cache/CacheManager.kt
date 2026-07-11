@@ -15,6 +15,7 @@
 
 package com.kurostream.cache
 
+import androidx.compose.runtime.Immutable
 import kotlinx.coroutines.flow.Flow
 
 interface CacheManager {
@@ -30,6 +31,7 @@ interface CacheManager {
     val stats: Flow<CacheStats>
 }
 
+@Immutable
 data class CacheStats(
     val namespace: String,
     val memoryHits: Long,

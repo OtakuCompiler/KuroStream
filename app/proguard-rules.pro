@@ -1,116 +1,128 @@
-# KuroStream App ProGuard/R8 Rules
+# KuroStream App ProGuard/R8 Rules - Ultra-Aggressive Mode
+# Enable R8 full mode, obfuscation, and aggressive optimization
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*,!method/propagation/*
+-optimizationpasses 5
+-overloadaggressively
+-repackageclasses 'k0'
+-allowaccessmodification
+-mergeinterfacesaggressively
 
 # Kotlin Serialization
--keepattributes *Annotation*
--keepattributes Signature
--keepattributes Exceptions
+-keepattributes *Annotation*, Signature, Exceptions, InnerClasses, EnclosingMethod
 -keepclassmembers class * {
     @kotlinx.serialization.SerialName <fields>;
     @kotlinx.serialization.Transient <fields>;
 }
+-keepclassmembers @kotlinx.serialization.Serializable class * {
+    *** Companion;
+    public static *** serializer(...);
+}
+-keepclassmembers class kotlinx.serialization.json.Json {
+    public static *** Default;
+}
 
 # Domain Entities (serialized via Room/JSON)
--keep class com.kurostream.domain.entity.** { *; }
--keep class com.kurostream.domain.model.** { *; }
--keep class com.kurostream.tv.model.** { *; }
+-keep,allowobfuscation class com.kurostream.domain.entity.** { *; }
+-keep,allowobfuscation class com.kurostream.domain.model.** { *; }
+-keep,allowobfuscation class com.kurostream.app.model.** { *; }
 
-# Retrofit / OkHttp
--dontwarn retrofit2.**
--keep class retrofit2.** { *; }
--dontwarn okhttp3.**
--keep class okhttp3.** { *; }
--dontwarn okio.**
--keep class okio.** { *; }
+# Retrofit / OkHttp - only keep what's needed for reflection
+-keep,allowobfuscation class retrofit2.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
+-keep,allowobfuscation class okhttp3.** { *; }
+-keep,allowobfuscation class okio.** { *; }
 -dontwarn javax.annotation.**
 -keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase
 
-# Coroutines
--dontwarn kotlinx.coroutines.**
+# Coroutines - keep only required
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 
-# Coil
--dontwarn coil.**
+# Coil - keep only required
+-keep,allowobfuscation class coil.** { *; }
 
 # Dagger Hilt
--dontwarn dagger.hilt.**
--keep class dagger.hilt.** { *; }
+-keep,allowobfuscation class dagger.hilt.** { *; }
+-keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
 
 # Room
--keep class com.kurostream.data.local.** { *; }
+-keep,allowobfuscation class com.kurostream.data.local.** { *; }
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep @androidx.room.Entity class * { *; }
 -keep @androidx.room.Dao interface * { *; }
+-keep class * extends androidx.room.RoomDatabase$Callback { *; }
 
 # DataStore
--keep class androidx.datastore.** { *; }
+-keep,allowobfuscation class androidx.datastore.** { *; }
 
-# Media3
--keep class androidx.media3.** { *; }
+# Media3 - only keep what ExoPlayer needs
+-keep,allowobfuscation class androidx.media3.** { *; }
+-keep class * extends androidx.media3.common.Player { *; }
+-keep class * implements androidx.media3.common.Player$Listener { *; }
 
 # LibVLC
--keep class org.videolan.libvlc.** { *; }
--keep class org.videolan.medialibrary.** { *; }
+-keep,allowobfuscation class org.videolan.libvlc.** { *; }
+-keep,allowobfuscation class org.videolan.medialibrary.** { *; }
 
 # MPV
--keep class is.xyz.mpv.** { *; }
+-keep,allowobfuscation class is.xyz.mpv.** { *; }
 -keepclasseswithmembernames class * {
     @is.xyz.mpv.* <methods>;
 }
 
 # Playback Module (imported via consumer-rules.pro)
-# This is included via playback/consumer-rules.pro
 
 # Timber
 -dontwarn timber.log.Timber
 
-# Gson / Moshi
--dontwarn com.google.gson.**
--keep class com.google.gson.** { *; }
--dontwarn com.squareup.moshi.**
--keep class com.squareup.moshi.** { *; }
+# Gson / Moshi - only keep what's needed
+-keep,allowobfuscation class com.google.gson.** { *; }
+-keep,allowobfuscation class com.squareup.moshi.** { *; }
+-keep class * extends com.squareup.moshi.JsonAdapter { *; }
+
+# Kotlinx Serialization
+-keep,allowobfuscation class kotlinx.serialization.** { *; }
 
 # Ktor
--dontwarn io.ktor.**
--keep class io.ktor.** { *; }
+-keep,allowobfuscation class io.ktor.** { *; }
+-keep class io.ktor.client.engine.android.Android { *; }
 
-# Firebase
--dontwarn com.google.firebase.**
--keep class com.google.firebase.** { *; }
+# Firebase - keep only what's needed for crash-free runtime
+-keep,allowobfuscation class com.google.firebase.** { *; }
+-keep class com.google.firebase.auth.** { *; }
+-keep class com.google.firebase.firestore.** { *; }
 
 # AppAuth
--dontwarn net.openid.appauth.**
--keep class net.openid.appauth.** { *; }
+-keep,allowobfuscation class net.openid.appauth.** { *; }
 
 # Vosk (Speech Recognition)
--dontwarn com.alphacephei.vosk.**
--keep class com.alphacephei.vosk.** { *; }
+-keep,allowobfuscation class com.alphacephei.vosk.** { *; }
 
 # WebRTC
--dontwarn org.webrtc.**
--keep class org.webrtc.** { *; }
+-keep,allowobfuscation class org.webrtc.** { *; }
 
 # NanoHTTPD
--dontwarn org.nanohttpd.**
--keep class org.nanohttpd.** { *; }
+-keep,allowobfuscation class org.nanohttpd.** { *; }
 
 # PyTorch Mobile
--dontwarn org.pytorch.**
--keep class org.pytorch.** { *; }
+-keep,allowobfuscation class org.pytorch.** { *; }
 
 # Oboe
--dontwarn com.google.oboe.**
--keep class com.google.oboe.** { *; }
+-keep,allowobfuscation class com.google.oboe.** { *; }
 
 # TensorFlow Lite
--dontwarn org.tensorflow.lite.**
--keep class org.tensorflow.lite.** { *; }
+-keep,allowobfuscation class org.tensorflow.lite.** { *; }
+-keep class org.tensorflow.lite.nnapi.** { *; }
 
-# Keep Native Method Names
+# Keep Native Method Names for JNI
 -keepclasseswithmembernames class * {
     native <methods>;
 }
 
 # Keep Parcelable Creators
--keep class * implements android.os.Parcelable {
+-keepclassmembers class * implements android.os.Parcelable {
     public static final android.os.Parcelable$Creator *;
 }
 
@@ -120,8 +132,29 @@
     public static ** valueOf(java.lang.String);
 }
 
-# Keep Setters/Getters for Data Classes
--keepclassmembers class * {
-    public <fields>;
-    public <methods>;
+# Keep Hilt-generated components
+-keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
+-keep class * extends dagger.hilt.android.internal.builders.** { *; }
+
+# Keep Serializable
+-keepclassmembers class * implements java.io.Serializable {
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+
+# Remove logging in release builds
+-assumenosideeffects class timber.log.Timber {
+    public static *** v(...);
+    public static *** d(...);
+    public static *** i(...);
+    public static *** w(...);
+    public static *** e(...);
+}
+-assumenosideeffects class android.util.Log {
+    public static *** v(...);
+    public static *** d(...);
+    public static *** i(...);
 }

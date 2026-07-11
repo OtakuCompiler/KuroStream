@@ -33,6 +33,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.kurostream.app.ui.components.MediaCard
 import com.kurostream.app.ui.components.SkeletonRow
+import com.kurostream.app.ui.components.StaggeredRevealItem
 import com.kurostream.app.model.MediaItem
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -110,16 +111,22 @@ private fun ContentRow(
             is RowState.Success -> {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 48.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    beyondViewportPageCount = 2,
                 ) {
                     items(
                         items = state.items,
                         key = { it.id }
                     ) { item ->
-                        MediaCard(
-                            item = item,
-                            onClick = { onItemClick(item.id) }
-                        )
+                        StaggeredRevealItem(
+                            index = state.items.indexOf(item),
+                            visible = true,
+                        ) {
+                            MediaCard(
+                                item = item,
+                                onClick = { onItemClick(item.id) }
+                            )
+                        }
                     }
                 }
             }

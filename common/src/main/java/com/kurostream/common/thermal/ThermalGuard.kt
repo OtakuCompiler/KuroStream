@@ -335,13 +335,4 @@ interface ThermalThrottleCallback {
     fun onNormalized()
 }
 
-/** Helper for Compose UI to observe thermal state */
-@Composable
-fun rememberThermalState(): State<ThermalGuard> {
-    val context = LocalContext.current
-    val guard = remember { ThermalGuard.getInstance(context) }
-    DisposableEffect(Unit) {
-        onDispose { /* guard.auto-managed by lifecycle */ }
-    }
-    return remember { mutableStateOf(guard) }.apply { value = guard }
-}
+// Compose helper moved to app module to avoid ui dependency in common

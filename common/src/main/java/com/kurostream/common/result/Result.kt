@@ -16,6 +16,11 @@
 package com.kurostream.common.result
 
 sealed class Result<out T> {
+    companion object {
+        fun <T> loading(): Result<T> = Loading
+        fun <T> success(data: T): Result<T> = Success(data)
+        fun <T> error(exception: Throwable): Result<T> = Error(exception)
+    }
     data class Success<out T>(val data: T) : Result<T>()
     data class Error(val exception: Throwable) : Result<Nothing>()
     object Loading : Result<Nothing>()

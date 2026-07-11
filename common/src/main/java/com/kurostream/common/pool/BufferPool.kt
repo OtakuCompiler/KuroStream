@@ -16,7 +16,6 @@
 package com.kurostream.common.pool
 
 import android.util.Log
-import kotlinx.coroutines.sync.Mutex
 import java.lang.ref.Cleaner
 import java.nio.ByteBuffer
 
@@ -145,13 +144,13 @@ object BufferPool {
     private class BufferPoolImpl(private val bufferSize: Int) {
         private val available = java.util.concurrent.ConcurrentLinkedQueue<PooledByteBuffer>()
         private val cleaner = Cleaner.create()
-        private val mutex = Mutex()
+        private val lock = Any()
         private var created = 0
         
         var allocatedBytes: Long = 0
         
         fun acquire(): PooledByteBuffer {
-            val buffer = available.poll() ?: mutex.withLock {
+            val buffer = available.poll() ?: synchronized(lock) {
                 if (created < 16) { // Hard cap per size class
                     created++
                     createBuffer()
@@ -177,7 +176,7 @@ object BufferPool {
         }
         
         fun clear() {
-            mutex.withLock {
+            synchronized(lock) {
                 available.forEach { it.cleaner?.clean() }
                 available.clear()
                 created = 0
@@ -186,7 +185,7 @@ object BufferPool {
         }
         
         fun shrink() {
-            mutex.withLock {
+            synchronized(lock) {
                 while (available.size > 2) {
                     val buf = available.poll()
                     buf?.cleaner?.clean()
@@ -196,7 +195,7 @@ object BufferPool {
         }
         
         fun preallocate(count: Int) {
-            mutex.withLock {
+            synchronized(lock) {
                 repeat(count) {
                     if (created < 16) {
                         created++
@@ -296,16 +295,15 @@ object BufferPool {
         /**
          * Use buffer with automatic position management.
          */
-        fun use(block: ByteBuffer.() -> Unit) {
+        fun use(block: (ByteBuffer) -> Unit) {
             val oldPos = buffer.position()
             val oldLimit = buffer.limit()
             try {
-                block(buffer:try {
-                    block(buffer)
-                } finally {
-                    buffer.position(oldPos)
-                    buffer.limit(oldLimit)
-                }
+                block(buffer)
+            } finally {
+                buffer.position(oldPos)
+                buffer.limit(oldLimit)
+            }
         }
         
         /**
@@ -338,11 +336,11 @@ object BufferPool {
         if (buffer.isDirect) {
             try {
                 val cleanerMethod = ByteBuffer::class.java.getDeclaredMethod("cleaner")
-                cleanerMethod.isAccessible = true
+                cleanerMethod.trySetAccessible()
                 val cleaner = cleanerMethod.invoke(buffer)
                 if (cleaner != null) {
                     val cleanMethod = cleaner.javaClass.getDeclaredMethod("clean")
-                    cleanMethod.isAccessible = true
+                    cleanMethod.trySetAccessible()
                     cleanMethod.invoke(cleaner)
                 }
             } catch (e: Exception) {

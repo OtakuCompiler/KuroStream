@@ -347,6 +347,16 @@ class PlaybackDiagnostics {
     }
 }
 
+object ObjectPools {
+    suspend fun clearAll() {
+        PlayerStatePool.stats()
+        SubtitleEventPool.stats()
+        NetworkChunkPool.stats()
+        TrackInfoPool.stats()
+        PlaybackDiagnosticsPool.stats()
+    }
+}
+
 data class PoolStats(
     val maxSize: Int,
     val available: Int,

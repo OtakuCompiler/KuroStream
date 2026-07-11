@@ -21,8 +21,8 @@ import com.kurostream.app.startup.KuroStreamInitializer
 import com.kurostream.app.player.PlayerInitializer
 import com.kurostream.app.extensions.PluginScannerInitializer
 import com.kurostream.app.repository.SyncInitializer
-import com.kurostream.app.optimization.BatteryAwareManager
-import com.kurostream.app.optimization.StartupProfiler
+import com.kurostream.common.optimization.BatteryAwareManager
+import com.kurostream.common.optimization.StartupProfiler
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.Module

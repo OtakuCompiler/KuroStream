@@ -123,16 +123,30 @@ android {
 
     // App Startup library
     // Will be added via dependencies
-}
 
-signingConfigs {
-    create("release") {
-        storeFile = file(System.getenv("KEYSTORE_PATH") ?: "../keystore/release.keystore")
-        storePassword = System.getenv("KEYSTORE_PASSWORD")
-        keyAlias = System.getenv("KEY_ALIAS")
-        keyPassword = System.getenv("KEY_PASSWORD")
+    // Enable WebP and aggressive resource optimization
+    @Suppress("UnstableApiUsage")
+    androidResources {
+        @Suppress("UnstableApiUsage")
+        additionalParameters = listOf("--no-version-vectors", "--no-version-transitions")
+    }
+
+    // Resource optimization
+    aaptOptions {
+        cruncherEnabled = false
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "../keystore/release.keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
     }
 }
+
+// R8 optimization via proguard config - full mode enabled in gradle.properties
 
 dependencies {
     // App Startup for deferred initialization
@@ -195,9 +209,16 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.retrofit.serialization)
 
     // Timber
     implementation(libs.timber)
+
+    // Coil adaptive image loading interceptor
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
+    // Additional Coil adapters for video frames
+    implementation("io.coil-kt:coil-video:${libs.versions.coil}")
 
     // Room (from data module transitively, but adding for compile-time)
     implementation(libs.room.runtime)
@@ -252,6 +273,7 @@ dependencies {
 
     // Compose Tooling (Debug)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 
     // Testing
     testImplementation(libs.junit)
