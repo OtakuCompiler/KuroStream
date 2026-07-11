@@ -20,8 +20,9 @@ plugins {
 group = "com.kurostream.domain"
 version = "1.0.0"
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation(project(":common"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${libs.versions.serialization.get()}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.coroutines.get()}")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testImplementation("com.tngtech.archunit:archunit-junit5:1.2.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
