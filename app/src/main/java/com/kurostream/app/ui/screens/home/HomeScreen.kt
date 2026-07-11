@@ -75,6 +75,7 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
+        viewModel.onScreenVisible()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

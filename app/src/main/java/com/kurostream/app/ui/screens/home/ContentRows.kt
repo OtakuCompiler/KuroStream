@@ -34,6 +34,7 @@ import androidx.tv.material3.Text
 import com.kurostream.app.ui.components.MediaCard
 import com.kurostream.app.ui.components.SkeletonRow
 import com.kurostream.app.ui.components.StaggeredRevealItem
+import com.kurostream.common.memory.LowRamDevice
 import com.kurostream.app.model.MediaItem
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -112,7 +113,7 @@ private fun ContentRow(
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 48.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    beyondViewportPageCount = 2,
+                    beyondViewportPageCount = LowRamDevice.contentRowOffscreenPages,
                 ) {
                     items(
                         items = state.items,

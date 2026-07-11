@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.repository.MediaRepository
 import com.kurostream.app.repository.WatchProgressRepository
+import com.kurostream.common.memory.LowRamDevice
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,8 +61,20 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var isVisible = false
+    private val deferLoading = LowRamDevice.isLowRamDevice()
+
     init {
-        loadHomeData()
+        if (!deferLoading) {
+            loadHomeData()
+        }
+    }
+
+    fun onScreenVisible() {
+        if (deferLoading && !isVisible) {
+            isVisible = true
+            loadHomeData()
+        }
     }
 
     private fun loadHomeData() {

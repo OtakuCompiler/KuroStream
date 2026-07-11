@@ -144,6 +144,8 @@ object BufferPool {
     
     fun setLowRamMode(enabled: Boolean) {
         lowRamMode = enabled
+        val newMax = if (enabled) 4 else 16
+        pools.values.forEach { it.setMaxBuffers(newMax) }
         if (enabled) {
             shrinkAll()
         }
@@ -153,7 +155,7 @@ object BufferPool {
     
     internal class BufferPoolImpl(
         private val bufferSize: Int,
-        private val maxBuffers: Int = 16
+        private var maxBuffers: Int = 16
     ) {
         private val available = java.util.concurrent.ConcurrentLinkedQueue<PooledByteBuffer>()
         private val cleaner = Cleaner.create()
@@ -207,6 +209,19 @@ object BufferPool {
             }
         }
         
+        fun setMaxBuffers(max: Int) {
+            synchronized(lock) {
+                maxBuffers = max
+                if (created > max) {
+                    while (available.size > 0 && created > max) {
+                        val buf = available.poll()
+                        buf?.cleaner?.clean()
+                        created--
+                    }
+                }
+            }
+        }
+
         fun preallocate(count: Int) {
             synchronized(lock) {
                 repeat(count) {
