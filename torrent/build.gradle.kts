@@ -70,7 +70,8 @@ dependencies {
     implementation(libs.work.runtime.ktx)
 
     // libtorrent4j - using a popular JNI wrapper for libtorrent
-    implementation(libs.libtorrent.android)
+    // TODO: Replace with maintained torrent library (frostwire jlibtorrent not on Maven Central)
+    // implementation(libs.libtorrent.android)
 
     // OkHttp for tracker/metadata fetching
     implementation(libs.okhttp)

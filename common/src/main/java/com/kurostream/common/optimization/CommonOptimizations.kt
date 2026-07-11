@@ -157,7 +157,7 @@ class ComposeRenderOffloader {
             computing = true
             backgroundScope.launch {
                 val computed = compute()
-                computeCache[key] = computed
+                computeCache[key] = computed as Any
                 backgroundScope.launch(Dispatchers.Main) {
                     result = computed
                     computing = false
@@ -435,21 +435,22 @@ class GlobalMetadataDeduplicator(
     
     fun findByCanonicalId(canonicalId: String): UnifiedMetadata? {
         val key = canonicalIds[canonicalId]
-        return key?.let { k -> metadataCache[k]?.also { accessTime[k] = System.currentTimeMillis() } }
+        return key?.let { (k: String) -> metadataCache[k]?.also { accessTime[k] = System.currentTimeMillis() } }
     }
     
     fun getAllForProvider(providerId: String): List<UnifiedMetadata> {
         return providerMapping[providerId]?.mapNotNull { metadataCache[it] } ?: emptyList()
     }
     
-    private fun evictOldest() {
+private fun evictOldest() {
         val oldest = accessTime.minByOrNull { it.value }?.key
-        oldest?.let {
-            metadataCache.remove(it)
-            canonicalIds.remove(it)
-            accessTime.remove(it)
-            providerMapping.values.forEach { set -> set.remove(oldest) }
+        oldest?.let { (itKey: String) ->
+            metadataCache.remove(itKey)
+            canonicalIds.remove(itKey)
+            accessTime.remove(itKey)
+            providerMapping.values.forEach { (set: MutableSet<String>) -> set.remove(itKey) }
         }
+    }
     }
     
     fun getCacheStats(): CacheStats {

@@ -147,7 +147,7 @@ dependencies {
     implementation(project(":playback"))
     implementation(project(":extensions"))
     implementation(project(":launcher"))
-    implementation(project(":torrent"))
+    // implementation(project(":torrent")) // TODO: Fix libtorrent dependency
     implementation(project(":backup"))
 
     // AndroidX
