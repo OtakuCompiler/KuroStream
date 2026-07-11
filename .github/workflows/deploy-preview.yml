@@ -30,10 +30,8 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 34
-          ndk-version: r26c
-          cmake-version: 3.22.1
-          build-tools-version: 34.0.0
+          packages: platforms;android-34,build-tools;34.0.0,ndk;26.1.10909125,cmake;3.22.1
+          accept-android-sdk-licenses: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

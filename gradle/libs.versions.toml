@@ -77,14 +77,6 @@ githubApi = "1.0.0"
 # Security
 securityCrypto = "1.1.0-alpha06"
 
-# New dependencies
-startup = "1.2.0"
-benchmarkMacro = "1.2.4"
-detekt = "1.23.6"
-ktlint = "1.3.0"
-spotless = "6.25.0"
-archunit = "1.0.0"
-
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -174,22 +166,6 @@ benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro
 compose-ui-test = { group = "androidx.compose.ui", name = "ui-test", version.ref = "composeUiTest" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "composeUiTest" }
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "composeUiTest" }
-
-# New libraries
-androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
-detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
-spotless = { group = "com.diffplug.spotless", name = "spotless-gradle-plugin", version.ref = "spotless" }
-archunit = { group = "com.tngtech.archunit", name = "archunit", version.ref = "archunit" }
-
-# Torrent
-libtorrent4j = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent", version.ref = "libtorrent4j" }
-
-# GitHub API
-github-api = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
-github-api-converter = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
-
-# Security
-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 
 # New libraries
 androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
