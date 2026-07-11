@@ -15,7 +15,6 @@
 
 package com.kurostream.common.util
 
-import kotlinx.coroutines.sync.Mutex
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 
@@ -38,8 +37,6 @@ object StringInterner {
     private var misses = 0L
     private var evicted = 0L
     
-    // Mutex for cleanup operations
-    private val cleanupMutex = Mutex()
     
     /**
      * Intern a string - returns canonical instance.
@@ -86,7 +83,7 @@ object StringInterner {
      * Get current stats.
      */
     fun getStats(): InternerStats {
-        cleanupMutex.withLock {
+        synchronized(this) {
             cleanupStaleEntries()
         }
         return InternerStats(
@@ -102,11 +99,11 @@ object StringInterner {
      * Clear all interned strings (for memory pressure).
      */
     fun clear() {
-        cleanupMutex.withLock {
+        synchronized(this) {
             interned.clear()
-            evicted += interned.size.toLong()
             hits = 0
             misses = 0
+            evicted = 0
         }
     }
     
@@ -114,7 +111,7 @@ object StringInterner {
      * Shrink the interner by removing stale entries.
      */
     fun shrink() {
-        cleanupMutex.withLock {
+        synchronized(this) {
             cleanupStaleEntries()
         }
     }

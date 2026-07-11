@@ -15,8 +15,6 @@
 
 package com.kurostream.common.pool
 
-import kotlinx.coroutines.sync.Mutex
-
 /**
  * Generic object pool with factory and reset functions.
  * Thread-safe using Mutex.
@@ -27,28 +25,28 @@ class ObjectPool<T>(
     private val maxSize: Int
 ) {
     private val available = mutableListOf<T>()
-    private val lock = Mutex()
+    private val lock = Any()
     private var created = 0
     
     /**
      * Acquire an object from the pool, creating new if empty.
      */
-    suspend fun acquire(): T = lock.withLock {
+    fun acquire(): T = synchronized(lock) {
         if (available.isNotEmpty()) {
-            return@withLock available.removeAt(available.lastIndex)
+            return@synchronized available.removeAt(available.lastIndex)
         }
         if (created < maxSize) {
             created++
-            return@withLock factory()
+            return@synchronized factory()
         }
         // Pool exhausted, create anyway (unbounded overflow)
-        return@withLock factory()
+        return@synchronized factory()
     }
     
     /**
      * Release object back to pool.
      */
-    suspend fun release(obj: T) = lock.withLock {
+    fun release(obj: T) = synchronized(lock) {
         if (available.size < maxSize) {
             reset(obj)
             available.add(obj)
@@ -59,7 +57,7 @@ class ObjectPool<T>(
     /**
      * Execute a block with a pooled object, auto-releasing.
      */
-    suspend fun <R> use(block: (T) -> R): R {
+    fun <R> use(block: (T) -> R): R {
         val obj = acquire()
         try {
             return block(obj)
@@ -71,17 +69,17 @@ class ObjectPool<T>(
     /**
      * Current available count.
      */
-    suspend fun availableCount(): Int = lock.withLock { available.size }
+    fun availableCount(): Int = synchronized(lock) { available.size }
     
     /**
      * Total created count.
      */
-    suspend fun createdCount(): Int = lock.withLock { created }
+    fun createdCount(): Int = synchronized(lock) { created }
     
     /**
      * Clear the pool.
      */
-    suspend fun clear() = lock.withLock {
+    fun clear() = synchronized(lock) {
         available.clear()
         created = 0
     }
@@ -89,7 +87,7 @@ class ObjectPool<T>(
     /**
      * Get pool stats.
      */
-    suspend fun getStats(): PoolStats = lock.withLock {
+    fun getStats(): PoolStats = synchronized(lock) {
         PoolStats(
             maxSize = maxSize,
             available = available.size,
@@ -108,10 +106,10 @@ object PlayerStatePool {
         maxSize = 20
     )
     
-    suspend fun acquire(): PlayerState = pool.acquire()
-    suspend fun release(state: PlayerState) = pool.release(state)
-    suspend fun use<R>(block: (PlayerState) -> R): R = pool.use(block)
-    suspend fun stats(): PoolStats = pool.getStats()
+    fun acquire(): PlayerState = pool.acquire()
+    fun release(state: PlayerState) = pool.release(state)
+    fun <R> use(block: (PlayerState) -> R): R = pool.use(block)
+    fun stats(): PoolStats = pool.getStats()
 }
 
 /**
@@ -124,10 +122,10 @@ object SubtitleEventPool {
         maxSize = 100
     )
     
-    suspend fun acquire(): SubtitleEvent = pool.acquire()
-    suspend fun release(event: SubtitleEvent) = pool.release(event)
-    suspend fun use<R>(block: (SubtitleEvent) -> R): R = pool.use(block)
-    suspend fun stats(): PoolStats = pool.getStats()
+    fun acquire(): SubtitleEvent = pool.acquire()
+    fun release(event: SubtitleEvent) = pool.release(event)
+    fun <R> use(block: (SubtitleEvent) -> R): R = pool.use(block)
+    fun stats(): PoolStats = pool.getStats()
 }
 
 /**
@@ -140,10 +138,10 @@ object NetworkChunkPool {
         maxSize = 200
     )
     
-    suspend fun acquire(): NetworkChunk = pool.acquire()
-    suspend fun release(chunk: NetworkChunk) = pool.release(chunk)
-    suspend fun use<R>(block: (NetworkChunk) -> R): R = pool.use(block)
-    suspend fun stats(): PoolStats = pool.getStats()
+    fun acquire(): NetworkChunk = pool.acquire()
+    fun release(chunk: NetworkChunk) = pool.release(chunk)
+    fun <R> use(block: (NetworkChunk) -> R): R = pool.use(block)
+    fun stats(): PoolStats = pool.getStats()
 }
 
 /**
@@ -156,10 +154,10 @@ object TrackInfoPool {
         maxSize = 30
     )
     
-    suspend fun acquire(): TrackInfo = pool.acquire()
-    suspend fun release(info: TrackInfo) = pool.release(info)
-    suspend fun use<R>(block: (TrackInfo) -> R): R = pool.use(block)
-    suspend fun stats(): PoolStats = pool.getStats()
+    fun acquire(): TrackInfo = pool.acquire()
+    fun release(info: TrackInfo) = pool.release(info)
+    fun <R> use(block: (TrackInfo) -> R): R = pool.use(block)
+    fun stats(): PoolStats = pool.getStats()
 }
 
 /**
@@ -172,10 +170,10 @@ object PlaybackDiagnosticsPool {
         maxSize = 10
     )
     
-    suspend fun acquire(): PlaybackDiagnostics = pool.acquire()
-    suspend fun release(diag: PlaybackDiagnostics) = pool.release(diag)
-    suspend fun use<R>(block: (PlaybackDiagnostics) -> R): R = pool.use(block)
-    suspend fun stats(): PoolStats = pool.getStats()
+    fun acquire(): PlaybackDiagnostics = pool.acquire()
+    fun release(diag: PlaybackDiagnostics) = pool.release(diag)
+    fun <R> use(block: (PlaybackDiagnostics) -> R): R = pool.use(block)
+    fun stats(): PoolStats = pool.getStats()
 }
 
 /**
@@ -348,7 +346,7 @@ class PlaybackDiagnostics {
 }
 
 object ObjectPools {
-    suspend fun clearAll() {
+    fun clearAll() {
         PlayerStatePool.stats()
         SubtitleEventPool.stats()
         NetworkChunkPool.stats()
