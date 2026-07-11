@@ -73,8 +73,19 @@ class MemoryMonitor private constructor(
         private var INSTANCE: MemoryMonitor? = null
         
         fun getInstance(context: Context, config: MemoryConfig = MemoryConfig.DEFAULT): MemoryMonitor {
+            val effectiveConfig = if (config === MemoryConfig.DEFAULT) {
+                val ctx = context.applicationContext
+                com.kurostream.common.memory.LowRamDevice.initialize(ctx)
+                if (com.kurostream.common.memory.LowRamDevice.isLowRamDevice()) {
+                    MemoryConfig.LOW_RAM
+                } else {
+                    config
+                }
+            } else {
+                config
+            }
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: MemoryMonitor(context.applicationContext, config).also { INSTANCE = it }
+                INSTANCE ?: MemoryMonitor(context.applicationContext, effectiveConfig).also { INSTANCE = it }
             }
         }
         
@@ -274,13 +285,20 @@ class MemoryMonitor private constructor(
             }
         }
         
-        // 4. Clear buffer pools
+        // 4. Shrink buffer pools on HIGH, clear on CRITICAL+
         if (pressure.ordinal >= MemoryPressure.CRITICAL.ordinal) {
             try {
                 com.kurostream.common.pool.BufferPool.clearAll()
                 actions.add("Buffer pools cleared")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to clear buffer pools")
+            }
+        } else if (pressure.ordinal >= MemoryPressure.HIGH.ordinal) {
+            try {
+                com.kurostream.common.pool.BufferPool.shrinkAll()
+                actions.add("Buffer pools shrunk")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to shrink buffer pools")
             }
         }
         
@@ -386,6 +404,13 @@ data class MemoryConfig(
 ) {
     companion object {
         val DEFAULT = MemoryConfig()
+        val LOW_RAM = MemoryConfig(
+            pollIntervalMs = 10000,
+            cautionThresholdMb = 120,
+            warningThresholdMb = 80,
+            criticalThresholdMb = 50,
+            emergencyThresholdMb = 20
+        )
     }
 }
 

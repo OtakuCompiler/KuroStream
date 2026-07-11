@@ -108,12 +108,15 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         super.onTrimMemory(level)
         when (level) {
             ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
-                Timber.d("TRIM_MEMORY_UI_HIDDEN - clearing image caches")
+                Timber.d("TRIM_MEMORY_UI_HIDDEN - clearing caches")
                 clearImageCaches()
+                com.kurostream.common.pool.BufferPool.shrinkAll()
+                com.kurostream.common.util.StringInterner.clear()
             }
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> {
                 Timber.d("TRIM_MEMORY_RUNNING_LOW - reducing memory")
                 reduceMemoryFootprint()
+                com.kurostream.common.pool.BufferPool.shrinkAll()
             }
             ComponentCallbacks2.TRIM_MEMORY_BACKGROUND -> {
                 Timber.d("TRIM_MEMORY_BACKGROUND - aggressive cleanup")
@@ -205,8 +208,9 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
     }
 
     override fun newImageLoader(): ImageLoader {
-        val availableMemory = Runtime.getRuntime().maxMemory()
-        val memoryCacheSize = (availableMemory / 20).coerceAtMost(10 * 1024 * 1024) // 10MB max, was 25% = ~64MB
+        com.kurostream.common.memory.LowRamDevice.initialize(this)
+        val memoryCacheSize = com.kurostream.common.memory.LowRamDevice.coilMemoryCacheSize
+        val diskCacheSize = com.kurostream.common.memory.LowRamDevice.coilDiskCacheSize
         
         return ImageLoader.Builder(this)
             .components {
@@ -221,7 +225,7 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(100L * 1024 * 1024) // 100MB disk, was 256MB
+                    .maxSizeBytes(diskCacheSize)
                     .build()
             }
             .defaultRequestOptions {

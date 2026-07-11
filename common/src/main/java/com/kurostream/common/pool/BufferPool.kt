@@ -35,7 +35,10 @@ object BufferPool {
     // Pool configuration
     private val DEFAULT_BUFFER_SIZE = 8 * 1024 * 1024 // 8MB per buffer (4K frame)
     private val DEFAULT_POOL_SIZE = 8 // 8 * 8MB = 64MB max
-    
+    private var lowRamMode = false
+    private val maxBuffersPerClass: Int
+        get() = if (lowRamMode) 4 else 16
+
     // Buffer sizes for different use cases
     private val bufferSizes = intArrayOf(
         256 * 1024,      // 256KB - small metadata
@@ -47,7 +50,7 @@ object BufferPool {
     
     // Pools per size class
     private val pools = bufferSizes.map { size ->
-        size to BufferPoolImpl(size)
+        size to BufferPoolImpl(size, if (lowRamMode) 4 else 16)
     }.toMap()
     
     // Statistics
@@ -139,9 +142,19 @@ object BufferPool {
         pools[sizeClass]?.preallocate(count)
     }
     
+    fun setLowRamMode(enabled: Boolean) {
+        lowRamMode = enabled
+        if (enabled) {
+            shrinkAll()
+        }
+    }
+    
     // ===== Internal Pool Implementation =====
     
-    internal class BufferPoolImpl(private val bufferSize: Int) {
+    internal class BufferPoolImpl(
+        private val bufferSize: Int,
+        private val maxBuffers: Int = 16
+    ) {
         private val available = java.util.concurrent.ConcurrentLinkedQueue<PooledByteBuffer>()
         private val cleaner = Cleaner.create()
         private val lock = Any()
@@ -151,11 +164,11 @@ object BufferPool {
         
         fun acquire(): PooledByteBuffer {
             val buffer = available.poll() ?: synchronized(lock) {
-                if (created < 16) { // Hard cap per size class
+                if (created < maxBuffers) {
                     created++
                     createBuffer()
                 } else {
-                    createBuffer() // Create new if exhausted
+                    createBuffer()
                 }
             }
             allocatedBytes += bufferSize.toLong()
@@ -197,7 +210,7 @@ object BufferPool {
         fun preallocate(count: Int) {
             synchronized(lock) {
                 repeat(count) {
-                    if (created < 16) {
+                    if (created < maxBuffers) {
                         created++
                         val buf = createBuffer()
                         available.offer(buf)
@@ -240,8 +253,6 @@ object BufferPool {
                 }
             }
         }
-        
-        fun getBuffer(): ByteBuffer = buffer
     }
     
     /**

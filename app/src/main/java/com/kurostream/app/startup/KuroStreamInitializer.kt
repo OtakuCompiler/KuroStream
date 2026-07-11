@@ -102,11 +102,15 @@ class KuroStreamInitializer : Initializer<Unit> {
 
     private fun initLowPriority(context: Context) {
         try {
-            // Warm up string interner
             com.kurostream.common.util.StringInterner.preloadCommonStrings()
-            // Pre-allocate buffer pool
-            com.kurostream.common.pool.BufferPool.preallocate(4 * 1024 * 1024, 4)
-            com.kurostream.common.pool.BufferPool.preallocate(8 * 1024 * 1024, 2)
+            com.kurostream.common.memory.LowRamDevice.initialize(context)
+            // Pre-allocate buffer pool on ample-RAM devices only
+            if (com.kurostream.common.memory.LowRamDevice.bufferPoolPreallocate) {
+                com.kurostream.common.pool.BufferPool.preallocate(4 * 1024 * 1024, 2)
+                com.kurostream.common.pool.BufferPool.preallocate(8 * 1024 * 1024, 1)
+            } else {
+                com.kurostream.common.pool.BufferPool.setLowRamMode(true)
+            }
             Timber.d("KuroStream low-priority initialization complete")
         } catch (e: Exception) {
             Timber.e(e, "Failed low-priority initialization")

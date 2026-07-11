@@ -43,6 +43,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import com.kurostream.app.ui.theme.TvBackground
+import com.kurostream.common.memory.LowRamDevice
 import com.kurostream.app.model.MediaItem
 import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
@@ -78,7 +79,7 @@ fun HeroBanner(
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier.fillMaxSize(),
             pageSpacing = 0.dp,
-            beyondViewportPageCount = 1,
+            beyondViewportPageCount = LowRamDevice.heroBannerOffscreenPages,
         ) { page ->
             val item = items[page]
             val pageOffset = (
