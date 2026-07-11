@@ -54,15 +54,6 @@ android {
         }
     }
 
-    // ABI Split Configuration for Universal APKs
-    splits {
-        abi {
-            isEnabled = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            isUniversalApk = true
-        }
-    }
 
     buildTypes {
         release {
@@ -176,11 +167,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.androidx.fragment.ktx)
-    implementation(libs.androidx.recyclerview)
-    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.datastore.preferences)
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.fragment.ktx)
+    implementation(libs.recyclerview)
+    implementation(libs.navigation.fragment)
 
     // Hilt
     implementation(libs.hilt.android)
@@ -284,9 +275,9 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test)
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(libs.compose.ui.test)
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.compose.ui.test.manifest)
     androidTestImplementation(libs.androidx.activity.compose)
     androidTestImplementation(libs.mockito.core)
     androidTestImplementation(libs.mockito.kotlin)
