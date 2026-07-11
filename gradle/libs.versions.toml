@@ -184,7 +184,7 @@ archunit = { group = "com.tngtech.archunit", name = "archunit", version.ref = "a
 
 # Torrent
 libtorrent4j = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent", version.ref = "libtorrent4j" }
-libtorrent-android = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent-android-arm64", version.ref = "libtorrent" }
+libtorrent-android = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent-android", version.ref = "libtorrent" }
 
 # GitHub API
 github-api = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }

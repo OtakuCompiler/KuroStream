@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicLong
  */
 class UiTextureAtlas(
     private val context: Context,
-    maxSize: Int = 4096
+    private val maxSize: Int = 4096
 ) {
     private val TAG = "UiTextureAtlas"
     private val atlasBitmap = Bitmap.createBitmap(maxSize, maxSize, Bitmap.Config.ARGB_8888)
@@ -89,7 +89,7 @@ class UiTextureAtlas(
             return false
         }
         
-        canvas.drawBitmap(bitmap, currentX + padding, currentY + padding, paint)
+        canvas.drawBitmap(bitmap, (currentX + padding).toFloat(), (currentY + padding).toFloat(), paint)
         
         val region = AtlasRegion(
             name = name,
@@ -144,8 +144,8 @@ class ComposeRenderOffloader {
         compute: () -> T,
         onResult: (T) -> Unit
     ) {
-        val result by remember { mutableStateOf<T?>(null) }
-        val computing by remember { mutableStateOf(false) }
+        var result by remember { mutableStateOf<T?>(null) }
+        var computing by remember { mutableStateOf(false) }
         
         LaunchedEffect(key) {
             if (computeCache.containsKey(key)) {
@@ -435,7 +435,7 @@ class GlobalMetadataDeduplicator(
     
     fun findByCanonicalId(canonicalId: String): UnifiedMetadata? {
         val key = canonicalIds[canonicalId]
-        return key?.let { metadataCache[it]?.also { accessTime[it] = System.currentTimeMillis() } }
+        return key?.let { k -> metadataCache[k]?.also { accessTime[k] = System.currentTimeMillis() } }
     }
     
     fun getAllForProvider(providerId: String): List<UnifiedMetadata> {
@@ -448,7 +448,7 @@ class GlobalMetadataDeduplicator(
             metadataCache.remove(it)
             canonicalIds.remove(it)
             accessTime.remove(it)
-            providerMapping.values.forEach { it.remove(it) }
+            providerMapping.values.forEach { set -> set.remove(oldest) }
         }
     }
     
