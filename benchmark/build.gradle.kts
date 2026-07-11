@@ -31,11 +31,9 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            matchingFallbacks += "release"
-            debuggable = false
+            matchingFallbacks.addAll(listOf("release"))
         }
         debug {
-            isDebuggable = true
             isMinifyEnabled = false
         }
     }
@@ -58,8 +56,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
 
-    androidTestImplementation(libs.androidx.benchmark.junit4)
-    androidTestImplementation(libs.androidx.benchmark.macro.junit4)
+    androidTestImplementation(libs.benchmark.junit4)
+    androidTestImplementation(libs.benchmark.macro.junit4)
 
     testImplementation(libs.junit)
 }
