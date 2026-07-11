@@ -14,24 +14,35 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
-}
-group = "com.kurostream.domain"
-version = "1.0.0"
-dependencies {
-    implementation(project(":common"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${libs.versions.serialization.get()}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${libs.versions.coroutines.get()}")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.2.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+android {
+    namespace = "com.kurostream.domain"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdk.get().toInt()
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+dependencies {
+    implementation(project(":common"))
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.core)
+    testImplementation(libs.junit)
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.2.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
 }
 
 tasks.withType<Test> {
