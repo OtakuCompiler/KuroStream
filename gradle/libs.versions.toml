@@ -8,7 +8,6 @@ coreKtx = "1.13.1"
 appcompat = "1.7.0"
 activityCompose = "1.9.3"
 composeBom = "2023.08.00"
-composeCompiler = "1.9.20"
 tvFoundation = "1.0.0-alpha11"
 tvMaterial = "1.0.0-alpha11"
 navigationCompose = "2.8.3"
@@ -192,7 +191,7 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-compose-compiler = { id = "org.jetbrains.compose.compiler", version = "1.6.10" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 dependencycheck = { id = "org.owasp.dependencycheck", version.ref = "dependencycheck" }

@@ -97,9 +97,6 @@ android {
         compose = true
         viewBinding = false
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.get("kotlin").toString()
-    }
     packaging {
         resources.excludes += "/META-INF/*.kotlin_module"
         // Native library packaging
