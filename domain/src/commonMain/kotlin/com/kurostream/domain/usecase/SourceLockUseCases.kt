@@ -1,4 +1,5 @@
 package com.kurostream.domain.usecase
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import com.kurostream.domain.model.MediaItem
 import com.kurostream.domain.model.MediaSource
@@ -165,5 +166,5 @@ internal fun resetTimeOverride() {
 }
 
 internal fun currentTimeMillis(): Long {
-    return _timeOverride?.invoke() ?: System.currentTimeMillis()
+    return _timeOverride?.invoke() ?: platformCurrentTimeMillis()
 }

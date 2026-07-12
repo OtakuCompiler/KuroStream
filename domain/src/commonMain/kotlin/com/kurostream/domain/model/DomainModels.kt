@@ -14,6 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.model
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 enum class MediaCategory { ANIME, MOVIE, TV_SHOW, DOCUMENTARY, KIDS, GENERAL }
 
@@ -28,13 +29,13 @@ data class MediaItem(
 data class WatchHistory(
     val id: String, val mediaItemId: String, val profileId: String,
     val position: Long = 0L, val duration: Long = 0L,
-    val watchedAt: Long = System.currentTimeMillis(), val completionPercent: Float = 0f,
+    val watchedAt: Long = platformCurrentTimeMillis(), val completionPercent: Float = 0f,
     val episodeNumber: Int? = null, val seasonNumber: Int? = null
 )
 
 data class Favorite(
     val id: String, val mediaItemId: String, val profileId: String,
-    val addedAt: Long = System.currentTimeMillis(), val category: String = "general"
+    val addedAt: Long = platformCurrentTimeMillis(), val category: String = "general"
 )
 
 enum class DownloadStatus { PENDING, DOWNLOADING, PAUSED, COMPLETED, FAILED }
@@ -43,7 +44,7 @@ data class DownloadItem(
     val id: String, val mediaItemId: String, val profileId: String, val localPath: String,
     val status: DownloadStatus = DownloadStatus.PENDING, val progress: Float = 0f,
     val totalBytes: Long = 0L, val downloadedBytes: Long = 0L,
-    val startedAt: Long = System.currentTimeMillis(), val completedAt: Long? = null,
+    val startedAt: Long = platformCurrentTimeMillis(), val completedAt: Long? = null,
     val errorMessage: String? = null
 )
 

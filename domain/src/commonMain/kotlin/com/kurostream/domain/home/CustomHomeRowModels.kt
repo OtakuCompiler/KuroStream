@@ -14,6 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.home
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import com.kurostream.domain.entity.AiringStatus
 import com.kurostream.domain.entity.MediaType
@@ -28,8 +29,8 @@ data class CustomHomeRow(
     val limit: Int = 20,
     val isVisible: Boolean = true,
     val displayStyle: DisplayStyle = DisplayStyle.POSTER_GRID,
-    val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis(),
+    val createdAt: Long = platformCurrentTimeMillis(),
+    val updatedAt: Long = platformCurrentTimeMillis(),
 )
 
 @Serializable

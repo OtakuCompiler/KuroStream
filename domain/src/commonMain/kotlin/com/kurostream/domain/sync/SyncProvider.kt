@@ -14,6 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.sync
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import com.kurostream.domain.model.*
 
@@ -34,7 +35,7 @@ data class SyncPayload(
     val favorites: List<Favorite> = emptyList(),
     val downloads: List<DownloadItem> = emptyList(),
     val settings: Map<String, String> = emptyMap(),
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = platformCurrentTimeMillis(),
     val deviceId: String = "",
     val version: Int = 1
 )

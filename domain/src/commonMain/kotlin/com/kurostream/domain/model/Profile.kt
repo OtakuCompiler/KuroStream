@@ -14,9 +14,10 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.model
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 data class Profile(
     val id: String, val name: String, val avatarUrl: String? = null,
     val hasPin: Boolean = false, val isActive: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis(), val preferencesJson: String? = null
+    val createdAt: Long = platformCurrentTimeMillis(), val preferencesJson: String? = null
 )

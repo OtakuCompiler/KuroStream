@@ -14,6 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.model
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import kotlinx.serialization.Serializable
 
@@ -27,8 +28,8 @@ data class SourceLock(
     val providerId: String,           // e.g., "torrserver", "stremio:community", "jellyfin:local"
     val sourceQuality: String,        // e.g., "1080p", "4K HDR", "720p"
     val sourceUrl: String,            // Base URL or identifier for the source
-    val lockedAt: Long = System.currentTimeMillis(),
-    val lastUsedAt: Long = System.currentTimeMillis(),
+    val lockedAt: Long = platformCurrentTimeMillis(),
+    val lastUsedAt: Long = platformCurrentTimeMillis(),
     val episodeCount: Int = 1,        // How many episodes played from this lock
     val isActive: Boolean = true,
 )

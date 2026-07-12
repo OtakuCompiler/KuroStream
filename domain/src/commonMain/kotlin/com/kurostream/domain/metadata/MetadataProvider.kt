@@ -1,4 +1,5 @@
 package com.kurostream.domain.metadata
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
@@ -66,7 +67,7 @@ data class AnimeMetadata(
     val relations: List<AnimeRelation> = emptyList(),
     val themes: AnimeThemes = AnimeThemes(),
     val statistics: AnimeStatistics? = null,
-    val lastUpdated: Long = System.currentTimeMillis(),
+    val lastUpdated: Long = platformCurrentTimeMillis(),
     val providerId: String,
 )
 
@@ -105,7 +106,7 @@ data class UnifiedAnimeDetails(
     val themes: AnimeThemes = AnimeThemes(),
     val statistics: AnimeStatistics? = null,
     val providerData: Map<String, Any> = emptyMap(),
-    val lastUpdated: Long = System.currentTimeMillis(),
+    val lastUpdated: Long = platformCurrentTimeMillis(),
 )
 
 enum class MediaType { TV, MOVIE, OVA, ONA, SPECIAL, MUSIC, UNKNOWN }

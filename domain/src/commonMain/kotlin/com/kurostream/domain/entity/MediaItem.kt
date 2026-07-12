@@ -14,6 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.entity
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import kotlinx.serialization.Serializable
 
@@ -38,7 +39,7 @@ data class MediaItem(
     val score: Double? = null,
     val sourceExtensionId: String,
     val deepLink: String? = null,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = platformCurrentTimeMillis()
 )
 
 enum class MediaType { TV, MOVIE, OVA, ONA, SPECIAL, MUSIC }

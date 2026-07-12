@@ -1,4 +1,5 @@
 package com.kurostream.domain.network
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
@@ -16,7 +17,7 @@ interface NetworkMonitorRepository {
 
 @Serializable
 data class NetworkStats(
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = platformCurrentTimeMillis(),
     val downloadSpeedMbps: Double = 0.0,
     val uploadSpeedMbps: Double = 0.0,
     val latencyMs: Double = 0.0,
@@ -70,7 +71,7 @@ data class SpeedTestResult(
     val latencyMs: Double,
     val serverLocation: String,
     val serverIp: String,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = platformCurrentTimeMillis(),
     val error: String? = null,
 )
 
@@ -81,7 +82,7 @@ data class PingTestResult(
     val maxMs: Double,
     val avgMs: Double,
     val packetLossPercent: Double,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = platformCurrentTimeMillis(),
 )
 
 @Serializable

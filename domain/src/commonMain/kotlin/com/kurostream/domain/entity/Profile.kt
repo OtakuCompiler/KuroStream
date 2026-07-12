@@ -14,6 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.entity
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import kotlinx.serialization.Serializable
 
@@ -28,7 +29,7 @@ data class Profile(
     val autoSkipIntro: Boolean = false,
     val autoSkipOutro: Boolean = false,
     val preferredQuality: VideoQuality = VideoQuality.AUTO,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = platformCurrentTimeMillis()
 )
 
 enum class VideoQuality { AUTO, P144, P240, P360, P480, P720, P1080, P1440, P4K }

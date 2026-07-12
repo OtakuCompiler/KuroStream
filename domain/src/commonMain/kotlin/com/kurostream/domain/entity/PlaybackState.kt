@@ -14,6 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.entity
+import com.kurostream.domain.platform.platformCurrentTimeMillis
 
 import kotlinx.serialization.Serializable
 
@@ -27,7 +28,7 @@ data class PlaybackState(
     val playbackSpeed: Float = 1.0f,
     val audioTrackIndex: Int = 0,
     val subtitleTrackIndex: Int = -1,
-    val lastPlayedAt: Long = System.currentTimeMillis()
+    val lastPlayedAt: Long = platformCurrentTimeMillis()
 ) {
     val progressPercent: Float
         get() = if (durationMillis > 0) (positionMillis.toFloat() / durationMillis.toFloat()).coerceIn(0f, 1f) else 0f

@@ -13,23 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
-package com.kurostream.domain.entity
-import com.kurostream.domain.platform.platformCurrentTimeMillis
+package com.kurostream.domain.platform
 
-import kotlinx.serialization.Serializable
+import kotlin.js.Date
 
-@Serializable
-data class DownloadTask(
-    val id: String,
-    val mediaId: String,
-    val episodeId: String? = null,
-    val title: String,
-    val url: String,
-    val status: DownloadStatus,
-    val bytesDownloaded: Long = 0L,
-    val totalBytes: Long = 0L,
-    val localPath: String? = null,
-    val createdAt: Long = platformCurrentTimeMillis()
-)
-
-enum class DownloadStatus { PENDING, QUEUED, DOWNLOADING, PAUSED, COMPLETED, FAILED, CANCELLED }
+actual fun platformCurrentTimeMillis(): Long = Date.now().toLong()

@@ -17,6 +17,7 @@ package com.kurostream.domain.subtitle
 
 import com.kurostream.core.common.result.Result
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 
 interface OfflineTranslator {
     suspend fun initialize(): Result<Unit>
