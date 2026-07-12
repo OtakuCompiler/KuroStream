@@ -7,6 +7,7 @@ plugins {
 
 kotlin {
     androidTarget()
+    jvm()
     js {
         browser()
         nodejs()
@@ -22,6 +23,11 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(libs.junit)
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
         val androidMain by getting {
