@@ -24,3 +24,6 @@ obj/
 *.log
 *.swp
 KuroStream_release/
+.trashed-*
+MERGE_REPORT*.md
+.github/secrets.md
