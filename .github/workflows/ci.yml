@@ -73,14 +73,17 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run Detekt
-        run: ./gradlew detekt --no-daemon
+       - name: Run Spotless
+         run: ./gradlew spotlessCheck --no-daemon
 
-      - name: Run Android Lint
-        run: ./gradlew lintDebug --no-daemon
+       - name: Run Detekt
+         run: ./gradlew detekt --no-daemon
 
-      - name: Run Unit Tests
-        run: ./gradlew test --no-daemon --info
+       - name: Run Android Lint
+         run: ./gradlew lintDebug --no-daemon
+
+       - name: Run Unit Tests
+         run: ./gradlew test --no-daemon --info
 
       - name: Upload Test Reports
         if: always()

@@ -84,6 +84,8 @@ githubApi = "1.0.0"
 
 # Security
 securityCrypto = "1.1.0-alpha06"
+protobuf = "3.25.3"
+protobufKotlin = "1.9.20"
 
 # Compression
 zstd = "1.5.6-3"
@@ -204,6 +206,8 @@ security-crypto = { group = "androidx.security", name = "security-crypto", versi
 
 # Compression
 zstd-jni = { group = "com.github.luben", name = "zstd-jni", version.ref = "zstd" }
+protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", version.ref = "protobufKotlin" }
+protobuf-protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

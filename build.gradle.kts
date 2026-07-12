@@ -22,7 +22,7 @@ allprojects {
             configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
                 toolVersion = "1.23.6"
                 config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
-                buildUponDefaultConfig = true
+                buildUponDefaultConfig = false
                 allRules = false
                 parallel = true
             }

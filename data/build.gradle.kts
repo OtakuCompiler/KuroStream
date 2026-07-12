@@ -22,7 +22,11 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
+
+val protobufVersion = libs.versions.protobuf.get()
+val protobufKotlinVersion = libs.versions.protobufKotlin.get()
 
 android {
     namespace = "com.kurostream.data"
@@ -73,6 +77,8 @@ dependencies {
     ksp(libs.room.compiler)
 
     implementation(libs.datastore.preferences)
+    implementation(libs.datastore.core)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
