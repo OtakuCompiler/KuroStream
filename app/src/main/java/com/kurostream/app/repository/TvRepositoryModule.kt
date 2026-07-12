@@ -17,13 +17,11 @@ package com.kurostream.app.repository
 
 import com.kurostream.data.repository.MediaRepositoryImpl
 import com.kurostream.data.repository.ProfileRepositoryImpl
-import com.kurostream.data.repository.SettingsRepositoryImpl
-import com.kurostream.data.repository.SourceLockRepositoryImpl
 import com.kurostream.data.repository.WatchProgressRepositoryImpl
 import com.kurostream.domain.repository.MediaRepository as CanonicalMediaRepository
 import com.kurostream.domain.repository.ProfileRepository as CanonicalProfileRepository
-import com.kurostream.domain.repository.SettingsRepository as CanonicalSettingsRepository
-import com.kurostream.domain.repository.SourceLockRepository as CanonicalSourceLockRepository
+import com.kurostream.domain.repository.SettingsRepository
+import com.kurostream.domain.repository.SourceLockRepository
 import com.kurostream.domain.repository.WatchProgressRepository as CanonicalWatchProgressRepository
 import com.kurostream.app.repository.TvRepositories.MediaRepository
 import com.kurostream.app.repository.TvRepositories.WatchProgressRepository
@@ -52,14 +50,6 @@ object TvRepositoryModule {
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository = impl
-
-    @Provides
-    @Singleton
-    fun provideSourceLockRepository(impl: SourceLockRepositoryImpl): SourceLockRepository = impl
-
-    @Provides
-    @Singleton
     fun provideCanonicalMediaRepository(impl: MediaRepositoryImpl): CanonicalMediaRepository = impl
 
     @Provides
@@ -68,11 +58,11 @@ object TvRepositoryModule {
 
     @Provides
     @Singleton
-    fun provideCanonicalSettingsRepository(impl: SettingsRepositoryImpl): CanonicalSettingsRepository = impl
+    fun provideCanonicalSettingsRepository(impl: SettingsRepository): SettingsRepository = impl
 
     @Provides
     @Singleton
-    fun provideCanonicalSourceLockRepository(impl: SourceLockRepositoryImpl): CanonicalSourceLockRepository = impl
+    fun provideCanonicalSourceLockRepository(impl: SourceLockRepository): SourceLockRepository = impl
 
     @Provides
     @Singleton

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.baseline-profile)
 }
 
 android {
@@ -95,6 +96,26 @@ android {
     androidResources {
         @Suppress("UnstableApiUsage")
         additionalParameters.addAll(listOf("--no-version-vectors", "--no-version-transitions"))
+    }
+
+    // Baseline Profile configuration
+    baselineProfile {
+        managedDevices {
+            devices {
+                create("pixel6api31", com.android.build.api.dsl.ManagedVirtualDevice::class) {
+                    device = "pixel_6"
+                    apiLevel = 31
+                    abi = "arm64"
+                }
+            }
+        }
+        autogenerate = true
+        mergeToMain = true
+    }
+
+    // Baseline Profile configuration
+    baselineProfile {
+        managedDevices += "pixel_7_pro_api_34"
     }
 }
 
@@ -196,6 +217,11 @@ dependencies {
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+
+    // Baseline Profile
+    androidTestImplementation(libs.baselineProfile.gradlePlugin)
+    androidTestImplementation(libs.benchmark.macro.junit4)
+    androidTestImplementation(libs.benchmark.junit4)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

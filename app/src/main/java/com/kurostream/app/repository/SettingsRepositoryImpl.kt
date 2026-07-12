@@ -1,24 +1,6 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.app.repository
 
-import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.core.content.edit
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferencesKeys
@@ -56,7 +38,6 @@ class SettingsRepositoryImpl @Inject constructor(
         val REDUCE_MOTION = booleanPreferencesKey("reduce_motion", false)
         val FOCUS_HIGHLIGHT = booleanPreferencesKey("focus_highlight", true)
 
-        // Source Lock settings
         val SOURCE_LOCK_ENABLED = booleanPreferencesKey("source_lock_enabled", true)
         val SOURCE_LOCK_FALLBACK_MODE = intPreferencesKey("source_lock_fallback_mode", 0)
         val SOURCE_LOCK_MAX_RETRIES = intPreferencesKey("source_lock_max_retries", 2)
@@ -64,25 +45,21 @@ class SettingsRepositoryImpl @Inject constructor(
         val SOURCE_LOCK_PERSIST = booleanPreferencesKey("source_lock_persist", true)
         val SOURCE_LOCK_NOTIFY_FALLBACK = booleanPreferencesKey("source_lock_notify_fallback", true)
 
-        // Disk Buffer Settings (NEW)
         val DISK_BUFFER_SIZE_MB = intPreferencesKey("disk_buffer_size_mb", 200)
         val DISK_BUFFER_READ_AHEAD_MB = intPreferencesKey("disk_buffer_read_ahead_mb", 4)
         val DISK_BUFFER_LOCATION = stringPreferencesKey("disk_buffer_location", "internal")
         val DISK_BUFFER_DELETE_ON_SHUTDOWN = booleanPreferencesKey("disk_buffer_delete_on_shutdown", false)
 
-        // Torrent Settings (NEW)
         val SEED_WHILE_IDLE = booleanPreferencesKey("seed_while_idle", true)
         val SEQUENTIAL_DOWNLOAD = booleanPreferencesKey("sequential_download", true)
         val SEED_RATIO_LIMIT = floatPreferencesKey("seed_ratio_limit", 2.0f)
         val GLOBAL_DOWNLOAD_LIMIT_KBPS = longPreferencesKey("global_download_limit_kbps", -1L)
         val GLOBAL_UPLOAD_LIMIT_KBPS = longPreferencesKey("global_upload_limit_kbps", -1L)
 
-        // AI Features
         val AI_UPSCALING = booleanPreferencesKey("ai_upscaling", false)
         val FRAME_INTERPOLATION = booleanPreferencesKey("frame_interpolation", false)
         val LOW_LATENCY_UPSCALING = booleanPreferencesKey("low_latency_upscaling", false)
 
-        // VOD Cache
         val VOD_CACHE_COMPRESSION = booleanPreferencesKey("vod_cache_compression", true)
     }
 
@@ -205,10 +182,8 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun runBenchmarks() {
-        // Trigger benchmark runs
     }
 
-    // Disk Buffer Settings (NEW)
     override suspend fun setDiskBufferSizeMb(sizeMb: Int) {
         dataStore.updateDataAsync { it[Keys.DISK_BUFFER_SIZE_MB] = sizeMb }
     }
@@ -225,7 +200,6 @@ class SettingsRepositoryImpl @Inject constructor(
         dataStore.updateDataAsync { it[Keys.DISK_BUFFER_DELETE_ON_SHUTDOWN] = enabled }
     }
 
-    // Torrent Settings (NEW)
     override suspend fun setSeedWhileIdleEnabled(enabled: Boolean) {
         dataStore.updateDataAsync { it[Keys.SEED_WHILE_IDLE] = enabled }
     }
@@ -246,7 +220,6 @@ class SettingsRepositoryImpl @Inject constructor(
         dataStore.updateDataAsync { it[Keys.GLOBAL_UPLOAD_LIMIT_KBPS] = kbps }
     }
 
-    // Source Lock settings
     override suspend fun setSourceLockEnabled(enabled: Boolean) {
         dataStore.updateDataAsync { it[Keys.SOURCE_LOCK_ENABLED] = enabled }
     }
@@ -272,7 +245,6 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearAllSourceLocks() {
-        // Implementation for clearing all source locks
     }
 
     override suspend fun setAiUpscalingEnabled(enabled: Boolean) {

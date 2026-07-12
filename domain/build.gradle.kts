@@ -37,7 +37,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":common"))
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation("javax.inject:javax.inject:1")
@@ -52,6 +51,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
+                implementation(project(":common"))
                 implementation(libs.okhttp)
             }
         }

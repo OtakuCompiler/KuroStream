@@ -1,18 +1,3 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.app.repository
 
 import com.kurostream.domain.model.SourceLockSettings
@@ -32,22 +17,18 @@ interface SettingsRepository {
         val reduceMotionEnabled: Boolean = false,
         val focusHighlightEnabled: Boolean = true,
         val sourceLockSettings: SourceLockSettings = SourceLockSettings(),
-        // Disk Buffer Settings (NEW)
         val diskBufferSizeMb: Int = 200,
         val diskBufferReadAheadMb: Int = 4,
         val diskBufferLocation: String = "internal",
         val diskBufferDeleteOnShutdown: Boolean = false,
-        // Torrent Settings (NEW)
         val seedWhileIdleEnabled: Boolean = true,
         val sequentialDownloadEnabled: Boolean = true,
         val seedRatioLimit: Float = 2.0f,
         val globalDownloadLimitKbps: Long = -1L,
         val globalUploadLimitKbps: Long = -1L,
-        // AI Features
         val aiUpscalingEnabled: Boolean = false,
         val frameInterpolationEnabled: Boolean = false,
         val lowLatencyUpscalingEnabled: Boolean = false,
-        // VOD Cache
         val vodCacheCompressionEnabled: Boolean = true,
     )
 
@@ -68,20 +49,17 @@ interface SettingsRepository {
     fun getCacheSize(): Long
     suspend fun runBenchmarks()
 
-    // Disk Buffer Settings (NEW)
     suspend fun setDiskBufferSizeMb(sizeMb: Int)
     suspend fun setDiskBufferReadAheadMb(sizeMb: Int)
     suspend fun setDiskBufferLocation(location: String)
     suspend fun setDiskBufferDeleteOnShutdown(enabled: Boolean)
 
-    // Torrent Settings (NEW)
     suspend fun setSeedWhileIdleEnabled(enabled: Boolean)
     suspend fun setSequentialDownloadEnabled(enabled: Boolean)
     suspend fun setSeedRatioLimit(limit: Float)
     suspend fun setGlobalDownloadLimit(kbps: Long)
     suspend fun setGlobalUploadLimit(kbps: Long)
 
-    // Source Lock settings
     suspend fun setSourceLockEnabled(enabled: Boolean)
     suspend fun setSourceLockFallbackMode(mode: Int)
     suspend fun setSourceLockMaxRetries(retries: Int)
@@ -90,11 +68,9 @@ interface SettingsRepository {
     suspend fun setSourceLockNotifyFallback(notify: Boolean)
     suspend fun clearAllSourceLocks()
 
-    // AI Features
     suspend fun setAiUpscalingEnabled(enabled: Boolean)
     suspend fun setFrameInterpolationEnabled(enabled: Boolean)
     suspend fun setLowLatencyUpscalingEnabled(enabled: Boolean)
 
-    // VOD Cache
     suspend fun setVodCacheCompressionEnabled(enabled: Boolean)
 }

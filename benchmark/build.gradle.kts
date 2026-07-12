@@ -16,6 +16,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -44,6 +45,19 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    // Baseline Profile configuration
+    testOptions {
+        managedDevices {
+            devices {
+                create("pixel6api31", com.android.build.api.dsl.ManagedVirtualDevice::class) {
+                    device = "pixel_6"
+                    apiLevel = 31
+                    abi = "arm64"
+                }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -54,9 +68,13 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.serialization.json)
 
+    // Baseline Profile & Macrobenchmark
     androidTestImplementation(libs.benchmark.junit4)
     androidTestImplementation(libs.benchmark.macro.junit4)
+    androidTestImplementation("androidx.benchmark:benchmark-macro-junit4:${libs.versions.benchmarkMacro.get()}")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
 
     testImplementation(libs.junit)
 }

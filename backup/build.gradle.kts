@@ -74,7 +74,7 @@ dependencies {
     implementation(libs.okhttp)
 
     // Crypto for encryption
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation(libs.security.crypto)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
