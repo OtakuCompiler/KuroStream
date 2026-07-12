@@ -88,9 +88,6 @@ securityCrypto = "1.1.0-alpha06"
 # Compression
 zstd = "1.5.6-3"
 
-# Compose Compiler
-composeCompiler = "1.5.4"
-
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -180,8 +177,6 @@ androidx-core-testing = { group = "androidx.test", name = "core", version.ref = 
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockkAndroid" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
-androidx-core-testing = { group = "androidx.test", name = "core", version.ref = "androidxCoreTesting" }
-benchmark-junit4 = { group = "androidx.benchmark", name = "benchmark-junit4", version.ref = "benchmark" }
 benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
 compose-ui-test = { group = "androidx.compose.ui", name = "ui-test", version.ref = "composeUiTest" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "composeUiTest" }
@@ -195,7 +190,6 @@ androidx-documentfile = { group = "androidx.documentfile", name = "documentfile"
 androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
 detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-gradle-plugin", version.ref = "spotless" }
-archunit = { group = "com.tngtech.archunit", name = "archunit", version.ref = "archunit" }
 
 # Torrent
 libtorrent4j = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent", version.ref = "libtorrent4j" }
@@ -210,9 +204,6 @@ security-crypto = { group = "androidx.security", name = "security-crypto", versi
 
 # Compression
 zstd-jni = { group = "com.github.luben", name = "zstd-jni", version.ref = "zstd" }
-
-# Compose compiler
-compose-compiler = { group = "org.jetbrains.kotlin", name = "compose-compiler", version.ref = "composeCompiler" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
