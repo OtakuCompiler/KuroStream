@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.demo
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.AiringStatus
 import com.kurostream.domain.entity.AnimeDetails
 import com.kurostream.domain.entity.ContentRating

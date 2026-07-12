@@ -15,7 +15,7 @@
 
 package com.kurostream.data.repository
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.dao.SourceLockDao
 import com.kurostream.data.local.dao.SourceLockSettingsDao
 import com.kurostream.data.local.entity.SourceLockEntity

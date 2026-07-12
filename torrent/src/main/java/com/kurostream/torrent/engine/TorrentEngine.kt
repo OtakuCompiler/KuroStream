@@ -29,8 +29,8 @@ import com.frostwire.jlibtorrent.TorrentHandle
 import com.frostwire.jlibtorrent.TorrentInfo
 import com.frostwire.jlibtorrent.swig.add_torrent_params_flags_t
 import com.frostwire.jlibtorrent.swig.alert_category_t
-import com.kurostream.common.dispatcher.DispatcherProvider
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.dispatcher.DispatcherProvider
+import com.kurostream.core.common.result.Result
 import com.kurostream.torrent.cache.TorrentMetadataCache
 import com.kurostream.torrent.cache.TorrentPieceCache
 import com.kurostream.torrent.domain.*

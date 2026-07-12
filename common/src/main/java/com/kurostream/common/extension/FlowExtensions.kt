@@ -15,7 +15,7 @@
 
 package com.kurostream.common.extension
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map

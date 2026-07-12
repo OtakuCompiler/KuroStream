@@ -17,7 +17,7 @@ package com.kurostream.app.network
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.network.NetworkMonitorRepository
 import com.kurostream.domain.network.NetworkStats
 import com.kurostream.domain.network.ConnectionQuality

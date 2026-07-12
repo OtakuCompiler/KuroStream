@@ -15,7 +15,7 @@
 
 package com.kurostream.domain.subtitle
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import kotlinx.coroutines.flow.Flow
 
 interface OfflineTranslator {

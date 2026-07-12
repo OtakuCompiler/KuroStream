@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.marketplace
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.plugin.sdk.marketplace.model.ExtensionListing
 import com.kurostream.plugin.sdk.marketplace.model.Review
 import com.kurostream.plugin.sdk.marketplace.model.ReviewSummary

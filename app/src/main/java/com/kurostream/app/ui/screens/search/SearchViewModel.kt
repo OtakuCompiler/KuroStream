@@ -17,7 +17,7 @@ package com.kurostream.app.ui.screens.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.app.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

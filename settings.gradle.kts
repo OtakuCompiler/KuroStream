@@ -38,6 +38,7 @@ include(":common")
 include(":extensions")
 include(":launcher")
 include(":benchmark")
+include(":core-common")
 // include(":torrent") // disabled: frostwire jlibtorrent 2.0.x is only on GitHub Packages (auth req'd), not Maven Central
 include(":backup")
 include(":lint-checks")

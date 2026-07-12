@@ -19,7 +19,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kurostream.backup.domain.*
 import com.kurostream.backup.repository.BackupRepository
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

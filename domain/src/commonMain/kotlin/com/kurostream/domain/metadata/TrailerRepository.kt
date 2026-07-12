@@ -15,7 +15,7 @@
 
 package com.kurostream.domain.metadata
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.model.Trailer
 import kotlinx.coroutines.flow.Flow
 

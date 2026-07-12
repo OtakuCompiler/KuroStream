@@ -15,8 +15,8 @@
 
 package com.kurostream.domain.legacy.usecase
 
-import com.kurostream.common.dispatcher.DispatcherProvider
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.dispatcher.DispatcherProvider
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.legacy.repository.MediaRepository
 import com.kurostream.domain.legacy.repository.ProfileRepository
@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
+import com.kurostream.core.common.di.Inject
 
 class GetContinueWatching @Inject constructor(
     private val mediaRepository: MediaRepository,

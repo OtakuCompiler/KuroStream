@@ -107,21 +107,22 @@ android {
                     apiLevel = 31
                     abi = "arm64"
                 }
+                create("pixel7proapi34", com.android.build.api.dsl.ManagedVirtualDevice::class) {
+                    device = "pixel_7_pro"
+                    apiLevel = 34
+                    abi = "arm64"
+                }
             }
         }
         autogenerate = true
         mergeToMain = true
-    }
-
-    // Baseline Profile configuration
-    baselineProfile {
-        managedDevices += "pixel_7_pro_api_34"
     }
 }
 
 dependencies {
     implementation(libs.androidx.startup.runtime)
 
+    implementation(project(":core-common"))
     implementation(project(":common"))
     implementation(project(":domain"))
     implementation(project(":data"))

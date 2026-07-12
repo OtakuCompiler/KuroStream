@@ -19,7 +19,7 @@ import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.kurostream.backup.domain.*
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.data.anistream.addons.AddonDao
 import com.kurostream.data.anistream.downloads.DownloadDao
 import com.kurostream.data.anistream.profile.ProfileDao

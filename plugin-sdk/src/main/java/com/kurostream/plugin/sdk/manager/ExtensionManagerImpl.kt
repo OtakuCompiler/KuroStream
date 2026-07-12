@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.manager
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.ExtensionCapability
 import com.kurostream.domain.entity.ExtensionInfo
 import com.kurostream.domain.entity.SemanticVersion

@@ -16,7 +16,7 @@
 package com.kurostream.data.subtitle
 
 import android.content.Context
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.subtitle.OfflineTranslator
 import com.kurostream.domain.subtitle.SubtitleLine
 import com.kurostream.domain.subtitle.TranslationResult

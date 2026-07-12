@@ -10,7 +10,7 @@ import com.kurostream.domain.repository.MediaRepository
 import com.kurostream.domain.repository.SourceLockRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
+import com.kurostream.core.common.di.Inject
 
 class SourceLockUseCases @Inject constructor(
     private val sourceLockRepository: SourceLockRepository,

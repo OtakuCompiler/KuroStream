@@ -16,7 +16,7 @@
 package com.kurostream.domain.legacy.usecase
 
 import com.kurostream.common.dispatcher.DefaultDispatcherProvider
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.AnimeDetails
 import com.kurostream.domain.legacy.repository.MediaRepository
 import io.mockk.coEvery

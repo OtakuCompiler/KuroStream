@@ -15,7 +15,7 @@
 
 package com.kurostream.domain.legacy.repository
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.PlaybackState
 import com.kurostream.domain.entity.SyncState
 import kotlinx.coroutines.flow.Flow

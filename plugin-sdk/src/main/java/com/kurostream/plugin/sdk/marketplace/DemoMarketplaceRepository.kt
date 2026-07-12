@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.marketplace
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.ExtensionCapability
 import com.kurostream.domain.entity.SemanticVersion
 import com.kurostream.plugin.sdk.marketplace.model.ExtensionListing

@@ -17,7 +17,7 @@ package com.kurostream.app.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.data.home.CustomHomeRowRepository
 import com.kurostream.domain.home.CustomHomeRow
 import com.kurostream.domain.home.RowPreview

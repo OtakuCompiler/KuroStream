@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.security
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import javax.inject.Inject
 
 interface SignatureVerifier {

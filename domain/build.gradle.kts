@@ -37,9 +37,9 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation(project(":core-common"))
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.coroutines.core)
-                implementation("javax.inject:javax.inject:1")
             }
         }
         val commonTest by getting {

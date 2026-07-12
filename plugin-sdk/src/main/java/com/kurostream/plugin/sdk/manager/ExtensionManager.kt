@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.manager
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.ExtensionInfo
 import com.kurostream.plugin.sdk.api.ExtensionApi
 import kotlinx.coroutines.flow.Flow

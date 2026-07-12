@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.api
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.MediaItem
 
 interface TorrentSource : ExtensionApi {

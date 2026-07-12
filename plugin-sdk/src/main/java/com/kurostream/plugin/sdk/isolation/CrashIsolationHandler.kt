@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.isolation
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 
 /**
  * Interface for handling extension crashes in an isolated manner.

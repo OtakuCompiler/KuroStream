@@ -22,7 +22,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.wifi.WifiManager
 import android.os.Build
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.network.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel

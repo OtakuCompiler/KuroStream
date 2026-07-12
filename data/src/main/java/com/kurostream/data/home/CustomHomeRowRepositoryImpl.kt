@@ -15,7 +15,7 @@
 
 package com.kurostream.data.home
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.domain.home.CustomHomeRow
 import com.kurostream.domain.home.CustomHomeRowRepository

@@ -17,7 +17,7 @@ package com.kurostream.data.sync
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.model.WatchProgress
 import com.kurostream.domain.sync.CrossDeviceSyncRepository
 import kotlinx.coroutines.Dispatchers

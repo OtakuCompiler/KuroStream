@@ -15,7 +15,7 @@
 
 package com.kurostream.data.metadata
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.model.SourceLockSettings
 import kotlinx.coroutines.Dispatchers

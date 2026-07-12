@@ -17,7 +17,7 @@ package com.kurostream.torrent.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.torrent.domain.*
 import com.kurostream.torrent.repository.TorrentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

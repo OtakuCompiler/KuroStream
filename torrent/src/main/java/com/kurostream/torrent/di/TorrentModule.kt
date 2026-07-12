@@ -16,7 +16,7 @@
 package com.kurostream.torrent.di
 
 import android.app.Application
-import com.kurostream.common.dispatcher.DispatcherProvider
+import com.kurostream.core.common.dispatcher.DispatcherProvider
 import com.kurostream.torrent.cache.TorrentMetadataCache
 import com.kurostream.torrent.cache.TorrentPieceCache
 import com.kurostream.torrent.engine.AdaptiveLimitsCalculator

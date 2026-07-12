@@ -15,7 +15,7 @@
 
 package com.kurostream.plugin.sdk.sandbox
 
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.result.Result
 import com.kurostream.plugin.sdk.api.ExtensionApi
 import com.kurostream.plugin.sdk.api.ExtensionConfig
 import com.kurostream.domain.entity.ExtensionCapability

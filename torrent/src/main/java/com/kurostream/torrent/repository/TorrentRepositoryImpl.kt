@@ -16,8 +16,8 @@
 package com.kurostream.torrent.repository
 
 import android.content.Context
-import com.kurostream.common.dispatcher.DispatcherProvider
-import com.kurostream.common.result.Result
+import com.kurostream.core.common.dispatcher.DispatcherProvider
+import com.kurostream.core.common.result.Result
 import com.kurostream.torrent.domain.*
 import com.kurostream.torrent.engine.TorrentEngine
 import kotlinx.coroutines.flow.Flow
