@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.baseline.profile)
 }
 
 android {
@@ -96,26 +95,6 @@ android {
     androidResources {
         @Suppress("UnstableApiUsage")
         additionalParameters.addAll(listOf("--no-version-vectors", "--no-version-transitions"))
-    }
-
-    // Baseline Profile configuration
-    baselineProfile {
-        managedDevices {
-            devices {
-                create("pixel6api31", com.android.build.api.dsl.ManagedVirtualDevice::class) {
-                    device = "pixel_6"
-                    apiLevel = 31
-                    abi = "arm64"
-                }
-                create("pixel7proapi34", com.android.build.api.dsl.ManagedVirtualDevice::class) {
-                    device = "pixel_7_pro"
-                    apiLevel = 34
-                    abi = "arm64"
-                }
-            }
-        }
-        autogenerate = true
-        mergeToMain = true
     }
 }
 

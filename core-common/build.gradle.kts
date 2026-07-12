@@ -64,7 +64,7 @@ tasks.withType<Test> {
 
 spotless {
     kotlin {
-        target("*.kt", "*.kts") {
+        target(listOf("*.kt", "*.kts")) {
             ktlint()
         }
     }
