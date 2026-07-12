@@ -105,7 +105,7 @@ data class UnifiedAnimeDetails(
     val relations: List<AnimeRelation> = emptyList(),
     val themes: AnimeThemes = AnimeThemes(),
     val statistics: AnimeStatistics? = null,
-    val providerData: Map<String, Any> = emptyMap(),
+    val providerData: Map<String, String> = emptyMap(),
     val lastUpdated: Long = platformCurrentTimeMillis(),
 )
 
@@ -182,25 +182,7 @@ data class AnimeStatistics(
     val statusDistribution: Map<String, Int> = emptyMap(),
     val totalMembers: Int = 0,
     val totalFavorites: Int = 0,
-) {
-    constructor(
-        watching: Int,
-        completed: Int,
-        onHold: Int,
-        dropped: Int,
-        planToWatch: Int,
-        scoreDistribution: Map<Int, Int>,
-        statusDistribution: Map<String, Int>,
-    ) : this(
-        watching = watching,
-        completed = completed,
-        onHold = onHold,
-        dropped = dropped,
-        planToWatch = planToWatch,
-        scoreDistribution = scoreDistribution,
-        statusDistribution = statusDistribution,
-    )
-}
+)
 
 sealed interface MetadataResult<out T> {
     data class Success<T>(val data: T) : MetadataResult<T>
