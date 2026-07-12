@@ -368,18 +368,3 @@ style:
     active: true
   WildcardImport:
     active: false
-
-formatting:
-  active: true
-  EmptyFunctionBlock:
-    active: false
-  EmptyElseBlock:
-    active: false
-  EmptyCatchBlock:
-    active: false
-  NoEmptyFirstLineInClassBody:
-    active: false
-  NewLineAtEndOfFile:
-    active: false
-  FinalNewLine:
-    active: false
