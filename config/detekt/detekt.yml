@@ -368,3 +368,12 @@ style:
     active: true
   WildcardImport:
     active: false
+
+empty-blocks:
+  active: true
+  EmptyFunctionBlock:
+    active: false
+  EmptyElseBlock:
+    active: false
+  EmptyCatchBlock:
+    active: false
