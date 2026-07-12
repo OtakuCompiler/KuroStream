@@ -25,6 +25,7 @@ fun <T> Flow<T>.asResult(): Flow<Result<T>> {
     return this.map<T, Result<T>> { Result.Success(it) }.onStart { emit(Result.Loading) }.catch { emit(Result.Error(it)) }
 }
 
+@Suppress("EmptyElseBlock")
 fun <T> Flow<Result<T>>.onSuccess(action: suspend (T) -> Unit): Flow<Result<T>> {
     return this.map { result ->
         if (result is Result.Success) action(result.data)
@@ -32,6 +33,7 @@ fun <T> Flow<Result<T>>.onSuccess(action: suspend (T) -> Unit): Flow<Result<T>> 
     }
 }
 
+@Suppress("EmptyElseBlock")
 fun <T> Flow<Result<T>>.onError(action: suspend (Throwable) -> Unit): Flow<Result<T>> {
     return this.map { result ->
         if (result is Result.Error) action(result.exception)
@@ -39,6 +41,7 @@ fun <T> Flow<Result<T>>.onError(action: suspend (Throwable) -> Unit): Flow<Resul
     }
 }
 
+@Suppress("EmptyElseBlock")
 fun <T> Flow<Result<T>>.onLoading(action: suspend () -> Unit): Flow<Result<T>> {
     return this.map { result ->
         if (result is Result.Loading) action()

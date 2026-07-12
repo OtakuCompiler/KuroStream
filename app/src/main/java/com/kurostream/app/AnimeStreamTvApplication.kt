@@ -88,7 +88,7 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
         // Add thermal-aware UI rendering callback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            registerActivityLifecycleCallbacks(object : android.app.Application.ActivityLifecycleCallbacks {
+            registerActivityLifecycleCallbacks(@Suppress("EmptyFunctionBlock") object : android.app.Application.ActivityLifecycleCallbacks {
                 override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) = Unit
                 override fun onActivityStarted(activity: android.app.Activity) = Unit
                 override fun onActivityResumed(activity: android.app.Activity) {

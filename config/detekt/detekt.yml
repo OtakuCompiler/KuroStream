@@ -238,10 +238,6 @@ style:
   DestructuringDeclarationWithTooManyEntries:
     active: false
     maxDestructuringEntries: 3
-  EmptyFunctionBlock:
-    active: false
-  EmptyElseBlock:
-    active: false
   EqualsNullCall:
     active: true
   ExplicitItLambdaParameter:
