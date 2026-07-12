@@ -125,7 +125,8 @@ jobs:
     needs: [kmp-compile, lint-test, build-debug]
     if: always()
     steps:
-      - run: |
+      - name: Check job results
+        run: |
           echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
@@ -133,3 +134,9 @@ jobs:
           echo "| KMP | ${{ needs.kmp-compile.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Lint | ${{ needs.lint-test.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build | ${{ needs.build-debug.result }} |" >> $GITHUB_STEP_SUMMARY
+          
+          # Fail workflow if any job failed
+          if [ "${{ needs.kmp-compile.result }}" = "failure" ] || [ "${{ needs.lint-test.result }}" = "failure" ] || [ "${{ needs.build-debug.result }}" = "failure" ]; then
+            echo "##[error] One or more jobs failed"
+            exit 1
+          fi

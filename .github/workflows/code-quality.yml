@@ -96,7 +96,8 @@ jobs:
     needs: [detekt, lint, spotless]
     if: always()
     steps:
-      - run: |
+      - name: Check job results
+        run: |
           echo "## Code Quality" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
@@ -104,3 +105,9 @@ jobs:
           echo "| Detekt | ${{ needs.detekt.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Spotless | ${{ needs.spotless.result }} |" >> $GITHUB_STEP_SUMMARY
+          
+          # Fail workflow if any job failed
+          if [ "${{ needs.detekt.result }}" = "failure" ] || [ "${{ needs.lint.result }}" = "failure" ] || [ "${{ needs.spotless.result }}" = "failure" ]; then
+            echo "##[error] One or more checks failed"
+            exit 1
+          fi

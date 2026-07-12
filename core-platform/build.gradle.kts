@@ -45,11 +45,13 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation(libs.okhttp)
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
         val androidMain by getting {
             dependencies {
                 implementation(libs.okhttp)
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
         val jsMain by getting {
