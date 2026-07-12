@@ -6,7 +6,7 @@ plugins {
 }
 
 kotlin {
-    androidTarget {
+    android {
         publishLibraryVariants("release", "debug")
         compilations.all {
             kotlinOptions {
@@ -64,7 +64,7 @@ tasks.withType<Test> {
 
 spotless {
     kotlin {
-        target(listOf("*.kt", "*.kts")) {
+        target(*arrayOf("*.kt", "*.kts")) {
             ktlint()
         }
     }
