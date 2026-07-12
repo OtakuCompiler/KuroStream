@@ -12,6 +12,19 @@ kotlin {
                 jvmTarget = "17"
             }
         }
+
+        // Android-specific configuration
+        namespace = "com.kurostream.core.common"
+        compileSdk = libs.versions.compileSdk.get().toInt()
+
+        defaultConfig {
+            minSdk = libs.versions.minSdk.get().toInt()
+        }
+
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
     }
     js {
         browser()
@@ -40,20 +53,6 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
-    }
-}
-
-android {
-    namespace = "com.kurostream.core.common"
-    compileSdk = libs.versions.compileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
