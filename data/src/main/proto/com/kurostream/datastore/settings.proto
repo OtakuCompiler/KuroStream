@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package com.kurostream.datastore;
+
+option java_package = "com.kurostream.data.datastore";
+option java_outer_classname = "SettingsProto";
+option java_multiple_files = true;
+
+message Settings {
+    // Playback settings
+    bool auto_play_next = 1;
+    bool skip_intro = 2;
+    bool hardware_acceleration = 3;
+    bool background_playback = 4;
+    bool debug_overlay = 5;
+    
+    // Cache settings
+    int64 cache_size = 6;
+    
+    // Language settings
+    repeated string audio_languages = 7;
+    repeated string subtitle_languages = 8;
+    
+    // Accessibility
+    bool high_contrast = 9;
+    bool reduce_motion = 10;
+    bool focus_highlight = 11;
+    
+    // Source lock settings
+    bool source_lock_enabled = 12;
+    int32 source_lock_fallback_mode = 13;
+    int32 source_lock_max_retries = 14;
+    int64 source_lock_retry_delay_ms = 15;
+    bool source_lock_persist = 16;
+    bool source_lock_notify_fallback = 17;
+    
+    // Buffer settings
+    int32 disk_buffer_size_mb = 18;
+    int32 disk_buffer_read_ahead_mb = 19;
+    string disk_buffer_location = 20;
+    bool disk_buffer_delete_on_shutdown = 21;
+    
+    // Torrent settings
+    bool seed_while_idle = 22;
+    bool sequential_download = 23;
+    float seed_ratio_limit = 24;
+    int64 global_download_limit_kbps = 25;
+    int64 global_upload_limit_kbps = 26;
+    
+    // AI settings
+    bool ai_upscaling = 27;
+    bool frame_interpolation = 28;
+    bool low_latency_upscaling = 29;
+    
+    // Cache compression
+    bool vod_cache_compression = 30;
+}

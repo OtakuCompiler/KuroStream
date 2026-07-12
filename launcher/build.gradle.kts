@@ -96,7 +96,8 @@ dependencies {
     implementation(libs.okhttp)
 
     // Legacy ExoPlayer2 — see header note re: conflict with :playback's Media3 usage
-    implementation(libs.exoplayer2.legacy)
+    // TODO: Migrate this module to Media3 (androidx.media3) to resolve classpath conflict
+    // implementation(libs.exoplayer2.legacy)
 
     implementation(libs.tensorflow.lite)
 

@@ -16,20 +16,19 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
     jvm()
-    js {
-        browser()
-        nodejs()
-        binaries.executable()
-    }
+    android()
+    ios()
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":core-common"))
+                implementation(project(":domain"))
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.coroutines.core)
             }
@@ -38,6 +37,19 @@ kotlin {
             dependencies {
                 implementation(libs.junit)
                 implementation(libs.archunit)
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.hilt.android)
+                ksp(libs.hilt.compiler)
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation(libs.androidx.core.ktx)
+                implementation(libs.hilt.android)
+                ksp(libs.hilt.compiler)
             }
         }
     }

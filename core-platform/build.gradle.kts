@@ -25,19 +25,35 @@ kotlin {
         nodejs()
         binaries.executable()
     }
+    android()
 
     sourceSets {
         val commonMain by getting {
             dependencies {
                 implementation(project(":core-common"))
-                implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.serialization.json)
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(libs.junit)
                 implementation(libs.archunit)
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.okhttp)
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation(libs.okhttp)
+            }
+        }
+        val jsMain by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
     }

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.kurostream.datastore;
+
+option java_package = "com.kurostream.data.datastore";
+option java_outer_classname = "ProfileProto";
+option java_multiple_files = true;
+
+message ProfilePreferences {
+    string active_profile_id = 1;
+}

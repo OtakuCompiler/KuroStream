@@ -17,6 +17,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.baseline.profile)
 }
 
 android {
@@ -62,7 +63,7 @@ dependencies {
     // Baseline Profile & Macrobenchmark
     androidTestImplementation(libs.benchmark.macro.junit4)
     androidTestImplementation(libs.benchmark.junit4)
-    androidTestImplementation(libs.androidx-test-uiautomator)
+    androidTestImplementation(libs.androidx.test.uiautomator)
 
     testImplementation(libs.junit)
 }

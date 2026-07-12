@@ -28,6 +28,7 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "KuroStream"
+includeBuild("build-logic")
 include(":app")
 include(":domain")
 include(":data")
@@ -39,6 +40,7 @@ include(":extensions")
 include(":launcher")
 include(":benchmark")
 include(":core-common")
+include(":core-platform")
 // include(":torrent") // disabled: frostwire jlibtorrent 2.0.x is only on GitHub Packages (auth req'd), not Maven Central
 include(":backup")
 include(":lint-checks")

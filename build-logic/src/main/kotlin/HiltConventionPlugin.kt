@@ -13,36 +13,20 @@
 // You should have received a copy of the GNU General Public License
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
-plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.kotlin.serialization)
-}
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.dependencies
 
-kotlin {
-    jvm()
-    js {
-        browser()
-        nodejs()
-        binaries.executable()
-    }
+class HiltConventionPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        with(target) {
+            pluginManager.apply("com.google.dagger.hilt.android")
+            pluginManager.apply("com.google.devtools.ksp")
 
-    sourceSets {
-        val commonMain by getting {
             dependencies {
-                implementation(project(":core-common"))
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.kotlinx.coroutines.core)
-            }
-        }
-        val commonTest by getting {
-            dependencies {
-                implementation(libs.junit)
-                implementation(libs.archunit)
+                add("implementation", "com.google.dagger:hilt-android:2.52")
+                add("ksp", "com.google.dagger:hilt-compiler:2.52")
             }
         }
     }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
 }
