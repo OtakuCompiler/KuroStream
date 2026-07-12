@@ -184,8 +184,6 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
     private fun aggressiveMemoryCleanup() {
         moderateMemoryCleanup()
         // Force GC hint (suppressed - explicit GC calls discouraged)
-        // System.gc()
-        // Runtime.getRuntime().gc()
         
         // Clear string interner
         com.kurostream.common.util.StringInterner.clear()

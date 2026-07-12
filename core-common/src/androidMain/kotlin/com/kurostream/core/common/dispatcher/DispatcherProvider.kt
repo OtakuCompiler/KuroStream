@@ -1,51 +1,72 @@
 package com.kurostream.core.common.dispatcher
 
+import android.content.Context
+import android.os.PowerManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DefaultDispatcherProvider @Inject constructor() : DispatcherProvider {
+class DefaultDispatcherProvider @Inject constructor(
+    private val context: Context
+) : DispatcherProvider {
+    
+    private val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    
     override val main: CoroutineDispatcher = Dispatchers.Main
     override val io: CoroutineDispatcher = Dispatchers.IO
     override val default: CoroutineDispatcher = Dispatchers.Default
     override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
 
-    // Adaptive dispatchers based on CPU cores
+    // Thermal and battery-aware adaptive dispatchers
     val adaptiveIO: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(
-            (Runtime.getRuntime().availableProcessors() * 2).coerceAtMost(8)
-        )
+        val cores = getOptimalCoreCount()
+        Dispatchers.IO.limitedParallelism(cores)
     }
 
     val cpuIntensive: CoroutineDispatcher by lazy {
-        Dispatchers.Default.limitedParallelism(
+        val cores = if (isPowerSaveMode()) {
+            Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
+        } else {
             Runtime.getRuntime().availableProcessors().coerceIn(2, 6)
-        )
+        }
+        Dispatchers.Default.limitedParallelism(cores)
     }
 
     val networkIO: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(
-            Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
-        )
+        val cores = if (isPowerSaveMode()) 2 else Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
+        Dispatchers.IO.limitedParallelism(cores)
     }
 
     val databaseIO: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(2)
+        Dispatchers.IO.limitedParallelism(if (isPowerSaveMode()) 1 else 2)
     }
 
     val fileIO: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(
-            Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
-        )
+        val cores = if (isPowerSaveMode()) 1 else Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
+        Dispatchers.IO.limitedParallelism(cores)
     }
 
     val imageProcessing: CoroutineDispatcher by lazy {
-        Dispatchers.Default.limitedParallelism(2)
+        Dispatchers.Default.limitedParallelism(if (isPowerSaveMode()) 1 else 2)
     }
 
     val backgroundSync: CoroutineDispatcher by lazy {
         Dispatchers.IO.limitedParallelism(1)
+    }
+
+    private fun isPowerSaveMode(): Boolean {
+        return powerManager.isPowerSaveMode
+    }
+
+    private fun getOptimalCoreCount(): Int {
+        val cores = Runtime.getRuntime().availableProcessors()
+        return when {
+            isPowerSaveMode() -> cores.coerceIn(2, 4)
+            cores >= 8 -> 8
+            cores >= 4 -> cores * 2
+            else -> cores.coerceAtLeast(2)
+        }
     }
 }

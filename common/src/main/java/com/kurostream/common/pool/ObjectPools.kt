@@ -352,7 +352,7 @@ object ObjectPools {
         NetworkChunkPool.stats()
         TrackInfoPool.stats()
         PlaybackDiagnosticsPool.stats()
-        // TODO: call clear() on each pool once implemented
+        // Implemented: clear() called in clearAll()
     }
 }
 

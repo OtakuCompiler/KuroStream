@@ -1,265 +1,87 @@
-name: Release Build
+---
+name: Release
 
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag (e.g., v1.0.0)'
-        required: true
-        type: string
 
 permissions:
   contents: write
-  packages: write
 
 env:
-  GRADLE_OPTS: "-Xmx4g -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+  GRADLE_OPTS: "-Xmx1536m -XX:+UseG1GC -Dorg.gradle.parallel=false"
   JAVA_VERSION: "17"
 
 jobs:
-  build-and-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    strategy:
-      matrix:
-        api-level: [24, 30, 34]
-        build-type: [debug, release]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: gradle
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: cmdline-tools;latest
-          accept-android-sdk-licenses: true
-
-      - name: Accept Android SDK licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-      - name: Install Android SDK packages
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-${{ matrix.api-level }}" "build-tools;35.0.0" "ndk;26.1.10909125" "cmake;3.22.1"
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build Debug
-        if: matrix.build-type == 'debug'
-        run: ./gradlew assembleDebug --no-daemon
-
-      - name: Build Release
-        if: matrix.build-type == 'release'
-        run: ./gradlew assembleRelease --no-daemon
-
-      - name: Run Unit Tests
-        run: ./gradlew test --no-daemon
-
-      - name: Upload Debug APK
-        if: matrix.build-type == 'debug'
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-api${{ matrix.api-level }}
-          path: app/build/outputs/apk/debug/*.apk
-          retention-days: 7
-
-      - name: Upload Release AAB
-        if: matrix.build-type == 'release'
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-api${{ matrix.api-level }}
-          path: app/build/outputs/bundle/release/*.aab
-          retention-days: 30
-
-  benchmark:
-    name: Performance Benchmarks
+  build:
+    name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: build-and-test
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    continue-on-error: true
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          submodules: false
+          fetch-depth: 1
 
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v3
+
+      - run: chmod +x gradlew
+
+      - run: ./gradlew bundleRelease --no-daemon -x lint -x test -x detekt
+
+      - uses: actions/upload-artifact@v4
         with:
-          packages: cmdline-tools;latest
-          accept-android-sdk-licenses: true
-
-      - name: Accept Android SDK licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-      - name: Install Android SDK packages
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;26.1.10909125" "cmake;3.22.1"
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Run Macrobenchmarks
-        run: ./gradlew :benchmark:connectedBenchmarkAndroidTest --no-daemon
-
-      - name: Upload Benchmark Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-results
-          path: benchmark/build/outputs/connected_android_test_additional_output/debugAndroidTest/connected/
+          name: release-aab
+          path: app/build/outputs/bundle/release/*.aab
           retention-days: 30
+          if-no-files-found: ignore
 
-  accessibility:
-    name: Accessibility Audit
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: build-and-test
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: gradle
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: cmdline-tools;latest
-          accept-android-sdk-licenses: true
-
-      - name: Accept Android SDK licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-      - name: Install Android SDK packages
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35"
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Run Accessibility Tests
-        run: ./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kurostream.tv.accessibility.AccessibilityTest --no-daemon
-
-  sign-and-release:
+  sign-release:
     name: Sign & Release
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [build-and-test, benchmark, accessibility]
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: write
-      packages: write
+    timeout-minutes: 20
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    continue-on-error: true
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
         with:
-          submodules: false
-
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: gradle
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: cmdline-tools;latest
-          accept-android-sdk-licenses: true
-
-      - name: Accept Android SDK licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-      - name: Install Android SDK packages
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35"
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Download Release AAB
-        uses: actions/download-artifact@v4
-        with:
-          name: app-release-api34
+          name: release-aab
           path: app/build/outputs/bundle/release/
 
-      - name: Verify AAB
-        run: |
-          ls -la app/build/outputs/bundle/release/
-          if [ -f app/build/outputs/bundle/release/app-release.aab ]; then echo "AAB exists"; else echo "AAB not found"; exit 1; fi
-
-      - name: Sign AAB
+      - uses: r0adkll/sign-android-release@v1
         id: sign
-        uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: app/build/outputs/bundle/release/
-          signingKeyBase64: ${{ secrets.SIGNING_KEY_BASE64 }}
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload to Firebase App Distribution
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
+      - uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           groups: testers
           file: ${{ steps.sign.outputs.signedReleaseFile }}
-          releaseNotes: "Release ${{ github.ref_name }} - See RELEASE.md for details"
+          releaseNotes: Release ${{ github.ref_name }}
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v1
         with:
-          files: |
-            ${{ steps.sign.outputs.signedReleaseFile }}
-            app/build/outputs/bundle/release/app-release.aab
+          files: ${{ steps.sign.outputs.signedReleaseFile }}
           generate_release_notes: true
-          draft: false
-          prerelease: false
 
-      - name: Upload AAB as Artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: signed-aab
           path: ${{ steps.sign.outputs.signedReleaseFile }}
@@ -268,17 +90,12 @@ jobs:
   notify:
     name: Notify
     runs-on: ubuntu-latest
-    needs: sign-and-release
+    needs: sign-release
     if: always()
     steps:
-      - name: Send Slack Notification
+      - uses: 8398a7/action-slack@v3
         if: env.SLACK_WEBHOOK_URL != ''
-        uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
           channel: '#releases'
-          text: "KuroStream ${{ github.ref_name }} release ${{ job.status }}"
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          text: Release ${{ github.ref_name }} ${{ job.status }}

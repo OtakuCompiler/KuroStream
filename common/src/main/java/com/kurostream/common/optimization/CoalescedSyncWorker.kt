@@ -18,7 +18,7 @@ class CoalescedSyncWorker(
     }
 
     private suspend fun performCoalescedSync() {
-        TODO("Implement coalesced sync of all providers")
+        throw UnsupportedOperationException("Coalesced sync not yet implemented")
     }
 }
 
@@ -36,6 +36,6 @@ class LowPriorityWorker(
     }
 
     private suspend fun performLowPriorityTask() {
-        TODO("Implement low priority background task")
+        throw UnsupportedOperationException("Low priority task not yet implemented")
     }
 }

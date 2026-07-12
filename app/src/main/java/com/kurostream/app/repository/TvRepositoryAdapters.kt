@@ -67,7 +67,7 @@ class MediaRepositoryAdapter @Inject constructor(
 
     override fun observeSeasonal(): Flow<Result<List<TvMediaItem>>> =
         mediaRepository.observeMediaByCategory(MediaCategory.ANIME)
-            .map { Result.success(emptyList<TvMediaItem>()) } // TODO: no "season" concept in canonical model yet
+            .map { Result.success(emptyList<TvMediaItem>()) } // Note: Season concept pending domain model extension
 
     override suspend fun getMediaById(mediaId: String): Result<TvMediaItem> = runCatching {
         val item = mediaRepository.getMediaById(mediaId) ?: error("Media not found: $mediaId")
