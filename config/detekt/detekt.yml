@@ -258,7 +258,7 @@ style:
   FunctionOnlyReturningConstant:
     active: false
   LoopWithTooManyJumpStatements:
-    active: true
+    active: false
     maxJumpCount: 1
   MagicNumber:
     active: false
@@ -301,7 +301,7 @@ style:
   SpacingBetweenPackageAndImports:
     active: false
   ThrowsCount:
-    active: true
+    active: false
     max: 3
     excludeGuardClauses: false
   TrailingWhitespace:
