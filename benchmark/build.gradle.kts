@@ -14,7 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.test)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -38,25 +38,14 @@ android {
         }
     }
 
+    targetProjectPath = ":app"
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
         jvmTarget = "17"
-    }
-
-    // Baseline Profile configuration
-    testOptions {
-        managedDevices {
-            devices {
-                create("pixel6api31", com.android.build.api.dsl.ManagedVirtualDevice::class) {
-                    device = "pixel_6"
-                    apiLevel = 31
-                    abi = "arm64"
-                }
-            }
-        }
     }
 }
 
