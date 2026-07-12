@@ -15,52 +15,69 @@
 
 package com.kurostream.core.platform
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+
 class WebPlayer : PlatformPlayer {
-    override fun initialize() {
-        throw UnsupportedOperationException("WebPlayer.initialize not implemented for webOS/Tizen. Implement in platform-specific module.")
+    override suspend fun prepare(mediaUrl: String, headers: Map<String, String>) {
+        throw UnsupportedOperationException("WebPlayer.prepare not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
-    
-    override fun play(mediaUrl: String, headers: Map<String, String>? = null) {
+
+    override suspend fun play() {
         throw UnsupportedOperationException("WebPlayer.play not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
-    
-    override fun pause() {
+
+    override suspend fun pause() {
         throw UnsupportedOperationException("WebPlayer.pause not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
-    
-    override fun resume() {
-        throw UnsupportedOperationException("WebPlayer.resume not implemented for webOS/Tizen. Implement in platform-specific module.")
-    }
-    
-    override fun stop() {
-        throw UnsupportedOperationException("WebPlayer.stop not implemented for webOS/Tizen. Implement in platform-specific module.")
-    }
-    
-    override fun seekTo(position: Long) {
+
+    override suspend fun seekTo(position: Long) {
         throw UnsupportedOperationException("WebPlayer.seekTo not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
-    
-    override fun setVolume(volume: Float) {
+
+    override suspend fun stop() {
+        throw UnsupportedOperationException("WebPlayer.stop not implemented for webOS/Tizen. Implement in platform-specific module.")
+    }
+
+    override suspend fun release() {
+        throw UnsupportedOperationException("WebPlayer.release not implemented for webOS/Tizen. Implement in platform-specific module.")
+    }
+
+    override suspend fun setVolume(volume: Float) {
         throw UnsupportedOperationException("WebPlayer.setVolume not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
-    
-    override fun setPlaybackSpeed(speed: Float) {
+
+    override suspend fun setPlaybackSpeed(speed: Float) {
         throw UnsupportedOperationException("WebPlayer.setPlaybackSpeed not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
-    
-    override val playbackState: kotlinx.coroutines.flow.Flow<PlaybackState>
-        get() = kotlinx.coroutines.flow.flow { }
-    
-    override val currentPosition: kotlinx.coroutines.flow.Flow<Long>
-        get() = kotlinx.coroutines.flow.flow { }
-    
-    override val duration: kotlinx.coroutines.flow.Flow<Long>
-        get() = kotlinx.coroutines.flow.flow { }
-    
-    override val isPlaying: kotlinx.coroutines.flow.Flow<Boolean>
-        get() = kotlinx.coroutines.flow.flow { }
-    
-    override fun release() {
-        throw UnsupportedOperationException("WebPlayer.release not implemented for webOS/Tizen. Implement in platform-specific module.")
+
+    override suspend fun setLooping(looping: Boolean) {
+        throw UnsupportedOperationException("WebPlayer.setLooping not implemented for webOS/Tizen. Implement in platform-specific module.")
+    }
+
+    override val playbackState: Flow<PlaybackState>
+        get() = flow { }
+
+    override val currentPosition: Flow<Long>
+        get() = flow { }
+
+    override val duration: Flow<Long>
+        get() = flow { }
+
+    override val bufferedPosition: Flow<Long>
+        get() = flow { }
+
+    override val isPlaying: Flow<Boolean>
+        get() = flow { }
+
+    override val error: Flow<PlayerError?>
+        get() = flow { }
+
+    override fun setSurface(surface: Any?) {
+        throw UnsupportedOperationException("WebPlayer.setSurface not implemented for webOS/Tizen. Implement in platform-specific module.")
+    }
+
+    override fun setSurfaceHolder(holder: Any?) {
+        throw UnsupportedOperationException("WebPlayer.setSurfaceHolder not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
 }

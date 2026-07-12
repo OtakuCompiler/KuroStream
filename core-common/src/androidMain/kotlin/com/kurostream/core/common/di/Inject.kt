@@ -1,7 +1,5 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package com.kurostream.core.common.di
 
-import javax.inject.Inject as Jsr330Inject
-import kotlin.annotation.AnnotationRetention
-
-@Retention(AnnotationRetention.RUNTIME)
-actual annotation class Inject constructor() : Jsr330Inject
+actual typealias Inject = javax.inject.Inject

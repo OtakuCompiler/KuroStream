@@ -173,7 +173,7 @@ fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref
 recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragment" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
-mockito-kotlin = { group = "org.mockito", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
+mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
 archunit = { group = "com.tngtech.archunit", name = "archunit", version.ref = "archunit" }
 archunit-junit5 = { group = "com.tngtech.archunit", name = "archunit-junit5", version.ref = "archunit" }
 androidx-core-testing = { group = "androidx.test", name = "core", version.ref = "androidxCoreTesting" }

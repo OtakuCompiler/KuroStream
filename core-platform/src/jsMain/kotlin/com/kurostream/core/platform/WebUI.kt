@@ -15,7 +15,7 @@
 
 package com.kurostream.core.platform
 
-actual class WebUI : PlatformUI {
+class WebUI : PlatformUI {
     override fun openUrl(url: String) {
         throw UnsupportedOperationException("WebUI.openUrl not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
@@ -32,7 +32,7 @@ actual class WebUI : PlatformUI {
         throw UnsupportedOperationException("WebUI.showError not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
     
-    override fun vibrate(pattern: LongArray? = null) {
+    override fun vibrate(pattern: LongArray?) {
         throw UnsupportedOperationException("WebUI.vibrate not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
     

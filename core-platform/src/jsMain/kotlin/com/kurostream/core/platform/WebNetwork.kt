@@ -19,19 +19,19 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 class WebNetwork : PlatformNetwork {
-    override suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {
+    override suspend fun get(url: String, headers: Map<String, String>): HttpResponse {
         throw UnsupportedOperationException("WebNetwork.get not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
     
-    override suspend fun post(url: String, body: String?, headers: Map<String, String> = emptyMap()): HttpResponse {
+    override suspend fun post(url: String, body: String?, headers: Map<String, String>): HttpResponse {
         throw UnsupportedOperationException("WebNetwork.post not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
     
-    override suspend fun put(url: String, body: String?, headers: Map<String, String> = emptyMap()): HttpResponse {
+    override suspend fun put(url: String, body: String?, headers: Map<String, String>): HttpResponse {
         throw UnsupportedOperationException("WebNetwork.put not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
     
-    override suspend fun delete(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {
+    override suspend fun delete(url: String, headers: Map<String, String>): HttpResponse {
         throw UnsupportedOperationException("WebNetwork.delete not implemented for webOS/Tizen. Implement in platform-specific module.")
     }
     

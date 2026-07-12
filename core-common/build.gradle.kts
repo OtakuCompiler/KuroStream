@@ -28,6 +28,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.javax.inject)
             }
         }
         val androidMain by getting {
