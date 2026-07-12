@@ -196,7 +196,7 @@ dependencies {
     implementation(libs.nanohttpd.websocket)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+    debugImplementation(libs.leakcanary.android)
 
     // Baseline Profile & Macrobenchmark
     androidTestImplementation(libs.benchmark.macro.junit4)

@@ -26,7 +26,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                implementation("javax.inject:javax.inject:1")
+                implementation(libs.javax.inject)
             }
         }
         val jsMain by getting {
