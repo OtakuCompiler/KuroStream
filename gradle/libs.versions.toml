@@ -177,11 +177,6 @@ compose-ui-test = { group = "androidx.compose.ui", name = "ui-test", version.ref
 # Testing
 androidx.test.uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 
-# Baseline Profile
-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
-benchmark-junit4 = { group = "androidx.benchmark", name = "benchmark-junit4", version.ref = "benchmark" }
-benchmark-macro = { group = "androidx.benchmark", name = "benchmark-macro", version.ref = "benchmark" }
-
 # New libraries
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
