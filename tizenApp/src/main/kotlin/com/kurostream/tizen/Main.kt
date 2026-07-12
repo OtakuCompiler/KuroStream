@@ -15,7 +15,7 @@
 
 package com.kurostream.tizen
 
-import com.kurostream.domain.platform.PlatformFactory
+import com.kurostream.core.platform.PlatformFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
