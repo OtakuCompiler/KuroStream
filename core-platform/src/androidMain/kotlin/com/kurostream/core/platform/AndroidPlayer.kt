@@ -83,8 +83,7 @@ class AndroidPlayer(
             mediaPlayer.reset()
             val uri = Uri.parse(mediaUrl)
             if (headers.isNotEmpty()) {
-                val headersArray = headers.entries.map { "${it.key}: ${it.value}" }.toTypedArray()
-                mediaPlayer.setDataSource(context, uri, headersArray.toMap())
+                mediaPlayer.setDataSource(context, uri, headers)
             } else {
                 mediaPlayer.setDataSource(context, uri)
             }
