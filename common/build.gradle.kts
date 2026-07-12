@@ -21,8 +21,11 @@ plugins {
 }
 android {
     namespace = "com.kurostream.common"
-    compileSdk = 35
-    defaultConfig { minSdk = 21 }
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdk.get().toInt()
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -38,7 +41,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
+        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
 }
 dependencies {

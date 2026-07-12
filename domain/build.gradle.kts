@@ -21,6 +21,18 @@ plugins {
 
 kotlin {
     androidTarget {
+        namespace = "com.kurostream.domain"
+        compileSdk = libs.versions.compileSdk.get().toInt()
+
+        defaultConfig {
+            minSdk = libs.versions.minSdk.get().toInt()
+        }
+
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
+
         publishLibraryVariants("release", "debug")
         compilations.all {
             kotlinOptions {
@@ -45,8 +57,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(libs.junit)
-                implementation("com.tngtech.archunit:archunit-junit5:1.2.1")
-                implementation("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+                implementation(libs.archunit)
             }
         }
         val androidMain by getting {
@@ -60,20 +71,6 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
-    }
-}
-
-android {
-    namespace = "com.kurostream.domain"
-    compileSdk = libs.versions.compileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

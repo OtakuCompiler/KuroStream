@@ -78,7 +78,7 @@ android {
         viewBinding = false
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
+        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
     packaging {
         resources.excludes += "/META-INF/*.kotlin_module"

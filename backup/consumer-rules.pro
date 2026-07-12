@@ -1,2 +1,2 @@
-# Consumer ProGuard rules for data
+# Consumer ProGuard rules for backup
 # Add any library-specific ProGuard rules here

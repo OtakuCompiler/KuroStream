@@ -8,6 +8,7 @@ coreKtx = "1.13.1"
 appcompat = "1.7.0"
 activityCompose = "1.9.3"
 composeBom = "2023.08.00"
+composeCompiler = "1.5.4"
 tvFoundation = "1.0.0-alpha11"
 tvMaterial3 = "1.0.0-alpha04"
 navigationCompose = "2.8.3"
@@ -86,6 +87,9 @@ securityCrypto = "1.1.0-alpha06"
 
 # Compression
 zstd = "1.5.6-3"
+
+# Compose Compiler
+composeCompiler = "1.5.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -169,6 +173,10 @@ recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragment" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 mockito-kotlin = { group = "org.mockito", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
+mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+archunit = { group = "com.tngtech.archunit", name = "archunit", version.ref = "archunit" }
+archunit-junit5 = { group = "com.tngtech.archunit", name = "archunit-junit5", version.ref = "archunit" }
+androidx-core-testing = { group = "androidx.test", name = "core", version.ref = "androidxCoreTesting" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockkAndroid" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
@@ -202,6 +210,9 @@ security-crypto = { group = "androidx.security", name = "security-crypto", versi
 
 # Compression
 zstd-jni = { group = "com.github.luben", name = "zstd-jni", version.ref = "zstd" }
+
+# Compose compiler
+compose-compiler = { group = "org.jetbrains.kotlin", name = "compose-compiler", version.ref = "composeCompiler" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
