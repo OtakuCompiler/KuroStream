@@ -219,10 +219,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 
-    // Baseline Profile
-    androidTestImplementation(libs.baselineProfile.gradlePlugin)
-    androidTestImplementation(libs.benchmark.macro.junit4)
-    androidTestImplementation(libs.benchmark.junit4)
+    // Baseline Profile & Macrobenchmark
+    androidTestImplementation(libs.androidx.benchmark.macro.junit4)
+    androidTestImplementation(libs.androidx.benchmark.junit4)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

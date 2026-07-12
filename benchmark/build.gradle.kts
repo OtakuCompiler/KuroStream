@@ -71,10 +71,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Baseline Profile & Macrobenchmark
-    androidTestImplementation(libs.benchmark.junit4)
-    androidTestImplementation(libs.benchmark.macro.junit4)
-    androidTestImplementation("androidx.benchmark:benchmark-macro-junit4:${libs.versions.benchmarkMacro.get()}")
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
+    androidTestImplementation(libs.androidx.benchmark.macro.junit4)
+    androidTestImplementation(libs.androidx.benchmark.junit4)
+    androidTestImplementation(libs.androidx.test.uiautomator)
 
     testImplementation(libs.junit)
 }
