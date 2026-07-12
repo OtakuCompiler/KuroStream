@@ -26,7 +26,7 @@ kotlin {
         nodejs()
         binaries.executable()
     }
-    android()
+    androidTarget()
 
     sourceSets {
         val commonMain by getting {
@@ -57,6 +57,20 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
+    }
+}
+
+android {
+    namespace = "com.kurostream.core.platform"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdk.get().toInt()
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
