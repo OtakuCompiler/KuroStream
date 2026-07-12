@@ -71,6 +71,9 @@ spotless = "6.25.0"
 archunit = "1.0.0"
 dependencycheck = "9.0.1"
 
+# Testing
+uiautomator = "2.3.0"
+
 # Torrent dependencies
 libtorrent4j = "2.0.9"
 libtorrent = "2.0.9"
