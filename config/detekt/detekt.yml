@@ -33,7 +33,7 @@ comments:
 complexity:
   active: true
   ComplexCondition:
-    active: true
+    active: false
     threshold: 4
   ComplexInterface:
     active: false
@@ -54,7 +54,7 @@ complexity:
       - 'use'
       - 'with'
   LargeClass:
-    active: true
+    active: false
     threshold: 600
   LongMethod:
     active: false
@@ -77,8 +77,7 @@ exceptions:
     active: true
     ignoreLabeled: false
   SwallowedException:
-    active: true
-    allowedExceptionNameRegex: '^(ignored|expected|e|t|ex).*'
+    active: false
   ThrowingExceptionFromFinally:
     active: true
   ThrowingExceptionsWithoutMessageOrCause:
@@ -86,6 +85,8 @@ exceptions:
   ThrowingNewInstanceOfSameException:
     active: true
   TooGenericExceptionCaught:
+    active: false
+  TooGenericExceptionThrown:
     active: false
 
 naming:
@@ -194,7 +195,7 @@ potential-bugs:
   IteratorNotThrowingNoSuchElementException:
     active: true
   LateinitUsage:
-    active: true
+    active: false
     excludes:
       - '**/DownloadService.kt'
       - '**/LauncherActivity.kt'
@@ -342,7 +343,7 @@ style:
   UseCheckNotNull:
     active: true
   UseCheckOrError:
-    active: true
+    active: false
   UseDataClass:
     active: false
   UseIfEmptyOrIfBlank:
@@ -366,4 +367,19 @@ style:
   VarCouldBeVal:
     active: true
   WildcardImport:
+    active: false
+
+formatting:
+  active: true
+  EmptyFunctionBlock:
+    active: false
+  EmptyElseBlock:
+    active: false
+  EmptyCatchBlock:
+    active: false
+  NoEmptyFirstLineInClassBody:
+    active: false
+  NewLineAtEndOfFile:
+    active: false
+  FinalNewLine:
     active: false

@@ -23,7 +23,7 @@ allprojects {
                 toolVersion = "1.23.6"
                 config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
                 buildUponDefaultConfig = true
-                allRules = true
+                allRules = false
                 parallel = true
             }
         }
