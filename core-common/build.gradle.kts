@@ -6,26 +6,7 @@ plugins {
 }
 
 kotlin {
-    androidTarget {
-        namespace = "com.kurostream.core.common"
-        compileSdk = libs.versions.compileSdk.get().toInt()
-
-        defaultConfig {
-            minSdk = libs.versions.minSdk.get().toInt()
-        }
-
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
-
-        publishLibraryVariants("release", "debug")
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
+    androidTarget()
     js {
         browser()
         nodejs()
@@ -56,13 +37,27 @@ kotlin {
     }
 }
 
+android {
+    namespace = "com.kurostream.core.common"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdk.get().toInt()
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
 }
 
 spotless {
     kotlin {
-        target(*arrayOf("*.kt", "*.kts")) {
+        target("*.kt", "*.kts") {
             ktlint()
         }
     }

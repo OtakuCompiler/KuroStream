@@ -56,7 +56,7 @@ mockitoKotlin = "5.4.0"
 mockk = "1.13.13"
 kotlinxCoroutinesTest = "1.9.0"
 androidxCoreTesting = "2.2.0"
-benchmark = "1.2.4"
+benchmarkVersion = "1.2.4"
 composeUiTest = "1.7.0"
 mockkAndroid = "1.13.13"
 baselineProfile = "8.5.0"
@@ -170,14 +170,14 @@ recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragment" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 mockito-kotlin = { group = "org.mockito", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
-mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 archunit = { group = "com.tngtech.archunit", name = "archunit", version.ref = "archunit" }
 archunit-junit5 = { group = "com.tngtech.archunit", name = "archunit-junit5", version.ref = "archunit" }
 androidx-core-testing = { group = "androidx.test", name = "core", version.ref = "androidxCoreTesting" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockkAndroid" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
+benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmarkVersion" }
+benchmark-junit4 = { group = "androidx.benchmark", name = "benchmark-junit4", version.ref = "benchmarkVersion" }
 compose-ui-test = { group = "androidx.compose.ui", name = "ui-test", version.ref = "composeUiTest" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "composeUiTest" }
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "composeUiTest" }
