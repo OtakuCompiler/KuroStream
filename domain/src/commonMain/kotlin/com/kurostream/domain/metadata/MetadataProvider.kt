@@ -1,5 +1,5 @@
 package com.kurostream.domain.metadata
-import com.kurostream.domain.platform.platformCurrentTimeMillis
+import com.kurostream.core.platform.platformCurrentTimeMillis
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable

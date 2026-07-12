@@ -5,35 +5,35 @@ import kotlinx.coroutines.Dispatchers
 
 class DefaultDispatcherProvider : DispatcherProvider {
     override val main: CoroutineDispatcher = Dispatchers.Default
-    override val io: CoroutineDispatcher = Dispatchers.IO
+    override val io: CoroutineDispatcher = Dispatchers.Default
     override val default: CoroutineDispatcher = Dispatchers.Default
     override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
 
     val adaptiveIO: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(4)
+        Dispatchers.Default
     }
 
     val cpuIntensive: CoroutineDispatcher by lazy {
-        Dispatchers.Default.limitedParallelism(2)
+        Dispatchers.Default
     }
 
     val networkIO: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(2)
+        Dispatchers.Default
     }
 
     val databaseIO: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(2)
+        Dispatchers.Default
     }
 
     val fileIO: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(2)
+        Dispatchers.Default
     }
 
     val imageProcessing: CoroutineDispatcher by lazy {
-        Dispatchers.Default.limitedParallelism(2)
+        Dispatchers.Default
     }
 
     val backgroundSync: CoroutineDispatcher by lazy {
-        Dispatchers.IO.limitedParallelism(1)
+        Dispatchers.Default
     }
 }

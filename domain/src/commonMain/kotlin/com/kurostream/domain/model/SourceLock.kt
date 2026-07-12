@@ -14,7 +14,7 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.model
-import com.kurostream.domain.platform.platformCurrentTimeMillis
+import com.kurostream.core.platform.platformCurrentTimeMillis
 
 import kotlinx.serialization.Serializable
 

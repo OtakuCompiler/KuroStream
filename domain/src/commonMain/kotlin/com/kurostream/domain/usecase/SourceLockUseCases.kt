@@ -1,5 +1,5 @@
 package com.kurostream.domain.usecase
-import com.kurostream.domain.platform.platformCurrentTimeMillis
+import com.kurostream.core.platform.platformCurrentTimeMillis
 
 import com.kurostream.domain.model.MediaItem
 import com.kurostream.domain.model.MediaSource
