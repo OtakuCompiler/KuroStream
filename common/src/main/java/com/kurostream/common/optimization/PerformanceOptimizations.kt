@@ -48,7 +48,7 @@ class BatteryAwareManager private constructor(
                     val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
                     val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
                     val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-                    val plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+                    // val plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) // unused
 
                     batteryLevel = (level * 100) / scale
                     isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL

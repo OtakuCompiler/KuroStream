@@ -15,7 +15,6 @@
 
 package com.kurostream.common.optimization
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -46,7 +45,6 @@ import java.util.concurrent.atomic.AtomicLong
  * Target: 60fps UI, reduced GPU overhead
  */
 class UiTextureAtlas(
-    private val context: Context,
     private val maxSize: Int = 4096
 ) {
     private val TAG = "UiTextureAtlas"
@@ -194,7 +192,6 @@ class AlignedFileWriter(
     private val blockSize: Int = 4096
 ) {
     private val TAG = "AlignedFileWriter"
-    private val pendingWrites = ConcurrentHashMap<String, ByteArray>()
     private val writeExecutor = Executors.newSingleThreadExecutor()
     
     fun writeAligned(file: java.io.File, data: ByteArray, offset: Long = 0) {
@@ -349,9 +346,7 @@ class AdaptiveBitrateLadder {
  * 
  * Target: Reduced storage, faster sync, <80MB RAM
  */
-class GlobalMetadataDeduplicator(
-    private val context: Context
-) {
+class GlobalMetadataDeduplicator {
     private val TAG = "GlobalMetadataDeduplicator"
     private val metadataCache = ConcurrentHashMap<String, UnifiedMetadata>()
     private val providerMapping = ConcurrentHashMap<String, MutableSet<String>>()

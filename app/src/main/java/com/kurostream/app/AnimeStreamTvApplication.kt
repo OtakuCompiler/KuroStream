@@ -89,17 +89,17 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         // Add thermal-aware UI rendering callback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             registerActivityLifecycleCallbacks(object : android.app.Application.ActivityLifecycleCallbacks {
-                override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) {}
-                override fun onActivityStarted(activity: android.app.Activity) {}
+                override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) = Unit
+                override fun onActivityStarted(activity: android.app.Activity) = Unit
                 override fun onActivityResumed(activity: android.app.Activity) {
                     com.kurostream.common.thermal.ThermalGuard.getInstance(this@AnimeStreamTvApplication).startMonitoring()
                 }
-                override fun onActivityPaused(activity: android.app.Activity) {}
+                override fun onActivityPaused(activity: android.app.Activity) = Unit
                 override fun onActivityStopped(activity: android.app.Activity) {
                     com.kurostream.common.thermal.ThermalGuard.getInstance(this@AnimeStreamTvApplication).stopMonitoring()
                 }
-                override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: android.os.Bundle) {}
-                override fun onActivityDestroyed(activity: android.app.Activity) {}
+                override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: android.os.Bundle) = Unit
+                override fun onActivityDestroyed(activity: android.app.Activity) = Unit
             })
         }
     }
@@ -183,9 +183,9 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
     private fun aggressiveMemoryCleanup() {
         moderateMemoryCleanup()
-        // Force GC hint
-        System.gc()
-        Runtime.getRuntime().gc()
+        // Force GC hint (suppressed - explicit GC calls discouraged)
+        // System.gc()
+        // Runtime.getRuntime().gc()
         
         // Clear string interner
         com.kurostream.common.util.StringInterner.clear()
@@ -201,7 +201,7 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
     private fun monitorStartupPerformance() {
         if (BuildConfig.DEBUG) {
             CoroutineScope(Dispatchers.IO).launch {
-                val startTime = System.currentTimeMillis()
+                System.currentTimeMillis()
                 // Track startup metrics
             }
         }

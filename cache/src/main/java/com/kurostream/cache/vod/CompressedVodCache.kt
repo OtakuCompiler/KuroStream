@@ -49,7 +49,6 @@ class CompressedVodCache private constructor(
     private val context: Context,
     private val config: VodCacheConfig
 ) {
-    private val TAG = "CompressedVodCache"
     
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val decompressExecutor = java.util.concurrent.Executors.newFixedThreadPool(2)

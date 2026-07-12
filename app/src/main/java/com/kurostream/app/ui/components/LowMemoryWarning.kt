@@ -92,15 +92,30 @@ fun LowMemoryWarning(
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
         ) {
-            val (bgColor, textColor, iconColor, message) = when (pressure) {
+            val warningData = when (pressure) {
                 MemoryPressure.EMERGENCY -> {
-                    Color(0xFFB71C1C) to Color.White to Color.White to "CRITICAL: ${getAvailableMB()}MB free! App may crash."
+                    LowMemoryWarningData(
+                        bgColor = Color(0xFFB71C1C),
+                        textColor = Color.White,
+                        iconColor = Color.White,
+                        message = "CRITICAL: ${getAvailableMB()}MB free! App may crash."
+                    )
                 }
                 MemoryPressure.CRITICAL -> {
-                    Color(0xFFC62828) to Color.White to Color.White to "LOW MEMORY: ${getAvailableMB()}MB free. Close other apps."
+                    LowMemoryWarningData(
+                        bgColor = Color(0xFFC62828),
+                        textColor = Color.White,
+                        iconColor = Color.White,
+                        message = "LOW MEMORY: ${getAvailableMB()}MB free. Close other apps."
+                    )
                 }
                 else -> {
-                    Color(0xFFF57F17) to Color.White to Color.White to "Memory pressure: ${getAvailableMB()}MB free"
+                    LowMemoryWarningData(
+                        bgColor = Color(0xFFF57F17),
+                        textColor = Color.White,
+                        iconColor = Color.White,
+                        message = "Memory pressure: ${getAvailableMB()}MB free"
+                    )
                 }
             }
             
@@ -109,7 +124,7 @@ fun LowMemoryWarning(
                     .fillMaxWidth(0.4f)
                     .padding(16.dp)
                     .clip(RoundedCornerShape(12.dp)),
-                color = bgColor.copy(alpha = 0.95f),
+                color = warningData.bgColor.copy(alpha = 0.95f),
                 elevation = 8.dp
             ) {
                 Box(
@@ -124,7 +139,7 @@ fun LowMemoryWarning(
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = "Memory warning",
-                            tint = iconColor,
+                            tint = warningData.iconColor,
                             modifier = Modifier.size(28.dp)
                         )
                         
@@ -132,12 +147,12 @@ fun LowMemoryWarning(
                             Text(
                                 text = "Memory Warning",
                                 style = MaterialTheme.typography.titleSmall,
-                                color = textColor
+                                color = warningData.textColor
                             )
                             Text(
-                                text = message,
+                                text = warningData.message,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = textColor.copy(alpha = 0.9f),
+                                color = warningData.textColor.copy(alpha = 0.9f),
                                 maxLines = 2,
                                 textAlign = TextAlign.Start
                             )
@@ -151,7 +166,7 @@ fun LowMemoryWarning(
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Dismiss",
-                                    tint = textColor,
+                                    tint = warningData.textColor,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -162,6 +177,13 @@ fun LowMemoryWarning(
         }
     }
     
+    private data class LowMemoryWarningData(
+        val bgColor: androidx.compose.ui.graphics.Color,
+        val textColor: androidx.compose.ui.graphics.Color,
+        val iconColor: androidx.compose.ui.graphics.Color,
+        val message: String
+    )
+
     private fun getAvailableMB(): Long {
         val runtime = Runtime.getRuntime()
         return (runtime.maxMemory() - runtime.totalMemory() + runtime.freeMemory()) / (1024 * 1024)

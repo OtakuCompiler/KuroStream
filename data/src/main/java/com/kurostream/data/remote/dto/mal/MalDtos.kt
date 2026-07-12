@@ -18,7 +18,7 @@ package com.kurostream.data.remote.dto.mal
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MalDtos()
+data class MalDtos
 
 @Serializable
 data class Anime(

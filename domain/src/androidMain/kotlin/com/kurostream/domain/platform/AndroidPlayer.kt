@@ -19,115 +19,149 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import android.view.Surface
+import android.view.SurfaceHolder
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
 
-actual class AndroidPlayer(
+class AndroidPlayer(
     private val context: Context,
     private val scope: CoroutineScope
 ) : PlatformPlayer {
+
     private val mediaPlayer = MediaPlayer()
-    private val _playbackState = MutableStateFlow<PlaybackState>(PlaybackState.Idle)
+    private var pendingMediaUrl: String? = null
+    private var pendingHeaders: Map<String, String>? = null
+
+    private val _playbackState = MutableStateFlow(
+        PlaybackState(state = PlaybackState.State.IDLE)
+    )
     private val _currentPosition = MutableStateFlow(0L)
     private val _duration = MutableStateFlow(0L)
+    private val _bufferedPosition = MutableStateFlow(0L)
     private val _isPlaying = MutableStateFlow(false)
-    
-    override val playbackState: kotlinx.coroutines.flow.StateFlow<PlaybackState> = _playbackState
-    override val currentPosition: kotlinx.coroutines.flow.StateFlow<Long> = _currentPosition
-    override val duration: kotlinx.coroutines.flow.StateFlow<Long> = _duration
-    override val isPlaying: kotlinx.coroutines.flow.StateFlow<Boolean> = _isPlaying
-    
+    private val _error = MutableStateFlow<PlayerError?>(null)
+
+    override val playbackState = _playbackState.asStateFlow()
+    override val currentPosition = _currentPosition.asStateFlow()
+    override val duration = _duration.asStateFlow()
+    override val bufferedPosition = _bufferedPosition.asStateFlow()
+    override val isPlaying = _isPlaying.asStateFlow()
+    override val error = _error.asStateFlow()
+
     init {
         mediaPlayer.setOnPreparedListener { mp ->
             _duration.value = mp.duration.toLong()
-            _playbackState.value = PlaybackState.Playing(0)
+            _playbackState.value = PlaybackState(
+                state = PlaybackState.State.PLAYING,
+                position = _currentPosition.value,
+                duration = mp.duration.toLong()
+            )
             _isPlaying.value = true
             mp.start()
             startPositionUpdates()
         }
         mediaPlayer.setOnCompletionListener {
-            _playbackState.value = PlaybackState.Completed
+            _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.COMPLETED)
             _isPlaying.value = false
         }
         mediaPlayer.setOnErrorListener { _, what, extra ->
-            _playbackState.value = PlaybackState.Error("MediaPlayer error: $what, $extra")
+            _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.ERROR)
+            _error.value = PlayerError(code = what, message = "MediaPlayer error: $what, $extra")
             _isPlaying.value = false
             true
         }
     }
-    
-    override fun initialize() {
-    }
-    
-    override fun play(mediaUrl: String, headers: Map<String, String>? = null) {
+
+    override suspend fun prepare(mediaUrl: String, headers: Map<String, String>) {
+        pendingMediaUrl = mediaUrl
+        pendingHeaders = headers
+        _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.PREPARING)
         try {
             mediaPlayer.reset()
-            val dataSource = if (headers != null && headers.isNotEmpty()) {
-                val uri = Uri.parse(mediaUrl)
+            val uri = Uri.parse(mediaUrl)
+            if (headers.isNotEmpty()) {
                 val headersArray = headers.entries.map { "${it.key}: ${it.value}" }.toTypedArray()
-                android.media.MediaPlayer.create(context, uri).also { player ->
-                    player.setDataSource(context, uri, headersArray.toMap())
-                }
+                mediaPlayer.setDataSource(context, uri, headersArray.toMap())
             } else {
-                mediaPlayer.setDataSource(context, Uri.parse(mediaUrl))
+                mediaPlayer.setDataSource(context, uri)
             }
             mediaPlayer.prepareAsync()
-            _playbackState.value = PlaybackState.Buffering(0f)
         } catch (e: Exception) {
-            _playbackState.value = PlaybackState.Error(e.message ?: "Unknown error")
+            _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.ERROR)
+            _error.value = PlayerError(code = -1, message = e.message ?: "Unknown error", cause = e)
         }
     }
-    
-    override fun pause() {
+
+    override suspend fun play() {
+        try {
+            mediaPlayer.start()
+            _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.PLAYING)
+            _isPlaying.value = true
+            startPositionUpdates()
+        } catch (e: Exception) {
+            _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.ERROR)
+            _error.value = PlayerError(code = -1, message = e.message ?: "Unknown error", cause = e)
+        }
+    }
+
+    override suspend fun pause() {
         if (mediaPlayer.isPlaying) {
             mediaPlayer.pause()
-            _playbackState.value = PlaybackState.Paused(_currentPosition.value)
+            _playbackState.value = _playbackState.value.copy(
+                state = PlaybackState.State.PAUSED,
+                position = _currentPosition.value
+            )
             _isPlaying.value = false
         }
     }
-    
-    override fun resume() {
-        if (!_isPlaying.value) {
-            mediaPlayer.start()
-            _playbackState.value = PlaybackState.Playing(_currentPosition.value)
-            _isPlaying.value = true
-            startPositionUpdates()
-        }
+
+    override suspend fun seekTo(position: Long) {
+        mediaPlayer.seekTo(position.toInt())
     }
-    
-    override fun stop() {
+
+    override suspend fun stop() {
         mediaPlayer.stop()
-        _playbackState.value = PlaybackState.Idle
+        _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.IDLE, position = 0)
         _currentPosition.value = 0
         _isPlaying.value = false
     }
-    
-    override fun seekTo(position: Long) {
-        mediaPlayer.seekTo(position.toInt())
+
+    override suspend fun release() {
+        mediaPlayer.release()
+        _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.RELEASED)
     }
-    
-    override fun setVolume(volume: Float) {
+
+    override suspend fun setVolume(volume: Float) {
         mediaPlayer.setVolume(volume, volume)
     }
-    
-    override fun setPlaybackSpeed(speed: Float) {
+
+    override suspend fun setPlaybackSpeed(speed: Float) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            mediaPlayer.setPlaybackParams(
-                mediaPlayer.playbackParams.setSpeed(speed)
-            )
+            mediaPlayer.setPlaybackParams(mediaPlayer.playbackParams.setSpeed(speed))
         }
     }
-    
-    override fun release() {
-        mediaPlayer.release()
+
+    override suspend fun setLooping(looping: Boolean) {
+        mediaPlayer.isLooping = looping
     }
-    
+
+    override fun setSurface(surface: Any?) {
+        if (surface is Surface) {
+            mediaPlayer.setSurface(surface)
+        }
+    }
+
+    override fun setSurfaceHolder(holder: Any?) {
+        if (holder is SurfaceHolder) {
+            mediaPlayer.setDisplay(holder)
+        }
+    }
+
     private fun startPositionUpdates() {
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             while (mediaPlayer.isPlaying && !Thread.currentThread().isInterrupted) {
                 _currentPosition.value = mediaPlayer.currentPosition.toLong()
                 kotlinx.coroutines.delay(100)

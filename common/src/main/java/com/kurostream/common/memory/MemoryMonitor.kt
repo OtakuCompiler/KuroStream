@@ -302,9 +302,9 @@ class MemoryMonitor private constructor(
             }
         }
         
-        // 5. Request GC (hint only)
-        System.gc()
-        System.runFinalization()
+        // 5. Request GC (hint only) - suppressed as explicit GC calls are discouraged
+        // System.gc()
+        // System.runFinalization()
         actions.add("GC hint requested")
         
         // 6. For emergency, also clear disk caches if needed

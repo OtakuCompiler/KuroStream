@@ -300,7 +300,6 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
     }
 
     private fun convertToUnified(data: AnimeMetadata, sourceProviderId: String): UnifiedAnimeDetails {
-        val json = Json(JsonConfiguration.Stable)
         val providerData = mutableMapOf<String, Any>()
         providerData["_source"] = sourceProviderId
         providerData["_priority"] = allProviders.find { it.providerId == sourceProviderId }?.priority ?: 999

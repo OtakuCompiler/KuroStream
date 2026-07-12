@@ -24,10 +24,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
@@ -37,9 +38,9 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.net.InetAddress
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.SuspendCancellableCoroutine
 import kotlin.coroutines.resume
-import kotlinx.coroutines.channels.trySend
+import kotlin.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.channels.awaitClose
 
 class AndroidNetwork(private val context: Context) : PlatformNetwork {
     private val client = OkHttpClient.Builder()
@@ -48,24 +49,24 @@ class AndroidNetwork(private val context: Context) : PlatformNetwork {
         .writeTimeout(60, TimeUnit.SECONDS)
         .build()
     
-    private val mediaType = MediaType.get("application/json; charset=utf-8")
+    private val mediaType = "application/json; charset=utf-8".toMediaType()
     
-    override suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse = withContext(Dispatchers.IO) {
+    override suspend fun get(url: String, headers: Map<String, String>): HttpResponse = withContext(Dispatchers.IO) {
         val request = buildRequest(url, headers).get().build()
         executeRequest(request)
     }
     
-    override suspend fun post(url: String, body: String?, headers: Map<String, String> = emptyMap()): HttpResponse = withContext(Dispatchers.IO) {
+    override suspend fun post(url: String, body: String?, headers: Map<String, String>): HttpResponse = withContext(Dispatchers.IO) {
         val request = buildRequest(url, headers).post(toRequestBody(body)).build()
         executeRequest(request)
     }
     
-    override suspend fun put(url: String, body: String?, headers: Map<String, String> = emptyMap()): HttpResponse = withContext(Dispatchers.IO) {
+    override suspend fun put(url: String, body: String?, headers: Map<String, String>): HttpResponse = withContext(Dispatchers.IO) {
         val request = buildRequest(url, headers).put(toRequestBody(body)).build()
         executeRequest(request)
     }
     
-    override suspend fun delete(url: String, headers: Map<String, String> = emptyMap()): HttpResponse = withContext(Dispatchers.IO) {
+    override suspend fun delete(url: String, headers: Map<String, String>): HttpResponse = withContext(Dispatchers.IO) {
         val request = buildRequest(url, headers).delete().build()
         executeRequest(request)
     }
@@ -76,8 +77,8 @@ class AndroidNetwork(private val context: Context) : PlatformNetwork {
         }
     }
     
-    private fun toRequestBody(body: String?): RequestBody? {
-        return body?.let { RequestBody.create(it, mediaType) }
+    private fun toRequestBody(body: String?): RequestBody {
+        return (body ?: "").toRequestBody(mediaType)
     }
     
     private suspend fun executeRequest(request: Request): HttpResponse = suspendCancellableCoroutine { cont ->
@@ -108,11 +109,11 @@ class AndroidNetwork(private val context: Context) : PlatformNetwork {
         }.build()
         
         val channel = Channel<WebSocketMessage>()
-        var webSocket: WebSocket? = null
+        var ws: WebSocket? = null
         
         client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                this@AndroidNetwork.webSocket = webSocket
+                ws = webSocket
             }
             
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -133,7 +134,7 @@ class AndroidNetwork(private val context: Context) : PlatformNetwork {
             }
         })
         
-        awaitClose { webSocket?.close(1000, "Flow cancelled") }
+        awaitClose { ws?.close(1000, "Flow cancelled") }
     }
     
     override fun download(url: String, destinationPath: String, progress: Flow<Float>): Flow<DownloadResult> = callbackFlow {

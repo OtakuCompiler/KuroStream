@@ -144,39 +144,35 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
 
         // Primary: read from sysfs thermal zones
         for (path in thermalZonePaths) {
-            try {
-                File(path).bufferedReader().use { reader ->
-                    val line = reader.readLine() ?: return@use
-                    val milliCelsius = line.toLongOrNull() ?: 0L
-                    val celsius = milliCelsius / 1000.0
-                    if (celsius > maxTemp && celsius < 150.0) { // sanity check
-                        maxTemp = celsius
-                    }
-                }
-            } catch (e: Exception) {
-                // Ignore unreadable zones
-            }
+            maxTemp = readSysfsTemperature(path, maxTemp)
         }
 
         // Fallback: HardwarePropertiesManager (API 24+)
         if (maxTemp == 0.0 && hwPropertiesManager != null) {
-            try {
-                maxTemp = readTempViaHardwarePropertiesManager()
-            } catch (e: Exception) {
-                Log.w("ThermalGuard", "HardwarePropertiesManager read failed", e)
-            }
+            maxTemp = readHardwarePropertiesTemperature()
         }
 
         return maxTemp
     }
 
+    private fun readSysfsTemperature(path: String, currentMax: Double): Double {
+        return try {
+            File(path).bufferedReader().use { reader ->
+                val line = reader.readLine() ?: return@use currentMax
+                val milliCelsius = line.toLongOrNull() ?: 0L
+                val celsius = milliCelsius / 1000.0
+                if (celsius > currentMax && celsius < 150.0) celsius else currentMax
+            }
+        } catch (e: Exception) {
+            currentMax
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.N)
-    private fun readTempViaHardwarePropertiesManager(): Double {
+    private fun readHardwarePropertiesTemperature(): Double {
         // Use reflection to avoid compile-time dependency on HardwarePropertiesManager
         val manager = hwPropertiesManager as android.os.HardwarePropertiesManager
-        try {
-            // Use integer literals for TEMPERATURE_TYPE_CPU (0) and TEMPERATURE_SOURCE_TEMPERATURE_CURRENT (1)
-            // to avoid compile-time dependency on system API constants
+        return try {
             val temps = manager.getDeviceTemperatures(0, 1)
             if (temps.isEmpty()) return 0.0
             var max = 0.0
@@ -184,9 +180,9 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
                 val celsius = (temp.toDouble() / 1000.0) - 273.15
                 if (celsius > max && celsius < 150.0) max = celsius
             }
-            return max
+            max
         } catch (e: Exception) {
-            return 0.0
+            0.0
         }
     }
 

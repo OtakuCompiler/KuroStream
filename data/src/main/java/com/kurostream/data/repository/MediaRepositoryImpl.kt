@@ -34,7 +34,6 @@ class MediaRepositoryImpl @Inject constructor(
     private val watchHistoryDao: WatchHistoryDao,
     private val favoriteDao: FavoriteDao,
     private val downloadItemDao: DownloadItemDao,
-    private val profileDao: ProfileDao,
     private val anilistApi: AniListApi,
     private val malApi: MalApi,
     private val openSubtitlesApi: OpenSubtitlesApi,

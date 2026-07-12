@@ -18,9 +18,8 @@ package com.kurostream.domain.platform
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,8 +43,10 @@ class AndroidStorage(
         File(path).readBytes()
     }
     
-    override suspend fun deleteFile(path: String) = withContext(Dispatchers.IO) {
-        File(path).delete()
+    override suspend fun deleteFile(path: String) {
+        withContext(Dispatchers.IO) {
+            File(path).delete()
+        }
     }
     
     override suspend fun fileExists(path: String): Boolean = withContext(Dispatchers.IO) {
@@ -56,38 +57,33 @@ class AndroidStorage(
         File(path).listFiles()?.map { it.absolutePath } ?: emptyList()
     }
     
-    override suspend fun createDirectory(path: String) = withContext(Dispatchers.IO) {
-        File(path).mkdirs()
+    override suspend fun createDirectory(path: String) {
+        withContext(Dispatchers.IO) {
+            File(path).mkdirs()
+        }
     }
     
     override suspend fun getFileSize(path: String): Long = withContext(Dispatchers.IO) {
         File(path).length()
     }
     
-    override fun observeFile(path: String) = callbackFlow {
+    override fun observeFile(path: String): Flow<ByteArray> = callbackFlow {
         val file = File(path)
         var lastModified = file.lastModified()
-        val channel = Channel<ByteArray>()
-        
+
         val watcher = Thread {
-            while (isActive) {
+            while (!Thread.interrupted()) {
                 Thread.sleep(1000)
                 if (file.exists() && file.lastModified() != lastModified) {
                     lastModified = file.lastModified()
-                    channel.trySend(file.readBytes())
+                    trySend(file.readBytes())
                 }
             }
-        }.apply { start() }
-        
-        try {
-            collectWhile { bytes ->
-                trySend(bytes)
-            }
-        } finally {
-            watcher.interrupt()
-            channel.close()
         }
-    }.asStateFlow()
+        watcher.start()
+
+        awaitClose { watcher.interrupt() }
+    }
     
     override suspend fun putString(key: String, value: String) = withContext(Dispatchers.IO) {
         context.getSharedPreferences("kurostream_prefs", Context.MODE_PRIVATE)

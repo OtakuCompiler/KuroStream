@@ -183,25 +183,28 @@ class OfflineTranslatorImpl @Inject constructor(
     }
 
     private fun decodeOutput(buffer: ByteBuffer): IntArray {
-        // Simplified decoding - in reality would use beam search or argmax
         val output = IntArray(modelInputSize)
         buffer.rewind()
         for (i in 0 until modelInputSize) {
-            var maxVal = Float.NEGATIVE_INFINITY
-            var maxIdx = 0
-            for (j in 0 until vocabSize) {
-                val idx = i * vocabSize + j
-                if (idx * 4 < buffer.capacity()) {
-                    val value = buffer.getFloat(idx * 4)
-                    if (value > maxVal) {
-                        maxVal = value
-                        maxIdx = j
-                    }
-                }
-            }
-            output[i] = maxIdx
+            output[i] = findMaxIndex(buffer, i)
         }
         return output
+    }
+
+    private fun findMaxIndex(buffer: ByteBuffer, i: Int): Int {
+        var maxVal = Float.NEGATIVE_INFINITY
+        var maxIdx = 0
+        for (j in 0 until vocabSize) {
+            val idx = i * vocabSize + j
+            if (idx * 4 < buffer.capacity()) {
+                val value = buffer.getFloat(idx * 4)
+                if (value > maxVal) {
+                    maxVal = value
+                    maxIdx = j
+                }
+            }
+        }
+        return maxIdx
     }
 
     // Simple tokenizer placeholder - would use SentencePiece in production

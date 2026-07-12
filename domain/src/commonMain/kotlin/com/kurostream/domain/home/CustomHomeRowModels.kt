@@ -15,6 +15,8 @@
 
 package com.kurostream.domain.home
 
+import com.kurostream.domain.entity.AiringStatus
+import com.kurostream.domain.entity.MediaType
 import kotlinx.serialization.Serializable
 
 @Serializable

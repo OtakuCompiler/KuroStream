@@ -6,7 +6,7 @@ import java.io.RandomAccessFile
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-object MappedFileBufferPool {
+object MappedFileBuffer {
     private const val TAG = "MappedFileBuffer"
     private val activeBuffers = mutableMapOf<String, MappedByteBuffer>()
     private const val MAX_CACHED_SIZE = 100L * 1024 * 1024

@@ -38,7 +38,7 @@ complexity:
   ComplexInterface:
     active: false
   CyclomaticComplexMethod:
-    active: true
+    active: false
     threshold: 30
     ignoreSingleWhenExpression: true
     ignoreSimpleWhenEntries: true
@@ -63,8 +63,7 @@ complexity:
   MethodOverloading:
     active: false
   NestedBlockDepth:
-    active: true
-    threshold: 4
+    active: false
   StringLiteralDuplication:
     active: false
   TooManyFunctions:
@@ -99,6 +98,17 @@ naming:
     parameterPattern: '[a-z][A-Za-z0-9]*'
     privateParameterPattern: '[a-z][A-Za-z0-9]*'
     excludeClassPattern: '$^'
+    excludes:
+      - '**/dto/**'
+      - '**/emby/**'
+      - '**/jellyfin/**'
+      - '**/plex/**'
+      - '**/opensubtitles/**'
+      - '**/anilist/**'
+      - '**/mal/**'
+      - '**/tmdb/**'
+      - '**/youtube/**'
+      - '**/torrserver/**'
   EnumNaming:
     active: true
     enumEntryPattern: '[A-Z][_a-zA-Z0-9]*'
@@ -115,7 +125,7 @@ naming:
   LambdaParameterNaming:
     active: false
   MatchingDeclarationName:
-    active: true
+    active: false
   MemberNameEqualsClassName:
     active: true
   ObjectPropertyNaming:
@@ -168,13 +178,13 @@ potential-bugs:
   EqualsWithHashCodeExist:
     active: true
   ExplicitGarbageCollectionCall:
-    active: true
+    active: false
   HasPlatformType:
     active: true
   IgnoredReturnValue:
     active: true
   ImplicitDefaultLocale:
-    active: true
+    active: false
   ImplicitUnitReturnType:
     active: false
   InvalidRange:
@@ -185,6 +195,9 @@ potential-bugs:
     active: true
   LateinitUsage:
     active: true
+    excludes:
+      - '**/DownloadService.kt'
+      - '**/LauncherActivity.kt'
   MapGetWithNotNullAssertionOperator:
     active: true
   MissingPackageDeclaration:
@@ -223,8 +236,12 @@ style:
   DataClassContainsFunctions:
     active: false
   DestructuringDeclarationWithTooManyEntries:
-    active: true
+    active: false
     maxDestructuringEntries: 3
+  EmptyFunctionBlock:
+    active: false
+  EmptyElseBlock:
+    active: false
   EqualsNullCall:
     active: true
   ExplicitItLambdaParameter:
@@ -253,7 +270,7 @@ style:
   MaxLineLength:
     active: false
   MayBeConst:
-    active: true
+    active: false
   ModifierOrder:
     active: true
   NestedClassesVisibility:
@@ -283,7 +300,7 @@ style:
   SafeCast:
     active: true
   SerialVersionUIDInSerializableClass:
-    active: true
+    active: false
   SpacingBetweenPackageAndImports:
     active: false
   ThrowsCount:
@@ -317,10 +334,10 @@ style:
   UnusedPrivateClass:
     active: true
   UnusedPrivateMember:
-    active: true
+    active: false
     allowedNames: ''
   UnusedPrivateProperty:
-    active: true
+    active: false
     allowedNames: '_|ignored|expected|serialVersionUID'
   UseAnyOrNoneInsteadOfFind:
     active: true

@@ -136,7 +136,6 @@ class DownloadService : LifecycleService() {
         }
 
         // Remove notifications for completed/cancelled downloads
-        val activeIds = downloads.keys.map { NOTIFICATION_BASE_ID + it.hashCode() }
         activeNotifications.keys.filter { it !in downloads.keys }.forEach { id ->
             notificationManager.cancel(NOTIFICATION_BASE_ID + id.hashCode())
             activeNotifications.remove(id)

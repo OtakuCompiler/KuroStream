@@ -25,7 +25,6 @@ import android.os.Vibrator
 import android.view.View
 import android.view.WindowInsetsController
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 
 class AndroidUI(private val context: Context) : PlatformUI {
     
@@ -53,7 +52,7 @@ class AndroidUI(private val context: Context) : PlatformUI {
         Toast.makeText(context, "Error: $message", Toast.LENGTH_LONG).show()
     }
     
-    override fun vibrate(pattern: LongArray? = null) {
+    override fun vibrate(pattern: LongArray?) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             pattern?.let { vibrator.vibrate(VibrationEffect.createWaveform(it, -1)) }
@@ -75,7 +74,7 @@ class AndroidUI(private val context: Context) : PlatformUI {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val display = (context as? Activity)?.display
             display?.let { d ->
-                val mode = d.preferredMode ?: d.mode
+                val mode = d.supportedModes.firstOrNull() ?: d.mode
                 val currentRate = mode.refreshRate
                 if (Math.abs(currentRate - rate) > 0.1f) {
                     // Request display refresh rate change
@@ -117,9 +116,6 @@ class AndroidUI(private val context: Context) : PlatformUI {
     
     override fun isImmersiveMode(): Boolean {
         val activity = context as? Activity ?: return false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return activity.window.insetsController?.isAppearanceLightStatusBars == false
-        }
         return (activity.window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY) != 0
     }
 }

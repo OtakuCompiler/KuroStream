@@ -74,7 +74,6 @@ class BackupRepositoryImpl @Inject constructor(
     private val encryptedPrefs by lazy { createEncryptedPrefs() }
 
     private val GITHUB_CLIENT_ID = "YOUR_GITHUB_CLIENT_ID"
-    private val GITHUB_REDIRECT_URI = "kurostream://github-callback"
     private val GITHUB_SCOPES = "gist,repo"
 
     init {
@@ -137,7 +136,6 @@ class BackupRepositoryImpl @Inject constructor(
             if (deviceCodeResponse is Result.Failure) return@withContext deviceCodeResponse
 
             val deviceCode = deviceCodeResponse.data
-            val verificationUrl = "https://github.com/login/device"
             val userCode = deviceCode.userCode
 
             // Poll for token

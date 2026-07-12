@@ -1,6 +1,5 @@
 package com.kurostream.app.network
 
-import android.content.Context
 import android.graphics.Bitmap
 import coil.ImageLoader
 import coil.fetch.SourceResult
@@ -13,7 +12,6 @@ import coil.size.Size
 import com.kurostream.common.optimization.BatteryAwareManager
 
 class AdaptiveImageInterceptor(
-    private val context: Context,
     private val batteryAwareManager: BatteryAwareManager,
 ) : Interceptor {
     override suspend fun intercept(

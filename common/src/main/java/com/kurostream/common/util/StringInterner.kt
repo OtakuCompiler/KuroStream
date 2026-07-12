@@ -26,8 +26,6 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object StringInterner {
     
-    private val TAG = "StringInterner"
-    
     // Main interning map - using ConcurrentHashMap for thread safety
     // Key: original string, Value: WeakReference to interned string
     private val interned = ConcurrentHashMap<String, WeakReference<String>>()

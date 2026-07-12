@@ -54,7 +54,6 @@ fun SearchScreen(
     onResultClick: (String) -> Unit,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
     val query by viewModel.query.collectAsStateWithLifecycle("")
 

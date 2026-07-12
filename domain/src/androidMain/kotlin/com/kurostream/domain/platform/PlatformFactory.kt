@@ -26,7 +26,7 @@ actual class PlatformFactory(
 ) {
     actual fun createPlayer(): PlatformPlayer = AndroidPlayer(context, scope)
     actual fun createStorage(): PlatformStorage = AndroidStorage(context, scope)
-    actual fun createNetwork(): PlatformNetwork = AndroidNetwork(context, scope)
+    actual fun createNetwork(): PlatformNetwork = AndroidNetwork(context)
     actual fun createUI(): PlatformUI = AndroidUI(context)
     
     actual companion object {

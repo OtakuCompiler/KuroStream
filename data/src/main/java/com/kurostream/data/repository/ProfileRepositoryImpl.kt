@@ -20,6 +20,7 @@ import com.kurostream.data.local.entity.ProfileEntity
 import com.kurostream.domain.model.Profile
 import com.kurostream.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.security.MessageDigest
 import java.util.UUID
@@ -83,7 +84,10 @@ class ProfileRepositoryImpl @Inject constructor(
         if (profileDao.count() <= 1) return Result.failure(IllegalStateException("Cannot delete last profile"))
         profileDao.delete(profile)
         if (profile.isActive) {
-            val remaining = profileDao.observeAll().map { it.firstOrNull() }
+            val remaining = profileDao.observeAll().first()
+            if (remaining.isNotEmpty()) {
+                profileDao.update(remaining.first().copy(isActive = true))
+            }
         }
         return Result.success(Unit)
     }

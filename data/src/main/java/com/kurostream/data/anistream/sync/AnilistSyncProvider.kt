@@ -15,11 +15,9 @@
 
 package com.kurostream.data.anistream.sync
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.kurostream.data.anistream.settings.SettingsRepository
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
@@ -29,7 +27,6 @@ import javax.inject.Singleton
 
 @Singleton
 class AnilistSyncProvider @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val settingsRepository: SettingsRepository,
     private val anilistApi: AnilistApiService
 ) : SyncProvider {

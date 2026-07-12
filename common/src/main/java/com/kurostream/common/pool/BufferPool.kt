@@ -30,15 +30,10 @@ import java.nio.ByteBuffer
  */
 object BufferPool {
     
-    private val TAG = "BufferPool"
+    private const val TAG = "BufferPool"
     
-    // Pool configuration
-    private val DEFAULT_BUFFER_SIZE = 8 * 1024 * 1024 // 8MB per buffer (4K frame)
-    private val DEFAULT_POOL_SIZE = 8 // 8 * 8MB = 64MB max
     private var lowRamMode = false
-    private val maxBuffersPerClass: Int
-        get() = if (lowRamMode) 4 else 16
-
+    
     // Buffer sizes for different use cases
     private val bufferSizes = intArrayOf(
         256 * 1024,      // 256KB - small metadata

@@ -88,81 +88,60 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override fun getSettings(): Settings {
         return dataStore.data.map { prefs ->
-            Settings(
-                autoPlayNextEnabled = prefs[Keys.AUTO_PLAY_NEXT] ?: true,
-                skipIntroEnabled = prefs[Keys.SKIP_INTRO] ?: true,
-                hardwareAccelerationEnabled = prefs[Keys.HARDWARE_ACCELERATION] ?: true,
-                backgroundPlaybackEnabled = prefs[Keys.BACKGROUND_PLAYBACK] ?: false,
-                debugOverlayEnabled = prefs[Keys.DEBUG_OVERLAY] ?: false,
-                cacheSizeFormatted = formatCacheSize(prefs[Keys.CACHE_SIZE] ?: 0L),
-                preferredAudioLanguages = parseLanguages(prefs[Keys.AUDIO_LANGUAGES] ?: ""),
-                preferredSubtitleLanguages = parseLanguages(prefs[Keys.SUBTITLE_LANGUAGES] ?: ""),
-                highContrastEnabled = prefs[Keys.HIGH_CONTRAST] ?: false,
-                reduceMotionEnabled = prefs[Keys.REDUCE_MOTION] ?: false,
-                focusHighlightEnabled = prefs[Keys.FOCUS_HIGHLIGHT] ?: true,
-                sourceLockSettings = com.kurostream.domain.model.SourceLockSettings(
-                    enabled = prefs[Keys.SOURCE_LOCK_ENABLED] ?: true,
-                    fallbackMode = com.kurostream.domain.model.SourceLockFallback.values()[prefs[Keys.SOURCE_LOCK_FALLBACK_MODE] ?: 0],
-                    maxRetries = prefs[Keys.SOURCE_LOCK_MAX_RETRIES] ?: 2,
-                    retryDelayMs = prefs[Keys.SOURCE_LOCK_RETRY_DELAY_MS] ?: 3000,
-                    persistAcrossSessions = prefs[Keys.SOURCE_LOCK_PERSIST] ?: true,
-                    notifyOnFallback = prefs[Keys.SOURCE_LOCK_NOTIFY_FALLBACK] ?: true,
-                ),
-                diskBufferSizeMb = prefs[Keys.DISK_BUFFER_SIZE_MB] ?: 200,
-                diskBufferReadAheadMb = prefs[Keys.DISK_BUFFER_READ_AHEAD_MB] ?: 4,
-                diskBufferLocation = prefs[Keys.DISK_BUFFER_LOCATION] ?: "internal",
-                diskBufferDeleteOnShutdown = prefs[Keys.DISK_BUFFER_DELETE_ON_SHUTDOWN] ?: false,
-                seedWhileIdleEnabled = prefs[Keys.SEED_WHILE_IDLE] ?: true,
-                sequentialDownloadEnabled = prefs[Keys.SEQUENTIAL_DOWNLOAD] ?: true,
-                seedRatioLimit = prefs[Keys.SEED_RATIO_LIMIT] ?: 2.0f,
-                globalDownloadLimitKbps = prefs[Keys.GLOBAL_DOWNLOAD_LIMIT_KBPS] ?: -1L,
-                globalUploadLimitKbps = prefs[Keys.GLOBAL_UPLOAD_LIMIT_KBPS] ?: -1L,
-                aiUpscalingEnabled = prefs[Keys.AI_UPSCALING] ?: false,
-                frameInterpolationEnabled = prefs[Keys.FRAME_INTERPOLATION] ?: false,
-                lowLatencyUpscalingEnabled = prefs[Keys.LOW_LATENCY_UPSCALING] ?: false,
-                vodCacheCompressionEnabled = prefs[Keys.VOD_CACHE_COMPRESSION] ?: true,
-            )
+            buildSettings(prefs)
         }.blockingFirst()
     }
 
     override fun observeSettings(): Flow<Settings> {
         return dataStore.data.map { prefs ->
-            Settings(
-                autoPlayNextEnabled = prefs[Keys.AUTO_PLAY_NEXT] ?: true,
-                skipIntroEnabled = prefs[Keys.SKIP_INTRO] ?: true,
-                hardwareAccelerationEnabled = prefs[Keys.HARDWARE_ACCELERATION] ?: true,
-                backgroundPlaybackEnabled = prefs[Keys.BACKGROUND_PLAYBACK] ?: false,
-                debugOverlayEnabled = prefs[Keys.DEBUG_OVERLAY] ?: false,
-                cacheSizeFormatted = formatCacheSize(prefs[Keys.CACHE_SIZE] ?: 0L),
-                preferredAudioLanguages = parseLanguages(prefs[Keys.AUDIO_LANGUAGES] ?: ""),
-                preferredSubtitleLanguages = parseLanguages(prefs[Keys.SUBTITLE_LANGUAGES] ?: ""),
-                highContrastEnabled = prefs[Keys.HIGH_CONTRAST] ?: false,
-                reduceMotionEnabled = prefs[Keys.REDUCE_MOTION] ?: false,
-                focusHighlightEnabled = prefs[Keys.FOCUS_HIGHLIGHT] ?: true,
-                sourceLockSettings = com.kurostream.domain.model.SourceLockSettings(
-                    enabled = prefs[Keys.SOURCE_LOCK_ENABLED] ?: true,
-                    fallbackMode = com.kurostream.domain.model.SourceLockFallback.values()[prefs[Keys.SOURCE_LOCK_FALLBACK_MODE] ?: 0],
-                    maxRetries = prefs[Keys.SOURCE_LOCK_MAX_RETRIES] ?: 2,
-                    retryDelayMs = prefs[Keys.SOURCE_LOCK_RETRY_DELAY_MS] ?: 3000,
-                    persistAcrossSessions = prefs[Keys.SOURCE_LOCK_PERSIST] ?: true,
-                    notifyOnFallback = prefs[Keys.SOURCE_LOCK_NOTIFY_FALLBACK] ?: true,
-                ),
-                diskBufferSizeMb = prefs[Keys.DISK_BUFFER_SIZE_MB] ?: 200,
-                diskBufferReadAheadMb = prefs[Keys.DISK_BUFFER_READ_AHEAD_MB] ?: 4,
-                diskBufferLocation = prefs[Keys.DISK_BUFFER_LOCATION] ?: "internal",
-                diskBufferDeleteOnShutdown = prefs[Keys.DISK_BUFFER_DELETE_ON_SHUTDOWN] ?: false,
-                seedWhileIdleEnabled = prefs[Keys.SEED_WHILE_IDLE] ?: true,
-                sequentialDownloadEnabled = prefs[Keys.SEQUENTIAL_DOWNLOAD] ?: true,
-                seedRatioLimit = prefs[Keys.SEED_RATIO_LIMIT] ?: 2.0f,
-                globalDownloadLimitKbps = prefs[Keys.GLOBAL_DOWNLOAD_LIMIT_KBPS] ?: -1L,
-                globalUploadLimitKbps = prefs[Keys.GLOBAL_UPLOAD_LIMIT_KBPS] ?: -1L,
-                aiUpscalingEnabled = prefs[Keys.AI_UPSCALING] ?: false,
-                frameInterpolationEnabled = prefs[Keys.FRAME_INTERPOLATION] ?: false,
-                lowLatencyUpscalingEnabled = prefs[Keys.LOW_LATENCY_UPSCALING] ?: false,
-                vodCacheCompressionEnabled = prefs[Keys.VOD_CACHE_COMPRESSION] ?: true,
-            )
+            buildSettings(prefs)
         }
     }
+
+    private fun buildSettings(prefs: Preferences): Settings {
+        return Settings(
+            autoPlayNextEnabled = getBool(prefs, Keys.AUTO_PLAY_NEXT, true),
+            skipIntroEnabled = getBool(prefs, Keys.SKIP_INTRO, true),
+            hardwareAccelerationEnabled = getBool(prefs, Keys.HARDWARE_ACCELERATION, true),
+            backgroundPlaybackEnabled = getBool(prefs, Keys.BACKGROUND_PLAYBACK, false),
+            debugOverlayEnabled = getBool(prefs, Keys.DEBUG_OVERLAY, false),
+            cacheSizeFormatted = formatCacheSize(prefs[Keys.CACHE_SIZE] ?: 0L),
+            preferredAudioLanguages = parseLanguages(prefs[Keys.AUDIO_LANGUAGES] ?: ""),
+            preferredSubtitleLanguages = parseLanguages(prefs[Keys.SUBTITLE_LANGUAGES] ?: ""),
+            highContrastEnabled = getBool(prefs, Keys.HIGH_CONTRAST, false),
+            reduceMotionEnabled = getBool(prefs, Keys.REDUCE_MOTION, false),
+            focusHighlightEnabled = getBool(prefs, Keys.FOCUS_HIGHLIGHT, true),
+            sourceLockSettings = buildSourceLockSettings(prefs),
+            diskBufferSizeMb = getInt(prefs, Keys.DISK_BUFFER_SIZE_MB, 200),
+            diskBufferReadAheadMb = getInt(prefs, Keys.DISK_BUFFER_READ_AHEAD_MB, 4),
+            diskBufferLocation = getString(prefs, Keys.DISK_BUFFER_LOCATION, "internal"),
+            diskBufferDeleteOnShutdown = getBool(prefs, Keys.DISK_BUFFER_DELETE_ON_SHUTDOWN, false),
+            seedWhileIdleEnabled = getBool(prefs, Keys.SEED_WHILE_IDLE, true),
+            sequentialDownloadEnabled = getBool(prefs, Keys.SEQUENTIAL_DOWNLOAD, true),
+            seedRatioLimit = getFloat(prefs, Keys.SEED_RATIO_LIMIT, 2.0f),
+            globalDownloadLimitKbps = getLong(prefs, Keys.GLOBAL_DOWNLOAD_LIMIT_KBPS, -1L),
+            globalUploadLimitKbps = getLong(prefs, Keys.GLOBAL_UPLOAD_LIMIT_KBPS, -1L),
+            aiUpscalingEnabled = getBool(prefs, Keys.AI_UPSCALING, false),
+            frameInterpolationEnabled = getBool(prefs, Keys.FRAME_INTERPOLATION, false),
+            lowLatencyUpscalingEnabled = getBool(prefs, Keys.LOW_LATENCY_UPSCALING, false),
+            vodCacheCompressionEnabled = getBool(prefs, Keys.VOD_CACHE_COMPRESSION, true),
+        )
+    }
+
+    private fun buildSourceLockSettings(prefs: Preferences) = com.kurostream.domain.model.SourceLockSettings(
+        enabled = getBool(prefs, Keys.SOURCE_LOCK_ENABLED, true),
+        fallbackMode = com.kurostream.domain.model.SourceLockFallback.values()[getInt(prefs, Keys.SOURCE_LOCK_FALLBACK_MODE, 0)],
+        maxRetries = getInt(prefs, Keys.SOURCE_LOCK_MAX_RETRIES, 2),
+        retryDelayMs = getLong(prefs, Keys.SOURCE_LOCK_RETRY_DELAY_MS, 3000),
+        persistAcrossSessions = getBool(prefs, Keys.SOURCE_LOCK_PERSIST, true),
+        notifyOnFallback = getBool(prefs, Keys.SOURCE_LOCK_NOTIFY_FALLBACK, true),
+    )
+
+    private inline fun getBool(prefs: Preferences, key: Preferences.Key<Boolean>, default: Boolean) = prefs[key] ?: default
+    private inline fun getInt(prefs: Preferences, key: Preferences.Key<Int>, default: Int) = prefs[key] ?: default
+    private inline fun getLong(prefs: Preferences, key: Preferences.Key<Long>, default: Long) = prefs[key] ?: default
+    private inline fun getFloat(prefs: Preferences, key: Preferences.Key<Float>, default: Float) = prefs[key] ?: default
+    private inline fun getString(prefs: Preferences, key: Preferences.Key<String>, default: String) = prefs[key] ?: default
 
     override suspend fun setAutoPlayNextEnabled(enabled: Boolean) {
         dataStore.updateDataAsync { it[Keys.AUTO_PLAY_NEXT] = enabled }

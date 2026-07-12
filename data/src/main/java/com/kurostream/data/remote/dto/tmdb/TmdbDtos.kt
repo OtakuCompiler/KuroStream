@@ -18,8 +18,7 @@ package com.kurostream.data.remote.dto.tmdb
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TmdbDtos(
-)
+data class TmdbDtos
 
 @Serializable
 data class TvShow(

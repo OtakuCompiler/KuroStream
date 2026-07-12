@@ -23,6 +23,9 @@ internal data class CacheEntry<T>(
     val ttlMs: Long = 0L,
     val version: Int = 1
 ) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
     fun isExpired(): Boolean {
         if (ttlMs <= 0) return false
         return System.currentTimeMillis() - createdAt > ttlMs

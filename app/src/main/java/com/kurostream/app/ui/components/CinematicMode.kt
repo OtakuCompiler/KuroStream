@@ -44,11 +44,6 @@ fun CinematicModeOverlay(
     autoHideDelayMs: Long = 5000,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    val uiOpacity by animateFloatAsState(
-        targetValue = if (isActive) 1f else 0f,
-        animationSpec = tween(300)
-    )
     val controlsOpacity by animateFloatAsState(
         targetValue = if (showControls) 1f else 0f,
         animationSpec = tween(200)
@@ -126,10 +121,6 @@ fun CinematicModeButton(
 ) {
     val scale by animateFloatAsState(
         targetValue = if (isActive) 1.1f else 1f,
-        animationSpec = tween(200)
-    )
-    val color by animateFloatAsState(
-        targetValue = if (isActive) 1f else 0.5f,
         animationSpec = tween(200)
     )
 

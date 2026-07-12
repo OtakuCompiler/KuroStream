@@ -31,7 +31,6 @@ import timber.log.Timber
 
 @Singleton
 class TrailerRepositoryImpl @Inject constructor(
-    private val tmdbApi: TmdbApi,
     private val youTubeApi: YouTubeApi,
     private val unifiedMetadataRepository: com.kurostream.data.metadata.UnifiedMetadataRepositoryImpl,
 ) : TrailerRepository {
