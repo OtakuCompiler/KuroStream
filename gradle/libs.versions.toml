@@ -213,4 +213,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 dependencycheck = { id = "org.owasp.dependencycheck", version.ref = "dependencycheck" }
-baseline_profile = { id = "com.android.tools.build.baseline-profile", version.ref = "baselineProfile" }
+baseline-profile = { id = "com.android.tools.build.baseline-profile", version.ref = "baselineProfile" }
