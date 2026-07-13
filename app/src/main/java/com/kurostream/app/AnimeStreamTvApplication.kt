@@ -31,16 +31,23 @@ import coil.transform.Transformation
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import com.kurostream.app.lifecycle.LeakDetector
+import com.kurostream.app.lifecycle.StrictModeDebug
+import android.os.StrictMode
 
 @HiltAndroidApp
 class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCallbacks2 {
 
     private var isInBackground = false
-    private var memoryMonitor: com.kurostream.common.memory.MemoryMonitor? = null
+    private var memoryMonitor: com.kurostream.common.memory.UnifiedMemoryManager? = null
     private var batteryAwareManager: com.kurostream.common.optimization.BatteryAwareManager? = null
     private var startupProfiler: com.kurostream.common.optimization.StartupProfiler? = null
+    
+    // Managed coroutine scope for application-level coroutines
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
         super.onCreate()
@@ -49,10 +56,27 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+            
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .penaltyFlashScreen()
+                    .build()
+            )
+            
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build()
+            )
+            
+            LeakDetector.enable()
         }
 
         // Initialize memory monitor early
-        memoryMonitor = com.kurostream.common.memory.MemoryMonitor.getInstance(this)
+        memoryMonitor = com.kurostream.common.memory.UnifiedMemoryManager.getInstance(this)
 
         // Initialize battery-aware manager for scheduling decisions
         batteryAwareManager = com.kurostream.common.optimization.BatteryAwareManager.create(this)
@@ -173,7 +197,7 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         // Clear Coil disk cache if needed
         try {
             val imageLoader = ImageLoader.get(this)
-            CoroutineScope(Dispatchers.IO).launch {
+            appScope.launch(Dispatchers.IO) {
                 imageLoader.diskCache.clear()
             }
         } catch (e: Exception) {
@@ -198,11 +222,16 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
     private fun monitorStartupPerformance() {
         if (BuildConfig.DEBUG) {
-            CoroutineScope(Dispatchers.IO).launch {
+            appScope.launch(Dispatchers.IO) {
                 System.currentTimeMillis()
                 // Track startup metrics
             }
         }
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        appScope.coroutineContext.cancel()
     }
 
     override fun newImageLoader(): ImageLoader {

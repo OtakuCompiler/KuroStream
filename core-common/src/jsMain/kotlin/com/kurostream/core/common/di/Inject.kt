@@ -1,3 +1,3 @@
 package com.kurostream.core.common.di
 
-actual annotation class Inject
+actual typealias Inject = javax.inject.Inject

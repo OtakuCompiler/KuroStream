@@ -1,7 +1,11 @@
 package com.kurostream.common.memory
+import android.content.ComponentCallbacks2
 
 import android.content.Context
 import android.content.res.Configuration
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,17 +54,16 @@ class UnifiedMemoryManager @Inject constructor(
 
         val debugMemInfo = android.os.Debug.MemoryInfo()
         android.os.Debug.getMemoryInfo(debugMemInfo)
-        val pss = debugMemInfo.totalPrivatePss / 1024
+        val pss = debugMemInfo.totalPss / 1024
         val nativeHeap = android.os.Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
-        val dalvikHeap = android.os.Debug.getDalvikHeapSize() / (1024 * 1024)
 
         val targetMemory = calculateTargetMemory(availMem.toInt())
         val isCritical = availMem < 25 || pss > (activityManager.memoryClass * 0.9).toInt()
 
         _memoryState.value = MemoryState(
-            totalPrivatePssMb = pss,
+            totalPssMb = pss,
             nativeHeapMb = nativeHeap,
-            dalvikHeapMb = dalvikHeap,
+            dalvikHeapMb = nativeHeap,
             availableMemoryMb = availMem,
             targetMemoryMb = targetMemory,
             isLowMemory = lowMemory,
@@ -183,7 +186,7 @@ class UnifiedMemoryManager @Inject constructor(
         
         updateMemoryState()
         val state = _memoryState.value
-        Timber.d("Aggressive GC complete: ${state.totalPrivatePssMb}MB PSS")
+        Timber.d("Aggressive GC complete: ${state.totalPssMb}MB PSS")
     }
 
     fun registerTrimCallback(callback: (Int) -> Unit) {
@@ -206,14 +209,14 @@ class UnifiedMemoryManager @Inject constructor(
         updateMemoryState()
         val state = _memoryState.value
         return if (state.memoryClass > 0) {
-            state.totalPrivatePssMb.toFloat() / state.memoryClass
+            state.totalPssMb.toFloat() / state.memoryClass
         } else 1f
     }
 
     fun isAllocationSafe(sizeMb: Int): Boolean {
         updateMemoryState()
         val state = _memoryState.value
-        val projectedPss = state.totalPrivatePssMb + sizeMb
+        val projectedPss = state.totalPssMb + sizeMb
         return projectedPss < state.targetMemoryMb && !state.isCritical
     }
 
@@ -244,7 +247,7 @@ class UnifiedMemoryManager @Inject constructor(
 }
 
 data class MemoryState(
-    val totalPrivatePssMb: Int = 0,
+    val totalPssMb: Int = 0,
     val nativeHeapMb: Long = 0,
     val dalvikHeapMb: Long = 0,
     val availableMemoryMb: Int = 0,
@@ -256,13 +259,13 @@ data class MemoryState(
     val totalMemoryMb: Int = 0,
     val timestamp: Long = System.currentTimeMillis(),
 ) {
-    val memoryPressure: Float get() = totalPrivatePssMb.toFloat() / memoryClass
-    val headroomMb: Int get() = (targetMemoryMb - totalPrivatePssMb).coerceAtLeast(0)
-    val isHealthy: Boolean get() = totalPrivatePssMb < targetMemoryMb && !isCritical
+    val memoryPressure: Float get() = totalPssMb.toFloat() / memoryClass
+    val headroomMb: Int get() = (targetMemoryMb - totalPssMb).coerceAtLeast(0)
+    val isHealthy: Boolean get() = totalPssMb < targetMemoryMb && !isCritical
     val recommendedAction: String
         get() = when {
             isCritical -> "IMMEDIATE_GC"
-            totalPrivatePssMb > targetMemoryMb -> "TRIM_MEMORY"
+            totalPssMb > targetMemoryMb -> "TRIM_MEMORY"
             headroomMb < 50 -> "MONITOR"
             else -> "OK"
         }

@@ -51,12 +51,13 @@ abstract class KuroStreamDatabase : RoomDatabase() {
     abstract fun addonDao(): AddonDao
 
     companion object {
-        fun enableWaldMode(database: androidx.room.RoomDatabase) {
-            database.query("PRAGMA journal_mode=WAL", null)
-            database.query("PRAGMA foreign_keys=ON", null)
-            database.query("PRAGMA synchronous=NORMAL", null)
-            database.query("PRAGMA cache_size=-8000", null)
-            database.query("PRAGMA temp_store=MEMORY", null)
+        fun enableWalMode(database: androidx.room.RoomDatabase) {
+            val db = database.openHelper.writableDatabase
+            db.execSQL("PRAGMA journal_mode=WAL")
+            db.execSQL("PRAGMA foreign_keys=ON")
+            db.execSQL("PRAGMA synchronous=NORMAL")
+            db.execSQL("PRAGMA cache_size=-8000")
+            db.execSQL("PRAGMA temp_store=MEMORY")
         }
     }
 }

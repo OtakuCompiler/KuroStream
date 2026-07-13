@@ -56,6 +56,9 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
             matchingFallbacks.addAll(listOf("release"))
+            
+            // R8 Full Mode for aggressive optimization
+            isCrunchPngs = true
         }
         debug {
             isMinifyEnabled = false
@@ -96,6 +99,9 @@ android {
         @Suppress("UnstableApiUsage")
         additionalParameters.addAll(listOf("--no-version-vectors", "--no-version-transitions"))
     }
+
+    // APK Size Optimization: ABI splits via bundle config (modern approach)
+    // splits block is deprecated; use bundle { abi { enableSplit = true } } instead
 }
 
 dependencies {
@@ -182,18 +188,6 @@ dependencies {
 
     implementation(libs.appauth)
     implementation(libs.play.services.auth)
-
-    implementation(libs.pytorch.android.lite)
-    implementation(libs.tensorflow.lite)
-
-    implementation(libs.oboe)
-
-    implementation(libs.vosk.android)
-
-    implementation(libs.webrtc.android)
-
-    implementation(libs.nanohttpd)
-    implementation(libs.nanohttpd.websocket)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.leakcanary.android)

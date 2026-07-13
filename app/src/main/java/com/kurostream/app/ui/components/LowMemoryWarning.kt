@@ -1,18 +1,3 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
@@ -20,49 +5,71 @@ import androidx.compose.animation.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScopeInstance
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.item
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DataUsage
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.FreeBreakfast
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SettingsMemory
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.PorterDuffColorFilter
 import androidx.compose.ui.graphics.PorterDuffMode
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.tv.material3.Icon
+import androidx.tv.material3.IconButton
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.kurostream.common.memory.MemoryMonitor
-import com.kurostream.common.memory.MemoryPressure
+import com.kurostream.common.memory.UnifiedMemoryManager
+import com.kurostream.common.memory.MemoryState
 
-/**
- * Low memory warning indicator - shows in corner when memory is critically low.
- */
 @Composable
 fun LowMemoryWarning(
-    memoryPressure: StateFlow<MemoryPressure> = MemoryMonitor.getInstance(LocalContext.current).memoryPressure,
     modifier: Modifier = Modifier,
     onDismiss: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val pressure by memoryPressure.collectAsStateWithLifecycle()
-    val isVisible = pressure == MemoryPressure.CRITICAL || pressure == MemoryPressure.EMERGENCY
+    val memoryManager = UnifiedMemoryManager.getInstance(context)
+    val memoryState by memoryManager.memoryState.collectAsStateWithLifecycle()
+    
+    val isVisible = memoryState.isCritical || memoryState.isLowMemory
     
     val animatedAlpha by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
@@ -87,36 +94,30 @@ fun LowMemoryWarning(
                     alpha = animatedAlpha
                     scaleX = animatedScale
                     scaleY = animatedScale
-                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin(1f, 0f)
+                    transformOrigin = TransformOrigin(1f, 0f)
                 }
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
         ) {
-            val warningData = when (pressure) {
-                MemoryPressure.EMERGENCY -> {
-                    LowMemoryWarningData(
-                        bgColor = Color(0xFFB71C1C),
-                        textColor = Color.White,
-                        iconColor = Color.White,
-                        message = "CRITICAL: ${getAvailableMB()}MB free! App may crash."
-                    )
+            val warningData = when {
+                memoryState.isCritical -> LowMemoryWarningData(
+                    bgColor = Color(0xFFB71C1C),
+                    textColor = Color.White,
+                    iconColor = Color.White,
+                    message = "CRITICAL: ${memoryState.availableMemoryMb}MB free! App may crash."
+                )
+                memoryState.isLowMemory -> LowMemoryWarningData(
+                    bgColor = Color(0xFFC62828),
+                    textColor = Color.White,
+                    iconColor = Color.White,
+                    message = "LOW MEMORY: ${memoryState.availableMemoryMb}MB free. Close other apps."
                 }
-                MemoryPressure.CRITICAL -> {
-                    LowMemoryWarningData(
-                        bgColor = Color(0xFFC62828),
-                        textColor = Color.White,
-                        iconColor = Color.White,
-                        message = "LOW MEMORY: ${getAvailableMB()}MB free. Close other apps."
-                    )
-                }
-                else -> {
-                    LowMemoryWarningData(
-                        bgColor = Color(0xFFF57F17),
-                        textColor = Color.White,
-                        iconColor = Color.White,
-                        message = "Memory pressure: ${getAvailableMB()}MB free"
-                    )
-                }
+                else -> LowMemoryWarningData(
+                    bgColor = Color(0xFFF57F17),
+                    textColor = Color.White,
+                    iconColor = Color.White,
+                    message = "Memory pressure: ${memoryState.availableMemoryMb}MB free"
+                )
             }
             
             Surface(
@@ -133,7 +134,7 @@ fun LowMemoryWarning(
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -159,7 +160,7 @@ fun LowMemoryWarning(
                         }
                         
                         if (onDismiss != null) {
-                            androidx.tv.material3.IconButton(
+                            IconButton(
                                 onClick = onDismiss,
                                 modifier = Modifier.size(40.dp)
                             ) {
@@ -184,45 +185,44 @@ fun LowMemoryWarning(
         val message: String
     )
 
-    private fun getAvailableMB(): Long {
-        val runtime = Runtime.getRuntime()
-        return (runtime.maxMemory() - runtime.totalMemory() + runtime.freeMemory()) / (1024 * 1024)
-    }
-}
-
 @Composable
 fun MemoryStatusBar(
-    memoryPressure: StateFlow<MemoryPressure> = MemoryMonitor.getInstance(LocalContext.current).memoryPressure,
     modifier: Modifier = Modifier,
     showDetails: Boolean = true
 ) {
-    val pressure by memoryPressure.collectAsStateWithLifecycle()
-    val availableMB = getAvailableMB()
+    val context = LocalContext.current
+    val memoryManager = UnifiedMemoryManager.getInstance(context)
+    val memoryState by memoryManager.memoryState.collectAsStateWithLifecycle()
     
-    val (bgColor, textColor, icon) = when (pressure) {
-        MemoryPressure.EMERGENCY -> Color(0xFFB71C1C) to Color.White to Icons.Default.Error
-        MemoryPressure.CRITICAL -> Color(0xFFC62828) to Color.White to Icons.Default.Warning
-        MemoryPressure.HIGH -> Color(0xFFF57F17) to Color.White to Icons.Default.WarningAmber
-        MemoryPressure.MODERATE -> Color(0xFF2E7D32) to Color.White to Icons.Default.Memory
-        MemoryPressure.NORMAL -> Color(0xFF1B5E20) to Color.White to Icons.Default.Memory
+    val availableMB = memoryState.availableMemoryMb
+    val totalMB = memoryState.totalMemoryMb
+    val usedMB = totalMB - availableMB
+    val usedPercent = if (totalMB > 0) (usedMB * 100 / totalMB) else 0
+    
+    val (bgColor, textColor, icon) = when {
+        memoryState.isCritical -> Color(0xFFB71C1C) to Color.White to Icons.Default.Error
+        memoryState.isLowMemory -> Color(0xFFC62828) to Color.White to Icons.Default.Warning
+        memoryState.memoryPressure > 0.75f -> Color(0xFFF57F17) to Color.White to Icons.Default.WarningAmber
+        memoryState.memoryPressure > 0.5f -> Color(0xFF2E7D32) to Color.White to Icons.Default.Info
+        else -> Color(0xFF1B5E20) to Color.White to Icons.Default.Memory
     }
     
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+            .clip(RoundedCornerShape(8.dp)),
         color = bgColor,
         elevation = 2.dp
     ) {
         Row(
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            horizontalArrangement = if (showDetails) androidx.compose.foundation.layout.Arrangement.SpaceBetween 
-                                   else androidx.compose.foundation.layout.Arrangement.Center,
+            horizontalArrangement = if (showDetails) Arrangement.SpaceBetween 
+                                   else Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -235,12 +235,12 @@ fun MemoryStatusBar(
                 if (showDetails) {
                     Column {
                         Text(
-                            text = "${pressure.description} • ${availableMB}MB free",
+                            text = "${getPressureDescription(memoryState)} • ${availableMB}MB free",
                             style = MaterialTheme.typography.bodyMedium,
                             color = textColor
                         )
                         Text(
-                            text = "Pressure: ${pressure.name}",
+                            text = "Pressure: ${(memoryState.memoryPressure * 100).roundToInt()}%",
                             style = MaterialTheme.typography.bodySmall,
                             color = textColor.copy(alpha = 0.8f)
                         )
@@ -248,7 +248,7 @@ fun MemoryStatusBar(
                 }
             }
             
-            if (pressure != MemoryPressure.NORMAL && showDetails) {
+            if ((memoryState.isCritical || memoryState.isLowMemory) && showDetails) {
                 Text(
                     text = "⚠",
                     style = MaterialTheme.typography.titleLarge,
@@ -259,71 +259,69 @@ fun MemoryStatusBar(
     }
 }
 
-private fun getAvailableMB(): Long {
-    val runtime = Runtime.getRuntime()
-    return (runtime.maxMemory() - runtime.totalMemory() + runtime.freeMemory()) / (1024 * 1024)
+private fun getPressureDescription(state: MemoryState): String {
+    return when {
+        state.isCritical -> "CRITICAL"
+        state.isLowMemory -> "LOW"
+        state.memoryPressure > 0.75f -> "HIGH"
+        state.memoryPressure > 0.5f -> "MODERATE"
+        else -> "NORMAL"
+    }
 }
 
-/**
- * Detailed memory diagnostics screen component.
- */
 @Composable
 fun MemoryDiagnosticsScreen(
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val memoryMonitor = com.kurostream.common.memory.MemoryMonitor.getInstance(context)
-    val pressure by memoryMonitor.memoryPressure.collectAsStateWithLifecycle()
-    val availableMemory by memoryMonitor.availableMemory.collectAsStateWithLifecycle()
-    val totalMemory by memoryMonitor.totalMemory.collectAsStateWithLifecycle()
-    val trimCount by memoryMonitor.trimCallbackCount.collectAsStateWithLifecycle()
-    val lastTrimLevel by memoryMonitor.lastTrimLevel.collectAsStateWithLifecycle()
+    val memoryManager = UnifiedMemoryManager.getInstance(context)
+    val memoryState by memoryManager.memoryState.collectAsStateWithLifecycle()
     
+    val availableMemory = memoryState.availableMemoryMb.toLong() * 1024 * 1024
+    val totalMemory = memoryState.totalMemoryMb.toLong() * 1024 * 1024
     val usedMemory = totalMemory - availableMemory
     val usedPercent = if (totalMemory > 0) (usedMemory * 100 / totalMemory) else 0
     
     Column(
         modifier = Modifier.fillMaxSize().padding(48.dp),
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Memory Diagnostics", style = MaterialTheme.typography.displaySmall)
-            androidx.tv.material3.IconButton(onClick = onBackClick) {
+            IconButton(onClick = onBackClick) {
                 Icon(Icons.Default.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface)
             }
         }
         
         androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(24.dp))
         
-        // Pressure indicator
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = when (pressure) {
-                MemoryPressure.EMERGENCY -> Color(0xFFB71C1C)
-                MemoryPressure.CRITICAL -> Color(0xFFC62828)
-                MemoryPressure.HIGH -> Color(0xFFF57F17)
-                MemoryPressure.MODERATE -> Color(0xFF2E7D32)
-                MemoryPressure.NORMAL -> Color(0xFF1B5E20)
+            color = when {
+                memoryState.isCritical -> Color(0xFFB71C1C)
+                memoryState.isLowMemory -> Color(0xFFC62828)
+                memoryState.memoryPressure > 0.75f -> Color(0xFFF57F17)
+                memoryState.memoryPressure > 0.5f -> Color(0xFF2E7D32)
+                else -> Color(0xFF1B5E20)
             },
             elevation = 4.dp
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Row(
-                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = when (pressure) {
-                            MemoryPressure.EMERGENCY -> Icons.Default.Error
-                            MemoryPressure.CRITICAL -> Icons.Default.Warning
-                            MemoryPressure.HIGH -> Icons.Default.WarningAmber
-                            MemoryPressure.MODERATE -> Icons.Default.Info
-                            MemoryPressure.NORMAL -> Icons.Default.CheckCircle
+                        imageVector = when {
+                            memoryState.isCritical -> Icons.Default.Error
+                            memoryState.isLowMemory -> Icons.Default.Warning
+                            memoryState.memoryPressure > 0.75f -> Icons.Default.WarningAmber
+                            memoryState.memoryPressure > 0.5f -> Icons.Default.Info
+                            else -> Icons.Default.CheckCircle
                         },
                         contentDescription = "Pressure level",
                         tint = Color.White,
@@ -332,12 +330,12 @@ fun MemoryDiagnosticsScreen(
                     
                     Column {
                         Text(
-                            text = "Memory Pressure: ${pressure.name}",
+                            text = "Memory Pressure: ${getPressureDescription(memoryState)}",
                             style = MaterialTheme.typography.headlineMedium,
                             color = Color.White
                         )
                         Text(
-                            text = pressure.description,
+                            text = getPressureDescription(memoryState),
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White.copy(alpha = 0.9f)
                         )
@@ -348,11 +346,10 @@ fun MemoryDiagnosticsScreen(
         
         androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(24.dp))
         
-        // Memory usage bar
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Usage: ${formatBytes(usedMemory)} / ${formatBytes(totalMemory)} (${usedPercent}%)", 
                      style = MaterialTheme.typography.bodyLarge)
@@ -362,14 +359,14 @@ fun MemoryDiagnosticsScreen(
             
             androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
             
-            androidx.compose.foundation.layout.Box(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(24.dp)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp))
             ) {
-                androidx.compose.foundation.layout.Box(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth(usedPercent / 100f)
                         .height(24.dp)
@@ -381,25 +378,23 @@ fun MemoryDiagnosticsScreen(
                                 else -> Color(0xFF2E7D32)
                             }
                         )
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
                 )
             }
         }
         
         androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(24.dp))
         
-        // Stats grid
-        androidx.compose.foundation.lazy.LazyColumn(
+        LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { StatCard("Available Memory", formatBytes(availableMemory), Icons.Default.Memory) }
             item { StatCard("Used Memory", formatBytes(usedMemory), Icons.Default.Storage) }
             item { StatCard("Total Memory", formatBytes(totalMemory), Icons.Default.DataUsage) }
-            item { StatCard("Trim Callbacks", trimCount.toString(), Icons.Default.Refresh) }
-            item { StatCard("Last Trim Level", lastTrimLevel.toString(), Icons.Default.SettingsMemory) }
+            item { StatCard("Pressure", "${(memoryState.memoryPressure * 100).roundToInt()}%", Icons.Default.Warning) }
+            item { StatCard("Headroom", "${memoryState.headroomMb}MB", Icons.Default.SettingsMemory) }
             
-            // Java heap stats
             val runtime = Runtime.getRuntime()
             val heapMax = runtime.maxMemory()
             val heapTotal = runtime.totalMemory()
@@ -422,7 +417,7 @@ fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.ve
     ) {
         Row(
             modifier = Modifier.padding(24.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(imageVector = icon, contentDescription = null, 

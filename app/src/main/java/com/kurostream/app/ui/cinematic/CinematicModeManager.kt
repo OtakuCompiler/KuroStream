@@ -20,6 +20,7 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -109,6 +110,7 @@ fun rememberCinematicMode(): CinematicModeState {
     )
 }
 
+@Stable
 data class CinematicModeState(
     val isCinematicMode: Boolean,
     val uiOpacity: Float,

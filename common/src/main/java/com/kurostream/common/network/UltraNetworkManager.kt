@@ -12,7 +12,6 @@ import okhttp3.ConnectionPool
 import okhttp3.Dns
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
-import okhttp3.tls.HandshakeCertificates
 import timber.log.Timber
 import java.net.InetAddress
 import java.util.concurrent.ConcurrentHashMap
@@ -119,7 +118,7 @@ class UltraNetworkManager @Inject constructor(
         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
 
         val isHighSpeed = capabilities?.let {
-            it.hasLinkDownstreamBandwidthKbps { bw -> bw >= 50_000 } // 50 Mbps+
+            it.linkDownstreamBandwidthKbps >= 50_000 // 50 Mbps+
         } ?: false
 
         val isMetered = connectivityManager.isActiveNetworkMetered()
