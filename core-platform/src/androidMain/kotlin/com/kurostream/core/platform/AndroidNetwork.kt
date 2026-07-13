@@ -39,7 +39,7 @@ import java.io.IOException
 import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.channels.awaitClose
 
 class AndroidNetwork(private val context: Context) : PlatformNetwork {
@@ -81,7 +81,7 @@ class AndroidNetwork(private val context: Context) : PlatformNetwork {
         return (body ?: "").toRequestBody(mediaType)
     }
     
-    private suspend fun executeRequest(request: Request): HttpResponse = suspendCancellableCoroutine { cont ->
+    private suspend fun executeRequest(request: Request): HttpResponse = suspendCoroutine { cont ->
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 cont.resume(HttpResponse(0, null, emptyMap(), false))
