@@ -1,10 +1,10 @@
 package com.kurostream.common.memory
 import android.content.ComponentCallbacks2
-
 import android.content.Context
 import android.content.res.Configuration
-import kotlinx.coroutines.GlobalScope
+import android.os.Debug
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,10 +61,10 @@ class UnifiedMemoryManager @Inject constructor(
         val isCritical = availMem < 25 || pss > (activityManager.memoryClass * 0.9).toInt()
 
         _memoryState.value = MemoryState(
-            totalPssMb = pss,
+            totalPssMb = pss.toInt(),
             nativeHeapMb = nativeHeap,
             dalvikHeapMb = nativeHeap,
-            availableMemoryMb = availMem,
+            availableMemoryMb = availMem.toInt(),
             targetMemoryMb = targetMemory,
             isLowMemory = lowMemory,
             isCritical = isCritical,
@@ -119,19 +119,19 @@ class UnifiedMemoryManager @Inject constructor(
         trimCallbacks.forEach { it(level) }
         
         when (level) {
-            android.app.ActivityManager.TRIM_MEMORY_UI_HIDDEN -> {
+            ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
                 if (shouldGC()) performGC("UI hidden")
             }
-            android.app.ActivityManager.TRIM_MEMORY_RUNNING_MODERATE -> {
+            ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE -> {
                 if (shouldGC()) performGC("Running moderate")
             }
-            android.app.ActivityManager.TRIM_MEMORY_RUNNING_LOW -> {
+            ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> {
                 triggerAggressiveGC("Running low")
             }
-            android.app.ActivityManager.TRIM_MEMORY_RUNNING_CRITICAL -> {
+            ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> {
                 triggerAggressiveGC("Running critical")
             }
-            android.app.ActivityManager.TRIM_MEMORY_BACKGROUND -> {
+            ComponentCallbacks2.TRIM_MEMORY_BACKGROUND -> {
                 if (shouldGC()) performGC("Background")
             }
         }
