@@ -152,7 +152,6 @@ dependencies {
     implementation(libs.nanohttpd.websocket)
     implementation(libs.pytorch.android.lite)
     implementation(libs.oboe)
-    implementation(libs.torrent.libtorrent4j)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

@@ -117,7 +117,6 @@ dependencies {
     implementation(project(":extensions"))
     implementation(project(":launcher"))
     implementation(project(":backup"))
-    implementation(project(":torrent"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
