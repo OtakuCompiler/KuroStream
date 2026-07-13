@@ -49,11 +49,6 @@ exoplayer2Legacy = "2.19.1"
 tensorflowLite = "2.14.0"
 playServicesAuth = "21.2.0"
 fragmentKtx = "1.8.4"
-composeAnimation = "1.5.4"
-composeAnimationGraphics = "1.5.4"
-materialIconsExtended = "1.2.1"
-material3WindowSizeClass = "1.2.1"
-renderscript = "1.0.0"
 recyclerview = "1.3.2"
 navigationFragment = "2.8.3"
 mockito = "5.12.0"
@@ -66,15 +61,12 @@ composeUiTest = "1.7.0"
 mockkAndroid = "1.13.13"
 baselineProfile = "8.5.0"
 
-# Missing dependencies
+# New dependencies
 composeAnimation = "1.5.4"
 composeAnimationGraphics = "1.5.4"
 materialIconsExtended = "1.2.1"
 material3WindowSizeClass = "1.2.1"
 renderscript = "1.0.0"
-libtorrent4j = "1.2.14"
-
-# New dependencies
 documentfile = "1.0.1"
 startup = "1.2.0"
 benchmarkMacro = "1.2.4"
@@ -217,13 +209,6 @@ libtorrent4j = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent", vers
 libtorrent-android = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent-android", version.ref = "libtorrent" }
 libtorrent4j-playback = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent", version.ref = "libtorrent4j" }
 
-# Missing libraries
-androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "composeAnimation" }
-androidx-compose-animation-graphics = { group = "androidx.compose.animation", name = "animation-graphics", version.ref = "composeAnimationGraphics" }
-androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIconsExtended" }
-androidx-material3-window-size-class = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3WindowSizeClass" }
-renderscript = { group = "androidx.renderscript", name = "renderscript", version.ref = "renderscript" }
-
 # GitHub API
 github-api = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 github-api-converter = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
@@ -237,6 +222,7 @@ protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", ver
 protobuf-protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
+renderscript = { group = "androidx.renderscript", name = "renderscript", version.ref = "renderscript" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
