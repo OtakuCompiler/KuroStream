@@ -320,7 +320,7 @@ enum class DeviceProfile {
     ANDROID_TV_HIGH,
     MOBILE_LOW_RAM,
     MOBILE_MID,
-    MOBILE_HIGH,
+    MOBILE_HIGH;
     
     val baseImageCacheMb: Int
         get() = when (this) {
