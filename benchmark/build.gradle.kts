@@ -45,13 +45,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    
-    // Add source sets for main (benchmark runner) and androidTest
-    sourceSets {
-        main {
-            java.srcDirs("src/main/java")
-        }
-    }
 }
 
 dependencies {
