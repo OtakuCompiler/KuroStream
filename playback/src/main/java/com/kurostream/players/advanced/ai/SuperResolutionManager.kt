@@ -125,6 +125,7 @@ class SuperResolutionManager private constructor(
     // Processing state
     private val isEnabled = AtomicBoolean(false)
     private val isModelLoaded = AtomicBoolean(false)
+    private val isModelLoading = AtomicBoolean(false) // Guard for lazy load
     private val currentMode = AtomicReference(UpscaleMode.BALANCED)
     private val lowLatencyEnabled = AtomicBoolean(false)
     
@@ -242,14 +243,16 @@ class SuperResolutionManager private constructor(
             return null
         }
         
-        // Lazy-load model on first frame
-        if (!isModelLoaded.get()) {
+        // Lazy-load model on first frame (only once)
+        if (!isModelLoaded.get() && isModelLoading.compareAndSet(false, true)) {
             scope.launch {
                 loadModels()
                 isModelLoaded.set(true)
                 startProcessingLoops()
             }
             return null
+        } else if (!isModelLoaded.get()) {
+            return null // Model still loading, skip this frame
         }
         
         // Memory budget check — skip upscaling if we're over budget
@@ -280,6 +283,9 @@ class SuperResolutionManager private constructor(
      */
     fun release() {
         isEnabled.set(false)
+        
+        // Reset lazy-load guard
+        isModelLoading.set(false)
         
         // Stop processing loops
         scope.cancel()

@@ -117,14 +117,14 @@ class Media3Player(private val context: Context) : PlayerInterface {
                 .setLoadErrorHandlingPolicy(AdaptiveLoadErrorPolicy())
 
             // Initialize disk-backed load control for low memory footprint
-            diskBackedLoadControl = DiskBackedLoadControl.getInstance(context, 20_000_000) // 20MB target buffer
+            diskBackedLoadControl = DiskBackedLoadControl.getInstance(context, 10_000_000) // 10MB target buffer
 
             exoPlayer = ExoPlayer.Builder(context)
                 .setTrackSelector(trackSelector)
                 .setBandwidthMeter(bandwidthMeter)
                 .setMediaSourceFactory(mediaSourceFactory)
                 .setRenderersFactory(DefaultRenderersFactory(context).apply {
-                    setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+                    setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
                     setEnableDecoderFallback(true)
                 })
                 .setSeekParameters(SeekParameters.EXACT)

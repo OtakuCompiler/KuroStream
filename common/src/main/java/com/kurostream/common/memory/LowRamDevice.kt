@@ -33,32 +33,44 @@ object LowRamDevice {
     fun totalRamMb(): Long = totalRamMb
 
     val coilMemoryCacheSize: Int
-        get() = if (isLowRam) 4 * 1024 * 1024 else 10 * 1024 * 1024
+        get() = 2 * 1024 * 1024 // Fixed 2MB — small enough for TV UI
 
     val coilDiskCacheSize: Long
-        get() = if (isLowRam) 50L * 1024 * 1024 else 100L * 1024 * 1024
+        get() = 25L * 1024 * 1024 // Fixed 25MB disk cache
 
     val bufferPoolMaxPerClass: Int
-        get() = if (isLowRam) 8 else 16
+        get() = if (isLowRam) 4 else 8
 
     val heroBannerOffscreenPages: Int
-        get() = if (isLowRam) 0 else 1
+        get() = if (isLowRam) 0 else 0
 
     val contentRowOffscreenPages: Int
-        get() = if (isLowRam) 0 else 2
+        get() = if (isLowRam) 0 else 1
 
     val memoryPollIntervalMs: Long
-        get() = if (isLowRam) 10000L else 5000L
+        get() = if (isLowRam) 15_000L else 10_000L
 
     val bufferPoolPreallocate: Boolean
-        get() = !isLowRam
+        get() = false
 
     val memoryCautionThresholdMb: Int
-        get() = if (isLowRam) 120 else 200
+        get() = if (isLowRam) 80 else 120
 
     val memoryWarningThresholdMb: Int
-        get() = if (isLowRam) 80 else 150
+        get() = if (isLowRam) 50 else 80
 
     val memoryCriticalThresholdMb: Int
-        get() = if (isLowRam) 50 else 100
+        get() = if (isLowRam) 30 else 50
+
+    val maxDecoderFrameBuffers: Int
+        get() = if (isLowRam) 2 else 3
+
+    val maxGpuPoolTextures: Int
+        get() = if (isLowRam) 4 else 8
+
+    val upscaleRingBufferSeconds: Int
+        get() = if (isLowRam) 0 else 1 // Disable ring buffer on low RAM
+
+    val p2pMaxPeers: Int
+        get() = if (isLowRam) 2 else 4
 }

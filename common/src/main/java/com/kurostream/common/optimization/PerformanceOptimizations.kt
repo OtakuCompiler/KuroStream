@@ -230,37 +230,15 @@ class NetworkDeduplicator {
 }
 
 /**
- * Bitmap pooling for Coil to reduce GC pressure
+ * Bitmap pooling — removed. Coil manages its own cache and the system
+ * BitmapPool (Android 12+) provides native recycling. This was a duplicate
+ * pool consuming ~12 MB unnecessarily.
  */
 class BitmapPoolManager {
-    private val pools = mutableMapOf<Int, android.util.LruCache<Int, android.graphics.Bitmap>>()
-    private val maxPoolSize = 12 * 1024 * 1024 // 12MB (was 50MB)
+    fun clear() {}
 
-    fun getBitmap(width: Int, height: Int, config: android.graphics.Bitmap.Config = android.graphics.Bitmap.Config.ARGB_8888): android.graphics.Bitmap? {
-        val key = (width * height * 4).hashCode() // Approximate size
-        val pool = pools[key] ?: return null
-        return pool.get(key)
-    }
-
-    fun putBitmap(bitmap: android.graphics.Bitmap) {
-        val key = (bitmap.width * bitmap.height * 4).hashCode()
-        val pool = pools.getOrPut(key) {
-            object : android.util.LruCache<Int, android.graphics.Bitmap>(maxPoolSize / 4) {
-                override fun sizeOf(key: Int, value: android.graphics.Bitmap): Int {
-                    return value.byteCount
-                }
-            }
-        }
-        pool.put(key, bitmap)
-    }
-
-    fun clear() {
-        pools.values.forEach { it.evictAll() }
-    }
-
-    fun resize(newMaxSize: Long) {
-        // Recreate pools with new size
-    }
+    @Suppress("UNUSED_PARAMETER")
+    fun resize(newMaxSize: Long) {}
 }
 
 /**

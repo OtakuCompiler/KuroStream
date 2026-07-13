@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicLong
  * Target: 60fps UI, reduced GPU overhead
  */
 class UiTextureAtlas(
-    private val maxSize: Int = 2048
+    private val maxSize: Int = 1024
 ) {
     private val TAG = "UiTextureAtlas"
     private val atlasBitmap = Bitmap.createBitmap(maxSize, maxSize, Bitmap.Config.RGB_565)

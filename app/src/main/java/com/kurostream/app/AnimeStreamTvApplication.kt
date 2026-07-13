@@ -207,7 +207,6 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
     private fun aggressiveMemoryCleanup() {
         moderateMemoryCleanup()
-        // Force GC hint (suppressed - explicit GC calls discouraged)
         
         // Clear string interner
         com.kurostream.common.util.StringInterner.clear()
@@ -218,6 +217,10 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         } catch (e: Exception) {
             Timber.e(e, "Failed to clear buffer pools")
         }
+        
+        // Hint GC to collect released native wrappers
+        System.gc()
+        System.runFinalization()
     }
 
     private fun monitorStartupPerformance() {

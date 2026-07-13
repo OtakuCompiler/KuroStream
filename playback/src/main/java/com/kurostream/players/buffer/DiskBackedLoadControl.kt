@@ -38,18 +38,18 @@ class DiskBackedLoadControl private constructor(
     private val allocator = DefaultAllocator.Builder().build()
     private val mutex = Mutex()
     
-    // Target buffer levels — reduced for lower RAM footprint
-    private val minBufferMs = 3_000L
-    private val maxBufferMs = 60_000L
-    private val bufferForPlaybackMs = 1_500L
-    private val bufferForPlaybackAfterRebufferMs = 3_000L
-    private val backBufferMs = 8_000L
+    // Target buffer levels — aggressive for sub-100MB target
+    private val minBufferMs = 2_000L
+    private val maxBufferMs = 30_000L
+    private val bufferForPlaybackMs = 1_000L
+    private val bufferForPlaybackAfterRebufferMs = 2_000L
+    private val backBufferMs = 5_000L
     
     companion object {
         @Suppress("UNUSED_PARAMETER")
         private var INSTANCE: DiskBackedLoadControl? = null
         
-        fun getInstance(context: Context, targetBufferBytes: Long = 20_000_000): DiskBackedLoadControl {
+        fun getInstance(context: Context, targetBufferBytes: Long = 10_000_000): DiskBackedLoadControl {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: DiskBackedLoadControl(context.applicationContext, targetBufferBytes).also { INSTANCE = it }
             }
