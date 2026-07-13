@@ -22,9 +22,8 @@ import com.kurostream.domain.legacy.repository.MediaRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import com.kurostream.core.common.di.Inject
 
-class SearchAnime @Inject constructor(
+class SearchAnime(
     private val mediaRepository: MediaRepository,
     private val dispatcherProvider: DispatcherProvider
 ) {

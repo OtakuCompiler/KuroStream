@@ -25,9 +25,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import com.kurostream.core.common.di.Inject
 
-class GetContinueWatching @Inject constructor(
+class GetContinueWatching(
     private val mediaRepository: MediaRepository,
     private val profileRepository: ProfileRepository,
     private val dispatcherProvider: DispatcherProvider

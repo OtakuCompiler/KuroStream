@@ -1,6 +1,6 @@
 package com.kurostream.domain.usecase
-import com.kurostream.core.platform.platformCurrentTimeMillis
 
+import com.kurostream.core.platform.platformCurrentTimeMillis
 import com.kurostream.domain.model.MediaItem
 import com.kurostream.domain.model.MediaSource
 import com.kurostream.domain.model.SourceLock
@@ -11,9 +11,8 @@ import com.kurostream.domain.repository.MediaRepository
 import com.kurostream.domain.repository.SourceLockRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import com.kurostream.core.common.di.Inject
 
-class SourceLockUseCases @Inject constructor(
+class SourceLockUseCases(
     private val sourceLockRepository: SourceLockRepository,
     private val mediaRepository: MediaRepository,
 ) {

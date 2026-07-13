@@ -24,9 +24,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import com.kurostream.core.common.di.Inject
 
-class GetHomeRows @Inject constructor(
+class GetHomeRows(
     private val mediaRepository: MediaRepository,
     private val profileRepository: ProfileRepository,
     private val dispatcherProvider: DispatcherProvider
