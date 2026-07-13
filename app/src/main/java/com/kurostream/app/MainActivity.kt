@@ -19,11 +19,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.Surface
 import com.kurostream.app.navigation.TvNavHost
 import com.kurostream.app.ui.theme.AnimeStreamTVTheme
+import com.kurostream.app.ui.theme.DynamicThemeProvider
+import com.kurostream.app.ui.theme.TvDarkColorScheme
+import com.kurostream.app.ui.theme.toDynamicPalette
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -31,16 +35,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AnimeStreamTVTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    shape = androidx.compose.ui.graphics.RectangleShape
-                ) {
-                    val navController = rememberNavController()
-                    TvNavHost(
-                        navController = navController,
-                        modifier = Modifier.fillMaxSize()
-                    )
+            val defaultPalette = remember { TvDarkColorScheme.toDynamicPalette() }
+            DynamicThemeProvider(
+                palette = defaultPalette,
+                isAmoled = false,
+            ) {
+                AnimeStreamTVTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = androidx.compose.ui.graphics.RectangleShape
+                    ) {
+                        val navController = rememberNavController()
+                        TvNavHost(
+                            navController = navController,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
         }

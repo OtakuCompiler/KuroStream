@@ -30,6 +30,8 @@ interface SettingsRepository {
         val frameInterpolationEnabled: Boolean = false,
         val lowLatencyUpscalingEnabled: Boolean = false,
         val vodCacheCompressionEnabled: Boolean = true,
+        val liveWallpaperEnabled: Boolean = false,
+        val liveWallpaperType: String = "CHERRY_BLOSSOM",
     )
 
     fun getSettings(): Settings
@@ -73,4 +75,7 @@ interface SettingsRepository {
     suspend fun setLowLatencyUpscalingEnabled(enabled: Boolean)
 
     suspend fun setVodCacheCompressionEnabled(enabled: Boolean)
+
+    suspend fun setLiveWallpaperEnabled(enabled: Boolean)
+    suspend fun setLiveWallpaperType(type: String)
 }

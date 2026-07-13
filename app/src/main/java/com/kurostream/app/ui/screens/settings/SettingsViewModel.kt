@@ -21,16 +21,51 @@ import com.kurostream.app.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository,
+    val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState = _uiState.asStateFlow()
+
+    fun setHighContrastEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setHighContrastEnabled(enabled)
+        }
+    }
+
+    fun setReduceMotionEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setReduceMotionEnabled(enabled)
+            _uiState.update { it.copy(reduceMotionEnabled = enabled) }
+        }
+    }
+
+    fun setFocusHighlightEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setFocusHighlightEnabled(enabled)
+            _uiState.update { it.copy(focusHighlightEnabled = enabled) }
+        }
+    }
+
+    fun setLiveWallpaperEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setLiveWallpaperEnabled(enabled)
+            _uiState.update { it.copy(liveWallpaperEnabled = enabled) }
+        }
+    }
+
+    fun setLiveWallpaperType(type: String) {
+        viewModelScope.launch {
+            settingsRepository.setLiveWallpaperType(type)
+            _uiState.update { it.copy(liveWallpaperType = type) }
+        }
+    }
 
     fun setSourceLockEnabled(enabled: Boolean) {
         viewModelScope.launch {
@@ -259,4 +294,8 @@ data class SettingsUiState(
     val globalUploadLimitKbps: Long = -1,
     val lowLatencyUpscalingEnabled: Boolean = false,
     val vodCacheCompressionEnabled: Boolean = true,
+    val reduceMotionEnabled: Boolean = false,
+    val focusHighlightEnabled: Boolean = true,
+    val liveWallpaperEnabled: Boolean = false,
+    val liveWallpaperType: String = "CHERRY_BLOSSOM",
 )

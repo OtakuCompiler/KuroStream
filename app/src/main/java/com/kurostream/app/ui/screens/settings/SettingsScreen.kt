@@ -37,6 +37,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.kurostream.app.navigation.BackupRoute
 import com.kurostream.app.navigation.TorrentsRoute
+import com.kurostream.app.ui.components.LiveWallpaperType
 import com.kurostream.app.ui.theme.AnimeStreamTVTheme
 import kotlinx.coroutines.launch
 
@@ -270,6 +271,37 @@ fun SettingsScreen(
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(16.dp)
                 )
+
+                SettingsToggle(
+                    title = "Live Wallpaper",
+                    subtitle = if (uiState.liveWallpaperEnabled) {
+                        "Showing ${LiveWallpaperType.valueOf(uiState.liveWallpaperType).label}"
+                    } else {
+                        "Animate cherry blossoms or falling leaves in the background"
+                    },
+                    checked = uiState.liveWallpaperEnabled,
+                    onCheckedChange = { viewModel.setLiveWallpaperEnabled(it) },
+                    contentDescription = if (uiState.liveWallpaperEnabled) "Live wallpaper enabled" else "Live wallpaper disabled"
+                )
+
+                if (uiState.liveWallpaperEnabled) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant).padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Type", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                        LiveWallpaperType.entries.forEach { type ->
+                            val selected = uiState.liveWallpaperType == type.name
+                            TextButton(onClick = { viewModel.setLiveWallpaperType(type.name) }) {
+                                Text(
+                                    text = type.label,
+                                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Divider(modifier = Modifier.padding(vertical = 16.dp))

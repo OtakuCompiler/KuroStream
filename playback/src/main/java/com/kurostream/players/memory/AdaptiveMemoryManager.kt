@@ -48,7 +48,7 @@ class AdaptiveMemoryManager @Inject constructor(
         Debug.getMemoryInfo(memInfo)
         val pss = memInfo.totalPrivatePss / 1024
         val nativeHeap = Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
-        val dalvikHeap = Debug.getDalvikHeapSize() / (1024 * 1024)
+        val dalvikHeap = (memInfo.dalvikPss / 1024).toInt()
 
         val targetMemory = calculateTargetMemory(availMem.toInt())
         val isCritical = availMem < minReservedMemoryMb || pss > memoryClassMb * 0.9
@@ -56,7 +56,7 @@ class AdaptiveMemoryManager @Inject constructor(
         _memoryState.value = MemoryState(
             totalPrivatePssMb = pss,
             nativeHeapMb = nativeHeap,
-            dalvikHeapMb = dalvikHeap,
+            dalvikHeapMb = dalvikHeap.toLong(),
             availableMemoryMb = availMem,
             targetMemoryMb = targetMemory,
             isLowMemory = lowMemory,

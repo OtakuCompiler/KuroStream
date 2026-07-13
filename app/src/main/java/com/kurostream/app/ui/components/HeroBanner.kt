@@ -98,6 +98,23 @@ fun HeroBanner(
                         .background(Color.Black.copy(alpha = 0.35f))
                 )
 
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 48.dp, top = 48.dp)
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            RoundedCornerShape(4.dp),
+                        )
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = "Anime Spotlight",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()

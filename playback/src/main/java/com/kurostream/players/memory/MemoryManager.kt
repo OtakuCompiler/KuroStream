@@ -30,7 +30,7 @@ class MemoryManager @Inject constructor(
 
         val pss = memInfo.totalPrivatePss
         val nativeHeap = Debug.getNativeHeapAllocatedSize() / 1024
-        val dalvikHeap = Debug.getDalvikHeapSize() / 1024
+        val dalvikHeap = (memInfo.dalvikPss / 1024).toLong()
 
         val isLowMemory = activityManager.memoryClass < 256
         val availMem = activityManager.memoryInfo.let { info ->

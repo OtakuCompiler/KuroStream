@@ -158,8 +158,9 @@ class FireTVOptimizations @Inject constructor(
     private fun limitBackgroundThreads(maxThreads: Int) {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
         
-        ThreadPoolExecutorManager.getInstance().setCorePoolSize(maxThreads)
-        ThreadPoolExecutorManager.getInstance().setMaximumPoolSize(maxThreads * 2)
+        val executorManager = ThreadPoolExecutorManager.getInstance()
+        executorManager.setCorePoolSize(maxThreads)
+        executorManager.setMaximumPoolSize(maxThreads * 2)
     }
     
     fun getNetworkThrottler(): NetworkThrottler = _networkThrottler
@@ -232,14 +233,14 @@ class ImageDecodeLimiter(private var maxDecodePixels: Int = 1920 * 1080) {
         source: android.graphics.BitmapFactory.Options,
         decodeAction: suspend (android.graphics.BitmapFactory.Options) -> android.graphics.Bitmap?
     ): android.graphics.Bitmap? {
-        decodeSemaphore.withPermit {
+        return decodeSemaphore.withPermit {
             val inSampleSize = calculateInSampleSize(source.outWidth, source.outHeight, maxDecodePixels)
             source.inSampleSize = inSampleSize
             source.inJustDecodeBounds = false
             source.inPreferredConfig = android.graphics.Bitmap.Config.RGB_565
             source.inMutable = true
             
-            return@withPermit decodeAction(source)
+            decodeAction(source)
         }
     }
     
@@ -295,21 +296,13 @@ class HardwareLayerManager {
     }
 }
 
-@Composable
+@Deprecated("Move to app module - Composable UI should not be in library", ReplaceWith("/* HardwareLayerListItem moved to app module */"))
 fun HardwareLayerListItem(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val hardwareLayerManager = remember { HardwareLayerManager() }
-    
-    Box(
-        modifier = modifier
-            .graphicsLayer {
-                this.setLayerType(android.view.View.LAYER_TYPE_HARDWARE)
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        content()
+    // Moved to app module
+}
     }
 }
 
@@ -337,26 +330,17 @@ class AnimationReducer {
         complexAnimationsDisabled = false
     }
     
-    @Composable
-    fun ReducedAnimation(
-        modifier: Modifier = Modifier,
-        content: @Composable () -> Unit
-    ) {
-        if (complexAnimationsDisabled) {
-            Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                content()
-            }
-        } else {
-            Box(modifier = modifier
-                .graphicsLayer {
-                    this.alpha = durationScale
-                },
-                contentAlignment = Alignment.Center
-            ) {
-                content()
-            }
-        }
+@Deprecated("Move to app module - Composable UI should not be in library", ReplaceWith("/* ReducedAnimation moved to app module */"))
+@Composable
+fun ReducedAnimation(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    // ReducedAnimation moved to app module
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        content()
     }
+}
 }
 
 class FireTVThreadFactory : ThreadFactory {
@@ -371,14 +355,14 @@ class FireTVThreadFactory : ThreadFactory {
 }
 
 object ThreadPoolExecutorManager {
-    @Volatile private var INSTANCE: ThreadPoolExecutorManager? = null
+    @Volatile private var INSTANCE: ThreadPoolExecutorManagerImpl? = null
     
-    fun getInstance(): ThreadPoolExecutorManager = INSTANCE ?: synchronized(this) {
-        INSTANCE ?: ThreadPoolExecutorManager().also { INSTANCE = it }
+    fun getInstance(): ThreadPoolExecutorManagerImpl = INSTANCE ?: synchronized(this) {
+        INSTANCE ?: ThreadPoolExecutorManagerImpl().also { INSTANCE = it }
     }
 }
 
-class ThreadPoolExecutorManager {
+class ThreadPoolExecutorManagerImpl {
     private var corePoolSize = 4
     private var maximumPoolSize = 8
     
@@ -408,7 +392,3 @@ class FireTVLifecycleObserver(
         optimizations.shutdown()
     }
 }
-
-class NetworkRequest(
-    val execute: suspend () -> Unit
-)

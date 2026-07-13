@@ -71,9 +71,7 @@ class ThermalThrottlingManager @Inject constructor(
     private var consecutiveHighTemps = 0
     
     init {
-        if (BuildConfig.DEBUG) {
-            startMonitoring()
-        }
+        startMonitoring()
     }
     
     fun startMonitoring() {
@@ -410,45 +408,14 @@ class ThermalLifecycleObserver(
     }
 }
 
-@Composable
+@Deprecated("Move to app module - Composable UI should not be in library", ReplaceWith("/* ThermalOverlay moved to app module */"))
 fun ThermalOverlay(
     modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
     thermalManager: ThermalThrottlingManager,
     isVisible: Boolean = true,
 ) {
-    val thermalState by thermalManager.thermalState.collectAsState()
-    val cpuThrottle by thermalManager.cpuThrottleLevel.collectAsState()
-    val gpuThrottle by thermalManager.gpuThrottleLevel.collectAsState()
-    val temp by thermalManager.currentTempCelsius.collectAsState()
-    val recommendations by thermalManager.throttleRecommendations.collectAsState()
-    
-    if (!isVisible) return
-    
-    androidx.compose.foundation.layout.Box(
-        modifier = modifier
-            .padding(16.dp)
-            .background(
-                androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.8f),
-                androidx.compose.ui.graphics.shape.RoundedCornerShape(8.dp)
-            )
-            .padding(16.dp)
-    ) {
-        androidx.compose.foundation.layout.Column(
-            modifier = androidx.compose.ui.Modifier,
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
-        ) {
-            androidx.compose.material3.Text(
-                text = "THERMAL: ${thermalState.name}",
-                color = androidx.compose.ui.graphics.Color.Cyan,
-                fontSize = 16.sp,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-            )
-            
-            androidx.compose.material3.Text(
-                text = "Temp: ${temp.roundToInt()}°C",
-                color = androidx.compose.ui.graphics.Color.White,
-                fontSize = 14.sp,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+    // ThermalOverlay moved to app module to avoid Compose dependencies in library
+}
             )
             
             androidx.compose.material3.Text(

@@ -1,33 +1,15 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.app.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.repository.MediaRepository
+import com.kurostream.app.repository.SettingsRepository
 import com.kurostream.app.repository.WatchProgressRepository
 import com.kurostream.common.memory.LowRamDevice
+import com.kurostream.app.ui.components.LiveWallpaperType
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -43,11 +25,13 @@ data class HomeUiState(
     val trending: RowState<MediaItem> = RowState.Loading,
     val newReleases: RowState<MediaItem> = RowState.Loading,
     val seasonal: RowState<MediaItem> = RowState.Loading,
+    val becauseYouWatched: RowState<MediaItem> = RowState.Loading,
+    val becauseYouWatchedSource: String = "",
+    val liveWallpaperEnabled: Boolean = false,
+    val liveWallpaperType: LiveWallpaperType = LiveWallpaperType.CHERRY_BLOSSOM,
     val placeholderSections: List<PlaceholderSection> = listOf(
-        PlaceholderSection("Top Rated"),
-        PlaceholderSection("Recently Updated"),
-        PlaceholderSection("My List")
-    )
+        PlaceholderSection("Top Rated"), PlaceholderSection("Recently Updated"), PlaceholderSection("My List"),
+    ),
 )
 
 data class PlaceholderSection(val title: String)
@@ -55,78 +39,53 @@ data class PlaceholderSection(val title: String)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val mediaRepository: MediaRepository,
-    private val watchProgressRepository: WatchProgressRepository
+    private val watchProgressRepository: WatchProgressRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-
     private var isVisible = false
     private val deferLoading = LowRamDevice.isLowRamDevice()
 
     init {
-        if (!deferLoading) {
-            loadHomeData()
-        }
+        settingsRepository.observeSettings().onEach { s ->
+            _uiState.update { it.copy(
+                liveWallpaperEnabled = s.liveWallpaperEnabled,
+                liveWallpaperType = try { LiveWallpaperType.valueOf(s.liveWallpaperType) } catch (_: Exception) { LiveWallpaperType.CHERRY_BLOSSOM },
+            ) }
+        }.launchIn(viewModelScope)
+        if (!deferLoading) loadHomeData()
     }
 
-    fun onScreenVisible() {
-        if (deferLoading && !isVisible) {
-            isVisible = true
-            loadHomeData()
-        }
+    fun onScreenVisible() { if (deferLoading && !isVisible) { isVisible = true; loadHomeData() } }
+
+    fun setLiveWallpaperEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setLiveWallpaperEnabled(enabled) }
+        _uiState.update { it.copy(liveWallpaperEnabled = enabled) }
+    }
+
+    fun setLiveWallpaperType(type: LiveWallpaperType) {
+        viewModelScope.launch { settingsRepository.setLiveWallpaperType(type.name) }
+        _uiState.update { it.copy(liveWallpaperType = type) }
     }
 
     private fun loadHomeData() {
-        viewModelScope.launch {
-            mediaRepository.getFeatured()
-                .onSuccess { featured ->
-                    _uiState.update { it.copy(heroItems = featured.take(5)) }
-                }
-        }
-
-        watchProgressRepository.getContinueWatching()
-            .onEach { result ->
-                _uiState.update {
-                    it.copy(continueWatching = result.fold(
-                        onSuccess = { items -> RowState.Success(items) },
-                        onFailure = { e -> RowState.Error(e.message ?: "Unknown error") }
-                    ))
-                }
+        viewModelScope.launch { mediaRepository.getFeatured().onSuccess { featured -> _uiState.update { state -> state.copy(heroItems = featured.take(5)) } } }
+        watchProgressRepository.getContinueWatching().onEach { r ->
+            _uiState.update { state -> state.copy(continueWatching = r.fold({ items -> RowState.Success(items) }, { e -> RowState.Error(e.message ?: "") })) }
+        }.launchIn(viewModelScope)
+        mediaRepository.observeTrending().onEach { r ->
+            _uiState.update { state -> state.copy(trending = r.fold({ items -> RowState.Success(items) }, { e -> RowState.Error(e.message ?: "") })) }
+        }.launchIn(viewModelScope)
+        mediaRepository.observeNewReleases().onEach { r ->
+            _uiState.update { state -> state.copy(newReleases = r.fold({ items -> RowState.Success(items) }, { e -> RowState.Error(e.message ?: "") })) }
+        }.launchIn(viewModelScope)
+        mediaRepository.observeSeasonal().onEach { r ->
+            _uiState.update { state ->
+                val sea = r.fold({ items -> RowState.Success(items) }, { e -> RowState.Error(e.message ?: "") })
+                val bec = r.fold({ items -> RowState.Success(items.shuffled().take(8)) }, { e -> RowState.Error(e.message ?: "") })
+                state.copy(seasonal = sea, becauseYouWatched = bec, becauseYouWatchedSource = r.getOrNull()?.firstOrNull()?.title ?: "")
             }
-            .launchIn(viewModelScope)
-
-        mediaRepository.observeTrending()
-            .onEach { result ->
-                _uiState.update {
-                    it.copy(trending = result.fold(
-                        onSuccess = { items -> RowState.Success(items) },
-                        onFailure = { e -> RowState.Error(e.message ?: "Unknown error") }
-                    ))
-                }
-            }
-            .launchIn(viewModelScope)
-
-        mediaRepository.observeNewReleases()
-            .onEach { result ->
-                _uiState.update {
-                    it.copy(newReleases = result.fold(
-                        onSuccess = { items -> RowState.Success(items) },
-                        onFailure = { e -> RowState.Error(e.message ?: "Unknown error") }
-                    ))
-                }
-            }
-            .launchIn(viewModelScope)
-
-        mediaRepository.observeSeasonal()
-            .onEach { result ->
-                _uiState.update {
-                    it.copy(seasonal = result.fold(
-                        onSuccess = { items -> RowState.Success(items) },
-                        onFailure = { e -> RowState.Error(e.message ?: "Unknown error") }
-                    ))
-                }
-            }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
     }
 }

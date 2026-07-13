@@ -57,4 +57,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.work.runtime.ktx)
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animation.graphics)
+    implementation(libs.androidx.material.icons.extended)
 }

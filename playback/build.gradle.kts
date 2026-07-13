@@ -131,6 +131,10 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animation.graphics)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.material3.window.size.class)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(libs.hilt.android)
@@ -148,6 +152,7 @@ dependencies {
     implementation(libs.nanohttpd.websocket)
     implementation(libs.pytorch.android.lite)
     implementation(libs.oboe)
+    implementation(libs.torrent.libtorrent4j)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

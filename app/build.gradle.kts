@@ -117,6 +117,7 @@ dependencies {
     implementation(project(":extensions"))
     implementation(project(":launcher"))
     implementation(project(":backup"))
+    implementation(project(":torrent"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -137,6 +138,9 @@ dependencies {
     implementation(libs.fragment.ktx)
     implementation(libs.recyclerview)
     implementation(libs.navigation.fragment)
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animation.graphics)
+    implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
