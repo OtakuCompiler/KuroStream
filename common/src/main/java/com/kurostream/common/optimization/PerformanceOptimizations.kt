@@ -234,7 +234,7 @@ class NetworkDeduplicator {
  */
 class BitmapPoolManager {
     private val pools = mutableMapOf<Int, android.util.LruCache<Int, android.graphics.Bitmap>>()
-    private val maxPoolSize = 50 * 1024 * 1024 // 50MB
+    private val maxPoolSize = 12 * 1024 * 1024 // 12MB (was 50MB)
 
     fun getBitmap(width: Int, height: Int, config: android.graphics.Bitmap.Config = android.graphics.Bitmap.Config.ARGB_8888): android.graphics.Bitmap? {
         val key = (width * height * 4).hashCode() // Approximate size
@@ -292,14 +292,14 @@ object CoilCacheConfig {
     fun memoryCacheSize(context: Context): Long {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
         val memoryClass = activityManager.memoryClass
-        // Use 1/8th of available memory, max 256MB
-        return (memoryClass * 1024L * 1024L / 8).coerceAtMost(256 * 1024 * 1024)
+        // Use 1/16th of available memory, max 64MB
+        return (memoryClass * 1024L * 1024L / 16).coerceAtMost(64 * 1024 * 1024)
     }
 
     fun diskCacheSize(context: Context): Long {
         val cacheDir = context.cacheDir
         val usableSpace = cacheDir.usableSpace
-        // Use 10% of available space, max 256MB
-        return (usableSpace / 10).coerceAtMost(256 * 1024 * 1024)
+        // Use 5% of available space, max 128MB
+        return (usableSpace / 20).coerceAtMost(128 * 1024 * 1024)
     }
 }

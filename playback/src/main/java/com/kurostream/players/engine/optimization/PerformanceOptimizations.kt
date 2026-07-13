@@ -413,7 +413,7 @@ class DynamicResolutionScaler {
     private val scaleStep = 0.1f
     
     private val bandwidthHistory = mutableListOf<Long>()
-    private val maxHistorySize = 10
+    private val maxHistorySize = 5
     
     companion object {
         private const val TAG = "DynamicResolutionScaler"
