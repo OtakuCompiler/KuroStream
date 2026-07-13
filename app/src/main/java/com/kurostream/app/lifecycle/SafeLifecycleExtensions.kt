@@ -154,7 +154,7 @@ fun SafeViewModelScope(
     }
 }
 
-class LeakSafeViewModel : ViewModel() {
+open class LeakSafeViewModel : ViewModel() {
     private val _cleanupJobs = mutableListOf<Job>()
     private val _disposables = mutableListOf<() -> Unit>()
     
@@ -168,15 +168,15 @@ class LeakSafeViewModel : ViewModel() {
         _disposables.clear()
     }
     
-    protected fun addCleanupJob(job: Job) {
+    fun addCleanupJob(job: Job) {
         _cleanupJobs.add(job)
     }
     
-    protected fun addDisposable(disposable: () -> Unit) {
+    fun addDisposable(disposable: () -> Unit) {
         _disposables.add(disposable)
     }
     
-    protected fun launchInViewModelScope(block: suspend CoroutineScope.() -> Unit): Job {
+    fun launchInViewModelScope(block: suspend CoroutineScope.() -> Unit): Job {
         val job = viewModelScope.launch {
             try {
                 block()
@@ -284,35 +284,33 @@ fun StrictModeDebug(onViolation: (String) -> Unit = { Log.w("StrictMode", it) })
     }
 }
 
-class LeakDetector {
-    companion object {
-        private var isEnabled = false
-        
-        fun enable() {
-            if (BuildConfig.DEBUG && !isEnabled) {
-                isEnabled = true
-                
-                System.setProperty("kotlinx.coroutines.debug", "on")
-                
-                val leakCanary = try {
-                    Class.forName("leakcanary.LeakCanary")
-                    leakCanary.getMethod("install", android.app.Application::class.java)
-                    true
-                } catch (e: Exception) {
-                    false
-                }
-                
-                if (leakCanary) {
-                    Log.d("LeakDetector", "LeakCanary integration enabled")
-                }
-                
-                Log.d("LeakDetector", "Leak detection enabled")
+object LeakDetector {
+    private var isEnabled = false
+    
+    fun enable() {
+        if (BuildConfig.DEBUG && !isEnabled) {
+            isEnabled = true
+            
+            System.setProperty("kotlinx.coroutines.debug", "on")
+            
+            val leakCanary = try {
+                Class.forName("leakcanary.LeakCanary")
+                leakCanary.getMethod("install", android.app.Application::class.java)
+                true
+            } catch (e: Exception) {
+                false
             }
+            
+            if (leakCanary) {
+                Log.d("LeakDetector", "LeakCanary integration enabled")
+            }
+            
+            Log.d("LeakDetector", "Leak detection enabled")
         }
-        
-        fun disable() {
-            isEnabled = false
-        }
+    }
+    
+    fun disable() {
+        isEnabled = false
     }
 }
 
