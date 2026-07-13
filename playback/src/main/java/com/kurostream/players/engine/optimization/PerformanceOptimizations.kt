@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicLong
 @Keep
 class FramePreRenderer(
     private val context: Context,
-    private val maxQueueSize: Int = 3
+    private val maxQueueSize: Int = 1
 ) {
     
     private val frameQueue = ConcurrentLinkedQueue<PreRenderedFrame>()
@@ -178,7 +178,7 @@ class ZeroCopyTextureManager(
 ) {
     private val activeTextures = ConcurrentLinkedQueue<TextureHandle>()
     private val texturePool = ConcurrentLinkedQueue<TextureHandle>()
-    private val maxPoolSize = 8
+    private val maxPoolSize = 4
     
     data class TextureHandle(
         val surfaceTexture: SurfaceTexture,
@@ -558,21 +558,21 @@ class JitCodecLoader(
 class EnergyAwareScheduler(
     private val context: Context
 ) {
-    private val efficiencyExecutor = Executors.newFixedThreadPool(2) { r ->
+    private val efficiencyExecutor = Executors.newFixedThreadPool(1) { r ->
         Thread(r, "KuroEfficiency-${Thread.activeCount()}").apply {
             priority = Thread.MIN_PRIORITY
             // Pin to efficiency cores via JNI in production
         }
     }
     
-    private val performanceExecutor = Executors.newFixedThreadPool(4) { r ->
+    private val performanceExecutor = Executors.newFixedThreadPool(2) { r ->
         Thread(r, "KuroPerformance-${Thread.activeCount()}").apply {
             priority = Thread.MAX_PRIORITY
             // Pin to performance cores via JNI in production
         }
     }
     
-    private val backgroundExecutor = Executors.newCachedThreadPool { r ->
+    private val backgroundExecutor = Executors.newFixedThreadPool(1) { r ->
         Thread(r, "KuroBackground-${Thread.activeCount()}").apply {
             priority = Thread.NORM_PRIORITY - 1
         }

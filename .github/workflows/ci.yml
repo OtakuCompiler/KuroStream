@@ -23,7 +23,6 @@ jobs:
     name: KMP Compile
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +48,6 @@ jobs:
     name: Lint & Test
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -86,7 +84,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: [kmp-compile]
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:

@@ -117,7 +117,7 @@ class Media3Player(private val context: Context) : PlayerInterface {
                 .setLoadErrorHandlingPolicy(AdaptiveLoadErrorPolicy())
 
             // Initialize disk-backed load control for low memory footprint
-            diskBackedLoadControl = DiskBackedLoadControl.getInstance(context, 50_000_000) // 50MB target buffer
+            diskBackedLoadControl = DiskBackedLoadControl.getInstance(context, 20_000_000) // 20MB target buffer
 
             exoPlayer = ExoPlayer.Builder(context)
                 .setTrackSelector(trackSelector)

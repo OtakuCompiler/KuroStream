@@ -96,13 +96,13 @@ class ZeroCopyDecoder(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val shutdownFlag = AtomicBoolean(false)
     
-    // Frame queue for rendering
-    private val frameQueue = Channel<DecodedFrame>(Channel.UNLIMITED)
+    // Frame queue for rendering — bounded to prevent OOM
+    private val frameQueue = Channel<DecodedFrame>(Channel.RENDEZVOUS)
     
     companion object {
         // MediaCodec configuration
         private const val TIMEOUT_US = 10_000L // 10ms timeout
-        private const val MAX_FRAMES_IN_FLIGHT = 4 // Max frames being processed
+        private const val MAX_FRAMES_IN_FLIGHT = 2 // Max frames being processed (was 4)
     }
     
     /**
@@ -495,7 +495,8 @@ class ZeroCopyDecoder(
         val outputHeight: Int = 1080,
         val maxFramesInFlight: Int = MAX_FRAMES_IN_FLIGHT,
         val enableHdr: Boolean = false,
-        val enable10Bit: Boolean = false
+        val enable10Bit: Boolean = false,
+        val max4kFrameBuffers: Int = 3 // Minimum steady-decode frames for 4K
     ) {
         companion object {
             val DEFAULT = DecoderConfig()

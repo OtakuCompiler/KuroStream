@@ -15,10 +15,10 @@ data class AbrProfile(
 
 data class ChunkSpec(
     val sizeBytes: Int = 256 * 1024,
-    val maxParallelChunks: Int = 4,
-    val prefetchAheadMs: Long = 30_000,
-    val bufferTargetMs: Long = 60_000,
-    val bufferMaxMs: Long = 120_000,
+    val maxParallelChunks: Int = 2,
+    val prefetchAheadMs: Long = 15_000,
+    val bufferTargetMs: Long = 30_000,
+    val bufferMaxMs: Long = 60_000,
 )
 
 data class FailoverConfig(

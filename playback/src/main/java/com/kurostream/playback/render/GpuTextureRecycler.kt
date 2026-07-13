@@ -44,8 +44,8 @@ class GpuTextureRecycler {
     private val TAG = "GpuTextureRecycler"
     
     // Texture pool configuration
-    private val MAX_POOL_SIZE = 32 // Max textures to keep in pool
-    private val MAX_TEXTURE_SIZE = 8192 // Max texture dimension (8K)
+    private val MAX_POOL_SIZE = 8 // Max textures to keep in pool (was 32)
+    private val MAX_TEXTURE_SIZE = 4096 // Max texture dimension (was 8K)
     
     // Texture types
     enum class TextureType {

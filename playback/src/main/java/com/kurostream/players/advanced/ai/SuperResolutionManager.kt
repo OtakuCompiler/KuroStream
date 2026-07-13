@@ -165,9 +165,10 @@ class SuperResolutionManager private constructor(
         
         const val MODEL_INPUT_SIZE = 128  // ESRGAN/ESPCN input size
         const val UPSCALE_FACTOR = 2
-        const val TILE_OVERLAP = 8
-        const val MAX_CONCURRENT_TILES = 4
-        const val RING_BUFFER_SECONDS = 5  // Cache last 5 seconds
+        const val TILE_OVERLAP = 4  // Reduced from 8
+        const val MAX_CONCURRENT_TILES = 2  // Reduced from 4
+        const val RING_BUFFER_SECONDS = 1  // Cache last 1 second (was 5)
+        const val MAX_MEMORY_BUDGET_BYTES = 48_000_000L  // 48 MB cap for upscale buffers
     }
     
     init {
@@ -243,6 +244,15 @@ class SuperResolutionManager private constructor(
     @WorkerThread
     fun processFrame(inputFrame: ByteBuffer, width: Int, height: Int, timestampNs: Long): FrameBuffer? {
         if (!isEnabled.get() || !isModelLoaded.get()) {
+            return null
+        }
+        
+        // Memory budget check — skip upscaling if we're over budget
+        val frameCost = (width * UPSCALE_FACTOR).toLong() *
+            (height * UPSCALE_FACTOR) * 4L
+        if (getEstimatedMemoryBytes() + frameCost > MAX_MEMORY_BUDGET_BYTES) {
+            Log.w(TAG, "Memory budget exceeded, skipping upscale")
+            updateStats()
             return null
         }
         
@@ -514,8 +524,16 @@ class SuperResolutionManager private constructor(
             outputQueue.consumeEach { frame ->
                 deliverResult(frame)
                 // Add to ring buffer
+                val frameCost = frame.buffer.capacity().toLong()
                 synchronized(ringBufferLock) {
+                    // Evict oldest if at capacity
+                    if (ringBuffer.size >= ringBuffer.capacity) {
+                        ringBuffer.poll()?.let { released ->
+                            releaseFrameCost(released.buffer.capacity().toLong())
+                        }
+                    }
                     ringBuffer.add(frame)
+                    addFrameCost(frameCost)
                 }
             }
         }
@@ -791,6 +809,27 @@ class SuperResolutionManager private constructor(
         }
     }
     
+    private var estimatedMemoryBytes: Long = 0L
+    private val memoryLock = Any()
+    
+    fun getEstimatedMemoryBytes(): Long {
+        synchronized(memoryLock) {
+            return estimatedMemoryBytes
+        }
+    }
+    
+    private fun addFrameCost(cost: Long) {
+        synchronized(memoryLock) {
+            estimatedMemoryBytes += cost
+        }
+    }
+    
+    private fun releaseFrameCost(cost: Long) {
+        synchronized(memoryLock) {
+            estimatedMemoryBytes = (estimatedMemoryBytes - cost).coerceAtLeast(0)
+        }
+    }
+    
     private fun onThermalThrottle(stage: ThermalGuard.ThrottleStage) {
         when (stage) {
             ThermalGuard.ThrottleStage.WARNING -> {
@@ -841,9 +880,9 @@ class SuperResolutionManager private constructor(
     private val gpuDispatcher = Dispatchers.Default // Would use GPU thread in real implementation
     
     data class UpscaleConfig(
-        val maxInputWidth: Int = 3840, // 4K
-        val maxInputHeight: Int = 2160, // 4K
-        val ringBufferSize: Int = RING_BUFFER_SECONDS * 60, // 5 seconds at 60fps
+        val maxInputWidth: Int = 1920, // Down from 4K — scale up from 1080p base
+        val maxInputHeight: Int = 1080, // Down from 4K
+        val ringBufferSize: Int = RING_BUFFER_SECONDS * 30, // 1 second at 30fps (was 5s@60)
         val enableNnapi: Boolean = true,
         val enableFp16: Boolean = true,
         val enableRingBuffer: Boolean = true
@@ -931,5 +970,15 @@ class SuperResolutionManager private constructor(
         }
         
         fun size(): Int = size
+        
+        fun poll(): FrameBuffer? {
+            if (size == 0) return null
+            val frame = buffer[tail]
+            buffer[tail] = null
+            timestamps[tail] = 0
+            tail = (tail + 1) % capacity
+            size--
+            return frame
+        }
     }
 }

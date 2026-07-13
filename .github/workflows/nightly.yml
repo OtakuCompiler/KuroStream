@@ -15,7 +15,6 @@ jobs:
     name: Debug Build
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +48,6 @@ jobs:
     name: Bundle
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,7 +63,7 @@ jobs:
 
       - run: chmod +x gradlew
 
-      - run: ./gradlew bundleRelease --no-daemon -x lint -x test || true
+      - run: ./gradlew bundleRelease --no-daemon -x lint -x test
 
       - uses: actions/upload-artifact@v4
         with:

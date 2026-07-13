@@ -38,18 +38,18 @@ class DiskBackedLoadControl private constructor(
     private val allocator = DefaultAllocator.Builder().build()
     private val mutex = Mutex()
     
-    // Target buffer levels in bytes (mirroring ExoPlayer's default behavior)
-    private val minBufferMs = 5_000L
-    private val maxBufferMs = 120_000L
-    private val bufferForPlaybackMs = 2_500L
-    private val bufferForPlaybackAfterRebufferMs = 5_000L
-    private val backBufferMs = 15_000L
+    // Target buffer levels — reduced for lower RAM footprint
+    private val minBufferMs = 3_000L
+    private val maxBufferMs = 60_000L
+    private val bufferForPlaybackMs = 1_500L
+    private val bufferForPlaybackAfterRebufferMs = 3_000L
+    private val backBufferMs = 8_000L
     
     companion object {
         @Suppress("UNUSED_PARAMETER")
         private var INSTANCE: DiskBackedLoadControl? = null
         
-        fun getInstance(context: Context, targetBufferBytes: Long = 50_000_000): DiskBackedLoadControl {
+        fun getInstance(context: Context, targetBufferBytes: Long = 20_000_000): DiskBackedLoadControl {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: DiskBackedLoadControl(context.applicationContext, targetBufferBytes).also { INSTANCE = it }
             }
