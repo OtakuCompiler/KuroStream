@@ -197,6 +197,29 @@ class UnifiedMemoryManager @Inject constructor(
         trimCallbacks.remove(callback)
     }
 
+    /**
+     * Wires this manager to Android's [ComponentCallbacks2] trim memory events so that
+     * [trimMemory] is invoked whenever the system reports a memory pressure level.
+     * Returns the [ComponentCallbacks2] instance, allowing callers to unregister later.
+     */
+    fun registerComponentCallbacks(): ComponentCallbacks2 {
+        val callbacks = object : ComponentCallbacks2 {
+            override fun onConfigurationChanged(newConfig: Configuration) = Unit
+            override fun onLowMemory() {
+                trimMemory(ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL)
+            }
+            override fun onTrimMemory(level: Int) {
+                trimMemory(level)
+            }
+        }
+        context.applicationContext.registerComponentCallbacks(callbacks)
+        return callbacks
+    }
+
+    fun unregisterComponentCallbacks(callbacks: ComponentCallbacks2) {
+        context.applicationContext.unregisterComponentCallbacks(callbacks)
+    }
+
     fun clearAllCaches() {
         context.cacheDir.deleteRecursively()
         context.cacheDir.mkdirs()

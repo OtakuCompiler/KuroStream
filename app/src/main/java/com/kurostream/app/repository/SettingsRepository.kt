@@ -30,8 +30,7 @@ interface SettingsRepository {
         val frameInterpolationEnabled: Boolean = false,
         val lowLatencyUpscalingEnabled: Boolean = false,
         val vodCacheCompressionEnabled: Boolean = true,
-        val liveWallpaperEnabled: Boolean = false,
-        val liveWallpaperType: String = "CHERRY_BLOSSOM",
+        val skinName: String = "AMOLED_BLACK",
     )
 
     fun getSettings(): Settings
@@ -76,6 +75,5 @@ interface SettingsRepository {
 
     suspend fun setVodCacheCompressionEnabled(enabled: Boolean)
 
-    suspend fun setLiveWallpaperEnabled(enabled: Boolean)
-    suspend fun setLiveWallpaperType(type: String)
+    suspend fun setSkinName(name: String)
 }

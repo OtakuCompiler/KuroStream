@@ -53,17 +53,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setLiveWallpaperEnabled(enabled: Boolean) {
+    fun setSkinName(name: String) {
         viewModelScope.launch {
-            settingsRepository.setLiveWallpaperEnabled(enabled)
-            _uiState.update { it.copy(liveWallpaperEnabled = enabled) }
-        }
-    }
-
-    fun setLiveWallpaperType(type: String) {
-        viewModelScope.launch {
-            settingsRepository.setLiveWallpaperType(type)
-            _uiState.update { it.copy(liveWallpaperType = type) }
+            settingsRepository.setSkinName(name)
+            _uiState.update { it.copy(skinName = name) }
         }
     }
 
@@ -296,6 +289,5 @@ data class SettingsUiState(
     val vodCacheCompressionEnabled: Boolean = true,
     val reduceMotionEnabled: Boolean = false,
     val focusHighlightEnabled: Boolean = true,
-    val liveWallpaperEnabled: Boolean = false,
-    val liveWallpaperType: String = "CHERRY_BLOSSOM",
+    val skinName: String = "AMOLED_BLACK",
 )

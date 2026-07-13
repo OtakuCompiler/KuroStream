@@ -15,7 +15,7 @@
 
 package com.kurostream.domain.legacy.usecase
 
-import com.kurostream.common.dispatcher.DefaultDispatcherProvider
+import com.kurostream.core.common.dispatcher.TestDispatcherProvider
 import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.legacy.repository.MediaRepository
@@ -29,7 +29,7 @@ import org.junit.Test
 class SearchAnimeTest {
 
     private val mediaRepository: MediaRepository = mockk()
-    private val dispatcherProvider = DefaultDispatcherProvider()
+    private val dispatcherProvider = TestDispatcherProvider
 
     private val useCase = SearchAnime(mediaRepository, dispatcherProvider)
 

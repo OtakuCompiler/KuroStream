@@ -62,8 +62,7 @@ class SettingsRepositoryImpl @Inject constructor(
 
         val VOD_CACHE_COMPRESSION = booleanPreferencesKey("vod_cache_compression", true)
 
-        val LIVE_WALLPAPER_ENABLED = booleanPreferencesKey("live_wallpaper_enabled", false)
-        val LIVE_WALLPAPER_TYPE = stringPreferencesKey("live_wallpaper_type", "CHERRY_BLOSSOM")
+        val SKIN_NAME = stringPreferencesKey("skin_name", "AMOLED_BLACK")
     }
 
     override fun getSettings(): Settings {
@@ -105,8 +104,7 @@ class SettingsRepositoryImpl @Inject constructor(
             frameInterpolationEnabled = getBool(prefs, Keys.FRAME_INTERPOLATION, false),
             lowLatencyUpscalingEnabled = getBool(prefs, Keys.LOW_LATENCY_UPSCALING, false),
             vodCacheCompressionEnabled = getBool(prefs, Keys.VOD_CACHE_COMPRESSION, true),
-            liveWallpaperEnabled = getBool(prefs, Keys.LIVE_WALLPAPER_ENABLED, false),
-            liveWallpaperType = getString(prefs, Keys.LIVE_WALLPAPER_TYPE, "CHERRY_BLOSSOM"),
+            skinName = getString(prefs, Keys.SKIN_NAME, "AMOLED_BLACK"),
         )
     }
 
@@ -268,12 +266,8 @@ class SettingsRepositoryImpl @Inject constructor(
         dataStore.updateDataAsync { it[Keys.VOD_CACHE_COMPRESSION] = enabled }
     }
 
-    override suspend fun setLiveWallpaperEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.LIVE_WALLPAPER_ENABLED] = enabled }
-    }
-
-    override suspend fun setLiveWallpaperType(type: String) {
-        dataStore.updateDataAsync { it[Keys.LIVE_WALLPAPER_TYPE] = type }
+    override suspend fun setSkinName(name: String) {
+        dataStore.updateDataAsync { it[Keys.SKIN_NAME] = name }
     }
 
     private fun formatCacheSize(bytes: Long): String {

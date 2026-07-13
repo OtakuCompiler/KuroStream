@@ -130,6 +130,7 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
+        memoryMonitor?.trimMemory(level)
         when (level) {
             ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
                 Timber.d("TRIM_MEMORY_UI_HIDDEN - clearing caches")

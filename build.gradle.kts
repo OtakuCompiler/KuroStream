@@ -16,6 +16,16 @@ apply(plugin = "org.owasp.dependencycheck")
 
 val excludedDetektModules = setOf("tizenApp", "webosApp")
 
+subprojects {
+    plugins.withType<JavaPlugin>().configureEach {
+        extensions.configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(17))
+            }
+        }
+    }
+}
+
 allprojects {
     afterEvaluate {
         if (plugins.hasPlugin("io.gitlab.arturbosch.detekt")) {

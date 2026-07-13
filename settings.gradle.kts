@@ -41,7 +41,7 @@ include(":launcher")
 include(":benchmark")
 include(":core-common")
 include(":core-platform")
-// include(":torrent") // disabled: frostwire jlibtorrent 2.0.x is only on GitHub Packages (auth req'd), not Maven Central
+if (findProject(":torrent") != null) include(":torrent") // re-enabled: user requested max peers for P2P streaming
 include(":backup")
 include(":lint-checks")
 include(":webosApp")

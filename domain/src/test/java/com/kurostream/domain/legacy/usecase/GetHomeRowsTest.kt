@@ -15,7 +15,7 @@
 
 package com.kurostream.domain.legacy.usecase
 
-import com.kurostream.common.dispatcher.DefaultDispatcherProvider
+import com.kurostream.core.common.dispatcher.TestDispatcherProvider
 import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.HomeRow
 import com.kurostream.domain.legacy.repository.MediaRepository
@@ -31,7 +31,7 @@ class GetHomeRowsTest {
 
     private val mediaRepository: MediaRepository = mockk()
     private val profileRepository: ProfileRepository = mockk()
-    private val dispatcherProvider = DefaultDispatcherProvider()
+    private val dispatcherProvider = TestDispatcherProvider
 
     private val useCase = GetHomeRows(mediaRepository, profileRepository, dispatcherProvider)
 

@@ -15,10 +15,11 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.kurostream.app.ui.components.HeroBanner
-import com.kurostream.app.ui.components.LiveWallpaperView
 import com.kurostream.app.ui.components.SkeletonRow
 import com.kurostream.app.ui.components.TvTopAppBar
+import com.kurostream.app.ui.theme.SkinBackground
 import com.kurostream.app.ui.theme.TvOnSurfaceVariant
+import com.kurostream.common.memory.LowRamDevice
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -40,8 +41,11 @@ fun HomeScreen(
     } }
     LaunchedEffect(Unit) { focusRequester.requestFocus(); viewModel.onScreenVisible() }
     Box(modifier = Modifier.fillMaxSize()) {
-        if (uiState.liveWallpaperEnabled) LiveWallpaperView(
-            wallpaperType = uiState.liveWallpaperType, modifier = Modifier.fillMaxSize()
+        SkinBackground(
+            skin = uiState.skin,
+            modifier = Modifier.fillMaxSize(),
+            reduceMotionEnabled = uiState.reduceMotionEnabled,
+            isLowRamDevice = LowRamDevice.isLowRamDevice(),
         )
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 80.dp)) {
             item { HeroBanner(items = uiState.heroItems, onItemClick = onMediaClick, modifier = Modifier.fillMaxWidth().height(420.dp)) }

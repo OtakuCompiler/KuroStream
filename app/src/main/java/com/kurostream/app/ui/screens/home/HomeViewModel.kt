@@ -6,8 +6,8 @@ import com.kurostream.app.model.MediaItem
 import com.kurostream.app.repository.MediaRepository
 import com.kurostream.app.repository.SettingsRepository
 import com.kurostream.app.repository.WatchProgressRepository
+import com.kurostream.app.ui.theme.Skin
 import com.kurostream.common.memory.LowRamDevice
-import com.kurostream.app.ui.components.LiveWallpaperType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -27,8 +27,8 @@ data class HomeUiState(
     val seasonal: RowState<MediaItem> = RowState.Loading,
     val becauseYouWatched: RowState<MediaItem> = RowState.Loading,
     val becauseYouWatchedSource: String = "",
-    val liveWallpaperEnabled: Boolean = false,
-    val liveWallpaperType: LiveWallpaperType = LiveWallpaperType.CHERRY_BLOSSOM,
+    val skin: Skin = Skin.AMOLED_BLACK,
+    val reduceMotionEnabled: Boolean = false,
     val placeholderSections: List<PlaceholderSection> = listOf(
         PlaceholderSection("Top Rated"), PlaceholderSection("Recently Updated"), PlaceholderSection("My List"),
     ),
@@ -50,24 +50,14 @@ class HomeViewModel @Inject constructor(
     init {
         settingsRepository.observeSettings().onEach { s ->
             _uiState.update { it.copy(
-                liveWallpaperEnabled = s.liveWallpaperEnabled,
-                liveWallpaperType = try { LiveWallpaperType.valueOf(s.liveWallpaperType) } catch (_: Exception) { LiveWallpaperType.CHERRY_BLOSSOM },
+                skin = try { Skin.valueOf(s.skinName) } catch (_: Exception) { Skin.AMOLED_BLACK },
+                reduceMotionEnabled = s.reduceMotionEnabled,
             ) }
         }.launchIn(viewModelScope)
         if (!deferLoading) loadHomeData()
     }
 
     fun onScreenVisible() { if (deferLoading && !isVisible) { isVisible = true; loadHomeData() } }
-
-    fun setLiveWallpaperEnabled(enabled: Boolean) {
-        viewModelScope.launch { settingsRepository.setLiveWallpaperEnabled(enabled) }
-        _uiState.update { it.copy(liveWallpaperEnabled = enabled) }
-    }
-
-    fun setLiveWallpaperType(type: LiveWallpaperType) {
-        viewModelScope.launch { settingsRepository.setLiveWallpaperType(type.name) }
-        _uiState.update { it.copy(liveWallpaperType = type) }
-    }
 
     private fun loadHomeData() {
         viewModelScope.launch { mediaRepository.getFeatured().onSuccess { featured -> _uiState.update { state -> state.copy(heroItems = featured.take(5)) } } }
