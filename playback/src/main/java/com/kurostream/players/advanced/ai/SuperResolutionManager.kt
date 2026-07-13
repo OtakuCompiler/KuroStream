@@ -197,17 +197,7 @@ class SuperResolutionManager private constructor(
         // Initialize EGL context
         gpuHandler?.post { createEglContext() }
         
-        // Load models
-        scope.launch {
-            loadModels()
-            isModelLoaded.set(true)
-            startProcessingLoops()
-        }
-        
-        // Register thermal callback
-        settings.thermalGuard.register { stage ->
-            onThermalThrottle(stage)
-        }
+        // Don't preload models — lazy-load on first frame instead
     }
     
     /**
@@ -243,7 +233,22 @@ class SuperResolutionManager private constructor(
      */
     @WorkerThread
     fun processFrame(inputFrame: ByteBuffer, width: Int, height: Int, timestampNs: Long): FrameBuffer? {
-        if (!isEnabled.get() || !isModelLoaded.get()) {
+        if (!isEnabled.get()) {
+            return null
+        }
+        
+        // Skip upscaling if input is already high-res (>= 1080p)
+        if (width >= 1920 || height >= 1080) {
+            return null
+        }
+        
+        // Lazy-load model on first frame
+        if (!isModelLoaded.get()) {
+            scope.launch {
+                loadModels()
+                isModelLoaded.set(true)
+                startProcessingLoops()
+            }
             return null
         }
         

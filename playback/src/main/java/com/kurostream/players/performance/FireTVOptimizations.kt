@@ -303,8 +303,6 @@ fun HardwareLayerListItem(
 ) {
     // Moved to app module
 }
-    }
-}
 
 class AnimationReducer {
     private var durationScale = 1.0f
@@ -329,18 +327,14 @@ class AnimationReducer {
         durationScale = 1.0f
         complexAnimationsDisabled = false
     }
-    
+}
+
 @Deprecated("Move to app module - Composable UI should not be in library", ReplaceWith("/* ReducedAnimation moved to app module */"))
-@Composable
 fun ReducedAnimation(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     // ReducedAnimation moved to app module
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        content()
-    }
-}
 }
 
 class FireTVThreadFactory : ThreadFactory {
