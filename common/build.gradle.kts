@@ -19,6 +19,8 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
 }
+
+apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 android {
     namespace = "com.kurostream.common"
     compileSdk = libs.versions.compileSdk.get().toInt()

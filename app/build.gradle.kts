@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+apply(plugin = "org.jetbrains.kotlin.plugin.compose")
+
 android {
     namespace = "com.kurostream.app"
     compileSdk = libs.versions.compileSdk.get().toInt()

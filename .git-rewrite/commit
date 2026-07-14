@@ -1,0 +1,8 @@
+tree 4badadf7a2e0879c216415c0dd9660e33327f091
+parent 19fd3546aabd272fd882f1047b5c9cf186bbe9f8
+author OtakuCompiler <otakucompiler@users.noreply.github.com> 1783836867 +0500
+committer OtakuCompiler <otakucompiler@users.noreply.github.com> 1783836867 +0500
+
+fix: Use camelCase for plugin alias access in build.gradle.kts
+
+- baseline_profile -> baselineProfile in Kotlin DSL accessor

@@ -27,6 +27,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
         with(target) {
             pluginManager.apply("com.android.library")
             pluginManager.apply("org.jetbrains.kotlin.android")
+            // Apply Compose Compiler Gradle plugin for Kotlin 2.0+
+            pluginManager.apply("org.jetbrains.kotlin.composer")
 
             extensions.configure<LibraryExtension> {
                 compileSdk = providers.provider { libs.versions.compileSdk.get().toInt() }
@@ -54,6 +56,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
                 kotlinOptions {
                     jvmTarget = "17"
+                }
+                composeOptions {
+                    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
                 }
             }
 

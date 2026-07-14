@@ -18,6 +18,11 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin/")
+    }
+    // Resolve the Compose Compiler Gradle plugin from the buildscript classpath
+    plugins {
+        id("org.jetbrains.kotlin.composer") version "2.0.21"
     }
 }
 dependencyResolutionManagement {

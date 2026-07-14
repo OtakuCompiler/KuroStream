@@ -1,0 +1,3 @@
+fix: Use camelCase for plugin alias access in build.gradle.kts
+
+- baseline_profile -> baselineProfile in Kotlin DSL accessor

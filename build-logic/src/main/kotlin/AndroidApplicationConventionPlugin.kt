@@ -26,6 +26,8 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
         with(target) {
             pluginManager.apply("com.android.application")
             pluginManager.apply("org.jetbrains.kotlin.android")
+            // Apply Compose Compiler Gradle plugin for Kotlin 2.0+
+            pluginManager.apply("org.jetbrains.kotlin.composer")
 
             extensions.configure<AppExtension> {
                 compileSdk = providers.provider { libs.versions.compileSdk.get().toInt() }

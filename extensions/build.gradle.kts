@@ -24,6 +24,8 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+apply(plugin = "org.jetbrains.kotlin.plugin.compose")
+
 android {
     namespace = "com.kurostream.extensions"
     compileSdk = libs.versions.compileSdk.get().toInt()

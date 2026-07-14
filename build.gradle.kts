@@ -12,6 +12,18 @@ plugins {
     alias(libs.plugins.dependencycheck) apply false
 }
 
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
+        classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.0.21")
+    }
+}
+
 apply(plugin = "org.owasp.dependencycheck")
 
 val excludedDetektModules = setOf("tizenApp", "webosApp")
@@ -30,9 +42,9 @@ allprojects {
     afterEvaluate {
         if (plugins.hasPlugin("io.gitlab.arturbosch.detekt")) {
             configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
-                toolVersion = "1.23.6"
+                toolVersion = libs.versions.detekt.get()
                 config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
-                buildUponDefaultConfig = false
+                buildUponDefaultConfig = true
                 allRules = false
                 parallel = true
             }

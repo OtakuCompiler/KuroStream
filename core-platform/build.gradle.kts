@@ -41,12 +41,6 @@ kotlin {
                 implementation(libs.archunit)
             }
         }
-        val jvmMain by getting {
-            dependencies {
-                implementation(libs.okhttp)
-                implementation(libs.kotlinx.coroutines.core)
-            }
-        }
         val androidMain by getting {
             dependencies {
                 implementation(libs.okhttp)
