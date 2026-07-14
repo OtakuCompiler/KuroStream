@@ -21,6 +21,7 @@ plugins {
 
 kotlin {
     androidTarget()
+    jvm()
     js {
         browser()
         nodejs()
@@ -44,6 +45,11 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation(libs.okhttp)
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
                 implementation(libs.kotlinx.coroutines.core)
             }
         }

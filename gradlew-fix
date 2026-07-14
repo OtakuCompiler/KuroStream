@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Fix for Java 25 compatibility
+JAVA_VERSION=$(java -version 2>&1 | head -1 | cut -d'"' -f2 | sed '/^1\./s///' | cut -d'.' -f1)
+if [ "$JAVA_VERSION" -ge "25" ]; then
+    export JAVA_OPTS="-Djava.version=17.0.0"
+    echo "Fixed Java version from $JAVA_VERSION to 17.0.0 for compatibility"
+fi
+
+# Run gradle with the original arguments
+./gradlew "$@"
