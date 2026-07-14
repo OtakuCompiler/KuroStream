@@ -18,7 +18,7 @@ sealed class Result<out T> {
         }
 
         fun <T> flowAsResult(flow: Flow<T>): Flow<Result<T>> = flow
-            .map<Result<T>> { data -> Success(data) }
+            .map { data -> Success(data) }
             .catch { emit(Error(it)) }
     }
 
@@ -96,13 +96,13 @@ sealed class Resource<out T> {
         }
     }
 
-    override val data: T? get() = when (this) {
+    val data: T? get() = when (this) {
         is Success -> data
         is Loading -> data
         is Error -> data
     }
 
-    override val exception: Throwable? get() = when (this) {
+    val exception: Throwable? get() = when (this) {
         is Error -> exception
         else -> null
     }
