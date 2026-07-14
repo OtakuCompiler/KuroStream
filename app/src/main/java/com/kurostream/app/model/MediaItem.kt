@@ -16,6 +16,7 @@
 package com.kurostream.app.model
 
 import androidx.compose.runtime.Immutable
+import com.kurostream.domain.entity.MediaItem as DomainMediaItem
 
 @Immutable
 data class MediaItem(
@@ -36,7 +37,29 @@ data class MediaItem(
     val lastWatchedEpisode: Int? = null,
     val lastPositionMs: Long = 0L,
     val watchProgressPercent: Float = 0f
-)
+) {
+    companion object {
+        fun fromDomain(domain: DomainMediaItem): MediaItem = MediaItem(
+            id = domain.id,
+            title = domain.title,
+            synopsis = domain.synopsis ?: "",
+            posterImage = domain.coverImageUrl,
+            coverImage = domain.coverImageUrl,
+            bannerImage = domain.bannerImageUrl,
+            genres = domain.genres,
+            rating = domain.score ?: 0.0,
+            year = domain.seasonYear,
+            format = domain.type.name,
+            status = domain.status.name,
+            episodeCount = domain.episodeNumber,
+            trailerUrl = null,
+            lastWatchedEpisodeId = null,
+            lastWatchedEpisode = null,
+            lastPositionMs = 0L,
+            watchProgressPercent = 0f
+        )
+    }
+}
 
 @Immutable
 data class Episode(
