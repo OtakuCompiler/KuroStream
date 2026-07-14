@@ -15,15 +15,19 @@
 
 package com.kurostream.domain.legacy.repository
 
-import com.kurostream.core.common.result.Result
-import com.kurostream.domain.entity.Profile
+import com.kurostream.domain.model.Profile
+import com.kurostream.domain.repository.ProfileRepository as NewProfileRepository
 import kotlinx.coroutines.flow.Flow
 
-interface ProfileRepository {
+@Deprecated(
+    message = "Use com.kurostream.domain.repository.ProfileRepository instead. This legacy interface will be removed in a future version.",
+    replaceWith = ReplaceWith("import com.kurostream.domain.repository.ProfileRepository")
+)
+interface ProfileRepositoryLegacy {
     fun observeActiveProfile(): Flow<Profile?>
     fun observeAllProfiles(): Flow<List<Profile>>
-    suspend fun createProfile(name: String, avatarUrl: String? = null): Result<Profile>
-    suspend fun updateProfile(profile: Profile): Result<Unit>
-    suspend fun deleteProfile(profileId: String): Result<Unit>
-    suspend fun setActiveProfile(profileId: String): Result<Unit>
+    suspend fun createProfile(name: String, avatarUrl: String? = null): com.kurostream.core.common.result.Result<Profile>
+    suspend fun updateProfile(profile: Profile): com.kurostream.core.common.result.Result<Unit>
+    suspend fun deleteProfile(profileId: String): com.kurostream.core.common.result.Result<Unit>
+    suspend fun setActiveProfile(profileId: String): com.kurostream.core.common.result.Result<Unit>
 }
