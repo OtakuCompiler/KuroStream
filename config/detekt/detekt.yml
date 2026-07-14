@@ -73,7 +73,7 @@ complexity:
     threshold: 3
   TooManyFunctions:
     active: true
-    threshold: 20
+    maxFunctionCount: 20
 
 exceptions:
   active: true

@@ -17,6 +17,7 @@ package com.kurostream.core.platform
 
 import android.content.Context
 import android.content.pm.PackageManager
+import javax.inject.Inject
 
 actual class PlatformContext @Inject constructor(
     private val context: Context
