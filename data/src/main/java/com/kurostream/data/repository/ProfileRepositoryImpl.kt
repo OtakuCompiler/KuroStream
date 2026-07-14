@@ -15,6 +15,7 @@
 
 package com.kurostream.data.repository
 
+import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.dao.ProfileDao
 import com.kurostream.data.local.entity.ProfileEntity
 import com.kurostream.domain.model.Profile
@@ -32,7 +33,7 @@ class ProfileRepositoryImpl @Inject constructor(
     private val profileDao: ProfileDao
 ) : ProfileRepository {
 
-    companion object {
+companion object {
         private const val MAX_PROFILES = 5
         private const val PIN_SALT = "kurostream_pin_salt_v1"
     }
@@ -50,9 +51,9 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override suspend fun createProfile(name: String, avatarUrl: String?, pin: String?): Result<Profile> {
         if (profileDao.count() >= MAX_PROFILES) {
-            return Result.failure(IllegalStateException("Max $MAX_PROFILES profiles"))
+            return Result.error(IllegalStateException("Max $MAX_PROFILES profiles"))
         }
-        if (name.isBlank()) return Result.failure(IllegalArgumentException("Name required"))
+        if (name.isBlank()) return Result.error(IllegalArgumentException("Name required"))
 
         val entity = ProfileEntity(
             id = UUID.randomUUID().toString(),
@@ -66,21 +67,21 @@ class ProfileRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateProfile(id: String, name: String?, avatarUrl: String?): Result<Profile> {
-        val existing = profileDao.getById(id) ?: return Result.failure(IllegalArgumentException("Not found"))
+        val existing = profileDao.getById(id) ?: return Result.error(IllegalArgumentException("Not found"))
         val updated = existing.copy(name = name?.trim() ?: existing.name, avatarUrl = avatarUrl ?: existing.avatarUrl)
         profileDao.update(updated)
         return Result.success(updated.toDomain())
     }
 
     override suspend fun switchProfile(profileId: String): Result<Profile> {
-        val target = profileDao.getById(profileId) ?: return Result.failure(IllegalArgumentException("Not found"))
+        val target = profileDao.getById(profileId) ?: return Result.error(IllegalArgumentException("Not found"))
         profileDao.switchActiveProfile(profileId)
         return Result.success(target.copy(isActive = true).toDomain())
     }
 
     override suspend fun deleteProfile(profileId: String): Result<Unit> {
-        val profile = profileDao.getById(profileId) ?: return Result.failure(IllegalArgumentException("Not found"))
-        if (profileDao.count() <= 1) return Result.failure(IllegalStateException("Cannot delete last profile"))
+        val profile = profileDao.getById(profileId) ?: return Result.error(IllegalArgumentException("Not found"))
+        if (profileDao.count() <= 1) return Result.error(IllegalStateException("Cannot delete last profile"))
         val remaining = profileDao.deleteAndGetRemaining(profile)
         if (profile.isActive && remaining.isNotEmpty()) {
             profileDao.update(remaining.first().copy(isActive = true))
@@ -89,14 +90,14 @@ class ProfileRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setPin(profileId: String, pin: String): Result<Unit> {
-        if (pin.length !in 4..6) return Result.failure(IllegalArgumentException("PIN 4-6 digits"))
-        val profile = profileDao.getById(profileId) ?: return Result.failure(IllegalArgumentException("Not found"))
+        if (pin.length !in 4..6) return Result.error(IllegalArgumentException("PIN 4-6 digits"))
+        val profile = profileDao.getById(profileId) ?: return Result.error(IllegalArgumentException("Not found"))
         profileDao.update(profile.copy(pinHash = hashPin(pin)))
         return Result.success(Unit)
     }
 
     override suspend fun removePin(profileId: String): Result<Unit> {
-        val profile = profileDao.getById(profileId) ?: return Result.failure(IllegalArgumentException("Not found"))
+        val profile = profileDao.getById(profileId) ?: return Result.error(IllegalArgumentException("Not found"))
         profileDao.update(profile.copy(pinHash = null))
         return Result.success(Unit)
     }
@@ -108,7 +109,7 @@ class ProfileRepositoryImpl @Inject constructor(
     override suspend fun hasPin(profileId: String): Boolean = profileDao.getById(profileId)?.pinHash != null
 
     override suspend fun updatePreferences(profileId: String, preferencesJson: String): Result<Unit> {
-        val profile = profileDao.getById(profileId) ?: return Result.failure(IllegalArgumentException("Not found"))
+        val profile = profileDao.getById(profileId) ?: return Result.error(IllegalArgumentException("Not found"))
         profileDao.update(profile.copy(preferencesJson = preferencesJson))
         return Result.success(Unit)
     }

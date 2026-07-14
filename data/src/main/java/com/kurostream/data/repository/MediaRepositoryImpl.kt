@@ -16,6 +16,8 @@
 package com.kurostream.data.repository
 
 import com.kurostream.cache.CacheNamespaceManager
+import com.kurostream.core.common.result.Result
+import com.kurostream.core.common.result.Resource
 import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.entity.*
 import com.kurostream.data.remote.api.*
@@ -55,16 +57,16 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun saveMediaItems(items: List<MediaItem>) { mediaItemDao.insertAll(items.map { it.toEntity() }) }
     override suspend fun deleteMediaItem(id: String) { mediaItemDao.deleteById(id) }
 
-    override suspend fun searchRemote(query: String, source: String?): List<MediaItem> {
+    override suspend fun searchRemote(query: String, source: String?): Result<List<MediaItem>> {
         val cacheKey = "search_${source}_${query}"
-        cacheManager.searchResults.get<List<MediaItem>>(cacheKey)?.let { return it }
+        cacheManager.searchResults.get<List<MediaItem>>(cacheKey)?.let { return Result.success(it) }
         val results = when (source) {
             "anilist" -> searchAniList(query)
             "mal" -> searchMal(query)
             else -> searchAllSources(query)
         }
         cacheManager.searchResults.put(cacheKey, results, SEARCH_CACHE_TTL)
-        return results
+        return Result.success(results)
     }
 
     private suspend fun searchAniList(query: String): List<MediaItem> = withContext(Dispatchers.IO) {
@@ -88,43 +90,47 @@ class MediaRepositoryImpl @Inject constructor(
         return (searchAniList(query) + searchMal(query)).distinctBy { it.id }
     }
 
-    override suspend fun getRemoteDetails(mediaId: String, source: String): MediaItem? {
+    override suspend fun getRemoteDetails(mediaId: String, source: String): Result<MediaItem?> {
         val cacheKey = "details_${source}_${mediaId}"
-        cacheManager.metadata.get<MediaItem>(cacheKey)?.let { return it }
+        cacheManager.metadata.get<MediaItem>(cacheKey)?.let { return Result.success(it) }
         val result = when (source) {
-            "anilist" -> getAniListDetails(mediaId.toIntOrNull() ?: return null)
-            "mal" -> getMalDetails(mediaId.toIntOrNull() ?: return null)
-            else -> null
+            "anilist" -> getAniListDetails(mediaId.toIntOrNull() ?: return Result.error(RuntimeException("Invalid media ID")))
+            "mal" -> getMalDetails(mediaId.toIntOrNull() ?: return Result.error(RuntimeException("Invalid media ID")))
+            else -> Result.error(RuntimeException("Unknown source: $source"))
         }
-        result?.let { cacheManager.metadata.put(cacheKey, it, METADATA_CACHE_TTL) }
-        return result
+        return result.map { mediaItem ->
+            cacheManager.metadata.put(cacheKey, mediaItem, METADATA_CACHE_TTL)
+            mediaItem
+        }
     }
 
-    private suspend fun getAniListDetails(id: Int): MediaItem? = withContext(Dispatchers.IO) {
+    private suspend fun getAniListDetails(id: Int): Result<MediaItem?> = withContext(Dispatchers.IO) {
         try {
             val request = AniListAnimeDetailsRequest(variables = mapOf("id" to id))
             val response = anilistApi.getAnimeDetails(request)
-            if (response.isSuccessful) response.body()?.data?.Media?.toDomain() else null
-        } catch (e: Exception) { null }
+            if (response.isSuccessful) Result.success(response.body()?.data?.Media?.toDomain())
+            else Result.error(RuntimeException("AniList API error: ${response.code()}"))
+        } catch (e: Exception) { Result.error(e) }
     }
 
-    private suspend fun getMalDetails(id: Int): MediaItem? = withContext(Dispatchers.IO) {
+    private suspend fun getMalDetails(id: Int): Result<MediaItem?> = withContext(Dispatchers.IO) {
         try {
             val response = malApi.getAnimeDetails(animeId = id)
-            if (response.isSuccessful) response.body()?.data?.toDomain() else null
-        } catch (e: Exception) { null }
+            if (response.isSuccessful) Result.success(response.body()?.data?.toDomain())
+            else Result.error(RuntimeException("MAL API error: ${response.code()}"))
+        } catch (e: Exception) { Result.error(e) }
     }
 
-    override suspend fun getTrending(source: String?): List<MediaItem> {
+    override suspend fun getTrending(source: String?): Result<List<MediaItem>> {
         val cacheKey = "trending_${source ?: "all"}"
-        cacheManager.searchResults.get<List<MediaItem>>(cacheKey)?.let { return it }
+        cacheManager.searchResults.get<List<MediaItem>>(cacheKey)?.let { return Result.success(it) }
         val results = when (source) {
             "anilist" -> getAniListTrending()
             "mal" -> getMalRanking()
             else -> getAniListTrending() + getMalRanking()
         }
         cacheManager.searchResults.put(cacheKey, results, SEARCH_CACHE_TTL)
-        return results
+        return Result.success(results)
     }
 
     private suspend fun getAniListTrending(): List<MediaItem> = withContext(Dispatchers.IO) {
@@ -187,7 +193,7 @@ class MediaRepositoryImpl @Inject constructor(
         // Simplified - needs proper ID-based lookup
     }
 
-    override suspend fun searchSubtitles(query: String, languages: List<String>, episodeInfo: EpisodeInfo?): List<SubtitleResult> = withContext(Dispatchers.IO) {
+    override suspend fun searchSubtitles(query: String, languages: List<String>, episodeInfo: EpisodeInfo?): Result<List<SubtitleResult>> = withContext(Dispatchers.IO) {
         try {
             val response = openSubtitlesApi.searchSubtitles(
                 query = query,
@@ -196,7 +202,7 @@ class MediaRepositoryImpl @Inject constructor(
                 episodeNumber = episodeInfo?.episodeNumber
             )
             if (response.isSuccessful) {
-                response.body()?.data?.mapNotNull { item ->
+                val results = response.body()?.data?.mapNotNull { item ->
                     item.attributes?.let { attr ->
                         SubtitleResult(
                             id = item.id ?: return@mapNotNull null,
@@ -210,8 +216,9 @@ class MediaRepositoryImpl @Inject constructor(
                         )
                     }
                 } ?: emptyList()
-            } else emptyList()
-        } catch (e: Exception) { emptyList() }
+                Result.success(results)
+            } else Result.error(RuntimeException("OpenSubtitles API error: ${response.code()}"))
+        } catch (e: Exception) { Result.error(e) }
     }
 
     private fun MediaItemEntity.toDomain() = MediaItem(id, sourceId, sourceType, title, description, posterUrl, bannerUrl, MediaCategory.valueOf(category), releaseDate, rating, duration, streamUrl, metadataJson)
