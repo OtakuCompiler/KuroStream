@@ -15,21 +15,25 @@
 
 package com.kurostream.domain.legacy.repository
 
-import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.AnimeDetails
 import com.kurostream.domain.entity.Episode
 import com.kurostream.domain.entity.HomeRow
 import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.entity.SubtitleCandidate
 import com.kurostream.domain.entity.VideoSource
+import com.kurostream.domain.repository.MediaRepository as NewMediaRepository
 import kotlinx.coroutines.flow.Flow
 
-interface MediaRepository {
-    fun observeHomeRows(profileId: String): Flow<Result<List<HomeRow>>>
-    suspend fun getTrending(page: Int, limit: Int): Result<List<MediaItem>>
-    suspend fun search(query: String, page: Int, limit: Int): Result<List<MediaItem>>
-    suspend fun getAnimeDetails(mediaId: String): Result<AnimeDetails>
-    suspend fun getEpisodes(mediaId: String): Result<List<Episode>>
-    suspend fun getVideoSources(episodeId: String): Result<List<VideoSource>>
-    suspend fun getSubtitleCandidates(episodeId: String): Result<List<SubtitleCandidate>>
+@Deprecated(
+    message = "Use com.kurostream.domain.repository.MediaRepository instead. This legacy interface will be removed in a future version.",
+    replaceWith = ReplaceWith("import com.kurostream.domain.repository.MediaRepository")
+)
+interface MediaRepositoryLegacy {
+    fun observeHomeRows(profileId: String): Flow<com.kurostream.core.common.result.Result<List<HomeRow>>>
+    suspend fun getTrending(page: Int, limit: Int): com.kurostream.core.common.result.Result<List<MediaItem>>
+    suspend fun search(query: String, page: Int, limit: Int): com.kurostream.core.common.result.Result<List<MediaItem>>
+    suspend fun getAnimeDetails(mediaId: String): com.kurostream.core.common.result.Result<AnimeDetails>
+    suspend fun getEpisodes(mediaId: String): com.kurostream.core.common.result.Result<List<Episode>>
+    suspend fun getVideoSources(episodeId: String): com.kurostream.core.common.result.Result<List<VideoSource>>
+    suspend fun getSubtitleCandidates(episodeId: String): com.kurostream.core.common.result.Result<List<SubtitleCandidate>>
 }

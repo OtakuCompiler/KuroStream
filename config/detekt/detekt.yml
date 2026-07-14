@@ -61,7 +61,8 @@ complexity:
     threshold: 60
   LongParameterList:
     active: true
-    threshold: 6
+    functionThreshold: 6
+    constructorThreshold: 7
   MethodOverloading:
     active: true
   NestedBlockDepth:
@@ -72,7 +73,7 @@ complexity:
     threshold: 3
   TooManyFunctions:
     active: true
-    threshold: 20
+    maxFunctionCount: 20
 
 exceptions:
   active: true
@@ -268,7 +269,21 @@ style:
     maxJumpCount: 1
   MagicNumber:
     active: true
-    ignoreNumbers: '-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000'
+    ignoreNumbers:
+      - -1
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 100
+      - 1000
     ignorePropertyDeclaration: true
     ignoreLocalVariableDeclaration: true
     ignoreConstantDeclaration: true
