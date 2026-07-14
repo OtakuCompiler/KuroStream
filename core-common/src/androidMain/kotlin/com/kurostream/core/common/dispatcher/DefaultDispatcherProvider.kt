@@ -23,7 +23,7 @@ class DefaultDispatcherProvider : DispatcherProvider {
     override val io: CoroutineDispatcher = Dispatchers.IO
     override val default: CoroutineDispatcher = Dispatchers.Default
     override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
-    
+
     // Specialized dispatchers for different workloads
     val computational: CoroutineDispatcher = Dispatchers.Default
     val diskIO: CoroutineDispatcher = Dispatchers.IO

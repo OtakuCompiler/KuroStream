@@ -15,6 +15,7 @@
 
 package com.kurostream.domain.repository
 
+import com.kurostream.core.common.result.Result
 import com.kurostream.domain.model.Profile
 import kotlinx.coroutines.flow.Flow
 
