@@ -18,15 +18,15 @@ package com.kurostream.core.common.dispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
-class DefaultDispatcherProvider : DispatcherProvider {
-    override val main: CoroutineDispatcher = Dispatchers.Main
-    override val io: CoroutineDispatcher = Dispatchers.IO
-    override val default: CoroutineDispatcher = Dispatchers.Default
-    override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
+actual class DefaultDispatcherProvider : DispatcherProvider {
+    actual override val main: CoroutineDispatcher = Dispatchers.Main
+    actual override val io: CoroutineDispatcher = Dispatchers.IO
+    actual override val default: CoroutineDispatcher = Dispatchers.Default
+    actual override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
 
     // Specialized dispatchers for different workloads
-    val computational: CoroutineDispatcher = Dispatchers.Default
-    val diskIO: CoroutineDispatcher = Dispatchers.IO
-    val networkIO: CoroutineDispatcher = Dispatchers.IO
-    val animation: CoroutineDispatcher = Dispatchers.Main
+    actual override val computational: CoroutineDispatcher = Dispatchers.Default
+    actual override val diskIO: CoroutineDispatcher = Dispatchers.IO
+    actual override val networkIO: CoroutineDispatcher = Dispatchers.IO
+    actual override val animation: CoroutineDispatcher = Dispatchers.Main
 }

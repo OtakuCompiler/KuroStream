@@ -19,15 +19,15 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.js.nodeExecutor
 
-class DefaultDispatcherProvider : DispatcherProvider {
-    override val main: CoroutineDispatcher = Dispatchers.Main
-    override val io: CoroutineDispatcher = nodeExecutor
-    override val default: CoroutineDispatcher = Dispatchers.Default
-    override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
+actual class DefaultDispatcherProvider : DispatcherProvider {
+    actual override val main: CoroutineDispatcher = Dispatchers.Main
+    actual override val io: CoroutineDispatcher = nodeExecutor
+    actual override val default: CoroutineDispatcher = Dispatchers.Default
+    actual override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
 
     // Specialized dispatchers for different workloads
-    val computational: CoroutineDispatcher = Dispatchers.Default
-    val diskIO: CoroutineDispatcher = nodeExecutor
-    val networkIO: CoroutineDispatcher = nodeExecutor
-    val animation: CoroutineDispatcher = Dispatchers.Main
+    actual override val computational: CoroutineDispatcher = Dispatchers.Default
+    actual override val diskIO: CoroutineDispatcher = nodeExecutor
+    actual override val networkIO: CoroutineDispatcher = nodeExecutor
+    actual override val animation: CoroutineDispatcher = Dispatchers.Main
 }
