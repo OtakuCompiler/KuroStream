@@ -20,11 +20,7 @@ plugins {
 
 kotlin {
     jvm()
-    js {
-        browser()
-        nodejs()
-        binaries.executable()
-    }
+    androidTarget()
 
     sourceSets {
         val commonMain by getting {
@@ -39,6 +35,10 @@ kotlin {
             dependencies {
                 implementation(libs.junit)
                 implementation(libs.archunit)
+            }
+        }
+        val androidMain by getting {
+            dependencies {
             }
         }
     }

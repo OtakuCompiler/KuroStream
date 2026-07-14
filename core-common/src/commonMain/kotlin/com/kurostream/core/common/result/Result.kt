@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlin.js.JsName
 
 sealed class Result<out T> {
     companion object {
@@ -19,17 +18,14 @@ sealed class Result<out T> {
         }
 
         fun <T> flowAsResult(flow: Flow<T>): Flow<Result<T>> = flow
-            .map<Result<T>> { data -> @JsName("mapResult") Success(data) }
+            .map<Result<T>> { data -> Success(data) }
             .catch { emit(Error(it)) }
     }
 
-    @JsName("Success")
     data class Success<out T>(val data: T) : Result<T>()
 
-    @JsName("Error")
     data class Error(val exception: Throwable) : Result<Nothing>()
 
-    @JsName("Loading")
     object Loading : Result<Nothing>()
 
     val isSuccess: Boolean get() = this is Success
@@ -72,8 +68,7 @@ sealed class Result<out T> {
         return this
     }
 
-    @JsName("exceptionOrNull")
-    fun exception(): Throwable? = (this as? Error)?.exception
+    fun exceptionOrNull(): Throwable? = (this as? Error)?.exception
 
     fun toThrowable(): T? = when (this) {
         is Success -> data
@@ -83,13 +78,10 @@ sealed class Result<out T> {
 }
 
 sealed class Resource<out T> {
-    @JsName("ResourceLoading")
     data class Loading<out T>(val data: T? = null) : Resource<T>()
-    
-    @JsName("ResourceSuccess")
+
     data class Success<out T>(val data: T) : Resource<T>()
-    
-    @JsName("ResourceError")
+
     data class Error<out T>(val exception: Throwable, val data: T? = null) : Resource<T>()
 
     companion object {
@@ -104,13 +96,13 @@ sealed class Resource<out T> {
         }
     }
 
-    open val data: T? get() = when (this) {
+    override val data: T? get() = when (this) {
         is Success -> data
         is Loading -> data
         is Error -> data
     }
 
-    open val exception: Throwable? get() = when (this) {
+    override val exception: Throwable? get() = when (this) {
         is Error -> exception
         else -> null
     }

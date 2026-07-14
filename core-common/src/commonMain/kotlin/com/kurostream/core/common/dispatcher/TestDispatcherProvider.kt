@@ -27,4 +27,8 @@ object TestDispatcherProvider : DispatcherProvider {
     override val io: CoroutineDispatcher = Dispatchers.Unconfined
     override val default: CoroutineDispatcher = Dispatchers.Unconfined
     override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
+    override val computational: CoroutineDispatcher = Dispatchers.Unconfined
+    override val diskIO: CoroutineDispatcher = Dispatchers.Unconfined
+    override val networkIO: CoroutineDispatcher = Dispatchers.Unconfined
+    override val animation: CoroutineDispatcher = Dispatchers.Unconfined
 }
