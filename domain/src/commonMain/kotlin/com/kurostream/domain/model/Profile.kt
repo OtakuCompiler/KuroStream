@@ -16,8 +16,23 @@
 package com.kurostream.domain.model
 import com.kurostream.core.platform.platformCurrentTimeMillis
 
+import kotlinx.serialization.Serializable
+
+enum class VideoQuality { AUTO, P144, P240, P360, P480, P720, P1080, P1440, P4K }
+
+@Serializable
 data class Profile(
-    val id: String, val name: String, val avatarUrl: String? = null,
-    val hasPin: Boolean = false, val isActive: Boolean = false,
-    val createdAt: Long = platformCurrentTimeMillis(), val preferencesJson: String? = null
+    val id: String,
+    val displayName: String,
+    val avatarUrl: String? = null,
+    val isPremium: Boolean = false,
+    val preferredLanguage: String = "en",
+    val preferredSubtitleLanguage: String = "en",
+    val autoSkipIntro: Boolean = false,
+    val autoSkipOutro: Boolean = false,
+    val preferredQuality: VideoQuality = VideoQuality.AUTO,
+    val hasPin: Boolean = false,
+    val isActive: Boolean = false,
+    val preferencesJson: String? = null,
+    val createdAt: Long = platformCurrentTimeMillis()
 )

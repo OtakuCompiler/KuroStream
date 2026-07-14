@@ -3,17 +3,16 @@ package com.kurostream.app.repository
 import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.PreferencesKeys
-import androidx.datastore.preferences.core.mutablePreferencesOf
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.runBlocking
+
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,52 +22,52 @@ class SettingsRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : SettingsRepository {
 
-    private val dataStore = context.preferencesDataStore("kurostream_settings")
+    private val dataStore: androidx.datastore.core.DataStore<Preferences> by context.preferencesDataStore(name = "kurostream_settings")
 
     private object Keys {
-        val AUTO_PLAY_NEXT = booleanPreferencesKey("auto_play_next", true)
-        val SKIP_INTRO = booleanPreferencesKey("skip_intro", true)
-        val HARDWARE_ACCELERATION = booleanPreferencesKey("hardware_acceleration", true)
-        val BACKGROUND_PLAYBACK = booleanPreferencesKey("background_playback", false)
-        val DEBUG_OVERLAY = booleanPreferencesKey("debug_overlay", false)
-        val CACHE_SIZE = longPreferencesKey("cache_size", 0L)
-        val AUDIO_LANGUAGES = stringPreferencesKey("audio_languages", "")
-        val SUBTITLE_LANGUAGES = stringPreferencesKey("subtitle_languages", "")
-        val HIGH_CONTRAST = booleanPreferencesKey("high_contrast", false)
-        val REDUCE_MOTION = booleanPreferencesKey("reduce_motion", false)
-        val FOCUS_HIGHLIGHT = booleanPreferencesKey("focus_highlight", true)
+        val AUTO_PLAY_NEXT = booleanPreferencesKey("auto_play_next")
+        val SKIP_INTRO = booleanPreferencesKey("skip_intro")
+        val HARDWARE_ACCELERATION = booleanPreferencesKey("hardware_acceleration")
+        val BACKGROUND_PLAYBACK = booleanPreferencesKey("background_playback")
+        val DEBUG_OVERLAY = booleanPreferencesKey("debug_overlay")
+        val CACHE_SIZE = longPreferencesKey("cache_size")
+        val AUDIO_LANGUAGES = stringPreferencesKey("audio_languages")
+        val SUBTITLE_LANGUAGES = stringPreferencesKey("subtitle_languages")
+        val HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
+        val REDUCE_MOTION = booleanPreferencesKey("reduce_motion")
+        val FOCUS_HIGHLIGHT = booleanPreferencesKey("focus_highlight")
 
-        val SOURCE_LOCK_ENABLED = booleanPreferencesKey("source_lock_enabled", true)
-        val SOURCE_LOCK_FALLBACK_MODE = intPreferencesKey("source_lock_fallback_mode", 0)
-        val SOURCE_LOCK_MAX_RETRIES = intPreferencesKey("source_lock_max_retries", 2)
-        val SOURCE_LOCK_RETRY_DELAY_MS = longPreferencesKey("source_lock_retry_delay_ms", 3000)
-        val SOURCE_LOCK_PERSIST = booleanPreferencesKey("source_lock_persist", true)
-        val SOURCE_LOCK_NOTIFY_FALLBACK = booleanPreferencesKey("source_lock_notify_fallback", true)
+        val SOURCE_LOCK_ENABLED = booleanPreferencesKey("source_lock_enabled")
+        val SOURCE_LOCK_FALLBACK_MODE = intPreferencesKey("source_lock_fallback_mode")
+        val SOURCE_LOCK_MAX_RETRIES = intPreferencesKey("source_lock_max_retries")
+        val SOURCE_LOCK_RETRY_DELAY_MS = longPreferencesKey("source_lock_retry_delay_ms")
+        val SOURCE_LOCK_PERSIST = booleanPreferencesKey("source_lock_persist")
+        val SOURCE_LOCK_NOTIFY_FALLBACK = booleanPreferencesKey("source_lock_notify_fallback")
 
-        val DISK_BUFFER_SIZE_MB = intPreferencesKey("disk_buffer_size_mb", 200)
-        val DISK_BUFFER_READ_AHEAD_MB = intPreferencesKey("disk_buffer_read_ahead_mb", 4)
-        val DISK_BUFFER_LOCATION = stringPreferencesKey("disk_buffer_location", "internal")
-        val DISK_BUFFER_DELETE_ON_SHUTDOWN = booleanPreferencesKey("disk_buffer_delete_on_shutdown", false)
+        val DISK_BUFFER_SIZE_MB = intPreferencesKey("disk_buffer_size_mb")
+        val DISK_BUFFER_READ_AHEAD_MB = intPreferencesKey("disk_buffer_read_ahead_mb")
+        val DISK_BUFFER_LOCATION = stringPreferencesKey("disk_buffer_location")
+        val DISK_BUFFER_DELETE_ON_SHUTDOWN = booleanPreferencesKey("disk_buffer_delete_on_shutdown")
 
-        val SEED_WHILE_IDLE = booleanPreferencesKey("seed_while_idle", true)
-        val SEQUENTIAL_DOWNLOAD = booleanPreferencesKey("sequential_download", true)
-        val SEED_RATIO_LIMIT = floatPreferencesKey("seed_ratio_limit", 2.0f)
-        val GLOBAL_DOWNLOAD_LIMIT_KBPS = longPreferencesKey("global_download_limit_kbps", -1L)
-        val GLOBAL_UPLOAD_LIMIT_KBPS = longPreferencesKey("global_upload_limit_kbps", -1L)
+        val SEED_WHILE_IDLE = booleanPreferencesKey("seed_while_idle")
+        val SEQUENTIAL_DOWNLOAD = booleanPreferencesKey("sequential_download")
+        val SEED_RATIO_LIMIT = floatPreferencesKey("seed_ratio_limit")
+        val GLOBAL_DOWNLOAD_LIMIT_KBPS = longPreferencesKey("global_download_limit_kbps")
+        val GLOBAL_UPLOAD_LIMIT_KBPS = longPreferencesKey("global_upload_limit_kbps")
 
-        val AI_UPSCALING = booleanPreferencesKey("ai_upscaling", false)
-        val FRAME_INTERPOLATION = booleanPreferencesKey("frame_interpolation", false)
-        val LOW_LATENCY_UPSCALING = booleanPreferencesKey("low_latency_upscaling", false)
+        val AI_UPSCALING = booleanPreferencesKey("ai_upscaling")
+        val FRAME_INTERPOLATION = booleanPreferencesKey("frame_interpolation")
+        val LOW_LATENCY_UPSCALING = booleanPreferencesKey("low_latency_upscaling")
 
-        val VOD_CACHE_COMPRESSION = booleanPreferencesKey("vod_cache_compression", true)
+        val VOD_CACHE_COMPRESSION = booleanPreferencesKey("vod_cache_compression")
 
-        val SKIN_NAME = stringPreferencesKey("skin_name", "AMOLED_BLACK")
+        val SKIN_NAME = stringPreferencesKey("skin_name")
     }
 
-    override fun getSettings(): Settings {
+    override suspend fun getSettings(): Settings {
         return dataStore.data.map { prefs ->
             buildSettings(prefs)
-        }.blockingFirst()
+        }.first()
     }
 
     override fun observeSettings(): Flow<Settings> {
@@ -124,47 +123,47 @@ class SettingsRepositoryImpl @Inject constructor(
     private inline fun getString(prefs: Preferences, key: Preferences.Key<String>, default: String) = prefs[key] ?: default
 
     override suspend fun setAutoPlayNextEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.AUTO_PLAY_NEXT] = enabled }
+        dataStore.edit { it[Keys.AUTO_PLAY_NEXT] = enabled }
     }
 
     override suspend fun setSkipIntroEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.SKIP_INTRO] = enabled }
+        dataStore.edit { it[Keys.SKIP_INTRO] = enabled }
     }
 
     override suspend fun setHardwareAccelerationEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.HARDWARE_ACCELERATION] = enabled }
+        dataStore.edit { it[Keys.HARDWARE_ACCELERATION] = enabled }
     }
 
     override suspend fun setBackgroundPlaybackEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.BACKGROUND_PLAYBACK] = enabled }
+        dataStore.edit { it[Keys.BACKGROUND_PLAYBACK] = enabled }
     }
 
     override suspend fun setDebugOverlayEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.DEBUG_OVERLAY] = enabled }
+        dataStore.edit { it[Keys.DEBUG_OVERLAY] = enabled }
     }
 
     override suspend fun setPreferredAudioLanguages(languages: List<String>) {
-        dataStore.updateDataAsync { it[Keys.AUDIO_LANGUAGES] = languages.joinToString(",") }
+        dataStore.edit { it[Keys.AUDIO_LANGUAGES] = languages.joinToString(",") }
     }
 
     override suspend fun setPreferredSubtitleLanguages(languages: List<String>) {
-        dataStore.updateDataAsync { it[Keys.SUBTITLE_LANGUAGES] = languages.joinToString(",") }
+        dataStore.edit { it[Keys.SUBTITLE_LANGUAGES] = languages.joinToString(",") }
     }
 
     override suspend fun setHighContrastEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.HIGH_CONTRAST] = enabled }
+        dataStore.edit { it[Keys.HIGH_CONTRAST] = enabled }
     }
 
     override suspend fun setReduceMotionEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.REDUCE_MOTION] = enabled }
+        dataStore.edit { it[Keys.REDUCE_MOTION] = enabled }
     }
 
     override suspend fun setFocusHighlightEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.FOCUS_HIGHLIGHT] = enabled }
+        dataStore.edit { it[Keys.FOCUS_HIGHLIGHT] = enabled }
     }
 
     override suspend fun setSourceLockSettings(settings: com.kurostream.domain.model.SourceLockSettings) {
-        dataStore.updateDataAsync { prefs ->
+        dataStore.edit { prefs ->
             prefs[Keys.SOURCE_LOCK_ENABLED] = settings.enabled
             prefs[Keys.SOURCE_LOCK_FALLBACK_MODE] = settings.fallbackMode.ordinal
             prefs[Keys.SOURCE_LOCK_MAX_RETRIES] = settings.maxRetries
@@ -175,99 +174,99 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearCache() {
-        dataStore.updateDataAsync { it[Keys.CACHE_SIZE] = 0L }
+        dataStore.edit { it[Keys.CACHE_SIZE] = 0L }
         context.cacheDir.deleteRecursively()
         context.getExternalCacheDir()?.deleteRecursively()
     }
 
-    override fun getCacheSize(): Long {
-        return dataStore.data.map { it[Keys.CACHE_SIZE] ?: 0L }.blockingFirst()
+    override suspend fun getCacheSize(): Long {
+        return dataStore.data.map { it[Keys.CACHE_SIZE] ?: 0L }.first()
     }
 
     override suspend fun runBenchmarks() {
     }
 
     override suspend fun setDiskBufferSizeMb(sizeMb: Int) {
-        dataStore.updateDataAsync { it[Keys.DISK_BUFFER_SIZE_MB] = sizeMb }
+        dataStore.edit { it[Keys.DISK_BUFFER_SIZE_MB] = sizeMb }
     }
 
     override suspend fun setDiskBufferReadAheadMb(sizeMb: Int) {
-        dataStore.updateDataAsync { it[Keys.DISK_BUFFER_READ_AHEAD_MB] = sizeMb }
+        dataStore.edit { it[Keys.DISK_BUFFER_READ_AHEAD_MB] = sizeMb }
     }
 
     override suspend fun setDiskBufferLocation(location: String) {
-        dataStore.updateDataAsync { it[Keys.DISK_BUFFER_LOCATION] = location }
+        dataStore.edit { it[Keys.DISK_BUFFER_LOCATION] = location }
     }
 
     override suspend fun setDiskBufferDeleteOnShutdown(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.DISK_BUFFER_DELETE_ON_SHUTDOWN] = enabled }
+        dataStore.edit { it[Keys.DISK_BUFFER_DELETE_ON_SHUTDOWN] = enabled }
     }
 
     override suspend fun setSeedWhileIdleEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.SEED_WHILE_IDLE] = enabled }
+        dataStore.edit { it[Keys.SEED_WHILE_IDLE] = enabled }
     }
 
     override suspend fun setSequentialDownloadEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.SEQUENTIAL_DOWNLOAD] = enabled }
+        dataStore.edit { it[Keys.SEQUENTIAL_DOWNLOAD] = enabled }
     }
 
     override suspend fun setSeedRatioLimit(limit: Float) {
-        dataStore.updateDataAsync { it[Keys.SEED_RATIO_LIMIT] = limit }
+        dataStore.edit { it[Keys.SEED_RATIO_LIMIT] = limit }
     }
 
     override suspend fun setGlobalDownloadLimit(kbps: Long) {
-        dataStore.updateDataAsync { it[Keys.GLOBAL_DOWNLOAD_LIMIT_KBPS] = kbps }
+        dataStore.edit { it[Keys.GLOBAL_DOWNLOAD_LIMIT_KBPS] = kbps }
     }
 
     override suspend fun setGlobalUploadLimit(kbps: Long) {
-        dataStore.updateDataAsync { it[Keys.GLOBAL_UPLOAD_LIMIT_KBPS] = kbps }
+        dataStore.edit { it[Keys.GLOBAL_UPLOAD_LIMIT_KBPS] = kbps }
     }
 
     override suspend fun setSourceLockEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.SOURCE_LOCK_ENABLED] = enabled }
+        dataStore.edit { it[Keys.SOURCE_LOCK_ENABLED] = enabled }
     }
 
     override suspend fun setSourceLockFallbackMode(mode: Int) {
-        dataStore.updateDataAsync { it[Keys.SOURCE_LOCK_FALLBACK_MODE] = mode }
+        dataStore.edit { it[Keys.SOURCE_LOCK_FALLBACK_MODE] = mode }
     }
 
     override suspend fun setSourceLockMaxRetries(retries: Int) {
-        dataStore.updateDataAsync { it[Keys.SOURCE_LOCK_MAX_RETRIES] = retries }
+        dataStore.edit { it[Keys.SOURCE_LOCK_MAX_RETRIES] = retries }
     }
 
     override suspend fun setSourceLockRetryDelayMs(delay: Long) {
-        dataStore.updateDataAsync { it[Keys.SOURCE_LOCK_RETRY_DELAY_MS] = delay }
+        dataStore.edit { it[Keys.SOURCE_LOCK_RETRY_DELAY_MS] = delay }
     }
 
     override suspend fun setSourceLockPersist(persist: Boolean) {
-        dataStore.updateDataAsync { it[Keys.SOURCE_LOCK_PERSIST] = persist }
+        dataStore.edit { it[Keys.SOURCE_LOCK_PERSIST] = persist }
     }
 
     override suspend fun setSourceLockNotifyFallback(notify: Boolean) {
-        dataStore.updateDataAsync { it[Keys.SOURCE_LOCK_NOTIFY_FALLBACK] = notify }
+        dataStore.edit { it[Keys.SOURCE_LOCK_NOTIFY_FALLBACK] = notify }
     }
 
     override suspend fun clearAllSourceLocks() {
     }
 
     override suspend fun setAiUpscalingEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.AI_UPSCALING] = enabled }
+        dataStore.edit { it[Keys.AI_UPSCALING] = enabled }
     }
 
     override suspend fun setFrameInterpolationEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.FRAME_INTERPOLATION] = enabled }
+        dataStore.edit { it[Keys.FRAME_INTERPOLATION] = enabled }
     }
 
     override suspend fun setLowLatencyUpscalingEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.LOW_LATENCY_UPSCALING] = enabled }
+        dataStore.edit { it[Keys.LOW_LATENCY_UPSCALING] = enabled }
     }
 
     override suspend fun setVodCacheCompressionEnabled(enabled: Boolean) {
-        dataStore.updateDataAsync { it[Keys.VOD_CACHE_COMPRESSION] = enabled }
+        dataStore.edit { it[Keys.VOD_CACHE_COMPRESSION] = enabled }
     }
 
     override suspend fun setSkinName(name: String) {
-        dataStore.updateDataAsync { it[Keys.SKIN_NAME] = name }
+        dataStore.edit { it[Keys.SKIN_NAME] = name }
     }
 
     private fun formatCacheSize(bytes: Long): String {

@@ -35,8 +35,8 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(libs.junit)
-                implementation("com.tngtech.archunit:archunit-junit5:1.2.1")
-                implementation("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+                implementation(libs.archunit.junit5)
+                implementation(libs.junit.jupiter.engine)
             }
         }
         val jsMain by getting {

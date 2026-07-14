@@ -16,8 +16,6 @@
 package com.kurostream.extensions.kitsu
 
 import com.kurostream.extensions.domain.model.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,66 +25,59 @@ class KitsuRepository @Inject constructor(
     private val api: KitsuApi
 ) {
 
-    fun getTrendingAnime(limit: Int = 20): Flow<Result<List<CatalogItem>>> = flow {
-        try {
-            val response = api.getTrendingAnime(limit)
-            if (response.isSuccessful) {
-                val items = response.body()?.data?.map { it.toCatalogItem() } ?: emptyList()
-                emit(Result.success(items))
-            } else {
-                emit(Result.failure(Exception("Trending fetch failed: ${response.code()}")))
-            }
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+    suspend fun getTrendingAnime(limit: Int = 20): Result<List<CatalogItem>> = try {
+        val response = api.getTrendingAnime(limit)
+        if (response.isSuccessful) {
+            val items = response.body()?.data?.map { it.toCatalogItem() } ?: emptyList()
+            Result.success(items)
+        } else {
+            Result.failure(Exception("Trending fetch failed: ${response.code()}"))
         }
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
-    fun getSeasonalAnime(season: String, year: Int, limit: Int = 20): Flow<Result<List<CatalogItem>>> = flow {
-        try {
-            val response = api.getSeasonalAnime(season, year, limit)
-            if (response.isSuccessful) {
-                val items = response.body()?.data?.map { it.toCatalogItem() } ?: emptyList()
-                emit(Result.success(items))
-            } else {
-                emit(Result.failure(Exception("Seasonal fetch failed: ${response.code()}")))
-            }
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+    suspend fun getSeasonalAnime(season: String, year: Int, limit: Int = 20): Result<List<CatalogItem>> = try {
+        val response = api.getSeasonalAnime(season, year, limit)
+        if (response.isSuccessful) {
+            val items = response.body()?.data?.map { it.toCatalogItem() } ?: emptyList()
+            Result.success(items)
+        } else {
+            Result.failure(Exception("Seasonal fetch failed: ${response.code()}"))
         }
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
-    fun getPopularAnime(limit: Int = 20): Flow<Result<List<CatalogItem>>> = flow {
-        try {
-            val response = api.getPopularAnime(limit)
-            if (response.isSuccessful) {
-                val items = response.body()?.data?.map { it.toCatalogItem() } ?: emptyList()
-                emit(Result.success(items))
-            } else {
-                emit(Result.failure(Exception("Popular fetch failed: ${response.code()}")))
-            }
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+    suspend fun getPopularAnime(limit: Int = 20): Result<List<CatalogItem>> = try {
+        val response = api.getPopularAnime(limit)
+        if (response.isSuccessful) {
+            val items = response.body()?.data?.map { it.toCatalogItem() } ?: emptyList()
+            Result.success(items)
+        } else {
+            Result.failure(Exception("Popular fetch failed: ${response.code()}"))
         }
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
-    fun searchAnime(query: String, limit: Int = 20): Flow<Result<List<CatalogItem>>> = flow {
-        try {
-            val response = api.getAnimeList(limit = limit, search = query)
-            if (response.isSuccessful) {
-                val items = response.body()?.data?.map { it.toCatalogItem() } ?: emptyList()
-                emit(Result.success(items))
-            } else {
-                emit(Result.failure(Exception("Search failed: ${response.code()}")))
-            }
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+    suspend fun searchAnime(query: String, limit: Int = 20): Result<List<CatalogItem>> = try {
+        val response = api.getAnimeList(limit = limit, search = query)
+        if (response.isSuccessful) {
+            val items = response.body()?.data?.map { it.toCatalogItem() } ?: emptyList()
+            Result.success(items)
+        } else {
+            Result.failure(Exception("Search failed: ${response.code()}"))
         }
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
     suspend fun getAnimeDetails(id: String): Result<MediaDetail> = try {
         val response = api.getAnime(id)
-        if (response.isSuccessful && response.body() != null) {
-            Result.success(response.body()!!.data.toMediaDetail(response.body()?.included))
+        val body = response.body()
+        if (response.isSuccessful && body != null) {
+            Result.success(body.data.toMediaDetail(body.included))
         } else {
             Result.failure(Exception("Details fetch failed: ${response.code()}"))
         }

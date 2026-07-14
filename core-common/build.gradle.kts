@@ -7,7 +7,6 @@ plugins {
 
 kotlin {
     androidTarget()
-    jvm()
     js {
         browser()
         nodejs()

@@ -48,8 +48,8 @@ class UiTextureAtlas(
     private val maxSize: Int = 1024
 ) {
     private val TAG = "UiTextureAtlas"
-    private val atlasBitmap = Bitmap.createBitmap(maxSize, maxSize, Bitmap.Config.RGB_565)
-    private val canvas = Canvas(atlasBitmap)
+    private val atlasBitmap by lazy { Bitmap.createBitmap(maxSize, maxSize, Bitmap.Config.RGB_565) }
+    private val canvas by lazy { Canvas(atlasBitmap) }
     private val paint = Paint().apply { isAntiAlias = true; isFilterBitmap = true }
     
     private var currentX = 0
@@ -153,10 +153,10 @@ class ComposeRenderOffloader {
             }
             
             computing = true
-            backgroundScope.launch {
+            backgroundScope.launch(Dispatchers.Default) {
                 val computed = compute()
                 computeCache[key] = computed as Any
-                backgroundScope.launch(Dispatchers.Main) {
+                kotlinx.coroutines.withContext(Dispatchers.Main) {
                     result = computed
                     computing = false
                     onResult(computed)

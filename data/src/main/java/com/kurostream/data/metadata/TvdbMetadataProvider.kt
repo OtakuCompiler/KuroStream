@@ -19,8 +19,6 @@ import com.kurostream.data.remote.api.TvdbApi
 import com.kurostream.data.remote.dto.tvdb.TvdbDtos
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import timber.log.Timber
@@ -38,9 +36,9 @@ class TvdbMetadataProvider @Inject constructor(
 
     private val cacheTtlMs = 24 * 60 * 60 * 1000L
 
-    override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> = withContext(Dispatchers.IO) {
+    override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> {
         val cacheKey = "tvdb_anime_$id"
-        cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getSeries(id)
                 response.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
@@ -51,9 +49,9 @@ class TvdbMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
+    override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> {
         val cacheKey = "tvdb_search_${query}_$page"
-        cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
+        return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
             try {
                 val response = api.searchSeries(query, page, limit)
                 MetadataResult.Success(response.data?.map { mapToDomain(it) } ?: emptyList())
@@ -64,16 +62,16 @@ class TvdbMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> = withContext(Dispatchers.IO) {
-        MetadataResult.NotFound
+    override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> {
+        return MetadataResult.NotFound
     }
 
-    override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
-        MetadataResult.Success(emptyList())
+    override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> {
+        return MetadataResult.Success(emptyList())
     }
 
-    override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
-        MetadataResult.Success(emptyList())
+    override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> {
+        return MetadataResult.Success(emptyList())
     }
 
     private fun mapToDomain(dto: TvdbDtos.Series): AnimeMetadata {

@@ -50,10 +50,11 @@ class TorrentProcessService : Service() {
                 if (uri != null) {
                     scope.launch {
                         try {
+                            val defaultSavePath = filesDir.absolutePath + "/torrents"
                             if (uri.startsWith("magnet:")) {
-                                engine.addMagnet(uri, savePath ?: engine.toString(), sequential)
+                                engine.addMagnet(uri, savePath ?: defaultSavePath, sequential)
                             } else {
-                                engine.addTorrentFile(uri, savePath ?: engine.toString(), sequential)
+                                engine.addTorrentFile(uri, savePath ?: defaultSavePath, sequential)
                             }
                             Log.i(TAG, "Torrent added in process: $uri")
                         } catch (e: Exception) {

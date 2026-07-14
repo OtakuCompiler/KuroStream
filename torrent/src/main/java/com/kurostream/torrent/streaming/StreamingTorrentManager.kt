@@ -118,8 +118,8 @@ class StreamingTorrentManager @Inject constructor(
         val handle = torrentEngine.torrents[infoHash] ?: return
         val torrentInfo = handle.torrentFile() ?: return
         val files = torrentInfo.files()
-        if (fileIndex >= files.numFiles()) return
-        val file = files.fileIndex(state.fileIndex)
+        if (state.fileIndex >= files.numFiles()) return
+        val file = files.fileAt(state.fileIndex)
         val fileSize = file.size
         val pieceSize = torrentInfo.pieceLength()
 
@@ -331,7 +331,8 @@ class StreamingTorrentManager @Inject constructor(
         val underrun = states.count { it.bufferHealth.isUnderrun }
         val fallback = states.count { it.fallbackTriggered }
         val totalSpeed = states.sumOf { it.bufferHealth.downloadSpeedBps }
-        val avgHealth = if (active > 0) states.filter { it.isStreaming }.averageOf { it.bufferHealth.bufferPercentage } else 0f
+        val streamingStates = states.filter { it.isStreaming }
+        val avgHealth = if (streamingStates.isNotEmpty()) streamingStates.map { it.bufferHealth.bufferPercentage }.sum() / streamingStates.size else 0f
 
         _globalStreamHealth.value = StreamHealth(
             activeStreams = active,

@@ -14,7 +14,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import timber.log.Timber
 import java.net.InetAddress
+import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,7 +35,7 @@ class UltraNetworkManager @Inject constructor(
     val networkState: StateFlow<NetworkState> = _networkState.asStateFlow()
 
     private val dnsCache = ConcurrentHashMap<String, List<InetAddress>>(256)
-    private val networkCallbacks = mutableListOf<ConnectivityManager.NetworkCallback>()
+    private val networkCallbacks = ConcurrentLinkedDeque<ConnectivityManager.NetworkCallback>()
 
     val optimizedClient: OkHttpClient by lazy { createOptimizedClient() }
 
@@ -140,7 +142,9 @@ class UltraNetworkManager @Inject constructor(
     private fun estimateLatency(): Int {
         return try {
             val startTime = System.currentTimeMillis()
-            InetAddress.getByName("8.8.8.8").isReachable(1000)
+            Socket().use { socket ->
+                socket.connect(java.net.InetSocketAddress("8.8.8.8", 53), 1000)
+            }
             (System.currentTimeMillis() - startTime).toInt()
         } catch (e: Exception) {
             100 // Default latency estimate
@@ -235,10 +239,10 @@ class CachedDns(
         if (addresses.isNotEmpty()) {
             cache[hostname] = addresses
             
-            // Limit cache size
+            // Limit cache size (evict oldest entry by finding first-most entry)
             if (cache.size > 256) {
-                val oldestKey = cache.keys.first()
-                cache.remove(oldestKey)
+                val oldestKey = cache.entries.firstOrNull()?.key
+                if (oldestKey != null) cache.remove(oldestKey)
             }
         }
 

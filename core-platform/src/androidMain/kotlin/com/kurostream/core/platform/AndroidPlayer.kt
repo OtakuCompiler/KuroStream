@@ -22,8 +22,10 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class AndroidPlayer(
@@ -34,6 +36,7 @@ class AndroidPlayer(
     private val mediaPlayer = MediaPlayer()
     private var pendingMediaUrl: String? = null
     private var pendingHeaders: Map<String, String>? = null
+    private var positionUpdateJob: Job? = null
 
     private val _playbackState = MutableStateFlow(
         PlaybackState(state = PlaybackState.State.IDLE)
@@ -107,6 +110,7 @@ class AndroidPlayer(
     }
 
     override suspend fun pause() {
+        positionUpdateJob?.cancel()
         if (mediaPlayer.isPlaying) {
             mediaPlayer.pause()
             _playbackState.value = _playbackState.value.copy(
@@ -122,6 +126,7 @@ class AndroidPlayer(
     }
 
     override suspend fun stop() {
+        positionUpdateJob?.cancel()
         mediaPlayer.stop()
         _playbackState.value = _playbackState.value.copy(state = PlaybackState.State.IDLE, position = 0)
         _currentPosition.value = 0
@@ -160,8 +165,9 @@ class AndroidPlayer(
     }
 
     private fun startPositionUpdates() {
-        scope.launch(Dispatchers.Main) {
-            while (mediaPlayer.isPlaying && !Thread.currentThread().isInterrupted) {
+        positionUpdateJob?.cancel()
+        positionUpdateJob = scope.launch(Dispatchers.Main) {
+            while (isActive) {
                 _currentPosition.value = mediaPlayer.currentPosition.toLong()
                 kotlinx.coroutines.delay(100)
             }

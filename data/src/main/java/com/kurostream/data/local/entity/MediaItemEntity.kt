@@ -16,6 +16,7 @@
 package com.kurostream.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Fts4
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -42,4 +43,10 @@ data class MediaItemEntity(
     val streamUrl: String?,
     val metadataJson: String?,
     val lastUpdated: Long = System.currentTimeMillis()
+)
+
+@Fts4(contentEntity = MediaItemEntity::class)
+@Entity(tableName = "media_items_fts")
+data class MediaItemFts(
+    val title: String,
 )

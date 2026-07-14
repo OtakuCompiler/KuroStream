@@ -17,6 +17,7 @@ package com.kurostream.cache.vod
 
 import android.content.Context
 import com.kurostream.common.pool.BufferPool
+import com.kurostream.core.common.result.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -102,10 +103,8 @@ class CompressedVodCache private constructor(
      */
     suspend fun initialize(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // Load existing index
             loadIndex()
             
-            // Ensure data file exists
             if (!dataFile.exists()) {
                 dataFile.createNewFile()
             }
@@ -115,7 +114,7 @@ class CompressedVodCache private constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to initialize CompressedVodCache")
-            Result.failure(e)
+            Result.error(e)
         }
     }
     
@@ -124,8 +123,8 @@ class CompressedVodCache private constructor(
      * Returns number of compressed bytes written.
      */
     suspend fun write(key: String, data: ByteArray, offset: Int = 0, length: Int = data.size - offset): Result<Long> = withContext(Dispatchers.IO) {
-        if (!isInitialized.get()) return Result.failure(IllegalStateException("Cache not initialized"))
-        if (shutdownFlag.get()) return Result.failure(IllegalStateException("Cache shut down"))
+        if (!isInitialized.get()) return Result.error(IllegalStateException("Cache not initialized"))
+        if (shutdownFlag.get()) return Result.error(IllegalStateException("Cache shut down"))
         
         try {
             val inputBuffer = ByteBuffer.wrap(data, offset, length)
@@ -162,7 +161,7 @@ class CompressedVodCache private constructor(
             Result.success(compressedSize.toLong())
         } catch (e: Exception) {
             Timber.e(e, "Failed to write to compressed VOD cache")
-            Result.failure(e)
+            Result.error(e)
         }
     }
     
@@ -171,7 +170,7 @@ class CompressedVodCache private constructor(
      * Returns decompressed data or null if not found.
      */
     suspend fun read(key: String, dst: ByteArray, offset: Int = 0, length: Int = dst.size - offset): Result<Int> = withContext(Dispatchers.IO) {
-        if (!isInitialized.get()) return Result.failure(IllegalStateException("Cache not initialized"))
+        if (!isInitialized.get()) return Result.error(IllegalStateException("Cache not initialized"))
         
         val index = chunkIndex[key] ?: return Result.success(-1) // Not found
         
@@ -193,7 +192,7 @@ class CompressedVodCache private constructor(
             Result.success(toCopy)
         } catch (e: Exception) {
             Timber.e(e, "Failed to read from compressed VOD cache: $key")
-            Result.failure(e)
+            Result.error(e)
         }
     }
     
@@ -201,7 +200,7 @@ class CompressedVodCache private constructor(
      * Read all data for a key into a new byte array.
      */
     suspend fun readAll(key: String): Result<ByteArray> = withContext(Dispatchers.IO) {
-        val index = chunkIndex[key] ?: return Result.failure(IOException("Key not found: $key"))
+        val index = chunkIndex[key] ?: return Result.error(IOException("Key not found: $key"))
         
         val compressedData = readFromDataFile(index.startPosition, index.compressedSize)
         val decompressed = decompress(compressedData)
@@ -252,7 +251,7 @@ class CompressedVodCache private constructor(
             updateStats()
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.error(e)
         }
     }
     
@@ -492,15 +491,6 @@ class CompressedVodCache private constructor(
         }
     }
     
-    sealed class Result<out T> {
-        data class Success<T>(val data: T) : Result<T>()
-        data class Failure(val error: Exception) : Result<Nothing>()
-        
-        companion object {
-            fun <T> success(data: T): Result<T> = Success(data)
-            fun <T> failure(error: Exception): Result<T> = Failure(error)
-        }
-    }
 }
 
 // ===== Zstd Wrapper Classes =====
@@ -545,6 +535,7 @@ class ZstdDecompressor {
         external fun createContext(): Long
         @Suppress("UNUSED_PARAMETER")
         external fun decompress(ctx: Long, src: ByteBuffer, dst: ByteBuffer): Int
+        external fun decompressGetSize(ctx: Long, src: ByteBuffer): Long
         @Suppress("UNUSED_PARAMETER")
         external fun freeContext(ctx: Long)
         
@@ -554,11 +545,9 @@ class ZstdDecompressor {
     }
     
     fun decompress(src: ByteBuffer): ByteBuffer {
-        // For decompression, we need to know the original size.
-        // We'll use a heuristic: allocate 4x the compressed size (safe for video)
-        // In production, we'd store original size in the frame header
-        val estimatedOriginalSize = src.remaining() * 4
-        val dst = ByteBuffer.allocateDirect(estimatedOriginalSize)
+        val originalSize = decompressGetSize(ctx, src.duplicate())
+        val estimatedSize = if (originalSize > 0) originalSize else src.remaining() * 4
+        val dst = ByteBuffer.allocateDirect(estimatedSize)
         
         val decompressedSize = decompress(ctx, src.duplicate(), dst)
         dst.limit(decompressedSize)

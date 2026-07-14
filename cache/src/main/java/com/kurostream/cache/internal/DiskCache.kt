@@ -1,11 +1,10 @@
 package com.kurostream.cache.internal
 
+import com.google.gson.Gson
 import com.jakewharton.disklrucache.DiskLruCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.util.concurrent.ConcurrentHashMap
 
 internal class DiskCache(
@@ -16,15 +15,16 @@ internal class DiskCache(
 ) {
     companion object {
         const val DEFAULT_MAX_SIZE_BYTES = 50L * 1024 * 1024
-        private const val SHARD_MASK = 0x03
+        private fun shardMask(sc: Int) = sc - 1
     }
 
     private val shards = ConcurrentHashMap<Int, DiskLruCache>()
     private val shardMutexes = Array(shardCount) { Any() }
+    private val gson = Gson()
 
     init {
         require(maxSizeBytes > 0)
-        require(shardCount in 1..16)
+        require(shardCount in 1..16 && (shardCount and (shardCount - 1)) == 0) { "shardCount must be power of 2" }
         if (!cacheDir.exists()) cacheDir.mkdirs()
         for (i in 0 until shardCount) {
             File(cacheDir, "shard_$i").mkdirs()
@@ -32,7 +32,7 @@ internal class DiskCache(
     }
 
     private fun getCache(key: String): DiskLruCache? {
-        val shardIndex = key.hashCode() and SHARD_MASK
+        val shardIndex = key.hashCode() and shardMask(shardCount)
         val shardDir = File(cacheDir, "shard_$shardIndex")
         val shardMaxSize = maxSizeBytes / shardCount
         val cache = shards[shardIndex]
@@ -44,23 +44,21 @@ internal class DiskCache(
         return cache
     }
 
-    @Suppress("UNCHECKED_CAST")
-    suspend fun <T : Any> get(key: String): T? = withContext(Dispatchers.IO) {
+    suspend fun get(key: String): CacheEntrySerializable? = withContext(Dispatchers.IO) {
         val safeKey = sanitizeKey(key)
         val cache = getCache(safeKey) ?: return@withContext null
-        val shardIndex = safeKey.hashCode() and SHARD_MASK
+        val shardIndex = safeKey.hashCode() and shardMask(shardCount)
         synchronized(shardMutexes[shardIndex]) {
             val snapshot = cache.get(safeKey) ?: return@synchronized null
             try {
                 snapshot.getInputStream(0).use { stream ->
-                    ObjectInputStream(stream).use { ois ->
-                        val entry = ois.readObject() as? CacheEntry<T>
-                        if (entry == null || entry.isExpired()) {
-                            cache.remove(safeKey)
-                            return@synchronized null
-                        }
-                        entry.value
+                    val jsonStr = stream.bufferedReader().readText()
+                    val entry = gson.fromJson(jsonStr, CacheEntrySerializable::class.java)
+                    if (entry == null || entry.isExpired()) {
+                        cache.remove(safeKey)
+                        return@synchronized null
                     }
+                    entry
                 }
             } catch (e: Exception) {
                 cache.remove(safeKey)
@@ -69,17 +67,15 @@ internal class DiskCache(
         }
     }
 
-    suspend fun <T : Any> put(key: String, value: T, ttlMs: Long = 0L) = withContext(Dispatchers.IO) {
+    suspend fun put(key: String, entry: CacheEntrySerializable) = withContext(Dispatchers.IO) {
         val safeKey = sanitizeKey(key)
         val cache = getCache(safeKey) ?: return@withContext
-        val shardIndex = safeKey.hashCode() and SHARD_MASK
+        val shardIndex = safeKey.hashCode() and shardMask(shardCount)
         synchronized(shardMutexes[shardIndex]) {
             val editor = cache.edit(safeKey) ?: return@synchronized
             try {
                 editor.newOutputStream(0).use { stream ->
-                    ObjectOutputStream(stream).use { oos ->
-                        oos.writeObject(CacheEntry(value, ttlMs = ttlMs))
-                    }
+                    stream.write(gson.toJson(entry).encodeToByteArray())
                 }
                 editor.commit()
             } catch (e: Exception) {
@@ -91,7 +87,7 @@ internal class DiskCache(
     suspend fun remove(key: String) = withContext(Dispatchers.IO) {
         val safeKey = sanitizeKey(key)
         val cache = getCache(safeKey) ?: return@withContext
-        val shardIndex = safeKey.hashCode() and SHARD_MASK
+        val shardIndex = safeKey.hashCode() and shardMask(shardCount)
         synchronized(shardMutexes[shardIndex]) {
             cache.remove(safeKey)
         }
@@ -100,7 +96,7 @@ internal class DiskCache(
     suspend fun contains(key: String): Boolean = withContext(Dispatchers.IO) {
         val safeKey = sanitizeKey(key)
         val cache = getCache(safeKey) ?: return@withContext false
-        val shardIndex = safeKey.hashCode() and SHARD_MASK
+        val shardIndex = safeKey.hashCode() and shardMask(shardCount)
         synchronized(shardMutexes[shardIndex]) {
             val snapshot = cache.get(safeKey) ?: return@synchronized false
             snapshot.close()

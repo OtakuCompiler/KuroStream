@@ -35,7 +35,7 @@ class GetContinueWatching(
         return profileRepository.observeActiveProfile()
             .flatMapLatest { profile ->
                 if (profile == null) flowOf(Result.Success(emptyList()))
-                else flow { emit(Result.Loading); emit(mediaRepository.getTrending(1, limit)) }
+                else flow { emit(Result.Loading); emit(mediaRepository.getWatchHistory(profile.id)) }
             }
             .flowOn(dispatcherProvider.io)
     }

@@ -1,22 +1,44 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.launcher.firebase.messaging
 
-// MERGE NOTE: this file was shipped EMPTY (0 bytes) in the streambox_phases_81_90.zip
-// source archive — this is not something introduced during merging. Other real files
-// in this module (FirebaseAuthManager, JellyfinAuthManager, PlexExtensionsModule, etc.)
-// reference "NotificationHelper" and will not compile until a real implementation is written here.
-// See MERGE_REPORT_2.md, section "streambox (81-90) — files shipped empty".
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+
+class NotificationHelper(private val context: Context) {
+
+    companion object {
+        const val CHANNEL_ID = "kurostream_updates"
+        const val CHANNEL_NAME = "KuroStream Updates"
+        const val CHANNEL_DESC = "New releases and updates"
+    }
+
+    fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = CHANNEL_DESC
+            }
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    fun showNotification(title: String, body: String) {
+        createNotificationChannel()
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        NotificationManagerCompat.from(context).notify(System.currentTimeMillis().toInt(), notification)
+    }
+}

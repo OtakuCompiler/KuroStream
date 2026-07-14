@@ -1,5 +1,5 @@
 build:
-  maxIssues: 0
+  maxIssues: 100
 
 processors:
   active: true
@@ -33,13 +33,13 @@ comments:
 complexity:
   active: true
   ComplexCondition:
-    active: false
+    active: true
     threshold: 4
   ComplexInterface:
-    active: false
+    active: true
   CyclomaticComplexMethod:
-    active: false
-    threshold: 30
+    active: true
+    threshold: 20
     ignoreSingleWhenExpression: true
     ignoreSimpleWhenEntries: true
     ignoreNestingFunctions: true
@@ -54,20 +54,25 @@ complexity:
       - 'use'
       - 'with'
   LargeClass:
-    active: false
-    threshold: 600
+    active: true
+    threshold: 400
   LongMethod:
-    active: false
+    active: true
+    threshold: 60
   LongParameterList:
-    active: false
+    active: true
+    threshold: 6
   MethodOverloading:
-    active: false
+    active: true
   NestedBlockDepth:
-    active: false
+    active: true
+    threshold: 4
   StringLiteralDuplication:
-    active: false
+    active: true
+    threshold: 3
   TooManyFunctions:
-    active: false
+    active: true
+    threshold: 20
 
 exceptions:
   active: true
@@ -77,7 +82,7 @@ exceptions:
     active: true
     ignoreLabeled: false
   SwallowedException:
-    active: false
+    active: true
   ThrowingExceptionFromFinally:
     active: true
   ThrowingExceptionsWithoutMessageOrCause:
@@ -98,7 +103,7 @@ naming:
     active: true
     parameterPattern: '[a-z][A-Za-z0-9]*'
     privateParameterPattern: '[a-z][A-Za-z0-9]*'
-    excludeClassPattern: '$^'
+    excludeClassPattern: '\$^'
     excludes:
       - '**/dto/**'
       - '**/emby/**'
@@ -118,11 +123,12 @@ naming:
   FunctionMinLength:
     active: false
   FunctionNaming:
-    active: false
+    active: true
+    functionPattern: '^[a-z][A-Za-z0-9]*$'
   FunctionParameterNaming:
     active: true
     parameterPattern: '[a-z][A-Za-z0-9]*'
-    excludeClassPattern: '$^'
+    excludeClassPattern: '\$^'
   LambdaParameterNaming:
     active: false
   MatchingDeclarationName:
@@ -163,23 +169,23 @@ potential-bugs:
   AvoidReferentialEquality:
     active: false
   CastNullableToNonNullableType:
-    active: false
+    active: true
   CastToNullableType:
-    active: false
+    active: true
   Deprecation:
-    active: false
+    active: true
   DontDowncastCollectionTypes:
-    active: false
+    active: true
   DoubleMutabilityForCollection:
     active: true
   ElseCaseInsteadOfExhaustiveWhen:
-    active: false
+    active: true
   EqualsAlwaysReturnsTrueOrFalse:
     active: true
   EqualsWithHashCodeExist:
     active: true
   ExplicitGarbageCollectionCall:
-    active: false
+    active: true
   HasPlatformType:
     active: true
   IgnoredReturnValue:
@@ -195,7 +201,7 @@ potential-bugs:
   IteratorNotThrowingNoSuchElementException:
     active: true
   LateinitUsage:
-    active: false
+    active: true
     excludes:
       - '**/DownloadService.kt'
       - '**/LauncherActivity.kt'
@@ -204,13 +210,13 @@ potential-bugs:
   MissingPackageDeclaration:
     active: false
   NullableToStringCall:
-    active: false
+    active: true
   PropertyUsedBeforeDeclaration:
     active: false
   UnconditionalJumpStatementInLoop:
     active: false
   UnnecessaryNotNullCheck:
-    active: false
+    active: true
   UnnecessaryNotNullOperator:
     active: true
   UnnecessarySafeCall:
@@ -261,21 +267,29 @@ style:
     active: false
     maxJumpCount: 1
   MagicNumber:
-    active: false
+    active: true
+    ignoreNumbers: '-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000'
+    ignorePropertyDeclaration: true
+    ignoreLocalVariableDeclaration: true
+    ignoreConstantDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
   MandatoryBracesLoops:
-    active: false
+    active: true
   MaxLineLength:
-    active: false
+    active: true
+    maxLineLength: 120
+    excludePackageStatements: true
+    excludeImportStatements: true
   MayBeConst:
-    active: false
+    active: true
   ModifierOrder:
     active: true
   NestedClassesVisibility:
     active: true
   NewLineAtEndOfFile:
-    active: false
+    active: true
   NoTabs:
-    active: false
+    active: true
   ObjectLiteralToLambda:
     active: true
   OptionalAbstractKeyword:
@@ -287,25 +301,27 @@ style:
   ProtectedMemberInFinalClass:
     active: true
   RedundantExplicitType:
-    active: false
+    active: true
   RedundantHigherOrderMapUsage:
     active: true
   RedundantVisibilityModifierRule:
     active: false
   ReturnCount:
     active: false
+    max: 3
+    excludeGuardClauses: false
   SafeCast:
     active: true
   SerialVersionUIDInSerializableClass:
     active: false
   SpacingBetweenPackageAndImports:
-    active: false
+    active: true
   ThrowsCount:
     active: false
     max: 3
     excludeGuardClauses: false
   TrailingWhitespace:
-    active: false
+    active: true
   UnnecessaryAbstractClass:
     active: true
   UnnecessaryAnnotationUseSiteTarget:
@@ -325,16 +341,16 @@ style:
   UnnecessaryParentheses:
     active: false
   UnusedImports:
-    active: false
+    active: true
   UnusedParameter:
     active: false
   UnusedPrivateClass:
     active: true
   UnusedPrivateMember:
-    active: false
+    active: true
     allowedNames: ''
   UnusedPrivateProperty:
-    active: false
+    active: true
     allowedNames: '_|ignored|expected|serialVersionUID'
   UseAnyOrNoneInsteadOfFind:
     active: true
@@ -347,7 +363,7 @@ style:
   UseDataClass:
     active: false
   UseIfEmptyOrIfBlank:
-    active: false
+    active: true
   UseIfInsteadOfWhen:
     active: false
   UseIsNullOrEmpty:

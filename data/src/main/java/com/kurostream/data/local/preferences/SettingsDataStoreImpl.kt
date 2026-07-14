@@ -17,6 +17,7 @@ package com.kurostream.data.local.preferences
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -78,7 +79,9 @@ class SettingsDataStoreImpl @Inject constructor(
         dataStore.edit { it[floatPreferencesKey(key)] = value }
     }
 
-    override suspend fun updateDataAsync(block: Preferences.() -> Unit) {
-        dataStore.updateDataAsync(block)
+    override suspend fun editPreferences(block: suspend MutablePreferences.() -> Unit) {
+        dataStore.edit { prefs ->
+            prefs.block()
+        }
     }
 }

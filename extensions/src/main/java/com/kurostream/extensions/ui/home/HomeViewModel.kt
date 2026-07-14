@@ -57,18 +57,18 @@ class HomeViewModel @Inject constructor(
                 val rows = mutableListOf<HomeRow>()
 
                 val trendingDeferred = async {
-                    kitsuRepository.getTrendingAnime(15).first()
+                    kitsuRepository.getTrendingAnime(15)
                         .getOrNull()?.let { HomeRow("Trending Now", "kitsu_trending", it) }
                 }
 
                 val (season, year) = kitsuRepository.getCurrentSeason()
                 val seasonalDeferred = async {
-                    kitsuRepository.getSeasonalAnime(season, year, 15).first()
+                    kitsuRepository.getSeasonalAnime(season, year, 15)
                         .getOrNull()?.let { HomeRow("${season.replaceFirstChar { it.uppercase() }} $year", "kitsu_seasonal", it) }
                 }
 
                 val popularDeferred = async {
-                    kitsuRepository.getPopularAnime(15).first()
+                    kitsuRepository.getPopularAnime(15)
                         .getOrNull()?.let { HomeRow("Most Popular", "kitsu_popular", it) }
                 }
 

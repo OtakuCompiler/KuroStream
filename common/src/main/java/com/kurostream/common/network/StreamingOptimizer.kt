@@ -41,18 +41,6 @@ class StreamingOptimizer {
     val failoverConfig = FailoverConfig()
     val p2pConfig = P2PConfig()
 
-    fun selectOptimalQuality(
-        bandwidthEstimateMbps: Double,
-        displayResolution: Pair<Int, Int>,
-    ): StreamingQuality {
-        return when {
-            bandwidthEstimateMbps >= 50 -> StreamingQuality.UHD_4K
-            bandwidthEstimateMbps >= 25 -> StreamingQuality.HIGH_1080P
-            bandwidthEstimateMbps >= 10 -> StreamingQuality.MEDIUM_720P
-            else -> StreamingQuality.LOW_480P
-        }
-    }
-
     fun calculateChunkCount(fileSizeBytes: Long, chunkSize: Int = chunkSpec.sizeBytes): Int {
         return (fileSizeBytes / chunkSize + if (fileSizeBytes % chunkSize == 0L) 0 else 1).toInt()
     }
@@ -68,5 +56,5 @@ class StreamingOptimizer {
 }
 
 fun <T> Flow<List<T>>.distinctList(): Flow<List<T>> = distinctUntilChanged { old, new ->
-    old.size == new.size && old.zip(new) { a, b -> a == b }.all { it }
+    old.size == new.size && old.zip(new).all { (a, b) -> a == b }
 }

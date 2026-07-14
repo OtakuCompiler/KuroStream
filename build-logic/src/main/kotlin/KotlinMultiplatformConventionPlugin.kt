@@ -16,6 +16,7 @@
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.libs
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class KotlinMultiplatformConventionPlugin : Plugin<Project> {
@@ -31,13 +32,13 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
                 sourceSets {
                     val commonMain by getting {
                         dependencies {
-                            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-                            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+                            implementation(libs.kotlinx.coroutines.core)
+                            implementation(libs.kotlinx.serialization.json)
                         }
                     }
                     val commonTest by getting {
                         dependencies {
-                            implementation("junit:junit:4.13.2")
+                            implementation(libs.junit)
                         }
                     }
                 }

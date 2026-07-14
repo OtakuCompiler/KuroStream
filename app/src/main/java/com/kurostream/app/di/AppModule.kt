@@ -17,10 +17,6 @@ package com.kurostream.app.di
 
 import com.kurostream.common.thermal.ThermalGuard
 import com.kurostream.app.network.NetworkDashboardViewModel
-import com.kurostream.app.startup.KuroStreamInitializer
-import com.kurostream.app.player.PlayerInitializer
-import com.kurostream.app.extensions.PluginScannerInitializer
-import com.kurostream.app.repository.SyncInitializer
 import com.kurostream.common.optimization.BatteryAwareManager
 import com.kurostream.common.optimization.StartupProfiler
 import dagger.hilt.InstallIn
@@ -53,23 +49,6 @@ object AppModule {
     fun provideStartupProfiler(): StartupProfiler {
         return StartupProfiler()
     }
-
-    // App Startup initializers
-    @Provides
-    @Singleton
-    fun provideKuroStreamInitializer(): KuroStreamInitializer = KuroStreamInitializer()
-
-    @Provides
-    @Singleton
-    fun providePluginScannerInitializer(): PluginScannerInitializer = PluginScannerInitializer()
-
-    @Provides
-    @Singleton
-    fun providePlayerInitializer(): PlayerInitializer = PlayerInitializer()
-
-    @Provides
-    @Singleton
-    fun provideSyncInitializer(): SyncInitializer = SyncInitializer()
 
     @Provides
     @Singleton

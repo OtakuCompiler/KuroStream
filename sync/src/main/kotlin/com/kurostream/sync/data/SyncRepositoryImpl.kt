@@ -1,22 +1,9 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.sync.data
 
 import com.kurostream.core.common.result.Result
+import com.kurostream.domain.entity.PlaybackState
 import com.kurostream.domain.entity.SyncState
+import com.kurostream.domain.repository.SyncProvider
 import com.kurostream.domain.repository.SyncRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,18 +12,36 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SyncRepositoryImpl @Inject constructor() : SyncRepository {
+class SyncRepositoryImpl @Inject constructor(
+    private val syncProvider: SyncProvider,
+) : SyncRepository {
     private val _syncState = MutableStateFlow(SyncState(isSyncing = false))
     override val syncState: Flow<SyncState> = _syncState.asStateFlow()
 
     override suspend fun sync(): Result<Unit> {
         _syncState.value = _syncState.value.copy(isSyncing = true)
         return try {
+            val authResult = syncProvider.authenticate(SyncCredentials.Token(""))
+            if (authResult is Result.Error) {
+                _syncState.value = _syncState.value.copy(isSyncing = false, lastError = authResult.exception.message)
+                return Result.Error(authResult.exception)
+            }
+
+            val localStates = listOf<PlaybackState>()
+            val pushResult = syncProvider.pushPlaybackStates(localStates)
+            if (pushResult is Result.Error) {
+                return Result.Error(pushResult.exception)
+            }
+
+            val pushState = pushResult.data
+            _syncState.value = _syncState.value.copy(
+                isSyncing = false, lastSyncedAt = System.currentTimeMillis(),
+                lastSyncResult = pushState
+            )
             Result.Success(Unit)
         } catch (e: Exception) {
+            _syncState.value = _syncState.value.copy(isSyncing = false, lastError = e.message)
             Result.Error(e)
-        } finally {
-            _syncState.value = _syncState.value.copy(isSyncing = false)
         }
     }
 

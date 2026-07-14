@@ -92,7 +92,8 @@ class StreamingPiecePrioritizer @Inject constructor() {
 
         val newPiece = (newPositionBytes / pieceSize).toInt().coerceIn(0, numPieces - 1)
 
-        scope?.launch(Dispatchers.IO) {
+        val s = scope ?: return
+        s.launch(Dispatchers.IO) {
             val priorities = IntArray(numPieces)
 
             val headerPieces = config.headerPieceCount.coerceAtMost(numPieces)

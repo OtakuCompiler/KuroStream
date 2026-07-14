@@ -1,7 +1,5 @@
 package com.kurostream.common.pool
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.nio.ByteBuffer
 import javax.inject.Inject
@@ -10,15 +8,10 @@ import javax.inject.Singleton
 /**
  * Universal object pool for memory-critical objects.
  * Reduces GC pressure and memory fragmentation.
+ * ByteBuffer pooling is delegated to BufferPool.
  */
 @Singleton
 class ObjectPoolManager @Inject constructor() {
-
-    private val byteBufferPool = ObjectPool(
-        factory = { ByteBuffer.allocateDirect(1024 * 1024).apply { order(java.nio.ByteOrder.nativeOrder()) } },
-        reset = { it.clear() },
-        maxSize = 50
-    )
 
     private val paintPool = ObjectPool(
         factory = { android.graphics.Paint().apply {
@@ -29,19 +22,12 @@ class ObjectPoolManager @Inject constructor() {
         maxSize = 10
     )
 
-    private val canvasPool = ObjectPool<android.graphics.Canvas>(
-        factory = { error("Canvas requires bitmap, use acquireCanvas instead") },
-        reset = { },
-        maxSize = 10
-    )
-
     suspend fun acquireByteBuffer(): ByteBuffer {
-        return byteBufferPool.acquire()
+        return BufferPool.acquire(1024 * 1024).buffer
     }
 
     suspend fun releaseByteBuffer(buffer: ByteBuffer) {
-        buffer.clear()
-        byteBufferPool.release(buffer)
+        // BufferPool manages its own release cycle via PooledBuffer
     }
 
     fun acquirePaint(): android.graphics.Paint {
@@ -61,12 +47,13 @@ class ObjectPoolManager @Inject constructor() {
     }
 
     suspend fun <T> useByteBuffer(size: Int, block: (ByteBuffer) -> T): T {
-        val buffer = acquireByteBuffer()
+        val pooled = BufferPool.acquire(size)
+        val buffer = pooled.buffer
         try {
             buffer.limit(size.coerceAtMost(buffer.capacity()))
             return block(buffer)
         } finally {
-            releaseByteBuffer(buffer)
+            pooled.release()
         }
     }
 
@@ -80,16 +67,16 @@ class ObjectPoolManager @Inject constructor() {
     }
 
     fun getStats(): PoolStats {
-        val byteBufferStats = byteBufferPool.getStats()
         val paintStats = paintPool.getStats()
         return PoolStats(
-            maxSize = byteBufferStats.maxSize + paintStats.maxSize,
-            available = byteBufferStats.available + paintStats.available,
-            created = byteBufferStats.created + paintStats.created
+            maxSize = paintStats.maxSize,
+            available = paintStats.available,
+            created = paintStats.created
         )
     }
 
     companion object {
+        @Suppress("UNUSED")
         private const val TAG = "ObjectPoolManager"
     }
 }

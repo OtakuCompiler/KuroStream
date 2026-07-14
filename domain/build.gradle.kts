@@ -20,6 +20,7 @@ plugins {
 
 kotlin {
     jvm()
+    androidTarget()
     js {
         browser()
         nodejs()
@@ -39,6 +40,10 @@ kotlin {
             dependencies {
                 implementation(libs.junit)
                 implementation(libs.archunit)
+            }
+        }
+        val androidMain by getting {
+            dependencies {
             }
         }
     }

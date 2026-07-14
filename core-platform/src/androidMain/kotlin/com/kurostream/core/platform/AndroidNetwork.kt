@@ -143,36 +143,43 @@ class AndroidNetwork(private val context: Context) : PlatformNetwork {
         file.parentFile?.mkdirs()
         
         val call = client.newCall(request)
-        val response = call.execute()
         
-        val totalBytes = response.body?.contentLength() ?: 0L
-        var downloadedBytes = 0L
-        
-        try {
-            val inputStream = response.body?.byteStream()
-            val outputStream = FileOutputStream(file)
-            val buffer = ByteArray(8192)
-            
-            inputStream?.let { `in` ->
-                while (true) {
-                    val read = `in`.read(buffer)
-                    if (read == -1) break
-                    outputStream.write(buffer, 0, read)
-                    downloadedBytes += read
-                    if (totalBytes > 0) {
-                        trySend(DownloadResult(true, destinationPath, null))
-                    }
-                }
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                trySend(DownloadResult(false, null, e.message))
             }
             
-            outputStream.close()
-            response.close()
-            trySend(DownloadResult(true, destinationPath, null))
-        } catch (e: Exception) {
-            trySend(DownloadResult(false, null, e.message))
-        } finally {
-            call.cancel()
-        }
+            override fun onResponse(call: Call, response: Response) {
+                val totalBytes = response.body?.contentLength() ?: 0L
+                var downloadedBytes = 0L
+                
+                try {
+                    val inputStream = response.body?.byteStream()
+                    val outputStream = FileOutputStream(file)
+                    val buffer = ByteArray(8192)
+                    
+                    inputStream?.let { `in` ->
+                        while (true) {
+                            val read = `in`.read(buffer)
+                            if (read == -1) break
+                            outputStream.write(buffer, 0, read)
+                            downloadedBytes += read
+                            if (totalBytes > 0) {
+                                trySend(DownloadResult(true, destinationPath, null))
+                            }
+                        }
+                    }
+                    
+                    outputStream.close()
+                    response.close()
+                    trySend(DownloadResult(true, destinationPath, null))
+                } catch (e: Exception) {
+                    trySend(DownloadResult(false, null, e.message))
+                }
+            }
+        })
+        
+        awaitClose { call.cancel() }
     }
     
     override suspend fun ping(host: String): Boolean = withContext(Dispatchers.IO) {

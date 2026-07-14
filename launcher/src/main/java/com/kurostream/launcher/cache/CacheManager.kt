@@ -17,14 +17,12 @@ package com.kurostream.launcher.cache
 
 import android.content.Context
 import androidx.work.*
-import com.kurostream.launcher.data.local.CacheEntryDao
+import com.kurostream.launcher.cache.CacheEntryDao
 import com.kurostream.launcher.data.local.entity.CacheEntryEntity
 import com.kurostream.launcher.ml.prediction.PredictionRepository
 import com.kurostream.launcher.ml.prediction.PredictionRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -191,19 +189,17 @@ class CacheManager @Inject constructor(
     /**
      * Get cache statistics
      */
-    fun getCacheStats(): Flow<CacheStats> = flow {
+    suspend fun getCacheStats(): CacheStats = withContext(Dispatchers.IO) {
         val entries = cacheEntryDao.getAllEntries()
         val totalSize = entries.filter { it.status == CacheStatus.COMPLETED }
             .sumOf { File(it.localPath).length() }
 
-        emit(
-            CacheStats(
-                totalSizeBytes = totalSize,
-                maxSizeBytes = getMaxCacheSize(),
-                cachedItems = entries.count { it.status == CacheStatus.COMPLETED },
-                scheduledItems = entries.count { it.status == CacheStatus.SCHEDULED },
-                failedItems = entries.count { it.status == CacheStatus.FAILED }
-            )
+        CacheStats(
+            totalSizeBytes = totalSize,
+            maxSizeBytes = getMaxCacheSize(),
+            cachedItems = entries.count { it.status == CacheStatus.COMPLETED },
+            scheduledItems = entries.count { it.status == CacheStatus.SCHEDULED },
+            failedItems = entries.count { it.status == CacheStatus.FAILED }
         )
     }
 

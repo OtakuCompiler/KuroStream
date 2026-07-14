@@ -15,9 +15,11 @@
 
 package com.kurostream.common.pool
 
+import android.os.Build
 import android.util.Log
 import java.lang.ref.Cleaner
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Pool of DirectByteBuffers for zero-copy frame data handling.
@@ -33,6 +35,7 @@ object BufferPool {
     private const val TAG = "BufferPool"
     
     private var lowRamMode = false
+    private val defaultPoolSize = AtomicInteger(16)
     
     // Buffer sizes for different use cases
     private val bufferSizes = intArrayOf(
@@ -43,16 +46,18 @@ object BufferPool {
         16 * 1024 * 1024 // 16MB - 4K HDR frames
     )
     
-    // Pools per size class
-    private val pools = bufferSizes.map { size ->
-        size to BufferPoolImpl(size, if (lowRamMode) 4 else 16)
-    }.toMap()
+    // Pools per size class - init lazily to respect lowRamMode
+    private val pools: Map<Int, BufferPoolImpl> by lazy {
+        bufferSizes.map { size ->
+            size to BufferPoolImpl(size, defaultPoolSize.get())
+        }.toMap()
+    }
     
     // Statistics
     private var totalAllocated = 0L
     private var totalReleased = 0L
     private var peakConcurrent = 0
-    private var currentConcurrent = 0
+    private val currentConcurrent = AtomicInteger(0)
     
     /**
      * Acquire a DirectByteBuffer of at least the requested size.
@@ -65,10 +70,10 @@ object BufferPool {
         val pool = pools[sizeClass]!!
         val buffer = pool.acquire()
         
+        val cc = currentConcurrent.incrementAndGet()
         synchronized(this) {
-            currentConcurrent++
             totalAllocated++
-            if (currentConcurrent > peakConcurrent) peakConcurrent = currentConcurrent
+            if (cc > peakConcurrent) peakConcurrent = cc
         }
         
         return PooledBuffer(buffer, pool, sizeClass)
@@ -81,10 +86,10 @@ object BufferPool {
         val pool = pools[sizeClass]!!
         val buffer = pool.acquire()
         
+        val cc = currentConcurrent.incrementAndGet()
         synchronized(this) {
-            currentConcurrent++
             totalAllocated++
-            if (currentConcurrent > peakConcurrent) peakConcurrent = currentConcurrent
+            if (cc > peakConcurrent) peakConcurrent = cc
         }
         
         return PooledBuffer(buffer, pool, sizeClass)
@@ -105,7 +110,7 @@ object BufferPool {
             totalAllocated = totalAllocated,
             totalReleased = totalReleased,
             peakConcurrent = peakConcurrent,
-            currentConcurrent = currentConcurrent,
+            currentConcurrent = currentConcurrent.get(),
             allocatedBytes = getAllocatedBytes(),
             pools = pools.mapValues { (_, pool) ->
                 pool.stats
@@ -119,7 +124,7 @@ object BufferPool {
     fun clearAll() {
         pools.values.forEach { it.clear() }
         synchronized(this) {
-            currentConcurrent = 0
+            currentConcurrent.set(0)
         }
     }
     
@@ -140,9 +145,12 @@ object BufferPool {
     fun setLowRamMode(enabled: Boolean) {
         lowRamMode = enabled
         val newMax = if (enabled) 4 else 16
-        pools.values.forEach { it.setMaxBuffers(newMax) }
-        if (enabled) {
-            shrinkAll()
+        defaultPoolSize.set(newMax)
+        if (pools.isNotEmpty()) {
+            pools.values.forEach { it.setMaxBuffers(newMax) }
+            if (enabled) {
+                shrinkAll()
+            }
         }
     }
     
@@ -294,8 +302,8 @@ object BufferPool {
             if (!released) {
                 released = true
                 pooled.release()
+                currentConcurrent.decrementAndGet()
                 synchronized(BufferPool) {
-                    currentConcurrent--
                     totalReleased++
                 }
             }
@@ -356,13 +364,18 @@ object BufferPool {
     private fun releaseNative(buffer: ByteBuffer) {
         if (buffer.isDirect) {
             try {
-                val cleanerMethod = ByteBuffer::class.java.getDeclaredMethod("cleaner")
-                cleanerMethod.isAccessible = true
-                val cleaner = cleanerMethod.invoke(buffer)
-                if (cleaner != null) {
-                    val cleanMethod = cleaner.javaClass.getDeclaredMethod("clean")
-                    cleanMethod.isAccessible = true
-                    cleanMethod.invoke(cleaner)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    val invokeCleaner = ByteBuffer::class.java.getMethod("invokeCleaner")
+                    invokeCleaner.invoke(null, buffer)
+                } else {
+                    val cleanerMethod = ByteBuffer::class.java.getDeclaredMethod("cleaner")
+                    cleanerMethod.isAccessible = true
+                    val cleaner = cleanerMethod.invoke(buffer)
+                    if (cleaner != null) {
+                        val cleanMethod = cleaner.javaClass.getDeclaredMethod("clean")
+                        cleanMethod.isAccessible = true
+                        cleanMethod.invoke(cleaner)
+                    }
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to clean DirectByteBuffer", e)

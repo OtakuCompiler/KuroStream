@@ -33,7 +33,7 @@ class StateRestorationManager @Inject constructor(
 ) {
     companion object {
         private const val KEY_NAV_BACKSTACK = "nav_backstack_state"
-        private const val KEY_PLAYER_STATE = "player_state"
+        internal const val KEY_PLAYER_STATE = "player_state"
         private const val KEY_SELECTED_TAB = "selected_tab_index"
         private const val KEY_SCROLL_POSITIONS = "scroll_positions"
         private const val KEY_SEARCH_QUERY = "search_query"

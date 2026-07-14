@@ -85,9 +85,22 @@ class TieredCacheManager @Inject constructor(
                 lastAccessTime = System.currentTimeMillis(),
                 tier = tier,
             )
+            // Create zero-byte marker file so the entry has a disk presence
+            getCachePath(key)?.createNewFile()
         }
 
+        persistRegistry()
         updateStats()
+    }
+
+    private fun persistRegistry() {
+        try {
+            val registryFile = File(internalCacheDir.parentFile, "tier_registry.json")
+            val json = com.google.gson.Gson().toJson(itemRegistry.entries.toList())
+            registryFile.writeText(json)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to persist registry", e)
+        }
     }
 
     fun getCachePath(key: String): File? {

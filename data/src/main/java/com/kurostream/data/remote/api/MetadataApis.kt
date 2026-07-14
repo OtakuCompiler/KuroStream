@@ -61,7 +61,6 @@ interface ImdbApi {
     suspend fun searchTitles(
         @Query("q") query: String,
         @Query("limit") limit: Int = 20,
-        0,
     ): Response<ImdbDtos.SearchResponse>
 
     @GET("title/{id}/episodes")

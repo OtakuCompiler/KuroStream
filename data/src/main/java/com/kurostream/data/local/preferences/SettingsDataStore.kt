@@ -15,6 +15,12 @@
 
 package com.kurostream.data.local.preferences
 
+import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsDataStore {
@@ -35,7 +41,15 @@ interface SettingsDataStore {
 
     val data: Flow<Preferences>
 
-    suspend fun updateDataAsync(block: Preferences.() -> Unit)
-}
+    suspend fun editPreferences(block: suspend MutablePreferences.() -> Unit)
 
-import androidx.datastore.preferences.Preferences
+    object Keys {
+        val SOURCE_LOCK_ENABLED = booleanPreferencesKey("source_lock_enabled")
+        val SOURCE_LOCK_FALLBACK_MODE = intPreferencesKey("source_lock_fallback_mode")
+        val SOURCE_LOCK_MAX_RETRIES = intPreferencesKey("source_lock_max_retries")
+        val SOURCE_LOCK_RETRY_DELAY_MS = longPreferencesKey("source_lock_retry_delay_ms")
+        val SOURCE_LOCK_PERSIST = booleanPreferencesKey("source_lock_persist")
+        val SOURCE_LOCK_NOTIFY_FALLBACK = booleanPreferencesKey("source_lock_notify_fallback")
+        val METADATA_PROVIDERS_ENABLED = stringPreferencesKey("metadata_providers_enabled")
+    }
+}

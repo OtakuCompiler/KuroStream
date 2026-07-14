@@ -42,7 +42,7 @@ object LowRamDevice {
         get() = if (isLowRam) 4 else 8
 
     val heroBannerOffscreenPages: Int
-        get() = if (isLowRam) 0 else 0
+        get() = if (isLowRam) 0 else 1
 
     val contentRowOffscreenPages: Int
         get() = if (isLowRam) 0 else 1

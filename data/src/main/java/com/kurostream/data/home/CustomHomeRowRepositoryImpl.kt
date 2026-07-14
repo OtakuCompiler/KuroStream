@@ -20,9 +20,12 @@ import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.domain.home.CustomHomeRow
 import com.kurostream.domain.home.CustomHomeRowRepository
 import com.kurostream.domain.repository.MediaRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -39,9 +42,12 @@ class CustomHomeRowRepositoryImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
     private val _customRows = MutableStateFlow<List<CustomHomeRow>>(emptyList())
     override val customRows = _customRows.asStateFlow()
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     init {
-        loadRows()
+        scope.launch {
+            loadRows()
+        }
     }
 
     private suspend fun loadRows() {

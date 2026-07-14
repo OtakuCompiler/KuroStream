@@ -27,7 +27,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -177,25 +176,6 @@ data class StartupMetrics(
 )
 
 /**
- * Thread scheduler for optimized coroutine dispatching
- */
-object ThreadScheduler {
-    val IO: CoroutineDispatcher = Dispatchers.IO
-    val DEFAULT: CoroutineDispatcher = Dispatchers.Default
-    val MAIN: CoroutineDispatcher = Dispatchers.Main
-    
-    // Dedicated dispatchers for specific tasks
-    val NETWORK_PARSING = Dispatchers.Default.limitedParallelism(2)
-    val IMAGE_PROCESSING = Dispatchers.Default.limitedParallelism(2)
-    val DATABASE = Dispatchers.IO.limitedParallelism(2)
-    val BACKGROUND_SYNC = Dispatchers.IO.limitedParallelism(1)
-    
-    fun withContext(context: CoroutineDispatcher, block: suspend () -> Unit) {
-        CoroutineScope(context).launch { block() }
-    }
-}
-
-/**
  * Network call deduplication manager
  */
 class NetworkDeduplicator {
@@ -230,18 +210,6 @@ class NetworkDeduplicator {
 }
 
 /**
- * Bitmap pooling — removed. Coil manages its own cache and the system
- * BitmapPool (Android 12+) provides native recycling. This was a duplicate
- * pool consuming ~12 MB unnecessarily.
- */
-class BitmapPoolManager {
-    fun clear() {}
-
-    @Suppress("UNUSED_PARAMETER")
-    fun resize(newMaxSize: Long) {}
-}
-
-/**
  * Lazy layout optimization helpers
  */
 object LazyLayoutOptimizations {
@@ -267,17 +235,28 @@ object PagingConfig {
  * Coil image caching configuration for low-memory devices
  */
 object CoilCacheConfig {
+    private var _memoryCacheSize: Long? = null
+    private var _diskCacheSize: Long? = null
+
     fun memoryCacheSize(context: Context): Long {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
-        val memoryClass = activityManager.memoryClass
-        // Use 1/16th of available memory, max 64MB
-        return (memoryClass * 1024L * 1024L / 16).coerceAtMost(64 * 1024 * 1024)
+        var result = _memoryCacheSize
+        if (result == null) {
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            val memoryClass = activityManager.memoryClass
+            result = (memoryClass * 1024L * 1024L / 16).coerceAtMost(64 * 1024 * 1024)
+            _memoryCacheSize = result
+        }
+        return result
     }
 
     fun diskCacheSize(context: Context): Long {
-        val cacheDir = context.cacheDir
-        val usableSpace = cacheDir.usableSpace
-        // Use 5% of available space, max 128MB
-        return (usableSpace / 20).coerceAtMost(128 * 1024 * 1024)
+        var result = _diskCacheSize
+        if (result == null) {
+            val cacheDir = context.cacheDir
+            val usableSpace = cacheDir.usableSpace
+            result = (usableSpace / 20).coerceAtMost(128 * 1024 * 1024)
+            _diskCacheSize = result
+        }
+        return result
     }
 }

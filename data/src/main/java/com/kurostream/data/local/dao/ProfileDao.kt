@@ -24,6 +24,9 @@ interface ProfileDao {
     @Query("SELECT * FROM profiles")
     fun observeAll(): Flow<List<ProfileEntity>>
 
+    @Query("SELECT * FROM profiles")
+    suspend fun getAll(): List<ProfileEntity>
+
     @Query("SELECT * FROM profiles WHERE id = :id")
     suspend fun getById(id: String): ProfileEntity?
 
@@ -50,4 +53,16 @@ interface ProfileDao {
 
     @Query("SELECT COUNT(*) FROM profiles")
     suspend fun count(): Int
+
+    @Transaction
+    suspend fun switchActiveProfile(id: String) {
+        clearActive()
+        setActive(id)
+    }
+
+    @Transaction
+    suspend fun deleteAndGetRemaining(profile: ProfileEntity): List<ProfileEntity> {
+        delete(profile)
+        return getAll()
+    }
 }

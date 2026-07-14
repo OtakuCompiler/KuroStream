@@ -1,41 +1,11 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.plugin.sdk.isolation
 
 import com.kurostream.core.common.result.Result
+import java.util.concurrent.ConcurrentHashMap
 
-/**
- * Interface for handling extension crashes in an isolated manner.
- * Implementations decide whether to restart, disable, or report the extension.
- */
 interface CrashIsolationHandler {
-    /**
-     * Called when an extension throws an uncaught exception.
-     * @return Result.Success if handled, Result.Error if escalation needed.
-     */
     suspend fun handleCrash(extensionId: String, throwable: Throwable): Result<CrashAction>
-
-    /**
-     * Observes whether an extension is currently in a crash loop.
-     */
     fun isInCrashLoop(extensionId: String): Boolean
-
-    /**
-     * Resets crash counters for an extension (e.g., after update).
-     */
     suspend fun resetCrashState(extensionId: String)
 }
 
@@ -46,24 +16,24 @@ enum class CrashAction {
     REPORT_AND_CONTINUE
 }
 
-/**
- * Default handler that disables an extension after 3 crashes in 5 minutes.
- */
 class DefaultCrashIsolationHandler : CrashIsolationHandler {
-    private val crashLog = mutableMapOf<String, MutableList<Long>>()
+    private val crashLog = ConcurrentHashMap<String, MutableList<Long>>()
 
     override suspend fun handleCrash(extensionId: String, throwable: Throwable): Result<CrashAction> {
         val now = System.currentTimeMillis()
         val crashes = crashLog.getOrPut(extensionId) { mutableListOf() }
-        crashes.add(now)
-        crashes.removeAll { now - it > 300_000 } // Keep only last 5 minutes
-
-        return Result.Success(if (crashes.size >= 3) CrashAction.DISABLE_EXTENSION else CrashAction.RESTART_EXTENSION)
+        synchronized(crashes) {
+            crashes.add(now)
+            crashes.removeAll { now - it > 300_000 }
+        }
+        val crashCount = synchronized(crashes) { crashes.size }
+        return Result.Success(if (crashCount >= 3) CrashAction.DISABLE_EXTENSION else CrashAction.RESTART_EXTENSION)
     }
 
     override fun isInCrashLoop(extensionId: String): Boolean {
         val now = System.currentTimeMillis()
-        return (crashLog[extensionId]?.count { now - it < 300_000 } ?: 0) >= 3
+        val crashes = crashLog[extensionId] ?: return false
+        return synchronized(crashes) { crashes.count { now - it < 300_000 } } >= 3
     }
 
     override suspend fun resetCrashState(extensionId: String) {

@@ -48,7 +48,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":app"))
+    implementation(project(":domain"))
+    implementation(project(":data"))
     implementation(project(":playback"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

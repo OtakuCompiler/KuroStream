@@ -19,8 +19,6 @@ import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.MediaItem
 
 interface TorrentSource : ExtensionApi {
-    override val extensionId: String = "torrent_source"
-
     override suspend fun getVideoSources(episodeId: String): Result<List<VideoSource>> {
         return Result.failure(UnsupportedOperationException("Torrent sources handled by TorrentService"))
     }
@@ -34,20 +32,6 @@ interface TorrentSource : ExtensionApi {
     suspend fun getTorrentStatus(infoHash: String): Result<TorrentStatusInfo>
     suspend fun setFilePriority(infoHash: String, fileIndex: Int, priority: FilePriority): Result<Unit>
 }
-
-@Serializable
-data class TorrentStreamInfo(
-    val infoHash: String,
-    val fileIndex: Int,
-    val streamUrl: String,
-    val fileName: String,
-    val fileSize: Long,
-    val mimeType: String,
-    val isSeekable: Boolean,
-    val downloadProgress: Float,
-    val bufferProgress: Float,
-    val isReadyToPlay: Boolean,
-)
 
 @Serializable
 data class TorrentStatusInfo(

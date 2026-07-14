@@ -4,15 +4,23 @@ import com.kurostream.core.platform.platformCurrentTimeMillis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
-interface MetadataProvider {
+interface MetadataProvider : AnimeSearchProvider, AnimeDetailsProvider, AnimeDiscoveryProvider {
     val providerId: String
     val providerName: String
     val priority: Int
     val isEnabled: Boolean
+}
 
-    suspend fun getAnime(id: String): MetadataResult<AnimeMetadata>
+interface AnimeSearchProvider {
     suspend fun searchAnime(query: String, page: Int = 1, limit: Int = 20): MetadataResult<List<AnimeMetadata>>
     suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata>
+}
+
+interface AnimeDetailsProvider {
+    suspend fun getAnime(id: String): MetadataResult<AnimeMetadata>
+}
+
+interface AnimeDiscoveryProvider {
     suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>>
     suspend fun getTrendingAnime(limit: Int = 20): MetadataResult<List<AnimeMetadata>>
 }

@@ -1,6 +1,5 @@
 package com.kurostream.domain.usecase
 
-import com.kurostream.core.platform.platformCurrentTimeMillis
 import com.kurostream.domain.model.MediaItem
 import com.kurostream.domain.model.MediaSource
 import com.kurostream.domain.model.SourceLock
@@ -15,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 class SourceLockUseCases(
     private val sourceLockRepository: SourceLockRepository,
     private val mediaRepository: MediaRepository,
+    private val clock: () -> Long = { System.currentTimeMillis() },
 ) {
     suspend fun resolveSource(
         mediaItem: MediaItem,
@@ -33,7 +33,7 @@ class SourceLockUseCases(
             val matchingSource = availableSources.find { it.providerId == existingLock.providerId }
             if (matchingSource != null) {
                 val updatedLock = existingLock.copy(
-                    lastUsedAt = currentTimeMillis(),
+                    lastUsedAt = clock(),
                     episodeCount = existingLock.episodeCount + 1
                 )
                 sourceLockRepository.updateLock(updatedLock)
@@ -56,8 +56,8 @@ class SourceLockUseCases(
                 providerId = bestSource.providerId,
                 sourceQuality = bestSource.quality,
                 sourceUrl = bestSource.url,
-                lockedAt = currentTimeMillis(),
-                lastUsedAt = currentTimeMillis(),
+                lockedAt = clock(),
+                lastUsedAt = clock(),
                 episodeCount = 1,
                 isActive = true
             )
@@ -100,7 +100,7 @@ class SourceLockUseCases(
                 val matchingSource = availableSources.find { it.providerId == existingLock.providerId }
                 if (matchingSource != null) {
                     val updatedLock = existingLock.copy(
-                        lastUsedAt = currentTimeMillis(),
+                        lastUsedAt = clock(),
                         episodeCount = existingLock.episodeCount + 1
                     )
                     sourceLockRepository.updateLock(updatedLock)
@@ -118,8 +118,8 @@ class SourceLockUseCases(
                         providerId = fallbackSource.providerId,
                         sourceQuality = fallbackSource.quality,
                         sourceUrl = fallbackSource.url,
-                        lockedAt = currentTimeMillis(),
-                        lastUsedAt = currentTimeMillis(),
+                        lockedAt = clock(),
+                        lastUsedAt = clock(),
                         episodeCount = 1,
                         isActive = true
                     )
@@ -152,18 +152,4 @@ class SourceLockUseCases(
     suspend fun updateSettings(settings: SourceLockSettings) {
         sourceLockRepository.updateSettings(settings)
     }
-}
-
-private var _timeOverride: (() -> Long)? = null
-
-internal fun setTimeOverride(override: () -> Long) {
-    _timeOverride = override
-}
-
-internal fun resetTimeOverride() {
-    _timeOverride = null
-}
-
-internal fun currentTimeMillis(): Long {
-    return _timeOverride?.invoke() ?: platformCurrentTimeMillis()
 }

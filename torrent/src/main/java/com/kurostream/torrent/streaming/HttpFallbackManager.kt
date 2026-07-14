@@ -191,7 +191,7 @@ class HttpFallbackManager @Inject constructor(
                 if (!state.isFallbackActive) break
 
                 val torrentSpeed = streamingTorrentManager.getStreamState(infoHash)?.bufferHealth?.downloadSpeedBps ?: 0
-                val httpSpeed = measureHttpSpeed(state.fallbackUrl!!, state.fallbackUrl!!)
+                val httpSpeed = measureHttpSpeed(state.fallbackUrl!!, emptyMap())
 
                 state.httpSpeed = httpSpeed
 
@@ -210,7 +210,7 @@ class HttpFallbackManager @Inject constructor(
         }
     }
 
-    private suspend fun measureHttpSpeed(url: String, headers: Map<String, String>): Long {
+    private suspend fun measureHttpSpeed(url: String, headers: Map<String, String> = emptyMap()): Long {
         return try {
             val client = okhttp3.OkHttpClient.Builder()
                 .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)

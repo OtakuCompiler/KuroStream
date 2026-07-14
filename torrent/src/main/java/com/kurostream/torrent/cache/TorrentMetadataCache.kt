@@ -40,6 +40,7 @@ class TorrentMetadataCache @Inject constructor(
     private val memoryCache = ConcurrentHashMap<String, CachedTorrentMetadata>()
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = false }
     private val maxCacheSize = 500
+    private val maxDiskCacheSizeBytes = 50L * 1024 * 1024
 
     private val cacheDir: File by lazy {
         File(context.filesDir, "torrent_metadata_cache").apply { mkdirs() }
@@ -79,6 +80,7 @@ class TorrentMetadataCache @Inject constructor(
             Log.w(TAG, "Failed to cache metadata to disk for ${info.infoHash}", e)
         }
 
+        evictDiskIfNeeded()
         evictIfNeeded()
         updateStats()
     }
@@ -138,6 +140,18 @@ class TorrentMetadataCache @Inject constructor(
             toEvict.forEach { metadata ->
                 memoryCache.remove(metadata.infoHash)
             }
+        }
+    }
+
+    private fun evictDiskIfNeeded() {
+        val files = cacheDir.listFiles()?.sortedBy { it.lastModified() } ?: return
+        var totalSize = files.sumOf { it.length() }
+        for (file in files) {
+            if (totalSize <= maxDiskCacheSizeBytes) break
+            val name = file.nameWithoutExtension
+            memoryCache.remove(name)
+            file.delete()
+            totalSize -= file.length()
         }
     }
 

@@ -15,10 +15,12 @@
 
 package com.kurostream.launcher.firebase.firestore
 
+import android.content.Context
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +31,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FirestoreSyncManager @Inject constructor() {
+class FirestoreSyncManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     private val firestore: FirebaseFirestore = Firebase.firestore
 
@@ -242,7 +246,7 @@ class FirestoreSyncManager @Inject constructor() {
                 val devices = devicesResult.getOrDefault(emptyList())
 
                 // Register current device
-                val currentDevice = DeviceInfo.getCurrentDevice()
+                val currentDevice = DeviceInfo.getCurrentDevice(context)
                 registerDevice(userId, currentDevice.deviceId, currentDevice)
 
                 Result.success(
@@ -305,16 +309,20 @@ data class DeviceInfo(
     val lastActive: Long = System.currentTimeMillis()
 ) {
     companion object {
-        fun getCurrentDevice(): DeviceInfo {
+        fun getCurrentDevice(context: Context): DeviceInfo {
             return DeviceInfo(
                 deviceId = android.provider.Settings.Secure.getString(
-                    android.app.Application().contentResolver,
+                    context.contentResolver,
                     android.provider.Settings.Secure.ANDROID_ID
                 ) ?: "unknown",
                 model = android.os.Build.MODEL,
                 manufacturer = android.os.Build.MANUFACTURER,
                 androidVersion = android.os.Build.VERSION.RELEASE,
-                appVersion = "1.0.0" // Should be retrieved from PackageManager
+                appVersion = try {
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+                } catch (e: Exception) {
+                    "1.0.0"
+                }
             )
         }
     }

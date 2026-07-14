@@ -44,27 +44,25 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        // externalNativeBuild {
-        //     cmake {
-        //         cppFlags += ""
-        //         abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
-        //         arguments += listOf("-DANDROID_STL=c++_shared")
-        //     }
-        // }
+        externalNativeBuild {
+            cmake {
+                cppFlags += ""
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+                arguments += listOf("-DANDROID_STL=c++_shared")
+            }
+        }
     }
 
-    // externalNativeBuild temporarily disabled: requires prebuilt libmpv-for-Android.
-    // See CMakeLists.txt comments and MERGE_REPORT_2.md "Native Libraries Setup".
-    // externalNativeBuild {
-    //     cmake {
-    //         path = file("src/main/cpp/CMakeLists.txt")
-    //         version = "3.22.1"
-    //     }
-    // }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
 
     buildFeatures {
         compose = true
-        // prefab re-enabled once externalNativeBuild is uncommented (needed for Oboe AAR)
+        prefabPublishing = true
     }
 
     buildTypes {
@@ -124,7 +122,8 @@ dependencies {
 
     implementation(libs.okhttp)
     implementation(libs.timber)
-    implementation(libs.gson)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
 
     // --- Phase 71-80 additions (advanced rendering/AI/DRM/sandbox/watch-party/audio) ---
     implementation(platform(libs.androidx.compose.bom))

@@ -27,7 +27,7 @@ import javax.inject.Singleton
 class ProtoProfileDataStore @Inject constructor(
     @androidx.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) {
-    private val dataStore: DataStore<ProfileProto.ProfilePreferences> = context.profileDataStore(
+    private val dataStore: DataStore<ProfileProto.ProfilePreferences> = context.dataStore(
         fileName = "profile_prefs.pb",
         serializer = ProfileSerializer
     )
@@ -50,4 +50,7 @@ class ProtoProfileDataStore @Inject constructor(
 }
 
 val Context.profileDataStore: DataStore<ProfileProto.ProfilePreferences>
-    get() = ProtoProfileDataStore(this).dataStore
+    by dataStore(
+        fileName = "profile_prefs.pb",
+        serializer = ProfileSerializer
+    )

@@ -57,6 +57,7 @@ import androidx.tv.material3.Text
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import com.kurostream.common.memory.UnifiedMemoryManager
 import com.kurostream.common.memory.MemoryState
 
@@ -177,13 +178,14 @@ fun LowMemoryWarning(
             }
         }
     }
-    
-    private data class LowMemoryWarningData(
-        val bgColor: androidx.compose.ui.graphics.Color,
-        val textColor: androidx.compose.ui.graphics.Color,
-        val iconColor: androidx.compose.ui.graphics.Color,
-        val message: String
-    )
+}
+
+private data class LowMemoryWarningData(
+    val bgColor: androidx.compose.ui.graphics.Color,
+    val textColor: androidx.compose.ui.graphics.Color,
+    val iconColor: androidx.compose.ui.graphics.Color,
+    val message: String
+)
 
 @Composable
 fun MemoryStatusBar(

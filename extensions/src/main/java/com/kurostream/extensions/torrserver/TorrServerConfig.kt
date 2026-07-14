@@ -19,6 +19,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,51 +28,54 @@ import javax.inject.Singleton
 class TorrServerConfig @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("torrserver", Context.MODE_PRIVATE)
+    private fun prefs(): SharedPreferences = context.getSharedPreferences("torrserver", Context.MODE_PRIVATE)
 
     var serverUrl: String
-        get() = prefs.getString("server_url", "http://127.0.0.1:8090") ?: "http://127.0.0.1:8090"
-        set(value) = prefs.edit { putString("server_url", value) }
+        get() = prefs().getString("server_url", "http://127.0.0.1:8090") ?: "http://127.0.0.1:8090"
+        set(value) = prefs().edit { putString("server_url", value) }
 
     var cacheSize: Int
-        get() = prefs.getInt("cache_size", 200)
-        set(value) = prefs.edit { putInt("cache_size", value) }
+        get() = prefs().getInt("cache_size", 200)
+        set(value) = prefs().edit { putInt("cache_size", value) }
 
     var preloadBuffer: Int
-        get() = prefs.getInt("preload_buffer", 32)
-        set(value) = prefs.edit { putInt("preload_buffer", value) }
+        get() = prefs().getInt("preload_buffer", 32)
+        set(value) = prefs().edit { putInt("preload_buffer", value) }
 
     var readerAHead: Int
-        get() = prefs.getInt("reader_ahead", 32)
-        set(value) = prefs.edit { putInt("reader_ahead", value) }
+        get() = prefs().getInt("reader_ahead", 32)
+        set(value) = prefs().edit { putInt("reader_ahead", value) }
 
     var useDiskCache: Boolean
-        get() = prefs.getBoolean("use_disk_cache", true)
-        set(value) = prefs.edit { putBoolean("use_disk_cache", value) }
+        get() = prefs().getBoolean("use_disk_cache", true)
+        set(value) = prefs().edit { putBoolean("use_disk_cache", value) }
 
     var removeAfterStop: Boolean
-        get() = prefs.getBoolean("remove_after_stop", false)
-        set(value) = prefs.edit { putBoolean("remove_after_stop", value) }
+        get() = prefs().getBoolean("remove_after_stop", false)
+        set(value) = prefs().edit { putBoolean("remove_after_stop", value) }
 
     var connectionsLimit: Int
-        get() = prefs.getInt("connections_limit", 50)
-        set(value) = prefs.edit { putInt("connections_limit", value) }
+        get() = prefs().getInt("connections_limit", 50)
+        set(value) = prefs().edit { putInt("connections_limit", value) }
 
     var dhtConnectionLimit: Int
-        get() = prefs.getInt("dht_limit", 500)
-        set(value) = prefs.edit { putInt("dht_limit", value) }
+        get() = prefs().getInt("dht_limit", 500)
+        set(value) = prefs().edit { putInt("dht_limit", value) }
 
     var isEnabled: Boolean
-        get() = prefs.getBoolean("enabled", false)
-        set(value) = prefs.edit { putBoolean("enabled", value) }
+        get() = prefs().getBoolean("enabled", false)
+        set(value) = prefs().edit { putBoolean("enabled", value) }
 
-    fun getSettingsPayload(): Map<String, Any> = mapOf(
-        "CacheSize" to cacheSize,
-        "PreloadBufferSize" to preloadBuffer,
-        "ReaderReadAHead" to readerAHead,
-        "UseDisk" to useDiskCache,
-        "RemoveCacheOnDrop" to removeAfterStop,
-        "ConnectionsLimit" to connectionsLimit,
-        "DhtConnectionLimit" to dhtConnectionLimit
-    )
+    suspend fun getSettingsPayload(): Map<String, Any> = withContext(Dispatchers.IO) {
+        val p = prefs()
+        mapOf(
+            "CacheSize" to p.getInt("cache_size", 200),
+            "PreloadBufferSize" to p.getInt("preload_buffer", 32),
+            "ReaderReadAHead" to p.getInt("reader_ahead", 32),
+            "UseDisk" to p.getBoolean("use_disk_cache", true),
+            "RemoveCacheOnDrop" to p.getBoolean("remove_after_stop", false),
+            "ConnectionsLimit" to p.getInt("connections_limit", 50),
+            "DhtConnectionLimit" to p.getInt("dht_limit", 500)
+        )
+    }
 }

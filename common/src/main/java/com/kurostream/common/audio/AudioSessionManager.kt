@@ -14,6 +14,15 @@ class AudioSessionManager(private val context: Context) {
 
     enum class AudioFocusState { NO_FOCUS, TRANSIENT, FULL }
 
+    private val focusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        currentFocus = when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN -> AudioFocusState.FULL
+            AudioManager.AUDIOFOCUS_LOSS -> AudioFocusState.NO_FOCUS
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> AudioFocusState.TRANSIENT
+            else -> AudioFocusState.NO_FOCUS
+        }
+    }
+
     fun requestAudioFocus(): Boolean {
         val attrs = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -25,14 +34,7 @@ class AudioSessionManager(private val context: Context) {
             val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                 .setAudioAttributes(attrs)
                 .setAcceptsDelayedFocusGain(true)
-                .setOnAudioFocusChangeListener { focusChange ->
-                    currentFocus = when (focusChange) {
-                        AudioManager.AUDIOFOCUS_GAIN -> AudioFocusState.FULL
-                        AudioManager.AUDIOFOCUS_LOSS -> AudioFocusState.NO_FOCUS
-                        AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> AudioFocusState.TRANSIENT
-                        else -> AudioFocusState.NO_FOCUS
-                    }
-                }
+                .setOnAudioFocusChangeListener(focusChangeListener)
                 .build()
             audioFocusRequest = request
             val result = audioManager.requestAudioFocus(request)
@@ -40,7 +42,7 @@ class AudioSessionManager(private val context: Context) {
         } else {
             @Suppress("DEPRECATION")
             val result = audioManager.requestAudioFocus(
-                null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN,
+                focusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN,
             )
             result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
         }

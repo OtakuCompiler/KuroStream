@@ -2,6 +2,7 @@ package com.kurostream.torrent.cache
 
 import android.util.Log
 import java.nio.ByteBuffer
+import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -15,6 +16,11 @@ class TorrentPieceCache @Inject constructor() {
     private val cache = ConcurrentHashMap<String, CacheEntry>()
     private val totalSizeBytes = AtomicLong(0)
 
+    private val bufferPool = ArrayDeque<ByteBuffer>()
+    private val poolLock = Any()
+    private var poolSize = 0
+    private val maxPoolSize = 64
+
     data class CacheEntry(
         val data: ByteBuffer,
         val infoHash: String,
@@ -23,17 +29,42 @@ class TorrentPieceCache @Inject constructor() {
         var accessCount: Int = 0,
     )
 
-    private var maxSizeBytes: Long = 64 * 1024 * 1024 // 64MB default
+    private var maxSizeBytes: Long = 64 * 1024 * 1024
 
     fun configure(maxSizeMb: Int = 64) {
         maxSizeBytes = maxSizeMb.toLong() * 1024 * 1024
         Log.i(TAG, "Piece cache configured: ${maxSizeMb}MB")
     }
 
+    private fun obtainBuffer(capacity: Int): ByteBuffer {
+        synchronized(poolLock) {
+            while (bufferPool.isNotEmpty()) {
+                val buf = bufferPool.pollFirst() ?: break
+                poolSize--
+                if (buf.capacity() >= capacity) {
+                    buf.clear()
+                    buf.limit(capacity)
+                    return buf
+                }
+            }
+        }
+        return ByteBuffer.allocateDirect(capacity)
+    }
+
+    private fun recycleBuffer(buffer: ByteBuffer) {
+        synchronized(poolLock) {
+            if (poolSize < maxPoolSize) {
+                buffer.clear()
+                bufferPool.addLast(buffer)
+                poolSize++
+            }
+        }
+    }
+
     fun put(infoHash: String, pieceIndex: Int, data: ByteArray) {
         val key = "$infoHash:$pieceIndex"
 
-        val buffer = ByteBuffer.allocateDirect(data.size)
+        val buffer = obtainBuffer(data.size)
         buffer.put(data)
         buffer.flip()
 
@@ -43,8 +74,12 @@ class TorrentPieceCache @Inject constructor() {
             pieceIndex = pieceIndex,
         )
 
-        cache[key] = entry
-        totalSizeBytes.addAndGet(data.size.toLong())
+        val old = cache.put(key, entry)
+        if (old != null) {
+            recycleBuffer(old.data)
+        } else {
+            totalSizeBytes.addAndGet(data.size.toLong())
+        }
 
         evictIfNeeded()
     }
@@ -72,6 +107,7 @@ class TorrentPieceCache @Inject constructor() {
         val entry = cache.remove(key)
         if (entry != null) {
             totalSizeBytes.addAndGet(-entry.data.capacity().toLong())
+            recycleBuffer(entry.data)
         }
     }
 
@@ -86,6 +122,7 @@ class TorrentPieceCache @Inject constructor() {
             val entry = cache.remove(key)
             if (entry != null) {
                 totalSizeBytes.addAndGet(-entry.data.capacity().toLong())
+                recycleBuffer(entry.data)
             }
         }
     }
@@ -100,6 +137,7 @@ class TorrentPieceCache @Inject constructor() {
             val key = "${oldestEntry.infoHash}:${oldestEntry.pieceIndex}"
             cache.remove(key)
             totalSizeBytes.addAndGet(-oldestEntry.data.capacity().toLong())
+            recycleBuffer(oldestEntry.data)
         }
     }
 }

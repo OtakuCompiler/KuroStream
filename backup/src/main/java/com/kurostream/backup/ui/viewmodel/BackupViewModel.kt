@@ -67,7 +67,7 @@ class BackupViewModel @Inject constructor(
                 is Result.Success -> {
                     // Auth state will update via flow
                 }
-                is Result.Failure -> {
+                is Result.Error -> {
                     _uiState.update { it.copy(errorMessage = result.exception.message) }
                 }
             }
@@ -77,7 +77,7 @@ class BackupViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             val result = repository.logout()
-            if (result is Result.Failure) {
+            if (result is Result.Error) {
                 _uiState.update { it.copy(errorMessage = result.exception.message) }
             }
         }
@@ -94,7 +94,7 @@ class BackupViewModel @Inject constructor(
                     _uiState.update { it.copy(lastBackupMetadata = result.data, showBackupSuccess = true) }
                     refreshBackups()
                 }
-                is Result.Failure -> {
+                is Result.Error -> {
                     _uiState.update { it.copy(errorMessage = result.exception.message) }
                 }
             }
@@ -121,7 +121,7 @@ class BackupViewModel @Inject constructor(
                 is Result.Success -> {
                     _uiState.update { it.copy(showRestoreSuccess = true) }
                 }
-                is Result.Failure -> {
+                is Result.Error -> {
                     _uiState.update { it.copy(errorMessage = result.exception.message) }
                 }
             }
@@ -134,7 +134,7 @@ class BackupViewModel @Inject constructor(
             val result = repository.deleteBackup(config, metadata)
             if (result is Result.Success) {
                 refreshBackups()
-            } else if (result is Result.Failure) {
+            } else if (result is Result.Error) {
                 _uiState.update { it.copy(errorMessage = result.exception.message) }
             }
         }

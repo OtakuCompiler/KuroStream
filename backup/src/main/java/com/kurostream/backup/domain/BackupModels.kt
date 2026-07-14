@@ -15,14 +15,10 @@
 
 package com.kurostream.backup.domain
 
+import com.kurostream.core.common.result.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import retrofit2.http.*
-
-sealed interface Result<out T> {
-    data class Success<out T>(val data: T) : Result<T>
-    data class Failure(val exception: Throwable) : Result<Nothing>
-}
 
 @Serializable
 data class BackupConfig(

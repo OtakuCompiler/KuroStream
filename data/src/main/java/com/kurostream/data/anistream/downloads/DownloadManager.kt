@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -47,6 +49,7 @@ class DownloadManager @Inject constructor(
 
     private val maxConcurrentDownloads = 2
     private val priorityQueue = PriorityQueue<DownloadItem>(compareByDescending { it.priority })
+    private val mutex = Mutex()
 
     init {
         restorePendingDownloads()
@@ -133,6 +136,11 @@ class DownloadManager @Inject constructor(
         file.delete()
     }
 
+    suspend fun cancelAll() {
+        val all = downloadDao.getAll()
+        all.forEach { cancelDownload(it.id) }
+    }
+
     suspend fun pauseAll() {
         val active = downloadDao.getByStatus(DownloadStatus.DOWNLOADING)
         active.forEach { pauseDownload(it.id) }
@@ -156,16 +164,18 @@ class DownloadManager @Inject constructor(
     }
 
     private suspend fun processQueue() {
-        val activeCount = downloadDao.getByStatus(DownloadStatus.DOWNLOADING).size
-        val availableSlots = maxConcurrentDownloads - activeCount
+        mutex.withLock {
+            val activeCount = downloadDao.getByStatus(DownloadStatus.DOWNLOADING).size
+            val availableSlots = maxConcurrentDownloads - activeCount
 
-        if (availableSlots <= 0) return
+            if (availableSlots <= 0) return@withLock
 
-        val queued = downloadDao.getByStatus(DownloadStatus.QUEUED)
-            .sortedByDescending { it.priority }
+            val queued = downloadDao.getByStatus(DownloadStatus.QUEUED)
+                .sortedByDescending { it.priority }
 
-        queued.take(availableSlots).forEach { item ->
-            startDownloadWorker(item)
+            queued.take(availableSlots).forEach { item ->
+                startDownloadWorker(item)
+            }
         }
     }
 

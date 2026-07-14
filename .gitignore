@@ -27,3 +27,4 @@ KuroStream_release/
 .trashed-*
 MERGE_REPORT*.md
 .github/secrets.md
+gradle-8.10.2-bin.zip

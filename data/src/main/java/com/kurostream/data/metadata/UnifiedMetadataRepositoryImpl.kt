@@ -18,11 +18,14 @@ package com.kurostream.data.metadata
 import com.kurostream.core.common.result.Result
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.model.SourceLockSettings
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -41,12 +44,20 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
     private val settingsDataStore: com.kurostream.data.local.preferences.SettingsDataStore,
 ) : UnifiedMetadataRepository {
 
-    private val _enabledProviders = MutableStateFlow<Set<String>>(getEnabledProvidersFromSettings())
+    private val _enabledProviders = MutableStateFlow<Set<String>>(emptySet())
     val enabledProviders: kotlinx.coroutines.flow.StateFlow<Set<String>> = _enabledProviders
 
     private val allProviders = listOf(
         kitsuProvider, anilistProvider, malProvider, tmdbProvider, tvdbProvider, imdbProvider
     ).sortedBy { it.priority }
+
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    init {
+        scope.launch {
+            _enabledProviders.value = getEnabledProvidersFromSettings()
+        }
+    }
 
     override suspend fun getAnimeDetails(id: String): MetadataResult<UnifiedAnimeDetails> = withContext(Dispatchers.IO) {
         val providerErrors = mutableMapOf<String, String>()
@@ -355,7 +366,7 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
     }
 
     private suspend fun saveEnabledProvidersToSettings(providers: Set<String>) {
-        settingsDataStore.dataStore.edit { prefs ->
+        settingsDataStore.editPreferences { prefs ->
             prefs[com.kurostream.data.local.preferences.SettingsDataStore.Keys.METADATA_PROVIDERS_ENABLED] = providers.joinToString(",")
         }
     }

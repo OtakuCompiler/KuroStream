@@ -134,6 +134,7 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
 
     fun shutdown() {
         stopMonitoring()
+        handler.removeCallbacksAndMessages(null)
         scope.coroutineContext.cancel()
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
     }

@@ -39,15 +39,14 @@ class TorrServerViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _uiState.value = TorrServerUiState.Loading
-            repository.listTorrents().collect { result ->
-                _uiState.value = when {
-                    result.isSuccess -> {
-                        val torrents = result.getOrNull() ?: emptyList()
-                        if (torrents.isEmpty()) TorrServerUiState.Empty
-                        else TorrServerUiState.Success(torrents)
-                    }
-                    else -> TorrServerUiState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+            val result = repository.listTorrents()
+            _uiState.value = when {
+                result.isSuccess -> {
+                    val torrents = result.getOrNull() ?: emptyList()
+                    if (torrents.isEmpty()) TorrServerUiState.Empty
+                    else TorrServerUiState.Success(torrents)
                 }
+                else -> TorrServerUiState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
             }
         }
     }

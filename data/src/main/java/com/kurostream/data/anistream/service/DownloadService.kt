@@ -97,7 +97,7 @@ class DownloadService : LifecycleService() {
             ACTION_START -> startForegroundService()
             ACTION_PAUSE_ALL -> lifecycleScope.launch { downloadManager.pauseAll() }
             ACTION_RESUME_ALL -> lifecycleScope.launch { downloadManager.resumeAll() }
-            ACTION_CANCEL_ALL -> lifecycleScope.launch { downloadManager.pauseAll() }
+            ACTION_CANCEL_ALL -> lifecycleScope.launch { downloadManager.cancelAll() }
         }
 
         return START_STICKY

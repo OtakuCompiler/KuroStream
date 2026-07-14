@@ -16,6 +16,7 @@
 package com.kurostream.core.platform
 
 import android.content.Context
+import android.os.FileObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -69,20 +70,17 @@ class AndroidStorage(
     
     override fun observeFile(path: String): Flow<ByteArray> = callbackFlow {
         val file = File(path)
-        var lastModified = file.lastModified()
 
-        val watcher = Thread {
-            while (!Thread.interrupted()) {
-                Thread.sleep(1000)
-                if (file.exists() && file.lastModified() != lastModified) {
-                    lastModified = file.lastModified()
+        val observer = object : FileObserver(path, FileObserver.MODIFY or FileObserver.CLOSE_WRITE) {
+            override fun onEvent(event: Int, eventPath: String?) {
+                if (file.exists()) {
                     trySend(file.readBytes())
                 }
             }
         }
-        watcher.start()
+        observer.startWatching()
 
-        awaitClose { watcher.interrupt() }
+        awaitClose { observer.stopWatching() }
     }
     
     override suspend fun putString(key: String, value: String) = withContext(Dispatchers.IO) {

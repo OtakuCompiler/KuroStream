@@ -17,6 +17,7 @@ package com.kurostream.data.local.dao
 
 import androidx.room.*
 import com.kurostream.data.local.entity.MediaItemEntity
+import com.kurostream.data.local.entity.MediaItemFts
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -30,8 +31,11 @@ interface MediaItemDao {
     @Query("SELECT * FROM media_items WHERE category = :category ORDER BY lastUpdated DESC")
     fun observeByCategory(category: String): Flow<List<MediaItemEntity>>
 
-    @Query("SELECT * FROM media_items WHERE title LIKE '%' || :query || '%' ORDER BY title ASC")
+    @Query("SELECT * FROM media_items WHERE id IN (SELECT docid FROM media_items_fts WHERE media_items_fts MATCH :query || '*') ORDER BY title ASC")
     suspend fun search(query: String): List<MediaItemEntity>
+
+    @Query("SELECT * FROM media_items WHERE title LIKE '%' || :query || '%' ORDER BY title ASC")
+    suspend fun searchLegacy(query: String): List<MediaItemEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: MediaItemEntity)

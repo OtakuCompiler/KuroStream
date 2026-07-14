@@ -34,7 +34,7 @@ class PreCacheWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val okHttpClient: OkHttpClient,
-    private val cacheEntryDao: com.kurostream.launcher.data.local.CacheEntryDao
+    private val cacheEntryDao: com.kurostream.launcher.cache.CacheEntryDao
 ) : CoroutineWorker(context, params) {
 
     companion object {

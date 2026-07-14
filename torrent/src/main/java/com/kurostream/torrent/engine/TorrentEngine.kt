@@ -50,9 +50,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sharingStarted
@@ -86,8 +86,8 @@ class TorrentEngine @Inject constructor(
 
     private var session: Session? = null
     private var sessionManager: SessionManager? = null
+    private val zeroSeekPlaybackManager = com.kurostream.players.buffer.ZeroSeekPlaybackManager()
     private var isInitialized = false
-    private var engineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val torrents = ConcurrentHashMap<String, TorrentHandle>()
     private val torrentStates = ConcurrentHashMap<String, MutableStateFlow<TorrentInfo>>()
@@ -150,15 +150,15 @@ class TorrentEngine @Inject constructor(
     }
 
     private fun startPeriodicJobs() {
-        trackerListProvider.startPeriodicRefresh(engineScope)
+        trackerListProvider.startPeriodicRefresh(this)
 
-        streamingPiecePrioritizer.attachScope(engineScope)
+        streamingPiecePrioritizer.attachScope(this)
 
-        writeCoalescer.start(engineScope)
+        writeCoalescer.start(this)
 
-        lazyVerifier.startBackgroundVerification(engineScope)
+        lazyVerifier.startBackgroundVerification(this)
 
-        engineScope.launch {
+        this.launch {
             while (isActive) {
                 updateGlobalStats()
                 kotlinx.coroutines.delay(1000)
@@ -215,17 +215,17 @@ class TorrentEngine @Inject constructor(
 
             launch {
                 try {
-                    metadataFetchManager.fetchMetadata(infoHash, session!!, engineScope)
+                    metadataFetchManager.fetchMetadata(infoHash, session!!, this)
                 } catch (e: Exception) {
                     Log.d(TAG, "Metadata fetch failed for $infoHash", e)
                 }
             }
 
             launch {
-                peerWarmupManager.warmupPeers(infoHash, session!!, engineScope)
+                peerWarmupManager.warmupPeers(infoHash, session!!, this)
             }
 
-            seederHuntManager.startHunting(infoHash, handle, engineScope)
+            seederHuntManager.startHunting(infoHash, handle, this)
         }
     }
 
@@ -367,7 +367,7 @@ class TorrentEngine @Inject constructor(
             if (pieceIndex < 3) {
                 val state = torrentStates[infoHash]?.value
                 if (state != null && state.files.isNotEmpty()) {
-                    com.kurostream.players.buffer.ZeroSeekPlaybackManager().onFirstPieceAvailable(
+                    zeroSeekPlaybackManager.onFirstPieceAvailable(
                         infoHash, 0, pieceIndex
                     )
                 }
@@ -530,10 +530,10 @@ class TorrentEngine @Inject constructor(
     }
 
     fun observeTorrents(): kotlinx.coroutines.flow.Flow<List<TorrentInfo>> {
-        return combine(torrentStates.values.map { it.asStateFlow() }.toTypedArray()) { states ->
-            states.mapNotNull { it }.sortedByDescending { it.addedAt }
+        return _globalStats.map {
+            torrentStates.values.map { it.value }.sortedByDescending { it.addedAt }
         }.distinctUntilChanged()
-            .stateIn(this.coroutineContext, sharingStarted.WhileSubscribed(), emptyList())
+            .stateIn(this, sharingStarted.WhileSubscribed(), emptyList())
     }
 
     fun observeTorrent(infoHash: String): kotlinx.coroutines.flow.Flow<TorrentInfo?> {

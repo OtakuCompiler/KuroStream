@@ -24,8 +24,11 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import com.kurostream.core.common.result.Result
 import com.kurostream.domain.network.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -66,14 +69,15 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
     ))
 
     private val _activeConnections = MutableStateFlow<List<ActiveConnection>>(emptyList())
-    private val networkCallback: ConnectivityManager.NetworkCallback? = null
+    private lateinit var networkCallback: ConnectivityManager.NetworkCallback
     private var isMonitoring = false
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     override suspend fun startMonitoring() = withContext(Dispatchers.IO) {
         if (isMonitoring) return@withContext
         isMonitoring = true
 
-        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
                 updateNetworkStats(network, capabilities)
             }
@@ -94,17 +98,20 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
         connectivityManager.registerNetworkCallback(request, networkCallback)
         
         // Start periodic stats collection
-        kotlinx.coroutines.Dispatchers.IO.launch {
+        scope.launch {
             while (isMonitoring) {
                 collectNetworkStats()
-                kotlinx.coroutines.delay(2000) // Update every 2 seconds
+                delay(2000)
             }
         }
     }
 
     override suspend fun stopMonitoring() = withContext(Dispatchers.IO) {
         isMonitoring = false
-        networkCallback?.let { connectivityManager.unregisterNetworkCallback(it) }
+        if (::networkCallback.isInitialized) {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        }
+        scope.cancel()
     }
 
     override fun observeNetworkStats() = _networkStats.asStateFlow()
@@ -175,28 +182,10 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
     )
 
     private fun getSystemNetworkStats(): SystemStats {
-        // Read from /proc/net/dev or use TrafficStats
-        var rxBytes = 0L
-        var txBytes = 0L
-        
-        try {
-            val process = Runtime.getRuntime().exec("cat /proc/net/dev")
-            process.inputStream.bufferedReader().use { reader ->
-                reader.forEachLine { line ->
-                    if (line.contains(":") && !line.contains("lo:")) {
-                        val parts = line.trim().split("\\s+".toRegex()).dropLast(1)
-                        if (parts.size >= 10) {
-                            rxBytes += parts[1].toLongOrNull() ?: 0L
-                            txBytes += parts[9].toLongOrNull() ?: 0L
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to read network stats")
-        }
-        
-        return SystemStats(rxBytes, txBytes)
+        return SystemStats(
+            rxBytes = android.net.TrafficStats.getTotalRxBytes(),
+            txBytes = android.net.TrafficStats.getTotalTxBytes(),
+        )
     }
 
     private fun updateConnectionQuality(stats: NetworkStats) {
@@ -317,7 +306,7 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
             } catch (e: Exception) {
                 lost++
             }
-            Thread.sleep(100)
+            delay(100)
         }
 
         PingTestResult(

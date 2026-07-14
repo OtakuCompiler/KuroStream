@@ -29,6 +29,11 @@ import javax.inject.Singleton
 class StremioAddonRepository @Inject constructor() {
 
     private val addonClients = mutableMapOf<String, StremioAddonApi>()
+    private val httpClient = okhttp3.OkHttpClient.Builder()
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
 
     fun registerAddon(baseUrl: String): StremioAddonApi {
         val normalizedUrl = baseUrl.trimEnd('/') + "/"
@@ -103,6 +108,7 @@ class StremioAddonRepository @Inject constructor() {
     private fun createAddonClient(baseUrl: String): StremioAddonApi {
         return Retrofit.Builder()
             .baseUrl(baseUrl)
+            .client(httpClient)
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create(StremioAddonApi::class.java)

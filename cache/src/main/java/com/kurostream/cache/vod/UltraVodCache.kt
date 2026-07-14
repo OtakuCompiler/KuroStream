@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 import java.io.File
+import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.PriorityBlockingQueue
 import java.util.concurrent.atomic.AtomicLong
@@ -197,16 +198,30 @@ class UltraVodCache @Inject constructor(
     }
 
     private fun generateEntryId(url: String, quality: VideoQuality, segmentIndex: Int): String {
-        val hash = (url + quality.name + segmentIndex).hashCode().toString(16)
+        val input = "$url|${quality.name}|$segmentIndex"
+        val digest = MessageDigest.getInstance("MD5").digest(input.toByteArray())
+        val hash = digest.joinToString("") { "%02x".format(it) }
         return "seg_$hash"
     }
 
     private fun findDuplicate(data: ByteArray): CacheEntry? {
-        // Simple hash-based deduplication
-        val dataHash = data.contentHashCode()
-        return indexCache.values.find { 
-            File(cacheDir, "${it.id}.bin").let { f -> 
-                f.exists() && f.readBytes().contentHashCode() == dataHash 
+        val digest = MessageDigest.getInstance("SHA-256")
+        val dataHash = digest.digest(data)
+        return indexCache.values.find { entry ->
+            val file = File(cacheDir, "${entry.id}.bin")
+            if (!file.exists()) return@find false
+            try {
+                val fileDigest = MessageDigest.getInstance("SHA-256")
+                file.inputStream().use { input ->
+                    val buffer = ByteArray(8192)
+                    var bytesRead: Int
+                    while (input.read(buffer).also { bytesRead = it } != -1) {
+                        fileDigest.update(buffer, 0, bytesRead)
+                    }
+                }
+                fileDigest.digest().contentEquals(dataHash)
+            } catch (e: Exception) {
+                false
             }
         }
     }
@@ -224,28 +239,34 @@ class UltraVodCache @Inject constructor(
     }
 
     private fun evictIfNeeded() {
-        val currentSize = indexCache.values.sumOf { it.sizeBytes } / (1024 * 1024)
         val maxSize = config.maxDiskMb
 
-        while (currentSize > maxSize && priorityQueue.isNotEmpty()) {
-            val entry = priorityQueue.poll()
-            if (entry != null) {
-                File(cacheDir, "${entry.id}.bin").delete()
-                indexCache.remove(entry.id)
-                Timber.d("Evicted segment ${entry.id} (cache size: ${currentSize}MB -> ${currentSize - entry.sizeBytes / (1024 * 1024)}MB)")
-            }
+        while (priorityQueue.isNotEmpty()) {
+            val currentSize = indexCache.values.sumOf { it.sizeBytes } / (1024 * 1024)
+            if (currentSize <= maxSize) break
+
+            val entry = priorityQueue.poll() ?: break
+            File(cacheDir, "${entry.id}.bin").delete()
+            indexCache.remove(entry.id)
+            Timber.d("Evicted segment ${entry.id}")
         }
     }
 
     private fun loadIndex() {
-        // Load index from disk if exists
         val indexFile = File(cacheDir, "index.json")
         if (indexFile.exists()) {
             try {
-                // Parse index file (implementation depends on serialization library)
-                Timber.d("Loaded index from disk")
+                val json = indexFile.readText()
+                val entries = com.google.gson.Gson().fromJson(json, Array<CacheEntry>::class.java)
+                entries.forEach { entry ->
+                    indexCache[entry.id] = entry
+                    priorityQueue.offer(entry)
+                }
+                Timber.d("Loaded index from disk: ${entries.size} entries")
             } catch (e: Exception) {
-                Timber.e(e, "Failed to load index")
+                Timber.e(e, "Failed to load index, starting fresh")
+                indexCache.clear()
+                priorityQueue.clear()
             }
         }
     }
@@ -269,15 +290,14 @@ class UltraVodCache @Inject constructor(
     }
 
     fun shutdown() {
-        // Save index to disk
         val indexFile = File(cacheDir, "index.json")
         try {
-            // Serialize indexCache to indexFile
+            val json = com.google.gson.Gson().toJson(indexCache.values.toList())
+            indexFile.writeText(json)
             Timber.d("Saved index to disk")
         } catch (e: Exception) {
             Timber.e(e, "Failed to save index")
         }
-        clear()
     }
 }
 

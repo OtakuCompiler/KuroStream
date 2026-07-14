@@ -17,7 +17,6 @@ package com.kurostream.data.repository
 
 import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.dao.SourceLockDao
-import com.kurostream.data.local.dao.SourceLockSettingsDao
 import com.kurostream.data.local.entity.SourceLockEntity
 import com.kurostream.data.local.entity.SourceLockSettingsEntity
 import com.kurostream.data.local.preferences.SettingsDataStore
@@ -38,7 +37,6 @@ import javax.inject.Singleton
 @Singleton
 class SourceLockRepositoryImpl @Inject constructor(
     private val sourceLockDao: SourceLockDao,
-    private val settingsDao: SourceLockSettingsDao,
     private val settingsDataStore: SettingsDataStore,
 ) : SourceLockRepository {
 
@@ -112,7 +110,7 @@ class SourceLockRepositoryImpl @Inject constructor(
     // Settings
     override suspend fun getSettings(): SourceLockSettings {
         return withContext(Dispatchers.IO) {
-            val entity = settingsDao.getSettings() ?: SourceLockSettingsEntity()
+            val entity = sourceLockDao.getSettings() ?: SourceLockSettingsEntity()
             _settings.value = entity.toDomain()
             entity.toDomain()
         }
@@ -128,7 +126,7 @@ class SourceLockRepositoryImpl @Inject constructor(
                 persistAcrossSessions = settings.persistAcrossSessions,
                 notifyOnFallback = settings.notifyOnFallback,
             )
-            settingsDao.insert(entity)
+            sourceLockDao.insertSettings(entity)
             _settings.value = settings
         }
     }

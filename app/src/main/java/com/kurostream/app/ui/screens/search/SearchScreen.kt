@@ -139,8 +139,7 @@ fun SearchScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
-                ) {
+                } else {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -336,48 +335,3 @@ data class SearchResultItem(
     val episodes: Int?
 )
 
-@HiltViewModel
-class SearchViewModel @Inject constructor(
-    private val mediaRepository: com.kurostream.app.repository.MediaRepository
-) : androidx.lifecycle.ViewModel() {
-
-    private val _query = MutableStateFlow("")
-    val query: StateFlow<String> = _query.asStateFlow()
-
-    private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
-    val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
-
-    fun setQuery(query: String) {
-        _query.value = query
-    }
-
-    fun search() {
-        val currentQuery = _query.value.trim()
-        if (currentQuery.isBlank()) return
-
-        _uiState.value = SearchUiState.Loading
-
-        viewModelScope.launch {
-            val result = mediaRepository.searchRemote(currentQuery, 1, 20)
-            result.fold(
-                onSuccess = { mediaItems ->
-                    val searchResults = mediaItems.map { item ->
-                        SearchResultItem(
-                            id = item.id,
-                            title = item.title,
-                            year = item.releaseDate?.let { java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).year } ?: 0,
-                            type = item.category.name,
-                            posterUrl = item.posterUrl ?: "",
-                            score = item.rating ?: 0.0,
-                            episodes = null
-                        )
-                    }
-                    _uiState.value = SearchUiState.Success(searchResults, currentQuery)
-                },
-                onFailure = { error ->
-                    _uiState.value = SearchUiState.Error(error.message ?: "Search failed")
-                }
-            )
-        }
-    }
-}

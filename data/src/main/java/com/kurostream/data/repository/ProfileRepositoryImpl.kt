@@ -74,20 +74,16 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override suspend fun switchProfile(profileId: String): Result<Profile> {
         val target = profileDao.getById(profileId) ?: return Result.failure(IllegalArgumentException("Not found"))
-        profileDao.clearActive()
-        profileDao.setActive(profileId)
+        profileDao.switchActiveProfile(profileId)
         return Result.success(target.copy(isActive = true).toDomain())
     }
 
     override suspend fun deleteProfile(profileId: String): Result<Unit> {
         val profile = profileDao.getById(profileId) ?: return Result.failure(IllegalArgumentException("Not found"))
         if (profileDao.count() <= 1) return Result.failure(IllegalStateException("Cannot delete last profile"))
-        profileDao.delete(profile)
-        if (profile.isActive) {
-            val remaining = profileDao.observeAll().first()
-            if (remaining.isNotEmpty()) {
-                profileDao.update(remaining.first().copy(isActive = true))
-            }
+        val remaining = profileDao.deleteAndGetRemaining(profile)
+        if (profile.isActive && remaining.isNotEmpty()) {
+            profileDao.update(remaining.first().copy(isActive = true))
         }
         return Result.success(Unit)
     }

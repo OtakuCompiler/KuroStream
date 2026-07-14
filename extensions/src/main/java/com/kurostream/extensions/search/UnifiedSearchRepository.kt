@@ -45,7 +45,7 @@ class UnifiedSearchRepository @Inject constructor(
 
             if (SearchSource.KITSU in includeSources) {
                 jobs.add(async {
-                    kitsuRepository.searchAnime(query).first().fold(
+                    kitsuRepository.searchAnime(query).fold(
                         onSuccess = { SearchSection("Kitsu", "kitsu", it) },
                         onFailure = { null }
                     )
@@ -88,29 +88,32 @@ class UnifiedSearchRepository @Inject constructor(
         emit(SearchResult.Complete(results.toList()))
     }
 
-    private suspend fun searchStremioAddons(query: String): List<CatalogItem> {
-        val allItems = mutableListOf<CatalogItem>()
+    private suspend fun searchStremioAddons(query: String): List<CatalogItem> = coroutineScope {
         val enabledAddons = stremioAddonManager.getEnabledAddons()
 
-        for (addon in enabledAddons) {
-            try {
-                stremioRepository.fetchCatalog(addon.url, "movie", "top", "search=$query")
-                    .first()
-                    .onSuccess { allItems.addAll(it) }
-            } catch (_: Exception) {}
-            try {
-                stremioRepository.fetchCatalog(addon.url, "series", "top", "search=$query")
-                    .first()
-                    .onSuccess { allItems.addAll(it) }
-            } catch (_: Exception) {}
-        }
-        return allItems
+        enabledAddons.flatMap { addon ->
+            listOf(
+                async {
+                    try {
+                        stremioRepository.fetchCatalog(addon.url, "movie", "top", "search=$query")
+                            .first()
+                            .getOrDefault(emptyList())
+                    } catch (_: Exception) { emptyList() }
+                },
+                async {
+                    try {
+                        stremioRepository.fetchCatalog(addon.url, "series", "top", "search=$query")
+                            .first()
+                            .getOrDefault(emptyList())
+                    } catch (_: Exception) { emptyList() }
+                }
+            )
+        }.awaitAll().flatten()
     }
 
     fun quickSearch(query: String): Flow<List<CatalogItem>> = flow {
-        kitsuRepository.searchAnime(query, limit = 5).collect { result ->
-            result.onSuccess { emit(it) }
-        }
+        val result = kitsuRepository.searchAnime(query, limit = 5)
+        result.onSuccess { emit(it) }
     }
 }
 

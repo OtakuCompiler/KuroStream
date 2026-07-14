@@ -71,10 +71,7 @@ import androidx.tv.material3.IconButton
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Slider
 import androidx.tv.material3.Text
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @UnstableApi
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -87,18 +84,14 @@ fun PlayerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val player = viewModel.player
     var controlsVisible by remember { mutableStateOf(true) }
-    var hideControlsJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(controlsVisible, uiState.isPlaying) {
-        hideControlsJob?.cancel()
         if (controlsVisible && uiState.isPlaying) {
-            hideControlsJob = CoroutineScope(Dispatchers.Main).launch {
-                delay(3000)
-                controlsVisible = false
-            }
+            delay(3000)
+            controlsVisible = false
         }
     }
 

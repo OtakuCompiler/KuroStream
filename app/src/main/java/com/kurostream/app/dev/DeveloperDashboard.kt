@@ -1,6 +1,5 @@
 package com.kurostream.app.dev
 
-import android.os.Debug
 import com.kurostream.common.memory.AdaptiveMemoryGovernor
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -30,7 +29,6 @@ class DeveloperDashboard @Inject constructor(
     private var frameTimes = mutableListOf<Long>()
     private var jankCount = 0
     private var frameCount = 0
-    private var lastGcCount = 0L
 
     fun recordFrameTime(frameTimeNs: Long) {
         frameTimes.add(frameTimeNs)
@@ -49,8 +47,7 @@ class DeveloperDashboard @Inject constructor(
         val heapFree = runtime.freeMemory() / (1024 * 1024)
         val heapAllocated = heapTotal - heapFree
         val jankPercent = if (frameCount > 0) (jankCount.toFloat() / frameCount) * 100 else 0f
-        val gcCount = Debug.getGlobalMethodByteCount() - lastGcCount
-        lastGcCount = Debug.getGlobalMethodByteCount()
+        val gcCount = 0L
 
         return Metrics(
             fps = avgFps,

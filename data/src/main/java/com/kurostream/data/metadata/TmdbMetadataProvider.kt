@@ -19,8 +19,6 @@ import com.kurostream.data.remote.dto.tmdb.TmdbDtos
 import com.kurostream.data.remote.api.TmdbApi
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import timber.log.Timber
@@ -38,9 +36,9 @@ class TmdbMetadataProvider @Inject constructor(
 
     private val cacheTtlMs = 24 * 60 * 60 * 1000L
 
-    override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> = withContext(Dispatchers.IO) {
+    override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> {
         val cacheKey = "tmdb_anime_$id"
-        cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getTvDetails(id)
                 response.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
@@ -51,9 +49,9 @@ class TmdbMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
+    override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> {
         val cacheKey = "tmdb_search_${query}_$page"
-        cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
+        return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
             try {
                 val response = api.searchTv(query, page)
                 response.data?.results?.map { mapToDomain(it) } ?: emptyList()
@@ -64,14 +62,14 @@ class TmdbMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> = withContext(Dispatchers.IO) {
+    override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> {
         val cacheKey = "tmdb_external_${type.name}_$value"
-        cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val source = when (type) {
                     ExternalIdType.IMDB_ID -> "imdb_id"
                     ExternalIdType.TVDB_ID -> "tvdb_id"
-                    else -> return@withContext MetadataResult.NotFound
+                    else -> return@getAnimeByExternalId MetadataResult.NotFound
                 }
                 val response = api.findByExternalId(source, value)
                 response.data?.tvResults?.firstOrNull()?.let { mapToDomain(it) } ?: MetadataResult.NotFound
@@ -82,9 +80,9 @@ class TmdbMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
+    override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> {
         val cacheKey = "tmdb_seasonal_${year}_${season.name}"
-        cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getDiscoverTv(page = 1, withKeywords = "anime", firstAirDateYear = year, airDateGte = "${year}-${seasonStartMonth(season)}-01", airDateLte = "${year}-${seasonEndMonth(season)}-31")
                 response.data?.results?.map { mapToDomain(it) } ?: emptyList()
@@ -95,9 +93,9 @@ class TmdbMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
+    override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> {
         val cacheKey = "tmdb_trending_$limit"
-        cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) {
+        return cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) {
             try {
                 val response = api.getTrendingTv("week")
                 response.data?.results?.take(limit)?.map { mapToDomain(it) } ?: emptyList()

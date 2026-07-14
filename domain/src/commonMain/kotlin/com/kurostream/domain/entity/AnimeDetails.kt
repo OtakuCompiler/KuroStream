@@ -15,6 +15,8 @@
 
 package com.kurostream.domain.entity
 
+import com.kurostream.domain.metadata.AnimeThemes
+import com.kurostream.domain.metadata.AnimeStatistics
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -52,14 +54,4 @@ data class Character(val id: String, val name: String, val role: String, val ima
 data class Staff(val id: String, val name: String, val role: String, val imageUrl: String? = null)
 
 @Serializable
-data class AnimeThemes(val openingThemes: List<String> = emptyList(), val endingThemes: List<String> = emptyList())
-
-@Serializable
 data class ExternalLink(val siteName: String, val url: String)
-
-@Serializable
-data class AnimeStatistics(
-    val scoreDistribution: Map<Int, Int> = emptyMap(),
-    val statusDistribution: Map<String, Int> = emptyMap(),
-    val totalMembers: Int = 0, val totalFavorites: Int = 0
-)

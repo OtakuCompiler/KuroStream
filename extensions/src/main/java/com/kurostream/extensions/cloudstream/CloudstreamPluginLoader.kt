@@ -40,6 +40,11 @@ class CloudstreamPluginLoader @Inject constructor(
     }
 
     private val loadedPlugins = mutableMapOf<String, LoadedPlugin>()
+    private val httpClient = okhttp3.OkHttpClient.Builder()
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .followRedirects(true)
+        .build()
 
     suspend fun loadPluginFromApk(apkFile: File): Result<CloudstreamManifest> = withContext(Dispatchers.IO) {
         try {
@@ -70,13 +75,13 @@ class CloudstreamPluginLoader @Inject constructor(
     }
 
     suspend fun loadPluginFromUrl(url: String): Result<CloudstreamManifest> = withContext(Dispatchers.IO) {
+        val tempFile = File(pluginDir, "temp_${System.currentTimeMillis()}.apk")
         try {
-            val tempFile = File(pluginDir, "temp_${System.currentTimeMillis()}.apk")
-            val client = okhttp3.OkHttpClient()
             val request = okhttp3.Request.Builder().url(url).build()
-            val response = client.newCall(request).execute()
+            val response = httpClient.newCall(request).execute()
 
             if (!response.isSuccessful) {
+                tempFile.delete()
                 return@withContext Result.failure(Exception("Download failed: ${response.code}"))
             }
 
@@ -86,8 +91,11 @@ class CloudstreamPluginLoader @Inject constructor(
                 }
             }
 
-            loadPluginFromApk(tempFile)
+            val result = loadPluginFromApk(tempFile)
+            tempFile.delete()
+            result
         } catch (e: Exception) {
+            tempFile.delete()
             Result.failure(e)
         }
     }

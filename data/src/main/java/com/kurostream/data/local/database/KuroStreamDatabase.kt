@@ -24,6 +24,7 @@ import com.kurostream.data.local.entity.*
 @Database(
     entities = [
         MediaItemEntity::class,
+        MediaItemFts::class,
         ProfileEntity::class,
         WatchHistoryEntity::class,
         FavoriteEntity::class,

@@ -44,9 +44,9 @@ class CacheNamespaceManager @Inject constructor(
         }
     }
 
-    suspend fun clearAll() {
+    suspend fun clearAll() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         synchronized(lock) {
-            managers.values.forEach { kotlinx.coroutines.runBlocking { it.clear() } }
+            managers.values.forEach { it.clear() }
         }
     }
 

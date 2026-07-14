@@ -15,8 +15,6 @@
 
 package com.kurostream.extensions.torrserver
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,13 +23,11 @@ class TorrServerRepository @Inject constructor(
     private val api: TorrServerApi,
     private val config: TorrServerConfig
 ) {
-    fun isServerReachable(): Flow<Result<Boolean>> = flow {
-        try {
-            val response = api.echo()
-            emit(Result.success(response.isSuccessful))
-        } catch (e: Exception) {
-            emit(Result.failure(e))
-        }
+    suspend fun isServerReachable(): Result<Boolean> = try {
+        val response = api.echo()
+        Result.success(response.isSuccessful)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
     suspend fun updateSettings(): Result<Map<String, Any>> = try {
@@ -45,17 +41,15 @@ class TorrServerRepository @Inject constructor(
         Result.failure(e)
     }
 
-    fun listTorrents(): Flow<Result<List<TorrServerTorrent>>> = flow {
-        try {
-            val response = api.listTorrents()
-            if (response.isSuccessful) {
-                emit(Result.success(response.body() ?: emptyList()))
-            } else {
-                emit(Result.failure(Exception("Failed to list torrents: ${response.code()}")))
-            }
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+    suspend fun listTorrents(): Result<List<TorrServerTorrent>> = try {
+        val response = api.listTorrents()
+        if (response.isSuccessful) {
+            Result.success(response.body() ?: emptyList())
+        } else {
+            Result.failure(Exception("Failed to list torrents: ${response.code()}"))
         }
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
     suspend fun addTorrent(magnetLink: String, title: String? = null): Result<TorrServerTorrent> = try {
@@ -103,17 +97,15 @@ class TorrServerRepository @Inject constructor(
         Result.failure(e)
     }
 
-    fun getTorrentStat(hash: String): Flow<Result<TorrentStat>> = flow {
-        try {
-            val response = api.getTorrentStat(hash)
-            if (response.isSuccessful && response.body() != null) {
-                emit(Result.success(response.body()!!))
-            } else {
-                emit(Result.failure(Exception("Failed to get stat: ${response.code()}")))
-            }
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+    suspend fun getTorrentStat(hash: String): Result<TorrentStat> = try {
+        val response = api.getTorrentStat(hash)
+        if (response.isSuccessful && response.body() != null) {
+            Result.success(response.body()!!)
+        } else {
+            Result.failure(Exception("Failed to get stat: ${response.code()}"))
         }
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
     fun buildStreamUrl(hash: String, fileIndex: Int): String {

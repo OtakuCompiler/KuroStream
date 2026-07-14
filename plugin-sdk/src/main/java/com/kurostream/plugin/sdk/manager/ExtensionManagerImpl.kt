@@ -1,18 +1,3 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.plugin.sdk.manager
 
 import com.kurostream.core.common.result.Result
@@ -29,8 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,23 +24,29 @@ class ExtensionManagerImpl @Inject constructor(
     private val extensionConfig: ExtensionConfig
 ) : ExtensionManager {
 
-    private val mutex = Mutex()
+    private val lock = Any()
     private val extensions = mutableMapOf<String, ExtensionEntry>()
     private val _allExtensions = MutableStateFlow<List<ExtensionInfo>>(emptyList())
 
     init {
         val demo = MockAnimeCatalog()
         val sandbox = ExtensionSandbox(demo, SandboxPolicy())
-        extensions[demo.extensionId] = ExtensionEntry(demo.info.copy(isInstalled = true, isEnabled = true), sandbox)
+        synchronized(lock) {
+            extensions[demo.extensionId] = ExtensionEntry(demo.info.copy(isInstalled = true, isEnabled = true), sandbox)
+        }
         emitState()
     }
 
     override fun observeAllExtensions(): StateFlow<List<ExtensionInfo>> = _allExtensions.asStateFlow()
     override fun observeEnabledExtensions() = _allExtensions.map { it.filter { e -> e.isEnabled } }
-    override fun getExtensionApi(extensionId: String): ExtensionApi? = extensions[extensionId]?.takeIf { it.info.isEnabled }?.sandbox
-    override fun getEnabledApis(): List<ExtensionApi> = extensions.values.filter { it.info.isEnabled }.map { it.sandbox }
+    override fun getExtensionApi(extensionId: String): ExtensionApi? = synchronized(lock) {
+        extensions[extensionId]?.takeIf { it.info.isEnabled }?.sandbox
+    }
+    override fun getEnabledApis(): List<ExtensionApi> = synchronized(lock) {
+        extensions.values.filter { it.info.isEnabled }.map { it.sandbox }
+    }
 
-    override suspend fun install(path: String): Result<ExtensionInfo> = mutex.withLock {
+    override suspend fun install(path: String): Result<ExtensionInfo> = synchronized(lock) {
         runCatching {
             val info = ExtensionInfo(
                 id = "stub_${System.currentTimeMillis()}", name = "Stub Extension", author = "Unknown",
@@ -71,11 +61,11 @@ class ExtensionManagerImpl @Inject constructor(
         }.getOrElse { Result.Error(it) }
     }
 
-    override suspend fun uninstall(extensionId: String): Result<Unit> = mutex.withLock {
+    override suspend fun uninstall(extensionId: String): Result<Unit> = synchronized(lock) {
         runCatching { extensions.remove(extensionId)?.sandbox?.onDestroy(); emitState(); Result.Success(Unit) }.getOrElse { Result.Error(it) }
     }
 
-    override suspend fun enable(extensionId: String): Result<Unit> = mutex.withLock {
+    override suspend fun enable(extensionId: String): Result<Unit> = synchronized(lock) {
         runCatching {
             val entry = extensions[extensionId] ?: throw IllegalArgumentException("Extension not found: $extensionId")
             entry.sandbox.onEnable()
@@ -84,7 +74,7 @@ class ExtensionManagerImpl @Inject constructor(
         }.getOrElse { Result.Error(it) }
     }
 
-    override suspend fun disable(extensionId: String): Result<Unit> = mutex.withLock {
+    override suspend fun disable(extensionId: String): Result<Unit> = synchronized(lock) {
         runCatching {
             val entry = extensions[extensionId] ?: throw IllegalArgumentException("Extension not found: $extensionId")
             entry.sandbox.onDisable()
@@ -93,11 +83,11 @@ class ExtensionManagerImpl @Inject constructor(
         }.getOrElse { Result.Error(it) }
     }
 
-    override suspend fun refresh(): Result<Unit> = mutex.withLock {
+    override suspend fun refresh(): Result<Unit> = synchronized(lock) {
         runCatching { emitState(); Result.Success(Unit) }.getOrElse { Result.Error(it) }
     }
 
-    private fun emitState() { _allExtensions.value = extensions.values.map { it.info } }
+    private fun emitState() { _allExtensions.value = synchronized(lock) { extensions.values.map { it.info } } }
     private data class ExtensionEntry(val info: ExtensionInfo, val sandbox: ExtensionSandbox)
 
     private class StubExtensionApi(override val info: ExtensionInfo) : ExtensionApi {

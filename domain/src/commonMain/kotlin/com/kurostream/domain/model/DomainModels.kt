@@ -18,14 +18,6 @@ import com.kurostream.core.platform.platformCurrentTimeMillis
 
 enum class MediaCategory { ANIME, MOVIE, TV_SHOW, DOCUMENTARY, KIDS, GENERAL }
 
-data class MediaItem(
-    val id: String, val sourceId: String, val sourceType: String, val title: String,
-    val description: String? = null, val posterUrl: String? = null, val bannerUrl: String? = null,
-    val category: MediaCategory = MediaCategory.GENERAL, val releaseDate: Long? = null,
-    val rating: Double? = null, val duration: Long? = null, val streamUrl: String? = null,
-    val metadata: String? = null
-)
-
 data class WatchHistory(
     val id: String, val mediaItemId: String, val profileId: String,
     val position: Long = 0L, val duration: Long = 0L,

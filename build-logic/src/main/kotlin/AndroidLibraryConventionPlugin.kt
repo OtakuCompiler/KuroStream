@@ -18,7 +18,9 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.gradle.kotlin.dsl.libs
+import org.gradle.kotlin.dsl.provider
+import org.gradle.kotlin.dsl.providers
 
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -27,10 +29,10 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             pluginManager.apply("org.jetbrains.kotlin.android")
 
             extensions.configure<LibraryExtension> {
-                compileSdk = 35
+                compileSdk = providers.provider { libs.versions.compileSdk.get().toInt() }
 
                 defaultConfig {
-                    minSdk = 24
+                    minSdk = providers.provider { libs.versions.minSdk.get().toInt() }
                     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                     consumerProguardFiles("consumer-rules.pro")
                 }
@@ -56,11 +58,11 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             }
 
             dependencies {
-                add("implementation", "androidx.core:core-ktx:1.13.1")
-                add("implementation", "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
-                add("testImplementation", "junit:junit:4.13.2")
-                add("androidTestImplementation", "androidx.test.ext:junit:1.2.1")
-                add("androidTestImplementation", "androidx.test.espresso:espresso-core:3.6.1")
+                add("implementation", libs.androidx.core.ktx)
+                add("implementation", libs.kotlinx.coroutines.android)
+                add("testImplementation", libs.junit)
+                add("androidTestImplementation", libs.androidx.junit)
+                add("androidTestImplementation", libs.androidx.espresso.core)
             }
         }
     }

@@ -22,7 +22,7 @@ plugins {
 
 kotlin {
     jvm()
-    android()
+    androidTarget()
     ios()
 
     sourceSets {

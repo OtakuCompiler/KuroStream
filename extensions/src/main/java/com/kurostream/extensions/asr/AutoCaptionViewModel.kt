@@ -46,14 +46,21 @@ class AutoCaptionViewModel @Inject constructor(
                     is AsrResult.Partial -> _partialText.value = result.text
                     is AsrResult.Final -> { _captionText.value += " ${result.text}"; _partialText.value = "" }
                     is AsrResult.Error -> {
-                        androidRecognizer.startListening().collect { speechResult ->
-                            when (speechResult) {
-                                is SpeechResult.Partial -> _partialText.value = speechResult.text
-                                is SpeechResult.Success -> { _captionText.value += " ${speechResult.text}"; _partialText.value = "" }
-                                is SpeechResult.Error -> {}
-                            }
-                        }
+                        launchFallbackRecognizer()
+                        return@collect
                     }
+                }
+            }
+        }
+    }
+
+    private fun launchFallbackRecognizer() {
+        viewModelScope.launch {
+            androidRecognizer.startListening().collect { speechResult ->
+                when (speechResult) {
+                    is SpeechResult.Partial -> _partialText.value = speechResult.text
+                    is SpeechResult.Success -> { _captionText.value += " ${speechResult.text}"; _partialText.value = "" }
+                    is SpeechResult.Error -> {}
                 }
             }
         }

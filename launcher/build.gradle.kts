@@ -91,13 +91,18 @@ dependencies {
     implementation(libs.play.services.auth)
 
     implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.gson)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
 
-    // Legacy ExoPlayer2 — see header note re: conflict with :playback's Media3 usage
-    // TODO: Migrate this module to Media3 (androidx.media3) to resolve classpath conflict
-    // implementation(libs.exoplayer2.legacy)
+    // Migrated to Media3 (androidx.media3) to resolve classpath conflict with :playback
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.exoplayer.dash)
+    implementation(libs.media3.exoplayer.hls)
+    implementation(libs.media3.ui)
+    implementation(libs.media3.session)
+    implementation(libs.media3.common)
 
     implementation(libs.tensorflow.lite)
 

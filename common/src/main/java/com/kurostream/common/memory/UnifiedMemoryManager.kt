@@ -3,6 +3,7 @@ import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Debug
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -63,7 +64,7 @@ class UnifiedMemoryManager @Inject constructor(
         _memoryState.value = MemoryState(
             totalPssMb = pss.toInt(),
             nativeHeapMb = nativeHeap,
-            dalvikHeapMb = nativeHeap,
+            dalvikHeapMb = Runtime.getRuntime().totalMemory() / (1024 * 1024),
             availableMemoryMb = availMem.toInt(),
             targetMemoryMb = targetMemory,
             isLowMemory = lowMemory,
@@ -153,24 +154,22 @@ class UnifiedMemoryManager @Inject constructor(
     private fun performGC(reason: String) {
         val before = android.os.Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
         
-        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Default) {
-            System.gc()
-            Runtime.getRuntime().gc()
-            
-            lastGCTime = System.currentTimeMillis()
-            gcCount++
-            
-            val after = android.os.Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
-            val saved = before - after
-            
-            Timber.d("GC ($reason): ${before}MB → ${after}MB (saved: ${saved}MB, count: $gcCount)")
-            
-            if (gcCount >= 5) {
-                Timber.w("GC limit reached (5), resetting counter")
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    gcCount = 0
-                }, 60000)
-            }
+        System.gc()
+        Runtime.getRuntime().gc()
+        
+        lastGCTime = System.currentTimeMillis()
+        gcCount++
+        
+        val after = android.os.Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
+        val saved = before - after
+        
+        Timber.d("GC ($reason): ${before}MB → ${after}MB (saved: ${saved}MB, count: $gcCount)")
+        
+        if (gcCount >= 5) {
+            Timber.w("GC limit reached (5), resetting counter")
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                gcCount = 0
+            }, 60000)
         }
     }
 
@@ -221,10 +220,19 @@ class UnifiedMemoryManager @Inject constructor(
     }
 
     fun clearAllCaches() {
-        context.cacheDir.deleteRecursively()
-        context.cacheDir.mkdirs()
-        context.externalCacheDir?.deleteRecursively()
-        context.externalCacheDir?.mkdirs()
+        val cacheSubdirs = listOf("kurostream_cache", "vod_compressed", "vod_ultra", "tiered_internal", "tiered_external")
+        cacheSubdirs.forEach { name ->
+            File(context.cacheDir, name).let { dir ->
+                if (dir.exists()) dir.deleteRecursively()
+            }
+        }
+        context.externalCacheDir?.let { extDir ->
+            cacheSubdirs.forEach { name ->
+                File(extDir, name).let { dir ->
+                    if (dir.exists()) dir.deleteRecursively()
+                }
+            }
+        }
         Timber.d("All caches cleared")
     }
 

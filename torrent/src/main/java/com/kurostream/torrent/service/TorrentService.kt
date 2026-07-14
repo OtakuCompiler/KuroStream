@@ -118,11 +118,14 @@ class TorrentService : LifecycleService() {
 
     private fun checkAutoStop(torrents: List<TorrentInfo>) {
         val hasActive = torrents.any { it.status in setOf(TorrentStatus.DOWNLOADING, TorrentStatus.DOWNLOADING_METADATA, TorrentStatus.CHECKING) }
-        val shouldRunInBackground = getSharedPreferences("torrent_settings", MODE_PRIVATE)
-            .getBoolean("seed_while_idle", true)
-
-        if (!hasActive && !shouldRunInBackground && !isSeedingOnly) {
-            stopSelf()
+        if (!hasActive && !isSeedingOnly) {
+            scope.launch(Dispatchers.IO) {
+                val shouldRunInBackground = getSharedPreferences("torrent_settings", MODE_PRIVATE)
+                    .getBoolean("seed_while_idle", true)
+                if (!shouldRunInBackground) {
+                    stopSelf()
+                }
+            }
         }
     }
 

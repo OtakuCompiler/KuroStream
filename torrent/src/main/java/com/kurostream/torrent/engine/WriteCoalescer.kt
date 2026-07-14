@@ -67,7 +67,6 @@ class WriteCoalescer @Inject constructor() {
         isRunning.set(false)
         flushJob?.cancel()
         flushJob = null
-        runBlocking { flushPendingWrites() }
         Log.i(TAG, "Write coalescer stopped. Stats: ${getStats()}")
     }
 

@@ -17,6 +17,9 @@ import com.android.build.gradle.AppExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.libs
+import org.gradle.kotlin.dsl.provider
+import org.gradle.kotlin.dsl.providers
 
 class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -25,11 +28,11 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             pluginManager.apply("org.jetbrains.kotlin.android")
 
             extensions.configure<AppExtension> {
-                compileSdk = 35
+                compileSdk = providers.provider { libs.versions.compileSdk.get().toInt() }
 
                 defaultConfig {
-                    minSdk = 24
-                    targetSdk = 35
+                    minSdk = providers.provider { libs.versions.minSdk.get().toInt() }
+                    targetSdk = providers.provider { libs.versions.compileSdk.get().toInt() }
                     versionCode = 100
                     versionName = "1.0.0"
                     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -84,7 +87,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 }
 
                 composeOptions {
-                    kotlinCompilerExtensionVersion = "1.5.4"
+                    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
                 }
 
                 packaging {

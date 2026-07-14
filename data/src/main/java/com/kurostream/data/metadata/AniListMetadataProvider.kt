@@ -19,8 +19,6 @@ import com.kurostream.data.remote.dto.anilist.AniListDtos
 import com.kurostream.data.remote.api.AniListApi
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -39,13 +37,13 @@ class AniListMetadataProvider @Inject constructor(
 
     private val cacheTtlMs = 24 * 60 * 60 * 1000L // 24 hours
 
-    override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> = withContext(Dispatchers.IO) {
+    override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> {
         val cacheKey = "anilist_anime_$id"
-        cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getAnime(id)
                 if (response.data?.media == null) {
-                    return@withContext MetadataResult.NotFound
+                    return@getAnime MetadataResult.NotFound
                 }
                 mapToDomain(response.data!!.media!!)
             } catch (e: Exception) {
@@ -55,9 +53,9 @@ class AniListMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
+    override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> {
         val cacheKey = "anilist_search_${query}_$page"
-        cache.getOrFetch(cacheKey, 60 * 60 * 1000L) { // 1 hour cache for searches
+        return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
             try {
                 val response = api.searchAnime(query, page, limit)
                 response.data?.page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()
@@ -68,15 +66,15 @@ class AniListMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> = withContext(Dispatchers.IO) {
+    override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> {
         val cacheKey = "anilist_external_${type.name}_$value"
-        cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val query = when (type) {
                     ExternalIdType.MAL_ID -> "idMal:$value"
                     ExternalIdType.ANILIST_ID -> "id:$value"
                     ExternalIdType.TMDB_ID -> "idTmdb:$value"
-                    else -> return@withContext MetadataResult.NotFound
+                    else -> return@getAnimeByExternalId MetadataResult.NotFound
                 }
                 val response = api.getAnimeByExternalId(query)
                 response.data?.media?.let { mapToDomain(it) } ?: MetadataResult.NotFound
@@ -87,9 +85,9 @@ class AniListMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
+    override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> {
         val cacheKey = "anilist_seasonal_${year}_${season.name}"
-        cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getSeasonalAnime(year, season.name.lowercase())
                 response.data?.page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()
@@ -100,9 +98,9 @@ class AniListMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> = withContext(Dispatchers.IO) {
+    override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> {
         val cacheKey = "anilist_trending_$limit"
-        cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) { // 6 hours
+        return cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) {
             try {
                 val response = api.getTrendingAnime(limit)
                 response.data?.page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()

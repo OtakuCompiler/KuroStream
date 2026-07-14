@@ -568,10 +568,13 @@ private fun CameraPreview(
     }
     
     if (cameraPermissionGranted) {
+        val previewView = remember { mutableStateOf<PreviewView?>(null) }
+        
         AndroidView(
             factory = {
                 PreviewView(context).apply {
                     scaleType = PreviewView.ScaleType.FILL_CENTER
+                    previewView.value = this
                 }
             },
             modifier = Modifier.fillMaxSize()
@@ -580,8 +583,10 @@ private fun CameraPreview(
         LaunchedEffect(context) {
             val cameraProvider = cameraProviderFuture.get()
             
+            val pv = previewView.value ?: return@LaunchedEffect
+            
             val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
+                it.setSurfaceProvider(pv.surfaceProvider)
             }
             
             val imageAnalyzer = ImageAnalysis.Builder()

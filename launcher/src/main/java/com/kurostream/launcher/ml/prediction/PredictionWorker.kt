@@ -22,6 +22,7 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 @HiltWorker
@@ -49,7 +50,7 @@ class PredictionWorker @AssistedInject constructor(
                 seriesId = seriesId,
                 currentEpisode = episode,
                 completionPercentage = completion
-            )
+            ).first()
 
             // Store prediction result for cache manager to use
             val outputData = androidx.work.Data.Builder()

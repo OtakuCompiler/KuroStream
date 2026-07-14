@@ -17,33 +17,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun SafeLaunchedEffect(
     key1: Any?,
     block: suspend CoroutineScope.() -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    val job = remember { Job() }
-    
     LaunchedEffect(key1) {
-        val childJob = scope.launch(job) {
-            try {
-                block()
-            } catch (e: Exception) {
-                Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
-            }
-        }
-        
-        DisposableEffect(key1) {
-            onDispose {
-                childJob.cancel()
-                job.cancel()
-            }
+        try {
+            block()
+        } catch (e: Exception) {
+            Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
         }
     }
 }
@@ -54,23 +39,11 @@ fun SafeLaunchedEffect(
     key2: Any?,
     block: suspend CoroutineScope.() -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    val job = remember { Job() }
-    
     LaunchedEffect(key1, key2) {
-        val childJob = scope.launch(job) {
-            try {
-                block()
-            } catch (e: Exception) {
-                Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
-            }
-        }
-        
-        DisposableEffect(key1, key2) {
-            onDispose {
-                childJob.cancel()
-                job.cancel()
-            }
+        try {
+            block()
+        } catch (e: Exception) {
+            Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
         }
     }
 }
@@ -82,23 +55,11 @@ fun SafeLaunchedEffect(
     key3: Any?,
     block: suspend CoroutineScope.() -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    val job = remember { Job() }
-    
     LaunchedEffect(key1, key2, key3) {
-        val childJob = scope.launch(job) {
-            try {
-                block()
-            } catch (e: Exception) {
-                Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
-            }
-        }
-        
-        DisposableEffect(key1, key2, key3) {
-            onDispose {
-                childJob.cancel()
-                job.cancel()
-            }
+        try {
+            block()
+        } catch (e: Exception) {
+            Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
         }
     }
 }

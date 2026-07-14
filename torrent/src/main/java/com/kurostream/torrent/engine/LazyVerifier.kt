@@ -116,7 +116,8 @@ class LazyVerifier @Inject constructor() {
         for (request in sorted.take(50)) {
             if (isAlreadyVerified(request.infoHash, request.pieceIndex)) continue
 
-            recordVerification(request.infoHash, request.pieceIndex, true)
+            // TODO: Implement actual SHA-1 hash verification against torrent metadata
+            recordVerification(request.infoHash, request.pieceIndex, false)
         }
     }
 
