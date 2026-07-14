@@ -81,10 +81,10 @@ class UseCaseProvider(
     val getActiveProfile = GetActiveProfileUseCase(profileRepository)
     val setActiveProfile = SetActiveProfileUseCase(profileRepository)
 
-    // Settings use cases
-    val getSetting = { <T>(key: String) -> GetSettingUseCase<T>(settingsRepository, key) }
-    val setSetting = { <T>(key: String) -> SetSettingUseCase<T>(settingsRepository, key) }
-    val boolSetting = { key: String, default: Boolean -> BoolSettingUseCase(settingsRepository, key, default) }
-    val intSetting = { key: String, default: Int -> IntSettingUseCase(settingsRepository, key, default) }
-    val stringSetting = { key: String, default: String -> StringSettingUseCase(settingsRepository, key, default) }
+    // Settings use cases - factory methods
+    fun <T> getSetting(key: String): GetSettingUseCase<T> = GetSettingUseCase(settingsRepository, key)
+    fun <T> setSetting(key: String): SetSettingUseCase<T> = SetSettingUseCase(settingsRepository, key)
+    fun boolSetting(key: String, default: Boolean = false): BoolSettingUseCase = BoolSettingUseCase(settingsRepository, key, default)
+    fun intSetting(key: String, default: Int = 0): IntSettingUseCase = IntSettingUseCase(settingsRepository, key, default)
+    fun stringSetting(key: String, default: String = ""): StringSettingUseCase = StringSettingUseCase(settingsRepository, key, default)
 }
