@@ -23,7 +23,9 @@ sealed class Result<out T> {
     }
 
     data class Success<out T>(val data: T) : Result<T>()
+
     data class Error(val exception: Throwable) : Result<Nothing>()
+
     object Loading : Result<Nothing>()
 
     val isSuccess: Boolean get() = this is Success
@@ -77,7 +79,9 @@ sealed class Result<out T> {
 
 sealed class Resource<out T> {
     data class Loading<out T>(val data: T? = null) : Resource<T>()
+
     data class Success<out T>(val data: T) : Resource<T>()
+
     data class Error<out T>(val exception: Throwable, val data: T? = null) : Resource<T>()
 
     companion object {
@@ -92,13 +96,13 @@ sealed class Resource<out T> {
         }
     }
 
-    override val data: T? get() = when (this) {
+    val data: T? get() = when (this) {
         is Success -> data
         is Loading -> data
         is Error -> data
     }
 
-    override val exception: Throwable? get() = when (this) {
+    val exception: Throwable? get() = when (this) {
         is Error -> exception
         else -> null
     }

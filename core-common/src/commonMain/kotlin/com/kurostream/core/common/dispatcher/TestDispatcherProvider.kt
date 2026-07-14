@@ -22,13 +22,13 @@ import kotlinx.coroutines.Dispatchers
  * Shared test [DispatcherProvider] implementation that uses [Dispatchers.Unconfined] for all
  * dispatchers. Keeps unit tests fast and deterministic without requiring Android resources.
  */
-object TestDispatcherProvider : DispatcherProvider {
-    override val main: CoroutineDispatcher = Dispatchers.Unconfined
-    override val io: CoroutineDispatcher = Dispatchers.Unconfined
-    override val default: CoroutineDispatcher = Dispatchers.Unconfined
-    override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
-    override val computational: CoroutineDispatcher = Dispatchers.Unconfined
-    override val diskIO: CoroutineDispatcher = Dispatchers.Unconfined
-    override val networkIO: CoroutineDispatcher = Dispatchers.Unconfined
-    override val animation: CoroutineDispatcher = Dispatchers.Unconfined
+actual class TestDispatcherProvider : DispatcherProvider {
+    actual override val main: CoroutineDispatcher = Dispatchers.Unconfined
+    actual override val io: CoroutineDispatcher = Dispatchers.Unconfined
+    actual override val default: CoroutineDispatcher = Dispatchers.Unconfined
+    actual override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
+    actual override val computational: CoroutineDispatcher = Dispatchers.Unconfined
+    actual override val diskIO: CoroutineDispatcher = Dispatchers.Unconfined
+    actual override val networkIO: CoroutineDispatcher = Dispatchers.Unconfined
+    actual override val animation: CoroutineDispatcher = Dispatchers.Unconfined
 }
