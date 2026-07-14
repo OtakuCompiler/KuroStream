@@ -189,7 +189,9 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.moshi)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
 
     implementation(libs.appauth)
     implementation(libs.play.services.auth)

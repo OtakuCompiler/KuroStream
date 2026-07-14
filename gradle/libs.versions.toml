@@ -7,7 +7,7 @@ ksp = "2.0.21-1.0.26"
 coreKtx = "1.15.0"
 appcompat = "1.7.0"
 activityCompose = "1.9.3"
-composeBom = "2024.12.00"
+composeBom = "2024.10.00"
 composeCompiler = "1.6.1"
 tvFoundation = "1.0.0-alpha11"
 tvMaterial3 = "1.0.0-alpha04"
@@ -37,8 +37,8 @@ media3 = "1.6.0"
 libvlc = "3.6.0-eap14"
 mpvAndroid = "2024.06-release"
 firebaseBom = "33.6.0"
-ktor = "3.0.3"
-appauth = "0.12.0"
+ktor = "3.0.0"
+appauth = "0.11.0"
 moshi = "1.15.1"
 vosk = "0.3.70"
 webrtc = "1.0.0"
@@ -166,7 +166,6 @@ ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref =
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-gson = { group = "io.ktor", name = "ktor-serialization-gson", version.ref = "ktor" }
-ktor-serialization-moshi = { group = "io.ktor", name = "ktor-serialization-moshi", version.ref = "ktor" }
 appauth = { group = "net.openid", name = "appauth", version.ref = "appauth" }
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
