@@ -1,6 +1,9 @@
 package com.kurostream.core.platform
 
-import javax.inject.Provider
+// Cross-platform Provider interface
+interface Provider<T> {
+    fun get(): T
+}
 
 interface LoggerComponent {
     val loggerProvider: Provider<PlatformLogger>

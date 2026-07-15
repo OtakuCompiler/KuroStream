@@ -15,70 +15,81 @@
 
 package com.kurostream.core.platform
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
     private var minLevel = LogLevel.DEBUG
     private val enabledTags = mutableSetOf<String>()
-    
-    fun verbose(tag: String, message: String, throwable: Throwable?) {
+
+    override fun verbose(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.VERBOSE.priority && isTagEnabled(tag)) {
             consoleLog("verbose", tag, message, throwable)
         }
     }
-    
-    fun debug(tag: String, message: String, throwable: Throwable?) {
+
+    override fun debug(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.DEBUG.priority && isTagEnabled(tag)) {
             consoleLog("debug", tag, message, throwable)
         }
     }
-    
-    fun info(tag: String, message: String, throwable: Throwable?) {
+
+    override fun info(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.INFO.priority && isTagEnabled(tag)) {
             consoleLog("info", tag, message, throwable)
         }
     }
-    
-    fun warn(tag: String, message: String, throwable: Throwable?) {
+
+    override fun warn(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.WARN.priority && isTagEnabled(tag)) {
             consoleWarn(tag, message, throwable)
         }
     }
-    
-    fun error(tag: String, message: String, throwable: Throwable?) {
+
+    override fun error(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.ERROR.priority && isTagEnabled(tag)) {
             consoleError(tag, message, throwable)
         }
     }
-    
-    fun fatal(tag: String, message: String, throwable: Throwable?) {
+
+    override fun fatal(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.FATAL.priority && isTagEnabled(tag)) {
             consoleError(tag, message, throwable)
-            window.location.reload()
+            reloadPage()
         }
     }
-    
-    fun setMinLevel(level: LogLevel) {
+
+    override fun setMinLevel(level: LogLevel) {
         minLevel = level
     }
-    
-    fun enableTag(tag: String) {
+
+    override fun enableTag(tag: String) {
         enabledTags.add(tag)
     }
-    
-    fun disableTag(tag: String) {
+
+    override fun disableTag(tag: String) {
         enabledTags.remove(tag)
     }
-    
+
     private fun isTagEnabled(tag: String): Boolean = enabledTags.isEmpty() || enabledTags.contains(tag)
-    
-    private external fun consoleLog(level: String, tag: String, message: String, throwable: Throwable?)
-    private external fun consoleWarn(tag: String, message: String, throwable: Throwable?)
-    private external fun consoleError(tag: String, message: String, throwable: Throwable?)
-    
+
+    @Suppress("UNUSED_PARAMETER")
+    private external fun consoleLog(level: String, tag: String, message: String, throwable: Throwable?): Unit
+
+    @Suppress("UNUSED_PARAMETER")
+    private external fun consoleWarn(tag: String, message: String, throwable: Throwable?): Unit
+
+    @Suppress("UNUSED_PARAMETER")
+    private external fun consoleError(tag: String, message: String, throwable: Throwable?): Unit
+
+    private external fun reloadPage(): Unit
+
     companion object {
         init {
             load()
         }
     }
-}
 
-external fun load(): Unit
+    external fun load(): Unit
+}
