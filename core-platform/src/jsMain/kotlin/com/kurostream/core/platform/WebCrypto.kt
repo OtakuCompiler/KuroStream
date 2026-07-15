@@ -23,7 +23,7 @@ class WebCrypto : PlatformCrypto {
 
     override suspend fun encrypt(data: ByteArray, key: String): ByteArray {
         val keyData = keys[key]?.encodeToByteArray() ?: throw IllegalArgumentException("Key not found")
-        return xorCrypt(data, keyData)
+        return xorCrypt(data, keyData.toByteArray())
     }
 
     override suspend fun decrypt(data: ByteArray, key: String): ByteArray {
@@ -47,7 +47,7 @@ class WebCrypto : PlatformCrypto {
 
     override suspend fun encryptString(text: String, key: String): String {
         val encrypted = encrypt(text.encodeToByteArray(), key)
-        return encrypted.joinToString("") { "%02x".format(it) }
+        return encrypted.joinToString("") { toHex(it) }
     }
 
     override suspend fun decryptString(encrypted: String, key: String): String {
@@ -85,5 +85,12 @@ class WebCrypto : PlatformCrypto {
             HashAlgorithm.SHA_256 -> hash.toString(16).padStart(64, '0')
             HashAlgorithm.SHA_512 -> hash.toString(16).padStart(128, '0')
         }
+    }
+    
+    private fun toHex(byte: Byte): String {
+        val hexChars = "0123456789abcdef"
+        val high = (byte.toInt() and 0xFF) ushr 4
+        val low = byte.toInt() and 0xF
+        return hexChars[high].toString() + hexChars[low].toString()
     }
 }
