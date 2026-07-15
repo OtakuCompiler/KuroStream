@@ -17,49 +17,49 @@ package com.kurostream.core.platform
 
 import java.util.logging.Level
 
-actual class JvmLogger(private val tag: String = "KuroStream") : PlatformLogger {
+class JvmLogger(private val tag: String = "KuroStream") : PlatformLogger {
     private var minLevel = LogLevel.DEBUG
     private val enabledTags = mutableSetOf<String>()
     private val logger = java.util.logging.Logger.getLogger(tag)
     
-    actual fun verbose(tag: String, message: String, throwable: Throwable?) {
+    override fun verbose(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.VERBOSE.priority && isTagEnabled(tag)) {
             logger.log(Level.FINE, message, throwable)
         }
     }
     
-    actual fun debug(tag: String, message: String, throwable: Throwable?) {
+    override fun debug(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.DEBUG.priority && isTagEnabled(tag)) {
             logger.log(Level.FINER, message, throwable)
         }
     }
     
-    actual fun info(tag: String, message: String, throwable: Throwable?) {
+    override fun info(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.INFO.priority && isTagEnabled(tag)) {
             logger.log(Level.INFO, message, throwable)
         }
     }
     
-    actual fun warn(tag: String, message: String, throwable: Throwable?) {
+    override fun warn(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.WARN.priority && isTagEnabled(tag)) {
             logger.log(Level.WARNING, message, throwable)
         }
     }
     
-    actual fun error(tag: String, message: String, throwable: Throwable?) {
+    override fun error(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.ERROR.priority && isTagEnabled(tag)) {
             logger.log(Level.SEVERE, message, throwable)
         }
     }
     
-    actual fun fatal(tag: String, message: String, throwable: Throwable?) {
+    override fun fatal(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.FATAL.priority && isTagEnabled(tag)) {
             logger.log(Level.SEVERE, message, throwable)
             System.exit(1)
         }
     }
     
-    actual fun setMinLevel(level: LogLevel) {
+    override fun setMinLevel(level: LogLevel) {
         minLevel = level
         val javaLevel = when (level) {
             LogLevel.VERBOSE -> Level.FINEST
@@ -73,11 +73,11 @@ actual class JvmLogger(private val tag: String = "KuroStream") : PlatformLogger 
         logger.level = javaLevel
     }
     
-    actual fun enableTag(tag: String) {
+    override fun enableTag(tag: String) {
         enabledTags.add(tag)
     }
     
-    actual fun disableTag(tag: String) {
+    override fun disableTag(tag: String) {
         enabledTags.remove(tag)
     }
     

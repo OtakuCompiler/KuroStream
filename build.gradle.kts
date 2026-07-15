@@ -26,13 +26,6 @@ buildscript {
 
 apply(plugin = "org.owasp.dependencycheck")
 
-// Fix for Java 25 compatibility
-val javaVersion = System.getProperty("java.version")
-if (javaVersion.startsWith("25.")) {
-    System.setProperty("java.version", "17.0.0")
-    println("Fixed Java version from $javaVersion to 17.0.0 for compatibility")
-}
-
 val excludedDetektModules = setOf("tizenApp", "webosApp")
 
 subprojects {

@@ -17,7 +17,7 @@ package com.kurostream.core.common.dispatcher
 
 import kotlinx.coroutines.CoroutineDispatcher
 
-expect open class DispatcherProvider {
+interface DispatcherProvider {
     val main: CoroutineDispatcher
     val io: CoroutineDispatcher
     val default: CoroutineDispatcher

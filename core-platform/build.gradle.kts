@@ -34,6 +34,7 @@ kotlin {
                 implementation(project(":core-common"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.javax.inject)
             }
         }
         val commonTest by getting {

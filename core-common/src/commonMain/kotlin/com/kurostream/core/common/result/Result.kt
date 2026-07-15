@@ -18,7 +18,7 @@ sealed class Result<out T> {
         }
 
         fun <T> flowAsResult(flow: Flow<T>): Flow<Result<T>> = flow
-            .map { data -> Success(data) }
+            .map { data -> Success(data) as Result<T> }
             .catch { emit(Error(it)) }
     }
 
@@ -68,8 +68,6 @@ sealed class Result<out T> {
         return this
     }
 
-    fun exceptionOrNull(): Throwable? = (this as? Error)?.exception
-
     fun toThrowable(): T? = when (this) {
         is Success -> data
         is Error -> throw exception
@@ -78,11 +76,26 @@ sealed class Result<out T> {
 }
 
 sealed class Resource<out T> {
-    data class Loading<out T>(val data: T? = null) : Resource<T>()
+    open val data: T? get() = when (this) {
+        is Success -> data
+        is Loading -> data
+        is Error -> data
+    }
 
-    data class Success<out T>(val data: T) : Resource<T>()
+    open val exception: Throwable? get() = when (this) {
+        is Error -> exception
+        else -> null
+    }
 
-    data class Error<out T>(val exception: Throwable, val data: T? = null) : Resource<T>()
+    val isLoading: Boolean get() = this is Loading
+    val isSuccess: Boolean get() = this is Success
+    val isError: Boolean get() = this is Error
+
+    data class Loading<out T>(override val data: T? = null) : Resource<T>()
+
+    data class Success<out T>(override val data: T) : Resource<T>()
+
+    data class Error<out T>(override val exception: Throwable, override val data: T? = null) : Resource<T>()
 
     companion object {
         fun <T> loading(data: T? = null): Resource<T> = Loading(data)
@@ -95,21 +108,6 @@ sealed class Resource<out T> {
             Error(e)
         }
     }
-
-    val data: T? get() = when (this) {
-        is Success -> data
-        is Loading -> data
-        is Error -> data
-    }
-
-    val exception: Throwable? get() = when (this) {
-        is Error -> exception
-        else -> null
-    }
-
-    val isLoading: Boolean get() = this is Loading
-    val isSuccess: Boolean get() = this is Success
-    val isError: Boolean get() = this is Error
 
     inline fun <R> fold(onSuccess: (T) -> R, onError: (Throwable) -> R, onLoading: () -> R): R = when (this) {
         is Success -> onSuccess(data)

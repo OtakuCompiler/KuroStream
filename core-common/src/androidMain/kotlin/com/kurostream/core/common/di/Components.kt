@@ -22,11 +22,3 @@ import javax.inject.Provider
 interface DispatcherProviderComponent {
     val dispatcherProvider: Provider<DispatcherProvider>
 }
-
-interface LoggerComponent {
-    val loggerProvider: Provider<com.kurostream.core.platform.PlatformLogger>
-}
-
-interface PlatformComponent {
-    val platformFactory: Provider<com.kurostream.core.platform.PlatformFactory>
-}

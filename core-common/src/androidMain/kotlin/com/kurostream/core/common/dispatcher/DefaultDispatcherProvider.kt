@@ -8,36 +8,37 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-actual class DefaultDispatcherProvider @Inject constructor(
-    private val context: Context
-) : DispatcherProvider {
+class DefaultDispatcherProvider : DispatcherProvider {
     
-    private val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    @Inject
+    lateinit var context: Context
     
-    actual override val main: CoroutineDispatcher = Dispatchers.Main
-    actual override val io: CoroutineDispatcher = Dispatchers.IO
-    actual override val default: CoroutineDispatcher = Dispatchers.Default
-    actual override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
+    private val powerManager by lazy {
+        context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    }
+    
+    override val main: CoroutineDispatcher = Dispatchers.Main
+    override val io: CoroutineDispatcher = Dispatchers.IO
+    override val default: CoroutineDispatcher = Dispatchers.Default
+    override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
 
     // Thermal and battery-aware adaptive dispatchers
-    actual override val computational: CoroutineDispatcher by lazy {
+    override val computational: CoroutineDispatcher by lazy {
         val cores = getOptimalCoreCount()
         Dispatchers.Default.limitedParallelism(cores)
     }
 
-    actual override val diskIO: CoroutineDispatcher by lazy {
+    override val diskIO: CoroutineDispatcher by lazy {
         val cores = if (isPowerSaveMode()) 1 else Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
         Dispatchers.IO.limitedParallelism(cores)
     }
 
-    actual override val networkIO: CoroutineDispatcher by lazy {
+    override val networkIO: CoroutineDispatcher by lazy {
         val cores = if (isPowerSaveMode()) 2 else Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
         Dispatchers.IO.limitedParallelism(cores)
     }
 
-    actual override val animation: CoroutineDispatcher = Dispatchers.Main
-
-    // Thermal and battery-aware adaptive dispatchers
+    override val animation: CoroutineDispatcher = Dispatchers.Main
     val adaptiveIO: CoroutineDispatcher by lazy {
         val cores = getOptimalCoreCount()
         Dispatchers.IO.limitedParallelism(cores)

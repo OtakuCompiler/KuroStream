@@ -1,0 +1,158 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "kilo/kilo-auto/free",
+  "small_model": "kilo/kilo-auto/free",
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 8000
+  },
+  "provider": {
+    "keylessai": {
+      "options": {
+        "timeout": 20000,
+        "chunkTimeout": 8000
+      }
+    },
+    "llm7": {
+      "options": {
+        "timeout": 30000,
+        "chunkTimeout": 12000
+      }
+    },
+    "pollinations": {
+      "options": {
+        "timeout": 45000,
+        "chunkTimeout": 20000
+      }
+    },
+    "glhf": {
+      "options": {
+        "timeout": 60000,
+        "chunkTimeout": 25000
+      }
+    },
+    "kilo": {
+      "options": {
+        "timeout": 30000,
+        "chunkTimeout": 12000
+      }
+    },
+    "gemini-free": {
+      "options": {
+        "timeout": 45000,
+        "chunkTimeout": 20000
+      }
+    },
+    "kimi-free": {
+      "options": {
+        "timeout": 45000,
+        "chunkTimeout": 20000
+      }
+    },
+    "ovh": {
+      "options": {
+        "timeout": 60000,
+        "chunkTimeout": 30000
+      }
+    },
+    "apiairforce": {
+      "options": {
+        "timeout": 30000,
+        "chunkTimeout": 10000
+      }
+    },
+    "aihorde": {
+      "options": {
+        "timeout": 120000,
+        "chunkTimeout": 60000
+      }
+    }
+  },
+  "agent": {
+    "build-android": {
+      "description": "Build Android APK with Gradle optimization",
+      "mode": "subagent",
+      "model": "kilo/kilo-auto/free",
+      "temperature": 0.1,
+      "permission": {
+        "bash": "allow",
+        "edit": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
+    },
+    "multi-os": {
+      "description": "Cross-platform compilation for Android, WebOS, Tizen",
+      "mode": "subagent",
+      "model": "kilo/kilo-auto/free",
+      "temperature": 0.15,
+      "permission": {
+        "bash": "allow",
+        "edit": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
+    },
+    "code-review": {
+      "description": "Review code for quality, security, and performance",
+      "mode": "subagent",
+      "model": "kilo/kilo-auto/free",
+      "temperature": 0.1,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "read": "allow",
+        "grep": "allow",
+        "glob": "allow"
+      }
+    },
+    "gradle-fix": {
+      "description": "Fix Gradle build errors and dependency issues",
+      "mode": "subagent",
+      "model": "kilo/kilo-auto/free",
+      "temperature": 0.1,
+      "permission": {
+        "bash": "allow",
+        "edit": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
+    }
+  },
+  "command": {
+    "build-debug": {
+      "template": "Build debug APK with arm64-v8a ABI filter. Run ./gradlew assembleDebug -PabiFilters=arm64-v8a --no-daemon -x lint -x test and report any errors.",
+      "description": "Build debug APK",
+      "agent": "build-android"
+    },
+    "build-release": {
+      "template": "Build release AAB. Run ./gradlew :app:bundleRelease --no-daemon -x lint -x test and report any errors.",
+      "description": "Build release bundle",
+      "agent": "build-android"
+    },
+    "lint-fix": {
+      "template": "Run ktlintCheck and spotlessCheck, then auto-fix any issues found with ktlintFormat and spotlessApply",
+      "description": "Lint check and auto-fix",
+      "agent": "build-android"
+    },
+    "test-domain": {
+      "template": "Run domain module unit tests: ./gradlew :domain:test --no-daemon -q. Show failures and suggest fixes.",
+      "description": "Run domain tests",
+      "agent": "build-android"
+    },
+    "health-check": {
+      "template": "Run lint, detekt, spotlessCheck, and domain tests sequentially. Report all failures.",
+      "description": "Full code quality check",
+      "agent": "code-review"
+    },
+    "multi-build": {
+      "template": "Build for Android (arm64-v8a debug APK), compile Kotlin/JS for webOS/Tizen. Run :app:assembleDebug and :domain:compileKotlinJs.",
+      "description": "Build all platforms",
+      "agent": "multi-os"
+    }
+  }
+}

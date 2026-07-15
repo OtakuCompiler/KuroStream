@@ -15,56 +15,56 @@
 
 package com.kurostream.core.platform
 
-actual class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
+class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
     private var minLevel = LogLevel.DEBUG
     private val enabledTags = mutableSetOf<String>()
     
-    actual fun verbose(tag: String, message: String, throwable: Throwable?) {
+    fun verbose(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.VERBOSE.priority && isTagEnabled(tag)) {
             consoleLog("verbose", tag, message, throwable)
         }
     }
     
-    actual fun debug(tag: String, message: String, throwable: Throwable?) {
+    fun debug(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.DEBUG.priority && isTagEnabled(tag)) {
             consoleLog("debug", tag, message, throwable)
         }
     }
     
-    actual fun info(tag: String, message: String, throwable: Throwable?) {
+    fun info(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.INFO.priority && isTagEnabled(tag)) {
             consoleLog("info", tag, message, throwable)
         }
     }
     
-    actual fun warn(tag: String, message: String, throwable: Throwable?) {
+    fun warn(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.WARN.priority && isTagEnabled(tag)) {
             consoleWarn(tag, message, throwable)
         }
     }
     
-    actual fun error(tag: String, message: String, throwable: Throwable?) {
+    fun error(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.ERROR.priority && isTagEnabled(tag)) {
             consoleError(tag, message, throwable)
         }
     }
     
-    actual fun fatal(tag: String, message: String, throwable: Throwable?) {
+    fun fatal(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.FATAL.priority && isTagEnabled(tag)) {
             consoleError(tag, message, throwable)
             window.location.reload()
         }
     }
     
-    actual fun setMinLevel(level: LogLevel) {
+    fun setMinLevel(level: LogLevel) {
         minLevel = level
     }
     
-    actual fun enableTag(tag: String) {
+    fun enableTag(tag: String) {
         enabledTags.add(tag)
     }
     
-    actual fun disableTag(tag: String) {
+    fun disableTag(tag: String) {
         enabledTags.remove(tag)
     }
     

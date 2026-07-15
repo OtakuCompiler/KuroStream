@@ -16,7 +16,7 @@ env:
     -Dorg.gradle.parallel=false
     -Dorg.gradle.caching=true
     -Dorg.gradle.daemon=false
-  JAVA_VERSION: "11"
+  JAVA_VERSION: "17"
 
 jobs:
   kmp-compile:
