@@ -15,17 +15,6 @@
 
 package com.kurostream.core.platform
 
-@Suppress("UNUSED_PARAMETER")
-external fun consoleLog(level: String, tag: String, message: String, throwable: Throwable?): Unit
-
-external fun consoleWarn(tag: String, message: String, throwable: Throwable?): Unit
-
-external fun consoleError(tag: String, message: String, throwable: Throwable?): Unit
-
-external fun reloadPage(): Unit
-
-external fun load(): Unit
-
 class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
     private var minLevel = LogLevel.DEBUG
     private val enabledTags = mutableSetOf<String>()
@@ -81,6 +70,13 @@ class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
 
     private fun isTagEnabled(tag: String): Boolean = enabledTags.isEmpty() || enabledTags.contains(tag)
 
+    @Suppress("UNUSED_PARAMETER")
+    external fun consoleLog(level: String, tag: String, message: String, throwable: Throwable?): Unit
+
+    external fun consoleWarn(tag: String, message: String, throwable: Throwable?): Unit
+
+    external fun consoleError(tag: String, message: String, throwable: Throwable?): Unit
+
     external fun reloadPage(): Unit
 
     companion object {
@@ -88,6 +84,6 @@ class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
             load()
         }
     }
-    
+
     external fun load(): Unit
 }

@@ -79,13 +79,11 @@ class WebCrypto : PlatformCrypto {
         for (char in data) {
             hash = (hash * 31 + char.code) and 0xFFFFFFFFFFFFFFFFL
         }
-        // Use modulo to keep value in range
-        val modHash = hash % 0x10000000000000000L
         return when (algorithm) {
-            HashAlgorithm.MD5 -> modHash.toString(16).padStart(32, '0')
-            HashAlgorithm.SHA_1 -> modHash.toString(16).padStart(40, '0')
-            HashAlgorithm.SHA_256 -> modHash.toString(16).padStart(64, '0')
-            HashAlgorithm.SHA_512 -> modHash.toString(16).padStart(128, '0')
+            HashAlgorithm.MD5 -> hash.toString(16).padStart(32, '0')
+            HashAlgorithm.SHA_1 -> hash.toString(16).padStart(40, '0')
+            HashAlgorithm.SHA_256 -> hash.toString(16).padStart(64, '0')
+            HashAlgorithm.SHA_512 -> hash.toString(16).padStart(128, '0')
         }
     }
     
