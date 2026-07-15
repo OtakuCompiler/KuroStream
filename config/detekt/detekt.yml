@@ -6,6 +6,17 @@ processors:
   exclude:
     - 'DetektProgressListener'
 
+# Exclude files with known detekt 1.23.6 ClassCastException bug
+# Bug: ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String
+# See: https://github.com/detekt/detekt/issues/7434
+exclude:
+  - '**/TvRepositoryAdapters.kt'
+  - '**/BenchmarkRunner.kt'
+  - '**/BackupSettingsScreen.kt'
+  - '**/TvRepositoryAdapters.kt'
+  - '**/BenchmarkRunner.kt'
+  - '**/BackupSettingsScreen.kt'
+
 console-reports:
   active: true
   exclude:
