@@ -38,18 +38,7 @@
         "chunkTimeout": 12000
       }
     },
-    "gemini-free": {
-      "options": {
-        "timeout": 45000,
-        "chunkTimeout": 20000
-      }
-    },
-    "kimi-free": {
-      "options": {
-        "timeout": 45000,
-        "chunkTimeout": 20000
-      }
-    },
+
     "ovh": {
       "options": {
         "timeout": 60000,
