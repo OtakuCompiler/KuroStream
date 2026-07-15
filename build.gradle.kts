@@ -58,11 +58,11 @@ allprojects {
                 allRules = false
                 parallel = true
                 // Exclude files with known detekt 1.23.6 ClassCastException bug
-                exclude.set(listOf(
+                exclude = listOf(
                     "**/TvRepositoryAdapters.kt",
                     "**/BenchmarkRunner.kt",
                     "**/BackupSettingsScreen.kt"
-                ))
+                )
             }
         }
     }
