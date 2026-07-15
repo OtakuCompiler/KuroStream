@@ -34,7 +34,6 @@ kotlin {
                 implementation(project(":core-common"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
-                implementation(libs.javax.inject)
             }
         }
         val commonTest by getting {
@@ -47,11 +46,14 @@ kotlin {
             dependencies {
                 implementation(libs.okhttp)
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.javax.inject)
             }
         }
         val jvmMain by getting {
             dependencies {
+                implementation(libs.okhttp)
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.javax.inject)
             }
         }
         val jsMain by getting {
