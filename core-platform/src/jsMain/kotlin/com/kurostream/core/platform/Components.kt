@@ -1,7 +1,6 @@
 package com.kurostream.core.platform
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.nodeExecutor
 
 // Simple implementation for JS target
 class DefaultLoggerComponent(
