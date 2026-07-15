@@ -15,10 +15,6 @@
 
 package com.kurostream.core.platform
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-
 class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
     private var minLevel = LogLevel.DEBUG
     private val enabledTags = mutableSetOf<String>()
@@ -75,21 +71,21 @@ class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
     private fun isTagEnabled(tag: String): Boolean = enabledTags.isEmpty() || enabledTags.contains(tag)
 
     @Suppress("UNUSED_PARAMETER")
-    private external fun consoleLog(level: String, tag: String, message: String, throwable: Throwable?): Unit
+    external fun consoleLog(level: String, tag: String, message: String, throwable: Throwable?): Unit
 
     @Suppress("UNUSED_PARAMETER")
-    private external fun consoleWarn(tag: String, message: String, throwable: Throwable?): Unit
+    external fun consoleWarn(tag: String, message: String, throwable: Throwable?): Unit
 
     @Suppress("UNUSED_PARAMETER")
-    private external fun consoleError(tag: String, message: String, throwable: Throwable?): Unit
+    external fun consoleError(tag: String, message: String, throwable: Throwable?): Unit
 
-    private external fun reloadPage(): Unit
+    external fun reloadPage(): Unit
+
+    external fun load(): Unit
 
     companion object {
         init {
             load()
         }
     }
-
-    external fun load(): Unit
 }
