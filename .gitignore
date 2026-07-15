@@ -28,3 +28,10 @@ KuroStream_release/
 MERGE_REPORT*.md
 .github/secrets.md
 gradle-8.10.2-bin.zip
+ktlint
+*.png
+*.txt
+*.sh
+node_modules/
+.opencode/
+.kotlin/
