@@ -22,6 +22,7 @@ plugins {
 kotlin {
     androidTarget()
     jvm()
+    ios()
     js {
         browser()
         nodejs()
@@ -54,6 +55,11 @@ kotlin {
                 implementation(libs.okhttp)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.javax.inject)
+            }
+        }
+        val iosMain by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
         val jsMain by getting {

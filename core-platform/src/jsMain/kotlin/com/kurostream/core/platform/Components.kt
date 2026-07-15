@@ -1,7 +1,5 @@
 package com.kurostream.core.platform
 
-import kotlinx.coroutines.Dispatchers
-
 // Simple implementation for JS target
 class DefaultLoggerComponent(
     private val provider: () -> PlatformLogger
