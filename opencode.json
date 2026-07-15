@@ -56,6 +56,63 @@
         "timeout": 120000,
         "chunkTimeout": 60000
       }
+    },
+    "google": {
+      "options": { "timeout": 30000, "chunkTimeout": 15000 }
+    },
+    "groq": {
+      "options": { "timeout": 30000, "chunkTimeout": 15000 }
+    },
+    "mistral": {
+      "options": { "timeout": 45000, "chunkTimeout": 20000 }
+    },
+    "nvidia": {
+      "options": { "timeout": 45000, "chunkTimeout": 20000 }
+    },
+    "openrouter": {
+      "options": { "timeout": 60000, "chunkTimeout": 30000 }
+    },
+    "cloudflare-workers-ai": {
+      "options": { "timeout": 60000, "chunkTimeout": 30000 }
+    },
+    "cerebras": {
+      "options": { "timeout": 30000, "chunkTimeout": 15000 }
+    },
+    "together-ai": {
+      "options": { "timeout": 45000, "chunkTimeout": 20000 }
+    },
+    "fireworks-ai": {
+      "options": { "timeout": 30000, "chunkTimeout": 15000 }
+    },
+    "deepinfra": {
+      "options": { "timeout": 45000, "chunkTimeout": 20000 }
+    },
+    "sambanova": {
+      "options": { "timeout": 45000, "chunkTimeout": 20000 }
+    },
+    "scaleway": {
+      "options": { "timeout": 45000, "chunkTimeout": 20000 }
+    },
+    "moonshot": {
+      "options": { "timeout": 45000, "chunkTimeout": 20000 }
+    },
+    "hyperbolic": {
+      "options": { "timeout": 60000, "chunkTimeout": 30000 }
+    },
+    "nebius": {
+      "options": { "timeout": 60000, "chunkTimeout": 30000 }
+    },
+    "novita": {
+      "options": { "timeout": 45000, "chunkTimeout": 20000 }
+    },
+    "zerolimitai": {
+      "options": { "timeout": 30000, "chunkTimeout": 15000 }
+    },
+    "bazaarlink": {
+      "options": { "timeout": 30000, "chunkTimeout": 15000 }
+    },
+    "requesty": {
+      "options": { "timeout": 30000, "chunkTimeout": 15000 }
     }
   },
   "agent": {
