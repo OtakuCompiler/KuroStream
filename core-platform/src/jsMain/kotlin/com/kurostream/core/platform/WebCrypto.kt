@@ -22,12 +22,12 @@ class WebCrypto : PlatformCrypto {
     private val keys = mutableMapOf<String, String>()
 
     override suspend fun encrypt(data: ByteArray, key: String): ByteArray {
-        val keyData = keys[key]?.encodeToByteArray() ?: throw IllegalArgumentException("Key not found")
-        return xorCrypt(data, keyData.toByteArray())
+        val keyData = keys[key]?.toByteArray() ?: throw IllegalArgumentException("Key not found")
+        return xorCrypt(data, keyData)
     }
 
     override suspend fun decrypt(data: ByteArray, key: String): ByteArray {
-        val keyData = keys[key]?.encodeToByteArray() ?: throw IllegalArgumentException("Key not found")
+        val keyData = keys[key]?.toByteArray() ?: throw IllegalArgumentException("Key not found")
         return xorCrypt(data, keyData)
     }
 
@@ -46,7 +46,7 @@ class WebCrypto : PlatformCrypto {
     }
 
     override suspend fun encryptString(text: String, key: String): String {
-        val encrypted = encrypt(text.encodeToByteArray(), key)
+        val encrypted = encrypt(text.toByteArray(), key)
         return encrypted.joinToString("") { toHex(it) }
     }
 

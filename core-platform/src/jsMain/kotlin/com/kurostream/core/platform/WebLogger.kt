@@ -73,10 +73,8 @@ class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
     @Suppress("UNUSED_PARAMETER")
     external fun consoleLog(level: String, tag: String, message: String, throwable: Throwable?): Unit
 
-    @Suppress("UNUSED_PARAMETER")
     external fun consoleWarn(tag: String, message: String, throwable: Throwable?): Unit
 
-    @Suppress("UNUSED_PARAMETER")
     external fun consoleError(tag: String, message: String, throwable: Throwable?): Unit
 
     external fun reloadPage(): Unit
