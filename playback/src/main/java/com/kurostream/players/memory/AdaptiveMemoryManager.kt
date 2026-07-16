@@ -3,6 +3,9 @@ package com.kurostream.players.memory
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Debug
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +22,8 @@ class AdaptiveMemoryManager @Inject constructor(
 
     private val _memoryState = MutableStateFlow(MemoryState())
     val memoryState: StateFlow<MemoryState> = _memoryState.asStateFlow()
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val totalMemoryMb: Int by lazy {
         val memInfo = ActivityManager.MemoryInfo()
@@ -145,9 +150,8 @@ class AdaptiveMemoryManager @Inject constructor(
         val before = Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
         
         // Run GC in background to avoid blocking
-        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Default) {
-            System.gc()
-            Runtime.getRuntime().gc()
+        scope.launch(kotlinx.coroutines.Dispatchers.Default) {
+            // Let system handle GC naturally
             
             lastGCTime = System.currentTimeMillis()
             gcCount++
@@ -169,12 +173,10 @@ class AdaptiveMemoryManager @Inject constructor(
     fun triggerAggressiveGC(reason: String) {
         Timber.w("Aggressive GC: $reason")
         
-        System.gc()
-        Runtime.getRuntime().gc()
-        Runtime.getRuntime().runFinalization()
+        // Let system handle GC naturally
         
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            System.gc()
+            // Let system handle GC naturally
         }, 100)
         
         lastGCTime = System.currentTimeMillis()
@@ -222,9 +224,14 @@ class AdaptiveMemoryManager @Inject constructor(
         trimCallbacks.clear()
         Timber.d("AdaptiveMemory reset")
     }
+
+    fun shutdown() {
+        scope.cancel()
+        Timber.d("AdaptiveMemoryManager shutdown")
+    }
 }
 
-data class MemoryState(
+data class AdaptiveMemoryState(
     val totalPrivatePssMb: Int = 0,
     val nativeHeapMb: Long = 0,
     val dalvikHeapMb: Long = 0,

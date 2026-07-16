@@ -20,9 +20,19 @@ plugins {
 }
 
 kotlin {
-    androidTarget()
-    jvm()
-    ios()
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
+    jvm {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
     js {
         browser()
         nodejs()
@@ -57,7 +67,17 @@ kotlin {
                 implementation(libs.javax.inject)
             }
         }
-        val iosMain by getting {
+        val iosArm64Main by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        val iosX64Main by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        val iosSimulatorArm64Main by getting {
             dependencies {
                 implementation(libs.kotlinx.coroutines.core)
             }
@@ -68,6 +88,8 @@ kotlin {
             }
         }
     }
+
+
 }
 
 android {

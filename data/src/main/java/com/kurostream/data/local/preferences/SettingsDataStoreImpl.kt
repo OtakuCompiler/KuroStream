@@ -27,7 +27,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SettingsDataStoreImpl @Inject constructor(
-    @androidx.hilt.android.qualifiers.ApplicationContext private val context: Context
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) : SettingsDataStore {
 
     private val dataStore: DataStore<Preferences> = context.preferencesDataStore("kurostream_settings")

@@ -25,7 +25,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ProtoProfileDataStore @Inject constructor(
-    @androidx.hilt.android.qualifiers.ApplicationContext private val context: Context
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) {
     private val dataStore: DataStore<ProfileProto.ProfilePreferences> = context.dataStore(
         fileName = "profile_prefs.pb",

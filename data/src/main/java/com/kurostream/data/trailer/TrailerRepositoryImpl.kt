@@ -15,6 +15,7 @@
 
 package com.kurostream.data.trailer
 
+import com.kurostream.core.common.result.Result
 import com.kurostream.data.remote.dto.tmdb.TmdbDtos
 import com.kurostream.data.remote.api.TmdbApi
 import com.kurostream.data.remote.api.YouTubeApi
@@ -32,49 +33,28 @@ import timber.log.Timber
 @Singleton
 class TrailerRepositoryImpl @Inject constructor(
     private val youTubeApi: YouTubeApi,
-    private val unifiedMetadataRepository: com.kurostream.data.metadata.UnifiedMetadataRepositoryImpl,
 ) : TrailerRepository {
 
     override suspend fun getTrailerForAnime(animeId: String): Result<Trailer> = withContext(Dispatchers.IO) {
         try {
-            // First try to get trailer from TMDB
-            val metadataResult = unifiedMetadataRepository.getAnimeDetails(animeId)
-            when (metadataResult) {
-                is com.kurostream.domain.metadata.MetadataResult.Success -> {
-                    val details = metadataResult.data
-                    details.trailerUrl?.let { url ->
-                        return@withContext Result.success(Trailer(url = url, source = "tmdb"))
-                    }
-                    details.externalLinks.firstOrNull { it.site == "youtube" }?.url?.let { url ->
-                        return@withContext Result.success(Trailer(url = url, source = "youtube"))
-                    }
-                }
-                is com.kurostream.domain.metadata.MetadataResult.Partial -> {
-                    val details = metadataResult.data
-                    details.trailerUrl?.let { url ->
-                        return@withContext Result.success(Trailer(url = url, source = "tmdb"))
-                    }
-                }
-            }
-
             // Fallback to YouTube search
             val searchQuery = "$animeId trailer"
             val youtubeResult = youTubeApi.searchVideos(searchQuery, maxResults = 5)
-            youtubeResult.data?.items?.firstOrNull { it.id.videoId != null }?.let { item ->
+            youtubeResult.data?.items?.firstOrNull { it.id?.videoId != null }?.let { item ->
                 val url = "https://www.youtube.com/watch?v=${item.id.videoId}"
                 return@withContext Result.success(Trailer(
                     url = url,
                     title = item.snippet.title,
-                    thumbnailUrl = item.snippet.thumbnails.high?.url,
+                    thumbnailUrl = item.snippet.thumbnails?.high?.url,
                     source = "youtube",
                     publishedAt = item.snippet.publishedAt
                 ))
             }
 
-            Result.failure(Exception("No trailer found"))
+            Result.error(Exception("No trailer found"))
         } catch (e: Exception) {
             Timber.e(e, "Failed to get trailer for $animeId")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -82,11 +62,11 @@ class TrailerRepositoryImpl @Inject constructor(
         try {
             val youtubeResult = youTubeApi.searchVideos(query, maxResults = 10)
             val trailers = youtubeResult.data?.items?.mapNotNull { item ->
-                item.id.videoId?.let { videoId ->
+                item.id?.videoId?.let { videoId ->
                     Trailer(
                         url = "https://www.youtube.com/watch?v=$videoId",
                         title = item.snippet.title,
-                        thumbnailUrl = item.snippet.thumbnails.high?.url,
+                        thumbnailUrl = item.snippet.thumbnails?.high?.url,
                         source = "youtube",
                         publishedAt = item.snippet.publishedAt
                     )
@@ -96,7 +76,7 @@ class TrailerRepositoryImpl @Inject constructor(
             Result.success(trailers)
         } catch (e: Exception) {
             Timber.e(e, "Failed to search trailers for $query")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 

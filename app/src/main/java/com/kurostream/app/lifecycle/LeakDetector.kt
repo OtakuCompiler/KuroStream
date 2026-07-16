@@ -59,10 +59,6 @@ object LeakDetector {
                     if (count > 0) {
                         Timber.w("LeakDetector: Found $count potentially leaked objects")
                     }
-                    
-                    // Force GC for more accurate detection
-                    System.gc()
-                    System.runFinalization()
                 }
             } catch (e: Exception) {
                 Log.e("LeakDetector", "Error during leak check", e)

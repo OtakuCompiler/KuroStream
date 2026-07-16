@@ -1,15 +1,15 @@
 package com.kurostream.core.platform
 
-import javax.inject.Provider
+import javax.inject.Provider as JavaxProvider
 
-actual class DefaultLoggerComponent(
-    private val provider: Provider<PlatformLogger>
-) : LoggerComponent {
-    actual override val loggerProvider: Provider<PlatformLogger> = provider
+class JvmProvider<T>(private val delegate: JavaxProvider<T>) : Provider<T> {
+    override fun get(): T = delegate.get()
 }
 
-actual class DefaultPlatformComponent(
-    private val factoryProvider: Provider<PlatformFactory>
-) : PlatformComponent {
-    actual override val platformFactory: Provider<PlatformFactory> = factoryProvider
+actual interface LoggerComponent {
+    actual val loggerProvider: Provider<PlatformLogger>
+}
+
+actual interface PlatformComponent {
+    actual val platformFactory: Provider<PlatformFactory>
 }

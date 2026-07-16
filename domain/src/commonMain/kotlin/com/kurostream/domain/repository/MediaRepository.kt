@@ -15,6 +15,7 @@
 
 package com.kurostream.domain.repository
 
+import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.model.*
 import kotlinx.coroutines.flow.Flow
 

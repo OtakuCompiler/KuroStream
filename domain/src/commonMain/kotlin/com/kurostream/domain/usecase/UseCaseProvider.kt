@@ -27,9 +27,9 @@ import com.kurostream.domain.usecase.subtitle.*
 import com.kurostream.domain.usecase.watchhistory.*
 
 class UseCaseProvider(
-    mediaRepository: MediaRepository,
-    profileRepository: ProfileRepository,
-    settingsRepository: SettingsRepository
+    private val mediaRepository: MediaRepository,
+    private val profileRepository: ProfileRepository,
+    private val settingsRepository: SettingsRepository
 ) {
     // Media use cases
     val getMediaByCategory = GetMediaByCategoryUseCase(mediaRepository)

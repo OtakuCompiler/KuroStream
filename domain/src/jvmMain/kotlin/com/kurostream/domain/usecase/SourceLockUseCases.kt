@@ -1,6 +1,6 @@
 package com.kurostream.domain.usecase
 
-import com.kurostream.domain.model.MediaItem
+import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.model.MediaSource
 import com.kurostream.domain.model.SourceLock
 import com.kurostream.domain.model.SourceLockFallback

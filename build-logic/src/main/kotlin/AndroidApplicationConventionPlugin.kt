@@ -18,8 +18,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.libs
-import org.gradle.kotlin.dsl.provider
-import org.gradle.kotlin.dsl.providers
 
 class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -27,7 +25,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             pluginManager.apply("com.android.application")
             pluginManager.apply("org.jetbrains.kotlin.android")
             // Apply Compose Compiler Gradle plugin for Kotlin 2.0+
-            pluginManager.apply("org.jetbrains.kotlin.composer")
+            pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 
             extensions.configure<AppExtension> {
                 compileSdk = providers.provider { libs.versions.compileSdk.get().toInt() }
@@ -86,10 +84,6 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 buildFeatures {
                     compose = true
                     viewBinding = false
-                }
-
-                composeOptions {
-                    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
                 }
 
                 packaging {

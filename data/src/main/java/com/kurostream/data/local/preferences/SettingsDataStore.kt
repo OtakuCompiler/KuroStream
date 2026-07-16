@@ -22,6 +22,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 interface SettingsDataStore {
     suspend fun getString(key: String, default: String): String
@@ -43,6 +44,32 @@ interface SettingsDataStore {
 
     suspend fun editPreferences(block: suspend MutablePreferences.() -> Unit)
 
+    // Convenience properties
+    val syncEnabled: Flow<Boolean>
+        get() = data.map { it[Keys.SYNC_ENABLED] ?: true }
+
+    suspend fun setSyncEnabled(value: Boolean) = setBoolean(Keys.SYNC_ENABLED.name, value)
+
+    val lastSyncTimestamp: Flow<Long>
+        get() = data.map { it[Keys.LAST_SYNC_TIMESTAMP] ?: 0L }
+
+    suspend fun setLastSyncTimestamp(value: Long) = setLong(Keys.LAST_SYNC_TIMESTAMP.name, value)
+
+    val skinName: Flow<String>
+        get() = data.map { it[Keys.SKIN_NAME] ?: "default" }
+
+    suspend fun setSkinName(value: String) = setString(Keys.SKIN_NAME.name, value)
+
+    val themeMode: Flow<String>
+        get() = data.map { it[Keys.THEME_MODE] ?: "system" }
+
+    suspend fun setThemeMode(value: String) = setString(Keys.THEME_MODE.name, value)
+
+    val subtitleLanguage: Flow<String>
+        get() = data.map { it[Keys.SUBTITLE_LANGUAGE] ?: "en" }
+
+    suspend fun setSubtitleLanguage(value: String) = setString(Keys.SUBTITLE_LANGUAGE.name, value)
+
     object Keys {
         val SOURCE_LOCK_ENABLED = booleanPreferencesKey("source_lock_enabled")
         val SOURCE_LOCK_FALLBACK_MODE = intPreferencesKey("source_lock_fallback_mode")
@@ -51,5 +78,11 @@ interface SettingsDataStore {
         val SOURCE_LOCK_PERSIST = booleanPreferencesKey("source_lock_persist")
         val SOURCE_LOCK_NOTIFY_FALLBACK = booleanPreferencesKey("source_lock_notify_fallback")
         val METADATA_PROVIDERS_ENABLED = stringPreferencesKey("metadata_providers_enabled")
+        
+        val SYNC_ENABLED = booleanPreferencesKey("sync_enabled")
+        val LAST_SYNC_TIMESTAMP = longPreferencesKey("last_sync_timestamp")
+        val SKIN_NAME = stringPreferencesKey("skin_name")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
+        val SUBTITLE_LANGUAGE = stringPreferencesKey("subtitle_language")
     }
 }

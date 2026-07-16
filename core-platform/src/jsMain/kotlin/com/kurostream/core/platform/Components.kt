@@ -1,18 +1,13 @@
 package com.kurostream.core.platform
 
-// Simple implementation for JS target
-class DefaultLoggerComponent(
-    private val provider: () -> PlatformLogger
-) : LoggerComponent {
-    override val loggerProvider: Provider<PlatformLogger> = object : Provider<PlatformLogger> {
-        override fun get(): PlatformLogger = provider()
-    }
+class JsProvider<T>(private val delegate: () -> T) : Provider<T> {
+    override fun get(): T = delegate()
 }
 
-class DefaultPlatformComponent(
-    private val factoryProvider: () -> PlatformFactory
-) : PlatformComponent {
-    override val platformFactory: Provider<PlatformFactory> = object : Provider<PlatformFactory> {
-        override fun get(): PlatformFactory = factoryProvider()
-    }
+actual interface LoggerComponent {
+    actual val loggerProvider: Provider<PlatformLogger>
+}
+
+actual interface PlatformComponent {
+    actual val platformFactory: Provider<PlatformFactory>
 }

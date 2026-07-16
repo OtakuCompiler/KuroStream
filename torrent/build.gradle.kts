@@ -52,7 +52,6 @@ android {
 dependencies {
     implementation(project(":core-common"))
     implementation(project(":domain"))
-    implementation(project(":common"))
     implementation(project(":cache"))
 
     implementation(libs.androidx.core.ktx)

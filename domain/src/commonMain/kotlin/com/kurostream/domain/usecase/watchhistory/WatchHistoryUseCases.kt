@@ -19,6 +19,7 @@ import com.kurostream.core.common.result.Result
 import com.kurostream.domain.model.WatchHistory
 import com.kurostream.domain.repository.MediaRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class GetWatchHistoryUseCase(
     private val repository: MediaRepository

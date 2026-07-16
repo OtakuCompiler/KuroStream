@@ -6,8 +6,16 @@ plugins {
 }
 
 kotlin {
-    androidTarget()
-    jvm()
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
+    jvm {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
     js {
         browser()
         nodejs()

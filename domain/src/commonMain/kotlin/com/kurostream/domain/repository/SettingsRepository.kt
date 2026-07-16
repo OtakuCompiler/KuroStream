@@ -33,6 +33,9 @@ interface SettingsRepository {
     fun observeCacheSizeMb(): Flow<Int>
     suspend fun setCacheSizeMb(size: Int)
     suspend fun clearAllSettings()
+
+    suspend fun <T> getSetting(key: String): T?
+    suspend fun <T> setSetting(key: String, value: T)
 }
 
 enum class AppTheme { SYSTEM, LIGHT, DARK, OLED }

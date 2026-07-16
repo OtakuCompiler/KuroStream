@@ -19,6 +19,7 @@ import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.dao.ProfileDao
 import com.kurostream.data.local.entity.ProfileEntity
 import com.kurostream.domain.model.Profile
+import com.kurostream.domain.model.VideoQuality
 import com.kurostream.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -116,10 +117,54 @@ companion object {
 
     override suspend fun getPreferences(profileId: String): String? = profileDao.getById(profileId)?.preferencesJson
 
+    override suspend fun getProfiles(): List<Profile> = profileDao.getAll().map { it.toDomain() }
+
+    override suspend fun getProfile(profileId: String): Profile? = profileDao.getById(profileId)?.toDomain()
+
+    override suspend fun saveProfile(profile: Profile): Result<Unit> {
+        val entity = ProfileEntity(
+            id = profile.id,
+            name = profile.displayName,
+            avatarUrl = profile.avatarUrl,
+            pinHash = if (profile.hasPin) "has_pin" else null,
+            isActive = profile.isActive,
+            isPremium = profile.isPremium,
+            preferredLanguage = profile.preferredLanguage,
+            preferredSubtitleLanguage = profile.preferredSubtitleLanguage,
+            autoSkipIntro = profile.autoSkipIntro,
+            autoSkipOutro = profile.autoSkipOutro,
+            preferredQuality = profile.preferredQuality.name,
+            hasPin = profile.hasPin,
+            createdAt = profile.createdAt,
+            preferencesJson = profile.preferencesJson
+        )
+        profileDao.insert(entity)
+        return Result.success(Unit)
+    }
+
+    override suspend fun setActiveProfile(profileId: String): Result<Unit> {
+        profileDao.switchActiveProfile(profileId)
+        return Result.success(Unit)
+    }
+
     private fun hashPin(pin: String): String {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest("$PIN_SALT$pin".toByteArray()).joinToString("") { "%02x".format(it) }
     }
 
-    private fun ProfileEntity.toDomain() = Profile(id, name, avatarUrl, pinHash != null, isActive, createdAt, preferencesJson)
+    private fun ProfileEntity.toDomain() = Profile(
+        id = id,
+        displayName = name,
+        avatarUrl = avatarUrl,
+        isPremium = isPremium,
+        preferredLanguage = preferredLanguage,
+        preferredSubtitleLanguage = preferredSubtitleLanguage,
+        autoSkipIntro = autoSkipIntro,
+        autoSkipOutro = autoSkipOutro,
+        preferredQuality = VideoQuality.valueOf(preferredQuality),
+        hasPin = hasPin,
+        isActive = isActive,
+        preferencesJson = preferencesJson,
+        createdAt = createdAt
+    )
 }

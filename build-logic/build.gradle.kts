@@ -21,14 +21,13 @@ repositories {
     google()
     mavenCentral()
     gradlePluginPortal()
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-dev/")
 }
 
 dependencies {
-    implementation("com.android.tools.build:gradle:8.7.0")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
-    implementation("com.google.dagger:hilt-android-gradle-plugin:2.52")
-    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.0.21-1.0.26")
-    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.24.0")
+    implementation("com.android.tools.build:gradle:8.7.3")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
+    implementation("com.google.dagger:hilt-android-gradle-plugin:2.53.1")
+    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.1.0-1.0.29")
+    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.7")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:6.25.0")
 }

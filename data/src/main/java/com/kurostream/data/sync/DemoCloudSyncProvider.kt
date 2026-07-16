@@ -18,9 +18,12 @@ package com.kurostream.data.sync
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.kurostream.data.local.dao.*
-import com.kurostream.data.local.preferences.SettingsDataStore
-import com.kurostream.domain.model.*
+import com.kurostream.domain.model.Profile
+import com.kurostream.domain.model.VideoQuality
+import com.kurostream.domain.model.WatchHistory
+import com.kurostream.domain.model.Favorite
+import com.kurostream.domain.model.DownloadItem
+import com.kurostream.domain.model.DownloadStatus
 import com.kurostream.domain.sync.SyncPayload
 import com.kurostream.domain.sync.SyncProvider
 import com.kurostream.domain.sync.SyncTimestamp
@@ -112,7 +115,21 @@ class DemoCloudSyncProvider @Inject constructor(
 
     suspend fun buildPayloadFromLocal(): SyncPayload {
         val profiles = profileDao.observeAll().first().map {
-            Profile(it.id, it.name, it.avatarUrl, it.pinHash != null, it.isActive, it.createdAt, it.preferencesJson)
+            Profile(
+                id = it.id,
+                displayName = it.name,
+                avatarUrl = it.avatarUrl,
+                isPremium = false,
+                preferredLanguage = "en",
+                preferredSubtitleLanguage = "en",
+                autoSkipIntro = false,
+                autoSkipOutro = false,
+                preferredQuality = VideoQuality.AUTO,
+                hasPin = it.pinHash != null,
+                isActive = it.isActive,
+                preferencesJson = it.preferencesJson,
+                createdAt = it.createdAt
+            )
         }
         val activeId = profiles.find { it.isActive }?.id
         val watchHistory = if (activeId != null) watchHistoryDao.observeByProfile(activeId).first().map {

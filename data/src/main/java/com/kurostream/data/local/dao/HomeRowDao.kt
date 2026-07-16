@@ -28,16 +28,16 @@ interface HomeRowDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(row: HomeRowEntity)
 
-    @Query("SELECT * FROM home_rows WHERE profileId = :profileId ORDER BY position")
+    @Query("SELECT * FROM home_rows WHERE profile_id = :profileId ORDER BY order_index")
     suspend fun getByProfileId(profileId: String): List<HomeRowEntity>
 
-    @Query("SELECT * FROM home_rows WHERE profileId = :profileId AND isVisible = 1 ORDER BY position")
+    @Query("SELECT * FROM home_rows WHERE profile_id = :profileId AND is_visible = 1 ORDER BY order_index")
     fun observeVisibleByProfileId(profileId: String): Flow<List<HomeRowEntity>>
 
     @Query("DELETE FROM home_rows WHERE id = :id")
     suspend fun deleteById(id: String)
 
-    @Query("DELETE FROM home_rows WHERE profileId = :profileId")
+    @Query("DELETE FROM home_rows WHERE profile_id = :profileId")
     suspend fun deleteByProfileId(profileId: String)
 
     @Query("SELECT * FROM home_rows")

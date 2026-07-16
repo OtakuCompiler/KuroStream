@@ -46,77 +46,77 @@ class KuroEngineJni private constructor(private val context: Context) {
                 instance ?: KuroEngineJni(context.applicationContext).also { instance = it }
             }
         }
+
+        // ===== FFmpeg Core =====
+        @JvmStatic external fun nativeInitFFmpeg(): Long
+        @JvmStatic external fun nativeCleanup(handle: Long)
+        @JvmStatic external fun nativeOpenInput(handle: Long, url: String): Int
+        @JvmStatic external fun nativePlay(handle: Long)
+        @JvmStatic external fun nativePause(handle: Long)
+        @JvmStatic external fun nativeStop(handle: Long)
+        @JvmStatic external fun nativeSeek(handle: Long, positionSeconds: Double)
+        @JvmStatic external fun nativeSetSpeed(handle: Long, speed: Float)
+        @JvmStatic external fun nativeSetHeaders(handle: Long, headersJson: String)
+        @JvmStatic external fun nativeSetDecoderThreads(handle: Long, threads: Int)
+        @JvmStatic external fun nativeEnableHardwareDecoding(handle: Long, enable: Boolean, decoderName: String)
+        @JvmStatic external fun nativeFindBestVideoStream(handle: Long, hwCodecsJson: String): Int
+        @JvmStatic external fun nativeFindBestAudioStream(handle: Long, preferredLanguage: String?): Int
+        @JvmStatic external fun nativeSelectStream(handle: Long, streamIndex: Int)
+        @JvmStatic external fun nativeGetVideoCodec(handle: Long): String
+        @JvmStatic external fun nativeGetAudioCodec(handle: Long): String
+        @JvmStatic external fun nativeGetVideoResolution(handle: Long): String
+        @JvmStatic external fun nativeGetFrameRate(handle: Long): Float
+        @JvmStatic external fun nativeGetBitrate(handle: Long): Long
+        @JvmStatic external fun nativeGetBufferHealth(handle: Long): Int
+        @JvmStatic external fun nativeGetDroppedFrames(handle: Long): Int
+
+        // ===== Libplacebo =====
+        @JvmStatic external fun nativeInitLibplacebo(fontsDir: String): Long
+        @JvmStatic external fun nativeCleanupLibplacebo(handle: Long)
+        @JvmStatic external fun nativeConfigureLibplacebo(handle: Long, surface: Surface, configJson: String)
+        @JvmStatic external fun nativePlaceboRenderFrame(handle: Long)
+        @JvmStatic external fun nativePlaceboSetUpscaling(handle: Long, enabled: Boolean, factor: Float)
+        @JvmStatic external fun nativePlaceboSetToneMapping(handle: Long, algorithm: Int, paramsJson: String)
+        @JvmStatic external fun nativePlaceboSetDebanding(handle: Long, enabled: Boolean, strength: Float)
+        @JvmStatic external fun nativePlaceboSetFrameInterpolation(handle: Long, enabled: Boolean)
+
+        // ===== Libass =====
+        @JvmStatic external fun nativeInitLibass(fontsDir: String): Long
+        @JvmStatic external fun nativeCleanupLibass(handle: Long)
+        @JvmStatic external fun nativeAssSetStyle(handle: Long, styleJson: String)
+        @JvmStatic external fun nativeAssRenderSubtitle(handle: Long, text: String, timestampMs: Long, width: Int, height: Int): ByteArray
+        @JvmStatic external fun nativeAssLoadExternal(handle: Long, path: String, language: String): Boolean
+        @JvmStatic external fun nativeAssSelectTrack(handle: Long, trackIndex: Int)
+        @JvmStatic external fun nativeAssGetTrackCount(handle: Long): Int
+        @JvmStatic external fun nativeAssGetTrackInfo(handle: Long, index: Int): String
+
+        // ===== Sonic Audio DSP =====
+        @JvmStatic external fun nativeInitSonicDsp(sampleRate: Int, channels: Int): Long
+        @JvmStatic external fun nativeCleanupSonicDsp(handle: Long)
+        @JvmStatic external fun nativeSonicSetVolume(handle: Long, volume: Float)
+        @JvmStatic external fun nativeSonicSetMute(handle: Long, mute: Boolean)
+        @JvmStatic external fun nativeSonicSetEq(handle: Long, bandsJson: String)
+        @JvmStatic external fun nativeSonicSetNightMode(handle: Long, enabled: Boolean, thresholdDb: Float, ratio: Float)
+        @JvmStatic external fun nativeSonicSetLoudnessNorm(handle: Long, enabled: Boolean, targetLufs: Float)
+        @JvmStatic external fun nativeSonicSetResampleQuality(handle: Long, quality: Int)
+        @JvmStatic external fun nativeSonicProcessBuffer(handle: Long, input: ByteArray, output: ByteArray, frames: Int)
+
+        // ===== Performance Metrics =====
+        @JvmStatic external fun nativeGetPerformanceMetrics(handle: Long): String
+
+        // ===== Codec Pack Loading =====
+        @JvmStatic external fun nativeLoadCodecPack(handle: Long, packPath: String): Boolean
+        @JvmStatic external fun nativeUnloadCodecPack(handle: Long, codecName: String)
+        @JvmStatic external fun nativeGetLoadedCodecPacks(handle: Long): String
+
+        // ===== DRM =====
+        @JvmStatic external fun nativeSetDrmConfig(handle: Long, drmConfigJson: String): Boolean
+        @JvmStatic external fun nativeProcessDrmKeyRequest(handle: Long, request: ByteArray): ByteArray
+
+        // ===== Surface =====
+        @JvmStatic external fun nativeSetSurface(handle: Long, surface: Surface)
+        @JvmStatic external fun nativeSetSurfaceSize(handle: Long, width: Int, height: Int)
     }
-
-    // ===== FFmpeg Core =====
-    @JvmStatic external fun nativeInitFFmpeg(): Long
-    @JvmStatic external fun nativeCleanup(handle: Long)
-    @JvmStatic external fun nativeOpenInput(handle: Long, url: String): Int
-    @JvmStatic external fun nativePlay(handle: Long)
-    @JvmStatic external fun nativePause(handle: Long)
-    @JvmStatic external fun nativeStop(handle: Long)
-    @JvmStatic external fun nativeSeek(handle: Long, positionSeconds: Double)
-    @JvmStatic external fun nativeSetSpeed(handle: Long, speed: Float)
-    @JvmStatic external fun nativeSetHeaders(handle: Long, headersJson: String)
-    @JvmStatic external fun nativeSetDecoderThreads(handle: Long, threads: Int)
-    @JvmStatic external fun nativeEnableHardwareDecoding(handle: Long, enable: Boolean, decoderName: String)
-    @JvmStatic external fun nativeFindBestVideoStream(handle: Long, hwCodecsJson: String): Int
-    @JvmStatic external fun nativeFindBestAudioStream(handle: Long, preferredLanguage: String?): Int
-    @JvmStatic external fun nativeSelectStream(handle: Long, streamIndex: Int)
-    @JvmStatic external fun nativeGetVideoCodec(handle: Long): String
-    @JvmStatic external fun nativeGetAudioCodec(handle: Long): String
-    @JvmStatic external fun nativeGetVideoResolution(handle: Long): String
-    @JvmStatic external fun nativeGetFrameRate(handle: Long): Float
-    @JvmStatic external fun nativeGetBitrate(handle: Long): Long
-    @JvmStatic external fun nativeGetBufferHealth(handle: Long): Int
-    @JvmStatic external fun nativeGetDroppedFrames(handle: Long): Int
-
-    // ===== Libplacebo =====
-    @JvmStatic external fun nativeInitLibplacebo(fontsDir: String): Long
-    @JvmStatic external fun nativeCleanupLibplacebo(handle: Long)
-    @JvmStatic external fun nativeConfigureLibplacebo(handle: Long, surface: Surface, configJson: String)
-    @JvmStatic external fun nativePlaceboRenderFrame(handle: Long)
-    @JvmStatic external fun nativePlaceboSetUpscaling(handle: Long, enabled: Boolean, factor: Float)
-    @JvmStatic external fun nativePlaceboSetToneMapping(handle: Long, algorithm: Int, paramsJson: String)
-    @JvmStatic external fun nativePlaceboSetDebanding(handle: Long, enabled: Boolean, strength: Float)
-    @JvmStatic external fun nativePlaceboSetFrameInterpolation(handle: Long, enabled: Boolean)
-
-    // ===== Libass =====
-    @JvmStatic external fun nativeInitLibass(fontsDir: String): Long
-    @JvmStatic external fun nativeCleanupLibass(handle: Long)
-    @JvmStatic external fun nativeAssSetStyle(handle: Long, styleJson: String)
-    @JvmStatic external fun nativeAssRenderSubtitle(handle: Long, text: String, timestampMs: Long, width: Int, height: Int): ByteArray // RGBA bitmap
-    @JvmStatic external fun nativeAssLoadExternal(handle: Long, path: String, language: String): Boolean
-    @JvmStatic external fun nativeAssSelectTrack(handle: Long, trackIndex: Int)
-    @JvmStatic external fun nativeAssGetTrackCount(handle: Long): Int
-    @JvmStatic external fun nativeAssGetTrackInfo(handle: Long, index: Int): String // JSON
-
-    // ===== Sonic Audio DSP =====
-    @JvmStatic external fun nativeInitSonicDsp(sampleRate: Int, channels: Int): Long
-    @JvmStatic external fun nativeCleanupSonicDsp(handle: Long)
-    @JvmStatic external fun nativeSonicSetVolume(handle: Long, volume: Float)
-    @JvmStatic external fun nativeSonicSetMute(handle: Long, mute: Boolean)
-    @JvmStatic external fun nativeSonicSetEq(handle: Long, bandsJson: String)
-    @JvmStatic external fun nativeSonicSetNightMode(handle: Long, enabled: Boolean, thresholdDb: Float, ratio: Float)
-    @JvmStatic external fun nativeSonicSetLoudnessNorm(handle: Long, enabled: Boolean, targetLufs: Float)
-    @JvmStatic external fun nativeSonicSetResampleQuality(handle: Long, quality: Int)
-    @JvmStatic external fun nativeSonicProcessBuffer(handle: Long, input: ByteArray, output: ByteArray, frames: Int)
-
-    // ===== Performance Metrics =====
-    @JvmStatic external fun nativeGetPerformanceMetrics(handle: Long): String // JSON
-
-    // ===== Codec Pack Loading =====
-    @JvmStatic external fun nativeLoadCodecPack(handle: Long, packPath: String): Boolean
-    @JvmStatic external fun nativeUnloadCodecPack(handle: Long, codecName: String)
-    @JvmStatic external fun nativeGetLoadedCodecPacks(handle: Long): String // JSON array
-
-    // ===== DRM =====
-    @JvmStatic external fun nativeSetDrmConfig(handle: Long, drmConfigJson: String): Boolean
-    @JvmStatic external fun nativeProcessDrmKeyRequest(handle: Long, request: ByteArray): ByteArray
-
-    // ===== Surface =====
-    @JvmStatic external fun nativeSetSurface(handle: Long, surface: Surface)
-    @JvmStatic external fun nativeSetSurfaceSize(handle: Long, width: Int, height: Int)
 
     // ===== Subtitle Loading =====
     fun loadExternalSubtitle(path: String, language: String): Boolean {

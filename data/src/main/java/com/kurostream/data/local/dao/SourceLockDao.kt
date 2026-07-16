@@ -33,19 +33,19 @@ interface SourceLockDao {
     @Update
     suspend fun update(lock: SourceLockEntity)
 
-    @Query("SELECT * FROM source_locks WHERE seriesId = :seriesId")
+    @Query("SELECT * FROM source_locks WHERE series_id = :seriesId")
     suspend fun getBySeriesId(seriesId: String): SourceLockEntity?
 
-    @Query("SELECT * FROM source_locks WHERE seriesId = :seriesId")
+    @Query("SELECT * FROM source_locks WHERE series_id = :seriesId")
     fun observeBySeriesId(seriesId: String): Flow<SourceLockEntity?>
 
-    @Query("SELECT * FROM source_locks WHERE isActive = 1")
+    @Query("SELECT * FROM source_locks WHERE is_active = 1")
     fun observeAllActive(): Flow<List<SourceLockEntity>>
 
-    @Query("DELETE FROM source_locks WHERE seriesId = :seriesId")
+    @Query("DELETE FROM source_locks WHERE series_id = :seriesId")
     suspend fun deleteBySeriesId(seriesId: String)
 
-    @Query("DELETE FROM source_locks WHERE lastUsedAt < :threshold AND isActive = 0")
+    @Query("DELETE FROM source_locks WHERE last_used_at < :threshold AND is_active = 0")
     suspend fun cleanupOldInactive(threshold: Long)
 
     @Query("DELETE FROM source_locks")
@@ -62,7 +62,7 @@ interface SourceLockDao {
     fun observeSettings(): Flow<SourceLockSettingsEntity?>
 
     // Fallback logging
-    @Query("INSERT INTO source_lock_fallbacks (seriesId, fromProvider, toProvider, reason, timestamp) VALUES (:seriesId, :fromProvider, :toProvider, :reason, :timestamp)")
+    @Query("INSERT INTO source_lock_fallbacks (series_id, from_provider, to_provider, reason, timestamp) VALUES (:seriesId, :fromProvider, :toProvider, :reason, :timestamp)")
     suspend fun recordFallback(
         seriesId: String,
         fromProvider: String,

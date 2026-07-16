@@ -24,8 +24,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-apply(plugin = "org.jetbrains.kotlin.plugin.compose")
-
 android {
     namespace = "com.kurostream.extensions"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -49,25 +47,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
 }
 
 dependencies {
     implementation(project(":domain"))
-    implementation(project(":common"))
-
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.coil.compose)
+    implementation(project(":ui"))
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

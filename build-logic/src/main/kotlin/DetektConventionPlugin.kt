@@ -24,7 +24,7 @@ class DetektConventionPlugin : Plugin<Project> {
             pluginManager.apply("io.gitlab.arturbosch.detekt")
 
             extensions.configure<DetektExtension> {
-                toolVersion = "1.23.6"
+                toolVersion = "1.23.7"
                 config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
                 buildUponDefaultConfig = true
                 allRules = false

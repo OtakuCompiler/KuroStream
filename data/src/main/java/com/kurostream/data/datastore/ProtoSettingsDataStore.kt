@@ -26,7 +26,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ProtoSettingsDataStore @Inject constructor(
-    @androidx.hilt.android.qualifiers.ApplicationContext private val context: Context
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) {
     private val dataStore: DataStore<SettingsProto.Settings> = context.dataStore(
         fileName = "kurostream_settings.pb",

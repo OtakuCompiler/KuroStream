@@ -4,9 +4,8 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.compose)
 }
-
-apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 
 android {
     namespace = "com.kurostream.app"
@@ -82,9 +81,6 @@ android {
         compose = true
         viewBinding = false
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
     packaging {
         resources.excludes += "/META-INF/*.kotlin_module"
         jniLibs {
@@ -111,6 +107,7 @@ dependencies {
 
     implementation(project(":core-common"))
     implementation(project(":common"))
+    implementation(project(":ui"))
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":cache"))
@@ -189,9 +186,6 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.moshi)
-    implementation(libs.moshi.kotlin)
 
     implementation(libs.appauth)
     implementation(libs.play.services.auth)

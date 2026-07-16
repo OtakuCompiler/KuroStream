@@ -20,7 +20,9 @@ import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.legacy.repository.MediaRepository
 import com.kurostream.domain.legacy.repository.ProfileRepository
+import com.kurostream.domain.model.WatchHistory
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -35,7 +37,11 @@ class GetContinueWatching(
         return profileRepository.observeActiveProfile()
             .flatMapLatest { profile ->
                 if (profile == null) flowOf(Result.Success(emptyList()))
-                else flow { emit(Result.Loading); emit(mediaRepository.getWatchHistory(profile.id)) }
+                else flow {
+                    emit(Result.Loading)
+                    val result = mediaRepository.getTrending(1, limit)
+                    emit(result)
+                }
             }
             .flowOn(dispatcherProvider.io)
     }

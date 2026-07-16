@@ -37,4 +37,9 @@ interface ProfileRepository {
 
     suspend fun updatePreferences(profileId: String, preferencesJson: String): Result<Unit>
     suspend fun getPreferences(profileId: String): String?
+
+    suspend fun getProfiles(): List<Profile>
+    suspend fun getProfile(profileId: String): Profile?
+    suspend fun saveProfile(profile: Profile): Result<Unit>
+    suspend fun setActiveProfile(profileId: String): Result<Unit>
 }

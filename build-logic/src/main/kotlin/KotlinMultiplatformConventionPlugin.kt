@@ -26,8 +26,7 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
 
             extensions.configure<KotlinMultiplatformExtension> {
                 jvm()
-                android()
-                ios()
+                androidTarget()
 
                 sourceSets {
                     val commonMain by getting {

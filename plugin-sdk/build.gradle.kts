@@ -42,7 +42,6 @@ android {
 dependencies {
     implementation(project(":core-common"))
     implementation(project(":domain"))
-    implementation(project(":common"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)

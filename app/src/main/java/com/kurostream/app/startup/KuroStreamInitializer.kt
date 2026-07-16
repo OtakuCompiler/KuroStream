@@ -23,9 +23,9 @@ import com.kurostream.common.thermal.ThermalGuard
 import com.kurostream.app.player.PlayerInitializer
 import com.kurostream.app.repository.SyncInitializer
 import com.kurostream.app.extensions.PluginScannerInitializer
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 
 /**
@@ -40,7 +40,7 @@ class KuroStreamInitializer : Initializer<Unit> {
 
         // Defer everything else to idle handler (after first frame)
         Looper.myQueue().addIdleHandler {
-            CoroutineScope(Dispatchers.Default).launch {
+            supervisorScope {
                 initPluginSdk(context)
                 initFirebase(context)
                 initSyncManager(context)
@@ -52,7 +52,7 @@ class KuroStreamInitializer : Initializer<Unit> {
 
         // Second-level deferral for lowest priority tasks
         Handler(Looper.getMainLooper()).postDelayed({
-            CoroutineScope(Dispatchers.Default).launch {
+            supervisorScope {
                 initLowPriority(context)
             }
         }, 5000)
@@ -64,7 +64,7 @@ class KuroStreamInitializer : Initializer<Unit> {
         SyncInitializer::class.java,
     )
 
-    private fun initPluginSdk(context: Context) {
+    private suspend fun initPluginSdk(context: Context) {
         try {
             // Plugin SDK initialization would go here
             // com.kurostream.plugin.sdk.manager.ExtensionManager.getInstance(context).initialize()
@@ -73,7 +73,7 @@ class KuroStreamInitializer : Initializer<Unit> {
         }
     }
 
-    private fun initFirebase(context: Context) {
+    private suspend fun initFirebase(context: Context) {
         try {
             // Firebase is auto-initialized, but we can do additional setup here
             // com.google.firebase.FirebaseApp.initializeApp(context)
@@ -81,6 +81,31 @@ class KuroStreamInitializer : Initializer<Unit> {
             Timber.e(e, "Failed to initialize Firebase")
         }
     }
+
+    private suspend fun initSyncManager(context: Context) {
+        try {
+            // Sync manager initialization
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize sync manager")
+        }
+    }
+
+    private suspend fun initPreCacheManager(context: Context) {
+        try {
+            // Pre-cache manager initialization
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize pre-cache manager")
+        }
+    }
+
+    private suspend fun initLowPriority(context: Context) {
+        try {
+            // Lowest priority initialization
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize low priority components")
+        }
+    }
+}
 
     private fun initSyncManager(context: Context) {
         try {

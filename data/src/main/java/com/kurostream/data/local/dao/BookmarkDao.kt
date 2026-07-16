@@ -29,7 +29,7 @@ interface BookmarkDao {
     @Query("DELETE FROM bookmarks WHERE id = :id")
     suspend fun deleteById(id: String)
 
-    @Query("SELECT * FROM bookmarks WHERE profileId = :profileId")
+    @Query("SELECT * FROM bookmarks WHERE profile_id = :profileId")
     suspend fun getByProfileId(profileId: String): List<BookmarkEntity>
 
     @Query("SELECT * FROM bookmarks")

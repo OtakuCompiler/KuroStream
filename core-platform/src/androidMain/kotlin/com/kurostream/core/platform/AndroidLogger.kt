@@ -21,52 +21,52 @@ class AndroidLogger(private val tag: String = "KuroStream") : PlatformLogger {
     private var minLevel = LogLevel.DEBUG
     private val enabledTags = mutableSetOf<String>()
     
-    fun verbose(tag: String, message: String, throwable: Throwable?) {
+    override fun verbose(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.VERBOSE.priority && isTagEnabled(tag)) {
             Log.v(tag, message, throwable)
         }
     }
     
-    fun debug(tag: String, message: String, throwable: Throwable?) {
+    override fun debug(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.DEBUG.priority && isTagEnabled(tag)) {
             Log.d(tag, message, throwable)
         }
     }
     
-    fun info(tag: String, message: String, throwable: Throwable?) {
+    override fun info(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.INFO.priority && isTagEnabled(tag)) {
             Log.i(tag, message, throwable)
         }
     }
     
-    fun warn(tag: String, message: String, throwable: Throwable?) {
+    override fun warn(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.WARN.priority && isTagEnabled(tag)) {
             Log.w(tag, message, throwable)
         }
     }
     
-    fun error(tag: String, message: String, throwable: Throwable?) {
+    override fun error(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.ERROR.priority && isTagEnabled(tag)) {
             Log.e(tag, message, throwable)
         }
     }
     
-    fun fatal(tag: String, message: String, throwable: Throwable?) {
+    override fun fatal(tag: String, message: String, throwable: Throwable?) {
         if (minLevel.priority <= LogLevel.FATAL.priority && isTagEnabled(tag)) {
             Log.e(tag, message, throwable)
             android.os.Process.killProcess(android.os.Process.myPid())
         }
     }
     
-    fun setMinLevel(level: LogLevel) {
+    override fun setMinLevel(level: LogLevel) {
         minLevel = level
     }
     
-    fun enableTag(tag: String) {
+    override fun enableTag(tag: String) {
         enabledTags.add(tag)
     }
     
-    fun disableTag(tag: String) {
+    override fun disableTag(tag: String) {
         enabledTags.remove(tag)
     }
     

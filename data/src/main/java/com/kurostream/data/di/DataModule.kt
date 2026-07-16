@@ -18,8 +18,8 @@ package com.kurostream.data.di
 import android.content.Context
 import com.kurostream.data.cache.CacheManager
 import com.kurostream.data.cache.CacheManagerImpl
-import com.kurostream.data.home.CustomHomeRowRepository
-import com.kurostream.data.home.CustomHomeRowRepositoryImpl
+// import com.kurostream.data.home.CustomHomeRowRepository
+// import com.kurostream.data.home.CustomHomeRowRepositoryImpl
 import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.data.local.preferences.SettingsDataStoreImpl
@@ -31,15 +31,15 @@ import com.kurostream.data.subtitle.OfflineTranslator
 import com.kurostream.data.subtitle.OfflineTranslatorImpl
 import com.kurostream.data.sync.CrossDeviceSyncRepository
 import com.kurostream.data.sync.CrossDeviceSyncRepositoryImpl
-import com.kurostream.data.trailer.TrailerRepository
-import com.kurostream.data.trailer.TrailerRepositoryImpl
-import com.kurostream.domain.metadata.MetadataProvider
-import com.kurostream.domain.metadata.UnifiedMetadataRepository
+// import com.kurostream.data.trailer.TrailerRepository
+// import com.kurostream.data.trailer.TrailerRepositoryImpl
+// import com.kurostream.domain.metadata.MetadataProvider
+// import com.kurostream.domain.metadata.UnifiedMetadataRepository
 import com.kurostream.domain.network.NetworkMonitorRepository
 import com.kurostream.domain.repository.*
 import com.kurostream.domain.subtitle.OfflineTranslator
 import com.kurostream.domain.sync.CrossDeviceSyncRepository
-import com.kurostream.domain.trailer.TrailerRepository
+// import com.kurostream.domain.trailer.TrailerRepository
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.Module
@@ -47,6 +47,7 @@ import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Named
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -83,10 +84,6 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideCustomHomeRowRepository(impl: CustomHomeRowRepositoryImpl): CustomHomeRowRepository = impl
-
-    @Provides
-    @Singleton
     fun provideNetworkMonitorRepository(impl: NetworkMonitorRepositoryImpl): NetworkMonitorRepository = impl
 
     @Provides
@@ -99,39 +96,32 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideTrailerRepository(impl: TrailerRepositoryImpl): TrailerRepository = impl
-
-    @Provides
-    @Singleton
-    fun provideUnifiedMetadataRepository(
-        kitsuProvider: KitsuMetadataProvider,
-        anilistProvider: AniListMetadataProvider,
-        malProvider: MalMetadataProvider,
-        tmdbProvider: TmdbMetadataProvider,
-    ): UnifiedMetadataRepository {
-        return UnifiedMetadataRepositoryImpl(
-            kitsuProvider,
-            anilistProvider,
-            malProvider,
-            tmdbProvider,
-        )
+    fun provideSettingsDataStore(@ApplicationContext context: Context): SettingsDataStore {
+        return SettingsDataStoreImpl(context)
     }
 
     @Provides
     @Singleton
-    fun provideMetadataProviders(
-        kitsuProvider: KitsuMetadataProvider,
-        anilistProvider: AniListMetadataProvider,
-        malProvider: MalMetadataProvider,
-        tmdbProvider: TmdbMetadataProvider,
-    ): Set<MetadataProvider> = setOf(
-        kitsuProvider, anilistProvider, malProvider, tmdbProvider
-    )
+    fun provideProfileDao(database: com.kurostream.data.local.database.KuroStreamDatabase): ProfileDao {
+        return database.profileDao()
+    }
 
     @Provides
     @Singleton
-    fun provideSettingsDataStore(@ApplicationContext context: Context): SettingsDataStore {
-        return SettingsDataStoreImpl(context)
+    fun provideWatchHistoryDao(database: com.kurostream.data.local.database.KuroStreamDatabase): WatchHistoryDao {
+        return database.watchHistoryDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFavoriteDao(database: com.kurostream.data.local.database.KuroStreamDatabase): FavoriteDao {
+        return database.favoriteDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDownloadItemDao(database: com.kurostream.data.local.database.KuroStreamDatabase): DownloadItemDao {
+        return database.downloadItemDao()
     }
 
     @Provides

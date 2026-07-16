@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.Flow
     message = "Use com.kurostream.domain.repository.ProfileRepository instead. This legacy interface will be removed in a future version.",
     replaceWith = ReplaceWith("import com.kurostream.domain.repository.ProfileRepository")
 )
-interface ProfileRepositoryLegacy {
+interface ProfileRepository {
     fun observeActiveProfile(): Flow<Profile?>
     fun observeAllProfiles(): Flow<List<Profile>>
     suspend fun createProfile(name: String, avatarUrl: String? = null): com.kurostream.core.common.result.Result<Profile>

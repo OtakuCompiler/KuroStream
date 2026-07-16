@@ -181,17 +181,18 @@ data class StartupMetrics(
 class NetworkDeduplicator {
     private val inFlightRequests = mutableMapOf<String, kotlinx.coroutines.Deferred<*>>()
     private val lock = Any()
+    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
 
     suspend fun <T> execute(key: String, request: suspend () -> T): T {
         val existing = synchronized(lock) {
             inFlightRequests[key] as? kotlinx.coroutines.Deferred<T>
         }
-        
+
         if (existing != null) {
             return existing.await()
         }
-        
-        val deferred = kotlinx.coroutines.CoroutineScope(Dispatchers.IO).async {
+
+        val deferred = scope.async {
             try {
                 request()
             } finally {
@@ -200,12 +201,16 @@ class NetworkDeduplicator {
                 }
             }
         }
-        
+
         synchronized(lock) {
             inFlightRequests[key] = deferred
         }
-        
+
         return deferred.await()
+    }
+
+    fun shutdown() {
+        scope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
     }
 }
 

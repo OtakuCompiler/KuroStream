@@ -15,23 +15,20 @@
 
 package com.kurostream.cache
 
-import androidx.compose.runtime.Immutable
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface CacheManager {
     val namespace: String
     suspend fun <T : Any> put(key: String, value: T, ttlMs: Long = 0L)
     suspend fun <T : Any> get(key: String, clazz: Class<T>): T?
-    suspend inline fun <reified T : Any> get(key: String): T? = get(key, T::class.java)
     suspend fun remove(key: String)
     suspend fun contains(key: String): Boolean
     suspend fun clear()
     fun memorySize(): Int
     fun diskSize(): Long
-    val stats: Flow<CacheStats>
+    val stats: StateFlow<CacheStats>
 }
 
-@Immutable
 data class CacheStats(
     val namespace: String,
     val memoryHits: Long,

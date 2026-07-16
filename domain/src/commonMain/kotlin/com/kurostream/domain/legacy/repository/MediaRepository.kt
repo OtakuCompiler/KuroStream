@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.Flow
     message = "Use com.kurostream.domain.repository.MediaRepository instead. This legacy interface will be removed in a future version.",
     replaceWith = ReplaceWith("import com.kurostream.domain.repository.MediaRepository")
 )
-interface MediaRepositoryLegacy {
+interface MediaRepository {
     fun observeHomeRows(profileId: String): Flow<com.kurostream.core.common.result.Result<List<HomeRow>>>
     suspend fun getTrending(page: Int, limit: Int): com.kurostream.core.common.result.Result<List<MediaItem>>
     suspend fun search(query: String, page: Int, limit: Int): com.kurostream.core.common.result.Result<List<MediaItem>>

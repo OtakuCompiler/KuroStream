@@ -12,43 +12,13 @@ plugins {
     alias(libs.plugins.dependencycheck) apply false
 }
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-    dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
-        classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.0.21")
-    }
-}
-
-apply(plugin = "org.owasp.dependencycheck")
-
 val excludedDetektModules = setOf("tizenApp", "webosApp")
 
 subprojects {
-    plugins.withType<JavaPlugin>().configureEach {
-        extensions.configure<JavaPluginExtension> {
-            toolchain {
-                languageVersion.set(JavaLanguageVersion.of(17))
-            }
-        }
+    if (name !in excludedDetektModules) {
+        apply(plugin = "io.gitlab.arturbosch.detekt")
     }
-}
 
-subprojects {
-    plugins.withType<JavaPlugin>().configureEach {
-        extensions.configure<JavaPluginExtension> {
-            toolchain {
-                languageVersion.set(JavaLanguageVersion.of(17))
-            }
-        }
-    }
-}
-
-allprojects {
     afterEvaluate {
         if (plugins.hasPlugin("io.gitlab.arturbosch.detekt")) {
             configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
@@ -57,27 +27,17 @@ allprojects {
                 buildUponDefaultConfig = true
                 allRules = false
                 parallel = true
-                // Exclude files with known detekt 1.23.6 ClassCastException bug
-                exclude(
-                    "**/TvRepositoryAdapters.kt",
-                    "**/BenchmarkRunner.kt",
-                    "**/BackupSettingsScreen.kt"
-                )
             }
-        }
-    }
-}
-
-subprojects {
-    if (name !in excludedDetektModules) {
-        apply(plugin = "io.gitlab.arturbosch.detekt")
-    }
-
-    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-        reports {
-            html.required.set(true)
-            xml.required.set(true)
-            txt.required.set(false)
+            tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+                exclude("**/TvRepositoryAdapters.kt")
+                exclude("**/BenchmarkRunner.kt")
+                exclude("**/BackupSettingsScreen.kt")
+                reports {
+                    html.required.set(true)
+                    xml.required.set(true)
+                    txt.required.set(false)
+                }
+            }
         }
     }
 }

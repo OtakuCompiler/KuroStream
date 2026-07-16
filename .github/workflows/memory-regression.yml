@@ -1,0 +1,319 @@
+# Memory Regression Tests Workflow
+# Runs on every PR and main branch push
+
+name: Memory Regression Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'playback/**'
+      - 'app/**'
+      - 'benchmark/**'
+      - '.github/workflows/memory-regression.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  memory-benchmark:
+    name: Memory Benchmark (${{ matrix.api }}-${{ matrix.abi }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [28, 31, 34]  # Android 9, 12, 14
+        abi: [arm64-v8a]
+        include:
+          - api: 28
+            emulator: "system-images;android-28;default;arm64-v8a"
+          - api: 31
+            emulator: "system-images;android-31;default;arm64-v8a"
+          - api: 34
+            emulator: "system-images;android-34;default;arm64-v8a"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need history for baseline comparison
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: wrapper
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/lib/android/sdk
+            ~/.android
+          key: android-sdk-${{ runner.os }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            android-sdk-${{ runner.os }}-
+
+      - name: Install Android SDK
+        run: |
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "emulator" "platform-tools"
+          echo "y" | sdkmanager --licenses
+
+      - name: Install Emulator Image
+        run: |
+          sdkmanager --install "${{ matrix.emulator }}"
+
+      - name: Start Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          arch: arm64
+          force-avd-creation: false
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -memory 2048 -partition-size 4096
+          disable-animations: true
+
+      - name: Build Benchmark APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :benchmark:assembleDebug -Pandroid.testInstrumentationRunnerArguments.class=com.kurostream.benchmark.MemoryBenchmarkSuite --no-daemon -q
+
+      - name: Install Benchmark APK
+        run: |
+          adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
+          adb install -r benchmark/build/outputs/apk/debug/benchmark-debug.apk
+
+      - name: Run Memory Benchmark
+        id: benchmark
+        run: |
+          adb shell am start -n com.kurostream.benchmark/com.kurostream.benchmark.MemoryBenchmarkActivity -a android.intent.action.MAIN -e duration 60000
+          
+          # Wait for benchmark to complete
+          sleep 70
+          
+          # Pull results
+          adb pull /sdcard/kurostream/benchmark_results.json benchmark_results.json || echo "Results not found"
+          
+          if [ -f benchmark_results.json ]; then
+            cat benchmark_results.json
+          else
+            echo "ERROR: Benchmark results not generated"
+            exit 1
+          fi
+
+      - name: Parse Results
+        id: parse
+        if: always()
+        run: |
+          if [ -f benchmark_results.json ]; then
+            python3 << 'EOF'
+            import json
+            import sys
+            
+            with open('benchmark_results.json') as f:
+                data = json.load(f)
+            
+            # Thresholds
+            thresholds = {
+                '1080p_P2P_Direct': {'peak_mb': 30, 'avg_mb': 25},
+                '1080p_Upscale_4K': {'peak_mb': 40, 'avg_mb': 33},
+                '4K_Direct': {'peak_mb': 50, 'avg_mb': 42},
+                '4K_Atmos': {'peak_mb': 45, 'avg_mb': 38},
+                'Idle_Home_Scrolling': {'peak_mb': 25, 'avg_mb': 20},
+            }
+            
+            all_passed = True
+            report = "| Scenario | Peak PSS (MB) | Avg PSS (MB) | Peak Target | Avg Target | Status |\n"
+            report += "|----------|---------------|--------------|-------------|------------|--------|\n"
+            
+            for result in data.get('results', []):
+                scenario = result.get('scenario', 'unknown')
+                peak_mb = result.get('peak_pss_kb', 0) / 1024
+                avg_mb = result.get('avg_pss_kb', 0) / 1024
+                
+                threshold = thresholds.get(scenario, {'peak_mb': 999, 'avg_mb': 999})
+                peak_pass = peak_mb <= threshold['peak_mb']
+                avg_pass = avg_mb <= threshold['avg_mb']
+                passed = peak_pass and avg_pass
+                
+                status = "✅ PASS" if passed else "❌ FAIL"
+                if not passed:
+                    all_passed = False
+                
+                report += f"| {scenario} | {peak_mb:.1f} | {avg_mb:.1f} | {threshold['peak_mb']} | {threshold['avg_mb']} | {status} |\n"
+            
+            print(report)
+            
+            # Write report for PR comment
+            with open('memory_report.md', 'w') as f:
+                f.write(report)
+            
+            # Write summary for GitHub Actions
+            with open('memory_summary.json', 'w') as f:
+                json.dump({'passed': all_passed, 'report': report, 'results': data}, f)
+            
+            if not all_passed:
+                print("::error::Memory regression detected!")
+                sys.exit(1)
+            
+            EOF
+          else
+            echo "::error::No benchmark results found"
+            exit 1
+          fi
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('memory_report.md', 'utf8');
+            const summary = fs.readFileSync('memory_summary.json', 'utf8');
+            const data = JSON.parse(summary);
+            
+            const body = `## 📊 Memory Benchmark Results (API ${{ matrix.api }})\n\n${data.report}\n\n---\n*Generated from commit ${{ github.sha }}*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-benchmark-${{ matrix.api }}-${{ matrix.abi }}
+          path: |
+            benchmark_results.json
+            memory_report.md
+            memory_summary.json
+          retention-days: 7
+
+      - name: Fail on Regression
+        if: failure() && steps.parse.outcome == 'failure'
+        run: exit 1
+
+  compare-baseline:
+    name: Compare Against Baseline
+    needs: memory-benchmark
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: memory-benchmark-*
+          merge-multiple: true
+
+      - name: Fetch Main Baseline
+        run: |
+          git fetch origin main:main --depth=1
+          # Try to get baseline from main branch
+          if git show main:benchmark/baseline.json > baseline_main.json 2>/dev/null; then
+            echo "Baseline found on main"
+          else
+            echo "No baseline on main, using current as baseline"
+            echo '{}' > baseline_main.json
+          fi
+
+      - name: Compare Results
+        run: |
+          python3 << 'EOF'
+          import json
+          import glob
+          
+          # Load all benchmark results
+          all_results = []
+          for f in glob.glob('benchmark_results.json'):
+              with open(f) as fp:
+                  all_results.append(json.load(fp))
+          
+          if not all_results:
+              print("No results to compare")
+              exit(0)
+          
+          # Load baseline
+          with open('baseline_main.json') as f:
+              baseline = json.load(f)
+          
+          if not baseline:
+              print("No baseline to compare against")
+              exit(0)
+          
+          # Compare
+          for result in all_results:
+              for r in result.get('results', []):
+                  scenario = r.get('scenario')
+                  peak = r.get('peak_pss_kb', 0) / 1024
+                  
+                  baseline_peak = baseline.get(scenario, {}).get('peak_pss_kb', 0) / 1024
+                  if baseline_peak > 0:
+                      change_pct = ((peak - baseline_peak) / baseline_peak) * 100
+                      if change_pct > 10:
+                          print(f"⚠️  REGRESSION: {scenario} peak increased {change_pct:.1f}% (baseline: {baseline_peak:.1f}MB, current: {peak:.1f}MB)")
+                      elif change_pct < -5:
+                          print(f"✅ IMPROVEMENT: {scenario} peak decreased {abs(change_pct):.1f}%")
+                      else:
+                          print(f"✅ STABLE: {scenario} peak change {change_pct:.1f}%")
+          
+          EOF
+
+  update-baseline:
+    name: Update Baseline (Main Only)
+    needs: [memory-benchmark, compare-baseline]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: memory-benchmark-*
+          merge-multiple: true
+
+      - name: Generate Baseline
+        run: |
+          python3 << 'EOF'
+          import json
+          import glob
+          
+          # Aggregate results across API levels
+          baseline = {}
+          for f in glob.glob('benchmark_results.json'):
+              with open(f) as fp:
+                  data = json.load(fp)
+              for r in data.get('results', []):
+                  scenario = r.get('scenario')
+                  if scenario not in baseline:
+                      baseline[scenario] = r
+                  else:
+                      # Keep best (lowest) peak
+                      if r.get('peak_pss_kb', 999999) < baseline[scenario].get('peak_pss_kb', 999999):
+                          baseline[scenario] = r
+          
+          with open('baseline.json', 'w') as f:
+              json.dump(baseline, f, indent=2)
+          
+          print("Baseline generated:", json.dumps(baseline, indent=2))
+          EOF
+
+      - name: Commit Baseline
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "chore: update memory benchmark baseline"
+          add: "benchmark/baseline.json"
+          default_author: github_actions

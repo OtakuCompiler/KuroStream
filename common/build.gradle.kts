@@ -20,7 +20,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 android {
     namespace = "com.kurostream.common"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -39,12 +38,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
 }
 dependencies {
     implementation(project(":core-common"))
@@ -53,13 +46,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.runtime)
     implementation(libs.timber)
-    implementation(libs.coil.compose)
-    implementation(libs.androidx.lifecycle.process)
     implementation(libs.work.runtime.ktx)
-    implementation(libs.androidx.compose.animation)
-    implementation(libs.androidx.compose.animation.graphics)
-    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 }

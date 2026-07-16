@@ -35,8 +35,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-apply(plugin = "org.jetbrains.kotlin.plugin.compose")
-
 android {
     namespace = "com.kurostream.players"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -63,7 +61,6 @@ android {
     }
 
     buildFeatures {
-        compose = true
         prefabPublishing = true
     }
 
@@ -87,9 +84,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
 
     packaging {
@@ -128,16 +122,6 @@ dependencies {
     implementation(libs.moshi.kotlin)
 
     // --- Phase 71-80 additions (advanced rendering/AI/DRM/sandbox/watch-party/audio) ---
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.compose.animation)
-    implementation(libs.androidx.compose.animation.graphics)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.material3.window.size)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 

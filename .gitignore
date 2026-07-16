@@ -1,7 +1,10 @@
+# Gradle
 .gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper.properties
+
+# Local configuration
 local.properties
 secrets.properties
 *.iml
@@ -9,8 +12,12 @@ secrets.properties
 .navigation/
 captures/
 *.hprof
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Build outputs
 *.kotlin_module
 *.apk
 *.ap_
@@ -22,16 +29,37 @@ out/
 obj/
 *.so
 *.log
-*.swp
+
+# KuroStream specific
 KuroStream_release/
 .trashed-*
 MERGE_REPORT*.md
 .github/secrets.md
-gradle-8.10.2-bin.zip
 ktlint
-*.png
-*.txt
 *.sh
 node_modules/
+
+# IDE
 .opencode/
 .kotlin/
+
+# Keep wrapper jar and properties
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Keep PNG files used in app resources
+!app/src/main/res/drawable/banner.png
+!app/src/main/res/mipmap-*/ic_launcher*.png
+
+# Keep gradle wrapper
+!gradlew
+!gradlew.bat
+
+# External
+.externalNativeBuild/
+
+# Test reports (optional to keep)
+*.xml
+!pom.xml
+!build.gradle.kts
+!settings.gradle.kts

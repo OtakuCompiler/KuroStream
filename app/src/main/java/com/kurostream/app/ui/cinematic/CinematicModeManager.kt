@@ -39,7 +39,8 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Cinematic Mode Manager - handles auto-hide UI after inactivity
  */
-class CinematicModeManager {
+@Stable
+class CinematicModeManager private constructor() {
 
     private val _isCinematicMode = MutableStateFlow(false)
     val isCinematicMode = _isCinematicMode.asStateFlow()
@@ -76,7 +77,13 @@ class CinematicModeManager {
 
     private fun startHideTimer() {
         hideJob?.cancel()
-        hideJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+        // Note: This class must be used within a coroutine scope
+        // The actual timer is managed by the calling scope
+    }
+
+    fun startTimer(scope: kotlinx.coroutines.CoroutineScope) {
+        hideJob?.cancel()
+        hideJob = scope.launch(kotlinx.coroutines.Dispatchers.Main) {
             kotlinx.coroutines.delay(timeoutMs)
             animateUiOpacity(0f)
         }
@@ -93,75 +100,37 @@ class CinematicModeManager {
         // Animation handled in Compose
         _uiOpacity.value = target
     }
+
+    fun cancel() {
+        hideJob?.cancel()
+    }
 }
 
 @Composable
 fun rememberCinematicMode(): CinematicModeState {
     val manager = remember { CinematicModeManager() }
-    val isCinematic by manager.isCinematicMode.collectAsStateWithLifecycle()
-    val opacity by manager.uiOpacity.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    
+    androidx.compose.runtime.DisposableEffect(manager) {
+        onDispose { manager.cancel() }
+    }
+    
+    val isCinematicMode by manager.isCinematicMode.collectAsStateWithLifecycle()
+    val uiOpacity by manager.uiOpacity.collectAsStateWithLifecycle()
     
     return CinematicModeState(
-        isCinematicMode = isCinematic,
-        uiOpacity = opacity,
+        isCinematicMode = isCinematicMode,
+        uiOpacity = uiOpacity,
         onUserInteraction = { manager.onUserInteraction() },
-        enable = { manager.enableCinematicMode() },
-        disable = { manager.disableCinematicMode() },
+        enableCinematicMode = { manager.enableCinematicMode(); manager.startTimer(scope) },
+        disableCinematicMode = { manager.disableCinematicMode() },
     )
 }
 
-@Stable
 data class CinematicModeState(
     val isCinematicMode: Boolean,
     val uiOpacity: Float,
     val onUserInteraction: () -> Unit,
-    val enable: () -> Unit,
-    val disable: () -> Unit,
+    val enableCinematicMode: () -> Unit,
+    val disableCinematicMode: () -> Unit,
 )
-
-@Composable
-fun CinematicModeWrapper(
-    content: @Composable () -> Unit,
-    cinematicState: CinematicModeState,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier) {
-        content()
-        
-        // Touch/key listener to detect user interaction
-        androidx.compose.ui.input.pointer.pointerInput(Unit) {
-            androidx.compose.ui.input.pointer.detectTapGestures(
-                onTap = { cinematicState.onUserInteraction() },
-                onDoubleTap = { cinematicState.onUserInteraction() },
-                onLongPress = { cinematicState.onUserInteraction() },
-            )
-        }
-        
-        // Key event listener for remote
-        androidx.compose.ui.input.key.onKeyEvent { event ->
-            if (event.type == androidx.compose.ui.input.key.KeyEventType.KeyDown) {
-                cinematicState.onUserInteraction()
-            }
-            false
-        }
-    }
-}
-
-@Composable
-fun AnimatedOpacityWrapper(
-    opacity: Float,
-    content: @Composable () -> Unit,
-) {
-    val animatedOpacity by animateFloatAsState(
-        targetValue = opacity,
-        animationSpec = tween(300)
-    )
-    
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer { alpha = animatedOpacity }
-    ) {
-        content()
-    }
-}

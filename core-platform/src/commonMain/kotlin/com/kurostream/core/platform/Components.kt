@@ -5,10 +5,10 @@ interface Provider<T> {
     fun get(): T
 }
 
-interface LoggerComponent {
+expect interface LoggerComponent {
     val loggerProvider: Provider<PlatformLogger>
 }
 
-interface PlatformComponent {
+expect interface PlatformComponent {
     val platformFactory: Provider<PlatformFactory>
 }

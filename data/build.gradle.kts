@@ -25,9 +25,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-val protobufVersion = libs.versions.protobuf.get()
-val protobufKotlinVersion = libs.versions.protobufKotlin.get()
-
 android {
     namespace = "com.kurostream.data"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -63,18 +60,17 @@ android {
 
 dependencies {
     implementation(project(":core-common"))
-    implementation(project(":common"))
     implementation(project(":domain"))
     implementation(project(":cache"))
+
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
-
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
 
     implementation(libs.datastore.preferences)
     implementation(libs.datastore.core)
@@ -102,6 +98,11 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation("androidx.lifecycle:lifecycle-service:${libs.versions.lifecycle.get()}")
+    
+    // TensorFlow Lite for offline translation
+    implementation(libs.tensorflow.lite)
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

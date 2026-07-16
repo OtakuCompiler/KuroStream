@@ -26,6 +26,8 @@ class ZeroSeekPlaybackManager @Inject constructor() {
     private val isWaitingForData = AtomicBoolean(false)
     private var stallWatchJob: Job? = null
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     data class FirstPieceEvent(
         val infoHash: String,
         val fileIndex: Int,
@@ -65,7 +67,7 @@ class ZeroSeekPlaybackManager @Inject constructor() {
             now - firstPieceTimeMs.get()
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             _firstPieceAvailable.emit(
                 FirstPieceEvent(
                     infoHash = infoHash,
@@ -91,7 +93,7 @@ class ZeroSeekPlaybackManager @Inject constructor() {
             0L
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             _playbackReady.emit(
                 PlaybackReadyEvent(
                     infoHash = infoHash,
@@ -119,38 +121,18 @@ class ZeroSeekPlaybackManager @Inject constructor() {
         Log.i(TAG, "Buffer resumed for $infoHash after ${stallDuration}ms stall")
     }
 
-    fun startStallWatch(scope: CoroutineScope, getBufferLevelMs: suspend () -> Long) {
-        stallWatchJob?.cancel()
-        stallWatchJob = scope.launch {
-            while (isActive) {
-                val bufferLevel = getBufferLevelMs()
-                if (bufferLevel < 500) {
-                    onBufferStall("")
-                } else if (bufferLevel > 2000) {
-                    onBufferResumed("")
-                }
-                delay(200)
-            }
-        }
-    }
-
-    fun stopStallWatch() {
-        stallWatchJob?.cancel()
-        stallWatchJob = null
-    }
-
-    fun getMetrics(): PlaybackMetrics = metrics.copy(
-        stallsCount = stallCount,
-        totalStallTimeMs = totalStallTime,
-    )
+    fun getMetrics(): PlaybackMetrics = metrics
 
     fun reset() {
         firstPieceTimeMs.set(0)
         playbackStartTimeMs.set(0)
         isWaitingForData.set(false)
         stallCount = 0
-        totalStallTime = 0L
-        stallStart = 0L
-        stopStallWatch()
+        totalStallTime = 0
+        stallStart = 0
+    }
+
+    fun shutdown() {
+        scope.cancel()
     }
 }

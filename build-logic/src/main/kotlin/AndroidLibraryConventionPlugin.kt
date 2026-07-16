@@ -19,8 +19,6 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.libs
-import org.gradle.kotlin.dsl.provider
-import org.gradle.kotlin.dsl.providers
 
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -28,7 +26,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             pluginManager.apply("com.android.library")
             pluginManager.apply("org.jetbrains.kotlin.android")
             // Apply Compose Compiler Gradle plugin for Kotlin 2.0+
-            pluginManager.apply("org.jetbrains.kotlin.composer")
+            pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 
             extensions.configure<LibraryExtension> {
                 compileSdk = providers.provider { libs.versions.compileSdk.get().toInt() }
@@ -56,9 +54,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
                 kotlinOptions {
                     jvmTarget = "17"
-                }
-                composeOptions {
-                    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
                 }
             }
 

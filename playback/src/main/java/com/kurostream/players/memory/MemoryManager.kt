@@ -69,24 +69,17 @@ class MemoryManager @Inject constructor(
         trimLevelCallbacks.forEach { it(level) }
         when (level) {
             ActivityManager.TRIM_MEMORY_UI_HIDDEN -> {
-                System.gc()
-                lastGCTime = System.currentTimeMillis()
-                Timber.d("Trimmed UI hidden (RAM saved: ~50MB)")
+                // Avoid explicit GC, rely on system
+                Timber.d("Trimmed UI hidden")
             }
             ActivityManager.TRIM_MEMORY_RUNNING_MODERATE -> {
-                System.gc()
-                lastGCTime = System.currentTimeMillis()
-                Timber.d("Trimmed running moderate (RAM saved: ~100MB)")
+                Timber.d("Trimmed running moderate")
             }
             ActivityManager.TRIM_MEMORY_RUNNING_LOW -> {
-                System.gc()
-                lastGCTime = System.currentTimeMillis()
-                Timber.d("Trimmed running low (RAM saved: ~200MB)")
+                Timber.d("Trimmed running low")
             }
             ActivityManager.TRIM_MEMORY_RUNNING_CRITICAL -> {
-                System.gc()
-                lastGCTime = System.currentTimeMillis()
-                Timber.d("Trimmed running critical (RAM saved: ~300MB)")
+                Timber.d("Trimmed running critical")
             }
         }
     }
@@ -99,8 +92,7 @@ class MemoryManager @Inject constructor(
         }
 
         val before = Debug.getNativeHeapAllocatedSize() / 1024
-        System.gc()
-        Runtime.getRuntime().gc()
+        // Let system handle GC naturally
         lastGCTime = System.currentTimeMillis()
 
         val after = Debug.getNativeHeapAllocatedSize() / 1024

@@ -124,8 +124,8 @@ class IdleStateManager @Inject constructor(
     private fun scheduleIdleGC(delayMs: Long) {
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             if (!isScrolling && _idleState.value.isIdle) {
-                System.gc()
-                Timber.d("Idle GC triggered (RAM saved: ~30MB)")
+                // Let system handle GC naturally
+                Timber.d("Idle GC opportunity")
             }
         }, delayMs)
     }

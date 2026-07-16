@@ -39,15 +39,14 @@ class CacheNamespaceManager @Inject constructor(
     private fun getOrCreate(namespace: String, memoryMaxSize: Int, diskMaxSizeBytes: Long): CacheManager {
         synchronized(lock) {
             return managers.getOrPut(namespace) {
-                CacheManagerImpl(namespace, cacheDir, memoryMaxSize, diskMaxSizeBytes)
+                CacheManagerImpl(namespace, cacheDir, diskMaxSizeBytes)
             }
         }
     }
 
-    suspend fun clearAll() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-        synchronized(lock) {
-            managers.values.forEach { it.clear() }
-        }
+    suspend fun clearAll() {
+        val snapshot = synchronized(lock) { managers.values.toList() }
+        snapshot.forEach { it.clear() }
     }
 
     fun getAllStats(): List<CacheStats> = managers.values.map { it.stats.value }

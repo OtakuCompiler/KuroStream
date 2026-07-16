@@ -29,6 +29,13 @@ data class ProfileEntity(
     val avatarUrl: String?,
     val pinHash: String?,
     val isActive: Boolean = false,
+    val isPremium: Boolean = false,
+    val preferredLanguage: String = "en",
+    val preferredSubtitleLanguage: String = "en",
+    val autoSkipIntro: Boolean = false,
+    val autoSkipOutro: Boolean = false,
+    val preferredQuality: String = "AUTO",
+    val hasPin: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val preferencesJson: String? = null
 )

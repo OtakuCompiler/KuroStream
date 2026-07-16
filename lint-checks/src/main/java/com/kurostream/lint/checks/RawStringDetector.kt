@@ -64,8 +64,7 @@ class RawStringDetector : Detector(), SourceCodeScanner {
             "^\\$", // Regex patterns
             "^[a-zA-Z_][a-zA-Z0-9_]*$", // Single words (likely constants)
             "^[0-9]+$", // Numbers
-            "^[
-	]+$", // Whitespace
+            "^[\\s]+$", // Whitespace
             "^$" // Empty
         )
         return allowedPatterns.any { string.matches(Regex(it)) }

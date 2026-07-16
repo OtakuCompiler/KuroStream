@@ -78,9 +78,9 @@ class GetRemoteDetailsUseCase(
         return try {
             val result = repository.getRemoteDetails(mediaId, source)
             if (result != null) Result.success(result)
-            else Result.error(RuntimeException("Media not found"))
+            else Result.error<MediaItem>(RuntimeException("Media not found"))
         } catch (e: Exception) {
-            Result.error(e)
+            Result.error<MediaItem>(e)
         }
     }
 }

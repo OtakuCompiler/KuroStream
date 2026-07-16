@@ -24,8 +24,8 @@ class HiltConventionPlugin : Plugin<Project> {
             pluginManager.apply("com.google.devtools.ksp")
 
             dependencies {
-                add("implementation", "com.google.dagger:hilt-android:2.52")
-                add("ksp", "com.google.dagger:hilt-compiler:2.52")
+                add("implementation", "com.google.dagger:hilt-android:2.53.1")
+                add("ksp", "com.google.dagger:hilt-compiler:2.53.1")
             }
         }
     }

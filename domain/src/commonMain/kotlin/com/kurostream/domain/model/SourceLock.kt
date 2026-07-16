@@ -15,6 +15,7 @@
 
 package com.kurostream.domain.model
 import com.kurostream.core.platform.platformCurrentTimeMillis
+import com.kurostream.domain.entity.MediaItem
 
 import kotlinx.serialization.Serializable
 

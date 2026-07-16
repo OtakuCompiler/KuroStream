@@ -1,14 +1,13 @@
 [versions]
 compileSdk = "35"
 minSdk = "24"
-agp = "8.7.0"
-kotlin = "2.0.21"
-ksp = "2.0.21-1.0.26"
+agp = "8.7.3"
+kotlin = "2.1.0"
+ksp = "2.1.0-1.0.29"
 coreKtx = "1.15.0"
 appcompat = "1.7.0"
 activityCompose = "1.9.3"
-composeBom = "2024.10.00"
-composeCompiler = "1.6.1"
+composeBom = "2024.12.01"
 tvFoundation = "1.0.0-alpha11"
 tvMaterial3 = "1.0.0-alpha04"
 navigationCompose = "2.8.7"
@@ -16,7 +15,7 @@ hiltNavigation = "1.2.0"
 lifecycle = "2.8.7"
 viewmodelCompose = "2.8.7"
 runtimeCompose = "2.8.7"
-hilt = "2.52"
+hilt = "2.53.1"
 room = "2.6.1"
 work = "2.9.1"
 datastore = "1.1.4"
@@ -33,11 +32,10 @@ gson = "2.11.0"
 androidxHilt = "1.2.0"
 disklrucache = "2.0.2"
 timber = "5.0.1"
-media3 = "1.6.0"
-libvlc = "3.6.0-eap14"
-mpvAndroid = "2024.06-release"
-firebaseBom = "33.6.0"
-ktor = "3.0.0"
+media3 = "1.6.1"
+libvlc = "4.0.0-eap1"
+firebaseBom = "33.7.0"
+ktor = "3.0.3"
 appauth = "0.11.0"
 moshi = "1.15.1"
 vosk = "0.3.70"
@@ -45,7 +43,6 @@ webrtc = "1.0.0"
 nanohttpd = "2.3.1"
 pytorchAndroid = "1.13.1"
 oboe = "1.9.0"
-exoplayer2Legacy = "2.19.1"
 tensorflowLite = "2.14.0"
 playServicesAuth = "21.2.0"
 fragmentKtx = "1.8.4"
@@ -59,42 +56,26 @@ androidxCoreTesting = "1.6.1"
 benchmarkVersion = "1.2.6"
 composeUiTest = "1.7.0"
 mockkAndroid = "1.13.15"
-baselineProfile = "8.7.0"
+baselineProfile = "8.7.3"
 
-# New dependencies
-composeAnimation = "1.6.1"
-composeAnimationGraphics = "1.6.1"
+# Compose animation (explicit versions for libraries NOT in BOM)
+composeAnimation = "1.7.0"
+composeAnimationGraphics = "1.7.0"
 materialIconsExtended = "1.3.1"
-material3WindowSizeClass = "1.3.1"
-renderscript = "1.0.0"
 documentfile = "1.0.1"
 startup = "1.2.0"
-benchmarkMacro = "1.2.6"
-kmp = "2.0.21"
-detekt = "1.23.6"
-ktlint = "1.3.0"
+kmp = "2.1.0"
+detekt = "1.23.7"
 spotless = "6.25.0"
-archunit = "1.2.0"
-junitJupiter = "5.10.2"
-dependencycheck = "9.0.1"
+archunit = "1.3.0"
+junitJupiter = "5.11.4"
+dependencycheck = "9.2.0"
 
 # Testing
 uiautomator = "2.3.0"
 
-# Torrent dependencies
-libtorrent4j = "2.0.9"
-libtorrent = "2.0.9"
-
-# GitHub API
-githubApi = "1.0.0"
-
 # Security
 securityCrypto = "1.1.0-alpha06"
-protobuf = "3.25.5"
-protobufKotlin = "2.0.21"
-
-# Compression
-zstd = "1.5.6-3"
 leakcanary = "2.14"
 javaxInject = "1"
 
@@ -111,7 +92,7 @@ androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "composeAnimation" }
 androidx-compose-animation-graphics = { group = "androidx.compose.animation", name = "animation-graphics", version.ref = "composeAnimationGraphics" }
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIconsExtended" }
-androidx-material3-window-size = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3WindowSizeClass" }
+
 androidx-tv-foundation = { group = "androidx.tv", name = "tv-foundation", version.ref = "tvFoundation" }
 androidx-tv-material3 = { group = "androidx.tv", name = "tv-material", version.ref = "tvMaterial3" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
@@ -144,7 +125,7 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
-retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "androidxHilt" }
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "androidxHilt" }
 disklrucache = { group = "com.jakewharton", name = "disklrucache", version.ref = "disklrucache" }
@@ -158,7 +139,7 @@ media3-session = { group = "androidx.media3", name = "media3-session", version.r
 media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3" }
 media3-decoder = { group = "androidx.media3", name = "media3-decoder", version.ref = "media3" }
 libvlc-all = { group = "org.videolan.android", name = "libvlc-all", version.ref = "libvlc" }
-mpv-android = { group = "com.github.mpv-android", name = "mpv-android", version.ref = "mpvAndroid" }
+
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
@@ -176,7 +157,7 @@ nanohttpd = { group = "org.nanohttpd", name = "nanohttpd", version.ref = "nanoht
 nanohttpd-websocket = { group = "org.nanohttpd", name = "nanohttpd-websocket", version.ref = "nanohttpd" }
 pytorch-android-lite = { group = "org.pytorch", name = "pytorch_android_lite", version.ref = "pytorchAndroid" }
 oboe = { group = "com.google.oboe", name = "oboe", version.ref = "oboe" }
-exoplayer2-legacy = { group = "com.google.android.exoplayer", name = "exoplayer", version.ref = "exoplayer2Legacy" }
+
 tensorflow-lite = { group = "org.tensorflow", name = "tensorflow-lite", version.ref = "tensorflowLite" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
@@ -206,25 +187,10 @@ androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime
 detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-gradle-plugin", version.ref = "spotless" }
 
-# Torrent
-libtorrent4j = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent", version.ref = "libtorrent4j" }
-libtorrent-android = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent-android", version.ref = "libtorrent" }
-libtorrent4j-playback = { group = "com.frostwire.jlibtorrent", name = "jlibtorrent", version.ref = "libtorrent4j" }
-
-# GitHub API
-github-api = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
-github-api-converter = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
-
 # Security
 security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
-
-# Compression
-zstd-jni = { group = "com.github.luben", name = "zstd-jni", version.ref = "zstd" }
-protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", version.ref = "protobufKotlin" }
-protobuf-protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
-renderscript = { group = "androidx.renderscript", name = "renderscript", version.ref = "renderscript" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -233,7 +199,7 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kmp" }
-kotlin-composer = { id = "org.jetbrains.kotlin.composer", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 

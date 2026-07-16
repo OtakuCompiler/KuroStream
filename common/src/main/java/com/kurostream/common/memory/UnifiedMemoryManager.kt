@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import android.os.Debug
 import java.io.File
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -121,19 +120,19 @@ class UnifiedMemoryManager @Inject constructor(
         
         when (level) {
             ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
-                if (shouldGC()) performGC("UI hidden")
+                // Avoid explicit GC, rely on system
             }
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE -> {
-                if (shouldGC()) performGC("Running moderate")
+                // Avoid explicit GC, rely on system
             }
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> {
-                triggerAggressiveGC("Running low")
+                // Avoid explicit GC, rely on system
             }
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> {
-                triggerAggressiveGC("Running critical")
+                // Avoid explicit GC, rely on system
             }
             ComponentCallbacks2.TRIM_MEMORY_BACKGROUND -> {
-                if (shouldGC()) performGC("Background")
+                // Avoid explicit GC, rely on system
             }
         }
     }
@@ -154,8 +153,7 @@ class UnifiedMemoryManager @Inject constructor(
     private fun performGC(reason: String) {
         val before = android.os.Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
         
-        System.gc()
-        Runtime.getRuntime().gc()
+        // Let system handle GC naturally
         
         lastGCTime = System.currentTimeMillis()
         gcCount++
@@ -176,9 +174,7 @@ class UnifiedMemoryManager @Inject constructor(
     fun triggerAggressiveGC(reason: String) {
         Timber.w("Aggressive GC: $reason")
         
-        System.gc()
-        Runtime.getRuntime().gc()
-        Runtime.getRuntime().runFinalization()
+        // Let system handle GC naturally
         
         lastGCTime = System.currentTimeMillis()
         gcCount = 0

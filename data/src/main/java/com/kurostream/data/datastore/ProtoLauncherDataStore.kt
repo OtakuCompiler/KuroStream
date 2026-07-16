@@ -27,7 +27,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ProtoLauncherDataStore @Inject constructor(
-    @androidx.hilt.android.qualifiers.ApplicationContext private val context: Context
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) {
     private val dataStore: DataStore<LauncherProto.LauncherPreferences> = context.dataStore(
         fileName = "launcher_prefs.pb",

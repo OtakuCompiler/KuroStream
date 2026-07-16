@@ -26,10 +26,10 @@ interface AddonDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: AddonConfigEntity)
 
-    @Query("SELECT * FROM addon_configs WHERE extensionId = :extensionId")
+    @Query("SELECT * FROM addon_configs WHERE extension_id = :extensionId")
     suspend fun getByExtensionId(extensionId: String): AddonConfigEntity?
 
-    @Query("SELECT * FROM addon_configs WHERE isEnabled = 1")
+    @Query("SELECT * FROM addon_configs WHERE is_enabled = 1")
     suspend fun getEnabled(): List<AddonConfigEntity>
 
     @Query("SELECT * FROM addon_configs")

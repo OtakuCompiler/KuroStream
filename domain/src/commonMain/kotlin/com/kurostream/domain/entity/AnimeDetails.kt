@@ -17,6 +17,7 @@ package com.kurostream.domain.entity
 
 import com.kurostream.domain.metadata.AnimeThemes
 import com.kurostream.domain.metadata.AnimeStatistics
+import com.kurostream.domain.model.VideoQuality
 import kotlinx.serialization.Serializable
 
 @Serializable
