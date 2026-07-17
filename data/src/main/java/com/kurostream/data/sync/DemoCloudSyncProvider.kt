@@ -18,6 +18,7 @@ package com.kurostream.data.sync
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.database.KuroStreamDatabase
 import com.kurostream.domain.model.Profile
 import com.kurostream.domain.model.VideoQuality

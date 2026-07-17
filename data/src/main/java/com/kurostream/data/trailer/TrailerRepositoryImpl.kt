@@ -34,22 +34,13 @@ class TrailerRepositoryImpl @Inject constructor(
 
     override suspend fun getTrailerForAnime(animeId: String): Result<Trailer> = withContext(Dispatchers.IO) {
         try {
-            // Try TMDB first
-            val tmdbResult = tmdbApi.getExternalIds(animeId)
-            if (tmdbResult.isSuccessful && tmdbResult.body()?.youtubeKey != null) {
-                val youtubeKey = tmdbResult.body()!!.youtubeKey!!
-                return@withContext Result.success(Trailer(
-                    url = "https://www.youtube.com/watch?v=$youtubeKey",
-                    title = "Official Trailer",
-                    thumbnailUrl = "https://img.youtube.com/vi/$youtubeKey/hqdefault.jpg",
-                    source = "tmdb",
-                    publishedAt = null
-                ))
-            }
-
-            // Fallback to YouTube search
+            // Fallback to YouTube search since TMDB API needs proper external ID mapping
             val searchQuery = "$animeId trailer"
-            val youtubeResult = youTubeApi.searchVideos(searchQuery, maxResults = 5)
+            val youtubeResult = youTubeApi.searchVideos(
+                query = searchQuery,
+                maxResults = 5,
+                apiKey = "YOUTUBE_API_KEY" // Should be provided via DI
+            )
             youtubeResult.data?.items?.firstOrNull { it.id?.videoId != null }?.let { item ->
                 val url = "https://www.youtube.com/watch?v=${item.id.videoId}"
                 return@withContext Result.success(Trailer(
@@ -69,7 +60,11 @@ class TrailerRepositoryImpl @Inject constructor(
 
     override suspend fun searchTrailers(query: String): Result<List<Trailer>> = withContext(Dispatchers.IO) {
         try {
-            val youtubeResult = youTubeApi.searchVideos(query, maxResults = 10)
+            val youtubeResult = youTubeApi.searchVideos(
+                query = query,
+                maxResults = 10,
+                apiKey = "YOUTUBE_API_KEY"
+            )
             val trailers = youtubeResult.data?.items?.mapNotNull { item ->
                 item.id?.videoId?.let { videoId ->
                     Trailer(

@@ -26,11 +26,11 @@ import com.kurostream.domain.model.SourceLockSettings
 import com.kurostream.domain.repository.SourceLockRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.mutableStateFlow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -41,7 +41,7 @@ class SourceLockRepositoryImpl @Inject constructor(
     private val settingsDataStore: SettingsDataStore,
 ) : SourceLockRepository {
 
-    private val _settings = mutableStateFlow<SourceLockSettings?>(null)
+    private val _settings = MutableStateFlow<SourceLockSettings?>(null)
     val settings: Flow<SourceLockSettings> = _settings.asStateFlow()
 
     override suspend fun getLock(seriesId: String): SourceLock? {

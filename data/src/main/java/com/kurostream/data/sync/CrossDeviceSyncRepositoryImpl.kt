@@ -23,7 +23,8 @@ import com.kurostream.domain.model.WatchProgress
 import com.kurostream.domain.sync.CrossDeviceSyncRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.await
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject

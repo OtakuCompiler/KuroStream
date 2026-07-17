@@ -24,10 +24,15 @@ import com.kurostream.data.remote.api.*
 import com.kurostream.data.remote.dto.anilist.*
 import com.kurostream.data.remote.dto.mal.MalDtos
 import com.kurostream.domain.entity.MediaItem
+import com.kurostream.domain.entity.MediaType
+import com.kurostream.domain.entity.AiringStatus
+import com.kurostream.domain.entity.ContentRating
+import com.kurostream.domain.entity.Season
 import com.kurostream.domain.model.*
 import com.kurostream.domain.repository.MediaRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -195,7 +200,7 @@ class MediaRepositoryImpl @Inject constructor(
         // Simplified - needs proper ID-based lookup
     }
 
-    override suspend fun searchSubtitles(query: String, languages: List<String>, episodeInfo: EpisodeInfo?): Result<List<SubtitleResult>> = withContext(Dispatchers.IO) {
+    override suspend fun searchSubtitles(query: String, languages: List<String>, episodeInfo: EpisodeInfo?): List<SubtitleResult> = withContext(Dispatchers.IO) {
         try {
             val response = openSubtitlesApi.searchSubtitles(
                 query = query,
@@ -204,7 +209,7 @@ class MediaRepositoryImpl @Inject constructor(
                 episodeNumber = episodeInfo?.episodeNumber
             )
             if (response.isSuccessful) {
-                val results = response.body()?.data?.mapNotNull { item ->
+                response.body()?.data?.mapNotNull { item ->
                     item.attributes?.let { attr ->
                         SubtitleResult(
                             id = item.id ?: return@mapNotNull null,
@@ -218,9 +223,10 @@ class MediaRepositoryImpl @Inject constructor(
                         )
                     }
                 } ?: emptyList()
-                Result.success(results)
-            } else Result.error(RuntimeException("OpenSubtitles API error: ${response.code()}"))
-        } catch (e: Exception) { Result.error(e) }
+            } else emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     private fun MediaItemEntity.toDomain(): MediaItem {
@@ -303,7 +309,7 @@ class MediaRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun MalDtos.SearchNode.toDomain(): MediaItem {
+    private fun SearchNode.toDomain(): MediaItem {
         val anime = this.node ?: return MediaItem(
             id = "mal_0",
             title = "Unknown",
