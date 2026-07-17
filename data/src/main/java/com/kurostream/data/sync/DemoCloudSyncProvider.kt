@@ -62,23 +62,9 @@ class DemoCloudSyncProvider @Inject constructor(
     private val favoriteDao = database.favoriteDao()
     private val downloadItemDao = database.downloadItemDao()
 
-    override val providerName: String = "demo"
-    override var isAuthenticated: Boolean = false
-        private set
-
-    private val gson = Gson()
-    private val syncFile = File(context.filesDir, "demo_cloud_sync.json")
-    private val deviceIdFile = File(context.filesDir, "demo_device_id.txt")
-    private val lock = Any()
-
-    private val deviceId: String by lazy {
-        if (deviceIdFile.exists()) deviceIdFile.readText().trim()
-        else UUID.randomUUID().toString().also { deviceIdFile.writeText(it) }
-    }
-
     override suspend fun authenticate(credentials: Map<String, String>): Result<Unit> {
         return if (credentials["username"].isNullOrBlank()) {
-            Result.failure(IllegalArgumentException("Username required"))
+            Result.error(IllegalArgumentException("Username required"))
         } else {
             isAuthenticated = true
             Result.success(Unit)
@@ -91,7 +77,7 @@ class DemoCloudSyncProvider @Inject constructor(
     }
 
     override suspend fun push(data: SyncPayload): Result<SyncTimestamp> = withContext(Dispatchers.IO) {
-        if (!isAuthenticated) return@withContext Result.failure(IllegalStateException("Not authenticated"))
+        if (!isAuthenticated) return@withContext Result.error(IllegalStateException("Not authenticated"))
         synchronized(lock) {
             val enriched = data.copy(timestamp = System.currentTimeMillis(), deviceId = deviceId)
             syncFile.writeText(gson.toJson(enriched))
@@ -102,7 +88,7 @@ class DemoCloudSyncProvider @Inject constructor(
     suspend fun pushLocalState(): Result<SyncTimestamp> = push(buildPayloadFromLocal())
 
     override suspend fun pull(lastSyncTimestamp: Long?): Result<SyncPayload?> = withContext(Dispatchers.IO) {
-        if (!isAuthenticated) return@withContext Result.failure(IllegalStateException("Not authenticated"))
+        if (!isAuthenticated) return@withContext Result.error(IllegalStateException("Not authenticated"))
         synchronized(lock) {
             if (!syncFile.exists()) return@withContext Result.success(null)
             val payload = gson.fromJson<SyncPayload>(syncFile.readText(), object : TypeToken<SyncPayload>() {}.type)

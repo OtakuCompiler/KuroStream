@@ -40,20 +40,18 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
 
     override suspend fun sync(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // Perform a full sync - this could be extended
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Sync failed")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
     override suspend fun pushData(data: Any): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // Generic push - could be extended
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -61,7 +59,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
         try {
             Result.success(null)
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -86,7 +84,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to sync watch progress")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -118,7 +116,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
             Result.success(progress)
         } catch (e: Exception) {
             Timber.e(e, "Failed to get remote watch progress")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -147,7 +145,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
             Result.success(progressList)
         } catch (e: Exception) {
             Timber.e(e, "Failed to get all remote watch progress")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -158,7 +156,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
                 "deviceId" to deviceId,
                 "deviceName" to deviceName,
                 "lastActive" to FieldValue.serverTimestamp(),
-                "appVersion" to BuildConfig.VERSION_NAME,
+                "appVersion" to "1.0.0",
             )
             firestore.collection(COLLECTION_DEVICE_STATE)
                 .document(deviceId)
@@ -166,7 +164,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to register device")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -178,7 +176,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to update device heartbeat")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -190,19 +188,19 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
                 .await()
 
             val devices = snapshot.documents.map { doc ->
-                val data = doc.data ?: return@map DeviceInfo(doc.id, "", "", 0, "")
-                DeviceInfo(
+                val data = doc.data ?: DeviceInfo(doc.id, "", "", 0, "")
+DeviceInfo(
                     deviceId = doc.id,
                     profileId = data["profileId"] as String,
                     deviceName = data["deviceName"] as String,
                     lastActive = (data["lastActive"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0,
-                    appVersion = data["appVersion"] as String,
+                    appVersion = data["appVersion"] as? String ?: "",
                 )
             }
             Result.success(devices)
         } catch (e: Exception) {
             Timber.e(e, "Failed to get devices for profile")
-            Result.failure(e)
+            Result.error(e)
         }
     }
 
@@ -214,7 +212,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
                 .document(mediaId)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        trySend(Result.failure(error))
+                        trySend(Result.error(error))
                         return@addSnapshotListener
                     }
                     if (snapshot == null || !snapshot.exists()) {

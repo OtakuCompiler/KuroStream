@@ -22,21 +22,31 @@ import com.kurostream.data.remote.api.YouTubeApi
 import com.kurostream.domain.metadata.TrailerRepository
 import com.kurostream.domain.model.Trailer
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import timber.log.Timber
 
 @Singleton
 class TrailerRepositoryImpl @Inject constructor(
     private val youTubeApi: YouTubeApi,
+    private val tmdbApi: TmdbApi,
 ) : TrailerRepository {
 
     override suspend fun getTrailerForAnime(animeId: String): Result<Trailer> = withContext(Dispatchers.IO) {
         try {
+            // Try TMDB first
+            val tmdbResult = tmdbApi.getExternalIds(animeId)
+            if (tmdbResult.isSuccessful && tmdbResult.body()?.youtubeKey != null) {
+                val youtubeKey = tmdbResult.body()!!.youtubeKey!!
+                return@withContext Result.success(Trailer(
+                    url = "https://www.youtube.com/watch?v=$youtubeKey",
+                    title = "Official Trailer",
+                    thumbnailUrl = "https://img.youtube.com/vi/$youtubeKey/hqdefault.jpg",
+                    source = "tmdb",
+                    publishedAt = null
+                ))
+            }
+
             // Fallback to YouTube search
             val searchQuery = "$animeId trailer"
             val youtubeResult = youTubeApi.searchVideos(searchQuery, maxResults = 5)
@@ -53,7 +63,6 @@ class TrailerRepositoryImpl @Inject constructor(
 
             Result.error(Exception("No trailer found"))
         } catch (e: Exception) {
-            Timber.e(e, "Failed to get trailer for $animeId")
             Result.error(e)
         }
     }
@@ -75,7 +84,6 @@ class TrailerRepositoryImpl @Inject constructor(
 
             Result.success(trailers)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to search trailers for $query")
             Result.error(e)
         }
     }
