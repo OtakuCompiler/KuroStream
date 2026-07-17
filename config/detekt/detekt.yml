@@ -1,7 +1,7 @@
 build:
   maxIssues: 100
 
-excludes:
+exclude:
   - '**/TvRepositoryAdapters.kt'
   - '**/BenchmarkRunner.kt'
   - '**/BackupSettingsScreen.kt'
