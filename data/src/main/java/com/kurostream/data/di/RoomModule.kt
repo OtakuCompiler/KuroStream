@@ -9,6 +9,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -38,15 +39,10 @@ object RoomModule {
     fun provideDownloadItemDao(database: KuroStreamDatabase): DownloadItemDao {
         return database.downloadItemDao()
     }
-}
-
-@InstallIn(dagger.hilt.components.ApplicationComponent::class)
-@Module
-object ApplicationModule {
 
     @Provides
     @Singleton
-    fun provideSettingsDataStore(@dagger.hilt.android.qualifiers.ApplicationContext context: Context): SettingsDataStore {
+    fun provideSettingsDataStore(@ApplicationContext context: Context): SettingsDataStore {
         return SettingsDataStoreImpl(context)
     }
 }
