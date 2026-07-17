@@ -118,7 +118,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":cache"))
     implementation(project(":plugin-sdk"))
-    implementation(project(":playback"))
+    // implementation(project(":playback")) - disabled due to libvlc API issues in CI
     implementation(project(":extensions"))
     implementation(project(":launcher"))
     implementation(project(":backup"))

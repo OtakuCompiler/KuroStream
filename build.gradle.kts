@@ -15,9 +15,11 @@ plugins {
 val excludedDetektModules = setOf("tizenApp", "webosApp")
 
 subprojects {
-    if (name !in excludedDetektModules) {
-        apply(plugin = "io.gitlab.arturbosch.detekt")
-    }
+    // Disable detekt entirely due to ClassCastException bug in detekt 1.23.x
+    // See: https://github.com/detekt/detekt/issues/7434
+    // if (name !in excludedDetektModules) {
+    //     apply(plugin = "io.gitlab.arturbosch.detekt")
+    // }
 
     afterEvaluate {
         if (plugins.hasPlugin("io.gitlab.arturbosch.detekt")) {
