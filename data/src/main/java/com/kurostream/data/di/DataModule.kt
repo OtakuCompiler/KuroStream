@@ -15,12 +15,12 @@
 
 package com.kurostream.data.di
 
-import android.content.Context
+// import android.content.Context
 import com.kurostream.data.cache.CacheManager
 import com.kurostream.data.cache.CacheManagerImpl
 // import com.kurostream.data.home.CustomHomeRowRepository
 // import com.kurostream.data.home.CustomHomeRowRepositoryImpl
-import com.kurostream.data.local.dao.*
+// import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.data.local.preferences.SettingsDataStoreImpl
 import com.kurostream.data.metadata.*
@@ -44,7 +44,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.android.qualifiers.ApplicationContext
+// import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Named
@@ -94,53 +94,8 @@ object DataModule {
     @Singleton
     fun provideOfflineTranslator(impl: OfflineTranslatorImpl): OfflineTranslator = impl
 
-    @Provides
-    @Singleton
-    fun provideSettingsDataStore(@ApplicationContext context: Context): SettingsDataStore {
-        return SettingsDataStoreImpl(context)
-    }
-
-    @Provides
-    @Singleton
-    fun provideProfileDao(database: com.kurostream.data.local.database.KuroStreamDatabase): ProfileDao {
-        return database.profileDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideWatchHistoryDao(database: com.kurostream.data.local.database.KuroStreamDatabase): WatchHistoryDao {
-        return database.watchHistoryDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideFavoriteDao(database: com.kurostream.data.local.database.KuroStreamDatabase): FavoriteDao {
-        return database.favoriteDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideDownloadItemDao(database: com.kurostream.data.local.database.KuroStreamDatabase): DownloadItemDao {
-        return database.downloadItemDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideHomeRowDao(database: com.kurostream.data.local.database.KuroStreamDatabase): HomeRowDao {
-        return database.homeRowDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideBookmarkDao(database: com.kurostream.data.local.database.KuroStreamDatabase): BookmarkDao {
-        return database.bookmarkDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideAddonDao(database: com.kurostream.data.local.database.KuroStreamDatabase): AddonDao {
-        return database.addonDao()
-    }
+    // DAO providers moved to RoomModule (ApplicationComponent) for KSP compatibility
+    // SettingsDataStore also moved to RoomModule (ApplicationComponent) for KSP compatibility
 }
 
 @Module

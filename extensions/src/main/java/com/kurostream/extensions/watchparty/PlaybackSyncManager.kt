@@ -17,6 +17,10 @@ package com.kurostream.extensions.watchparty
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -120,11 +124,28 @@ class PlaybackSyncManager @Inject constructor(
 
     fun dispose() { syncJob?.cancel(); syncScope.cancel() }
 
+    private val json = Json { ignoreUnknownKeys = true }
+
     private fun serializeSyncMessage(message: PlaybackSyncMessage): String {
-        return "{"action":"${message.action}","timestamp":${message.timestamp},"positionMs":${message.positionMs},"senderId":"${message.senderId}"}"
+        return json.encodeToString(message)
     }
 
-    private fun deserializeSyncMessage(json: String): PlaybackSyncMessage = PlaybackSyncMessage(SyncAction.PING, 0, 0, "")
+    private fun deserializeSyncMessage(json: String): PlaybackSyncMessage {
+        return json.decodeFromString<PlaybackSyncMessage>()
+    }
 }
 
+@Serializable
+data class PlaybackSyncMessage(
+    val action: SyncAction,
+    val timestamp: Long,
+    val positionMs: Long,
+    val senderId: String
+)
+
+enum class SyncAction {
+    PLAY, PAUSE, SEEK, PING, PONG
+}
+
+@Serializable
 data class PlaybackState(val isPlaying: Boolean = false, val positionMs: Long = 0, val playbackRate: Float = 1.0f, val timestamp: Long = System.currentTimeMillis())

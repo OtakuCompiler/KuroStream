@@ -22,6 +22,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -65,6 +66,9 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+
+    // Serialization for PlaybackSyncManager
+    implementation(libs.kotlinx.serialization.json)
 
     // Phase 68 — on-device ASR captions
     implementation(libs.vosk.android)
