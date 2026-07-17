@@ -18,8 +18,6 @@ package com.kurostream.core.platform
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.js.Date
-import kotlin.js.unsafeCast
-import kotlin.js.json
 
 @JsModule("console")
 @JsNonModule
@@ -37,10 +35,7 @@ external fun reloadPage()
 
 class WebLogger : PlatformLogger {
     private val enabledTags = mutableSetOf<String>()
-    private val minLevel = LogLevel.INFO
-
-    private val _logs = MutableSharedFlow<LogEntry>(replay = 1000)
-    override val logs = _logs.asStateFlow()
+    private var minLevel = LogLevel.INFO
 
     init {
         // Initialization
@@ -72,9 +67,6 @@ class WebLogger : PlatformLogger {
 
     private fun log(level: LogLevel, tag: String, message: String, throwable: Throwable?) {
         if (level.ordinal >= minLevel.ordinal && isTagEnabled(tag)) {
-            val entry = LogEntry(level, tag, message, throwable)
-            _logs.tryEmit(entry)
-
             when (level) {
                 LogLevel.DEBUG -> consoleLog("debug", tag, message, throwable)
                 LogLevel.VERBOSE, LogLevel.INFO -> consoleLog("log", tag, message, throwable)
@@ -98,12 +90,4 @@ class WebLogger : PlatformLogger {
     }
 
     private fun isTagEnabled(tag: String): Boolean = enabledTags.isEmpty() || enabledTags.contains(tag)
-
-    data class LogEntry(
-        val level: LogLevel,
-        val tag: String,
-        val message: String,
-        val throwable: Throwable?,
-        val timestamp: Long = Date.now()
-    )
 }
