@@ -33,20 +33,20 @@ class ExtensionManagerImpl @Inject constructor(
     init {
         val demo = MockAnimeCatalog()
         val sandbox = ExtensionSandbox(demo, SandboxPolicy())
-        lock.withLock {
+        runBlocking { lock.withLock {
             extensions[demo.extensionId] = ExtensionEntry(demo.info.copy(isInstalled = true, isEnabled = true), sandbox)
-        }
+        }}
         emitState()
     }
 
     override fun observeAllExtensions(): StateFlow<List<ExtensionInfo>> = _allExtensions.asStateFlow()
     override fun observeEnabledExtensions() = _allExtensions.map { it.filter { e -> e.isEnabled } }
-    override fun getExtensionApi(extensionId: String): ExtensionApi? = lock.withLock {
+    override fun getExtensionApi(extensionId: String): ExtensionApi? = runBlocking { lock.withLock {
         extensions[extensionId]?.takeIf { it.info.isEnabled }?.sandbox
-    }
-    override fun getEnabledApis(): List<ExtensionApi> = lock.withLock {
+    }}
+    override fun getEnabledApis(): List<ExtensionApi> = runBlocking { lock.withLock {
         extensions.values.filter { it.info.isEnabled }.map { it.sandbox }
-    }
+    }}
 
     override suspend fun install(path: String): Result<ExtensionInfo> = lock.withLock {
         runCatching {
@@ -89,7 +89,7 @@ class ExtensionManagerImpl @Inject constructor(
         runCatching { emitState(); Result.Success(Unit) }.getOrElse { Result.Error(it) }
     }
 
-    private fun emitState() { _allExtensions.value = lock.withLock { extensions.values.map { it.info } } }
+    private fun emitState() { _allExtensions.value = runBlocking { lock.withLock { extensions.values.map { it.info } } } }
     private data class ExtensionEntry(val info: ExtensionInfo, val sandbox: ExtensionSandbox)
 
     private class StubExtensionApi(override val info: ExtensionInfo) : ExtensionApi {

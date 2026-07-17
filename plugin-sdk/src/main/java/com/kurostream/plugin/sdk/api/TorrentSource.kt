@@ -16,16 +16,13 @@
 package com.kurostream.plugin.sdk.api
 
 import com.kurostream.core.common.result.Result
-import com.kurostream.core.common.result.Result.failure
-import com.kurostream.domain.entity.ExtensionCapability
-import com.kurostream.domain.entity.VideoSource
 
 interface TorrentSource : ExtensionApi {
     override suspend fun getVideoSources(episodeId: String): Result<List<VideoSource>> {
-        return failure(UnsupportedOperationException("Torrent sources handled by TorrentService"))
+        return Result.failure(UnsupportedOperationException("Torrent sources handled by TorrentService"))
     }
 
     override fun getCapabilities(): Set<ExtensionCapability> {
-        return setOf(ExtensionCapability.TORRENT_STREAM)
+        return setOf(ExtensionCapability.TORRENT_STREAMING)
     }
 }
