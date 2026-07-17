@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.dependencycheck) apply false
 }
 
-val excludedDetektModules = setOf("tizenApp", "webosApp", "benchmark")
+val excludedDetektModules = setOf("tizenApp", "webosApp", "benchmark", "cache", "common", "data", "extensions")
 
 subprojects {
     // Disable detekt entirely due to ClassCastException bug in detekt 1.23.x
