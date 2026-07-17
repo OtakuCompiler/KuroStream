@@ -6,6 +6,7 @@ import androidx.security.crypto.MasterKey
 import com.kurostream.backup.domain.GitHubApiService
 import com.kurostream.backup.domain.GitHubAuthState
 import com.kurostream.core.common.result.Result
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -13,7 +14,7 @@ import javax.inject.Singleton
 
 @Singleton
 class GitHubAuthManager @Inject constructor(
-    private val context: Context,
+    @ApplicationContext private val context: Context,
     private val apiService: GitHubApiService,
 ) {
     private val masterKey: MasterKey by lazy {
