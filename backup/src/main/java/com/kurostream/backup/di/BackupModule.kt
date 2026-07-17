@@ -15,29 +15,9 @@
 
 package com.kurostream.backup.di
 
-import android.app.Application
-import android.content.Context
-import com.kurostream.backup.data.BackupRepositoryImpl
-import com.kurostream.backup.domain.BackupRepository
 import com.kurostream.backup.domain.GitHubApiService
-import com.kurostream.data.anistream.addons.AddonDao
-import com.kurostream.data.anistream.downloads.DownloadDao
-import com.kurostream.data.anistream.profile.ProfileDao
-import com.kurostream.data.anistream.search.RecentSearchDao
-import com.kurostream.data.anistream.settings.SettingsDao
-import com.kurostream.data.anistream.sync.SyncProviderDao
-import com.kurostream.data.anistream.introskip.IntroSkipDao
-import com.kurostream.data.local.dao.BookmarkDao
-import com.kurostream.data.local.dao.FavoriteDao
-import com.kurostream.data.local.dao.HomeRowDao
-import com.kurostream.data.local.dao.SourceLockDao
-import com.kurostream.data.local.dao.WatchHistoryDao
-import com.kurostream.data.local.database.KuroStreamDatabase
-import com.kurostream.data.local.preferences.SettingsDataStore
-import com.kurostream.data.local.preferences.SettingsDataStoreImpl
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.SingletonComponent
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -87,33 +67,5 @@ object BackupModule {
     @Singleton
     fun provideGitHubApiService(retrofit: Retrofit): GitHubApiService {
         return retrofit.create(GitHubApiService::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideBackupRepository(
-        @ApplicationContext context: Context,
-        apiService: GitHubApiService,
-        profileDao: ProfileDao,
-        downloadDao: DownloadDao,
-        watchHistoryDao: WatchHistoryDao,
-        favoriteDao: FavoriteDao,
-        settingsDao: SettingsDao,
-        sourceLockDao: SourceLockDao,
-        homeRowDao: HomeRowDao,
-        bookmarkDao: BookmarkDao,
-        addonDao: AddonDao,
-        settingsDataStore: SettingsDataStore,
-    ): BackupRepository {
-        return BackupRepositoryImpl(
-            context, apiService, profileDao, downloadDao, watchHistoryDao, favoriteDao,
-            settingsDao, sourceLockDao, homeRowDao, bookmarkDao, addonDao, settingsDataStore
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideSettingsDataStore(@ApplicationContext context: Context): SettingsDataStore {
-        return SettingsDataStoreImpl(context)
     }
 }

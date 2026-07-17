@@ -6,8 +6,9 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+import javax.inject.Inject
 
-class BackupCryptoService {
+class BackupCryptoService @Inject constructor() {
 
     private val saltSize = 16
     private val ivSize = 12

@@ -24,6 +24,9 @@ interface FavoriteDao {
     @Query("SELECT * FROM favorites WHERE profileId = :profileId ORDER BY addedAt DESC")
     fun observeByProfile(profileId: String): Flow<List<FavoriteEntity>>
 
+    @Query("SELECT * FROM favorites")
+    suspend fun getAll(): List<FavoriteEntity>
+
     @Query("SELECT * FROM favorites WHERE mediaItemId = :mediaItemId AND profileId = :profileId")
     suspend fun getByMediaAndProfile(mediaItemId: String, profileId: String): FavoriteEntity?
 

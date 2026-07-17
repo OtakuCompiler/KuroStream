@@ -1,28 +1,39 @@
 package com.kurostream.backup.data
 
 import com.kurostream.backup.domain.*
-import com.kurostream.data.anistream.addons.AddonDao
-import com.kurostream.data.anistream.downloads.DownloadDao
-import com.kurostream.data.anistream.profile.ProfileDao
-import com.kurostream.data.anistream.settings.SettingsDao
+import com.kurostream.data.local.dao.AddonDao
+import com.kurostream.data.local.dao.BookmarkDao
+import com.kurostream.data.local.dao.DownloadItemDao
 import com.kurostream.data.local.dao.FavoriteDao
+import com.kurostream.data.local.dao.HomeRowDao
+import com.kurostream.data.local.dao.ProfileDao
+import com.kurostream.data.local.dao.SourceLockDao
 import com.kurostream.data.local.dao.WatchHistoryDao
 import com.kurostream.data.local.entity.AddonConfigEntity
 import com.kurostream.data.local.entity.BookmarkEntity
+import com.kurostream.data.local.entity.DownloadItemEntity
 import com.kurostream.data.local.entity.FavoriteEntity
 import com.kurostream.data.local.entity.HomeRowEntity
+import com.kurostream.data.local.entity.ProfileEntity
 import com.kurostream.data.local.entity.SourceLockEntity
 import com.kurostream.data.local.entity.WatchHistoryEntity
+import com.kurostream.data.local.preferences.SettingsDataStore
 import kotlinx.coroutines.Dispatchers
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class BackupDataRestorer @Inject constructor(
     private val profileDao: ProfileDao,
-    private val downloadDao: DownloadDao,
+    private val downloadDao: DownloadItemDao,
     private val watchHistoryDao: WatchHistoryDao,
     private val favoriteDao: FavoriteDao,
-    private val settingsDao: SettingsDao,
+    private val settingsDataStore: SettingsDataStore,
     private val sourceLockDao: SourceLockDao,
     private val homeRowDao: HomeRowDao,
     private val bookmarkDao: BookmarkDao,
@@ -41,29 +52,42 @@ class BackupDataRestorer @Inject constructor(
 
         data.profiles.forEach { backup ->
             profileDao.insert(
-                com.kurostream.data.anistream.profile.ProfileEntity(
-                    id = backup.id, name = backup.name, avatarUrl = backup.avatarUrl ?: "",
-                    isDefault = backup.isDefault, settings = backup.settings,
-                    createdAt = backup.createdAt, lastUsedAt = backup.lastUsedAt
+                ProfileEntity(
+                    id = backup.id, name = backup.name, avatarUrl = backup.avatarUrl,
+                    isActive = backup.isDefault, createdAt = backup.createdAt,
+                    pinHash = null, isPremium = false, preferredLanguage = "en",
+                    preferredSubtitleLanguage = "en", autoSkipIntro = false,
+                    autoSkipOutro = false, preferredQuality = "AUTO", hasPin = false,
+                    preferencesJson = null
                 )
             )
             profilesRestored++
         }
         data.settings.forEach { backup ->
-            settingsDao.insert(
-                com.kurostream.data.anistream.settings.SettingsEntity(
-                    key = backup.key, value = backup.value
-                )
-            )
+            settingsDataStore.editPreferences {
+                when {
+                    backup.value.toBooleanStrictOrNull() != null ->
+                        this[booleanPreferencesKey(backup.key)] = backup.value.toBooleanStrict()
+                    backup.value.toIntOrNull() != null ->
+                        this[intPreferencesKey(backup.key)] = backup.value.toInt()
+                    backup.value.toLongOrNull() != null ->
+                        this[longPreferencesKey(backup.key)] = backup.value.toLong()
+                    backup.value.toFloatOrNull() != null ->
+                        this[floatPreferencesKey(backup.key)] = backup.value.toFloat()
+                    else ->
+                        this[stringPreferencesKey(backup.key)] = backup.value
+                }
+            }
             settingsRestored++
         }
         data.downloads.forEach { backup ->
             downloadDao.insert(
-                com.kurostream.data.anistream.downloads.DownloadEntity(
-                    id = backup.id, mediaId = backup.mediaId, episodeId = backup.episodeId,
-                    title = backup.title, filePath = backup.filePath, fileSize = backup.fileSize,
-                    progress = backup.progress, status = backup.status, quality = backup.quality ?: "",
-                    addedAt = backup.addedAt, completedAt = backup.completedAt ?: 0
+                DownloadItemEntity(
+                    id = backup.id, mediaItemId = backup.mediaId,
+                    profileId = "default", localPath = backup.filePath,
+                    status = backup.status, progress = backup.progress,
+                    totalBytes = backup.fileSize, downloadedBytes = backup.fileSize,
+                    startedAt = backup.addedAt, completedAt = backup.completedAt
                 )
             )
             downloadsRestored++
@@ -71,10 +95,14 @@ class BackupDataRestorer @Inject constructor(
         data.watchHistory.forEach { backup ->
             watchHistoryDao.insert(
                 WatchHistoryEntity(
-                    id = backup.id, profileId = backup.profileId, mediaId = backup.mediaId,
-                    episodeId = backup.episodeId, progress = backup.progress,
-                    currentTime = backup.currentTime, totalTime = backup.totalTime,
-                    watchedAt = backup.watchedAt
+                    id = backup.id, profileId = backup.profileId,
+                    mediaItemId = backup.mediaId,
+                    position = backup.currentTime,
+                    duration = backup.totalTime,
+                    watchedAt = backup.watchedAt,
+                    completionPercent = backup.progress,
+                    episodeNumber = backup.episodeId?.toIntOrNull(),
+                    seasonNumber = null
                 )
             )
             watchHistoryRestored++
@@ -82,8 +110,9 @@ class BackupDataRestorer @Inject constructor(
         data.favorites.forEach { backup ->
             favoriteDao.insert(
                 FavoriteEntity(
-                    id = backup.id, profileId = backup.profileId, mediaId = backup.mediaId,
-                    mediaType = backup.mediaType, addedAt = backup.addedAt
+                    id = backup.id, profileId = backup.profileId,
+                    mediaItemId = backup.mediaId,
+                    addedAt = backup.addedAt, category = backup.mediaType
                 )
             )
             favoritesRestored++

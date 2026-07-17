@@ -3,22 +3,6 @@ package com.kurostream.backup.data
 import android.content.Context
 import com.kurostream.backup.domain.*
 import com.kurostream.core.common.result.Result
-import com.kurostream.data.anistream.addons.AddonDao
-import com.kurostream.data.anistream.downloads.DownloadDao
-import com.kurostream.data.anistream.profile.ProfileDao
-import com.kurostream.data.anistream.search.RecentSearchDao
-import com.kurostream.data.anistream.settings.SettingsDao
-import com.kurostream.data.anistream.sync.SyncProviderDao
-import com.kurostream.data.anistream.introskip.IntroSkipDao
-import com.kurostream.data.local.dao.FavoriteDao
-import com.kurostream.data.local.dao.MediaItemDao
-import com.kurostream.data.local.dao.WatchHistoryDao
-import com.kurostream.data.local.entity.AddonConfigEntity
-import com.kurostream.data.local.entity.BookmarkEntity
-import com.kurostream.data.local.entity.FavoriteEntity
-import com.kurostream.data.local.entity.HomeRowEntity
-import com.kurostream.data.local.entity.SourceLockEntity
-import com.kurostream.data.local.entity.WatchHistoryEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -287,9 +271,4 @@ class BackupRepositoryImpl @Inject constructor(
     override suspend fun getAuthUrl(): String = withContext(Dispatchers.IO) {
         "https://github.com/login/device?scope=${GITHUB_SCOPES}&client_id=${GITHUB_CLIENT_ID}"
     }
-
-    interface SourceLockDao { suspend fun getAll(): List<SourceLockEntity>; suspend fun insert(entity: SourceLockEntity) }
-    interface HomeRowDao { suspend fun getAll(): List<HomeRowEntity>; suspend fun insert(entity: HomeRowEntity) }
-    interface BookmarkDao { suspend fun getAll(): List<BookmarkEntity>; suspend fun insert(entity: BookmarkEntity) }
-    interface AddonDao { suspend fun getAll(): List<AddonConfigEntity>; suspend fun insert(entity: AddonConfigEntity) }
 }

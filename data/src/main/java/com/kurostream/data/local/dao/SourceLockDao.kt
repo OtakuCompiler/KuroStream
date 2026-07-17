@@ -42,6 +42,9 @@ interface SourceLockDao {
     @Query("SELECT * FROM source_locks WHERE is_active = 1")
     fun observeAllActive(): Flow<List<SourceLockEntity>>
 
+    @Query("SELECT * FROM source_locks")
+    suspend fun getAll(): List<SourceLockEntity>
+
     @Query("DELETE FROM source_locks WHERE series_id = :seriesId")
     suspend fun deleteBySeriesId(seriesId: String)
 

@@ -24,6 +24,9 @@ interface DownloadItemDao {
     @Query("SELECT * FROM download_items WHERE profileId = :profileId ORDER BY startedAt DESC")
     fun observeByProfile(profileId: String): Flow<List<DownloadItemEntity>>
 
+    @Query("SELECT * FROM download_items")
+    suspend fun getAll(): List<DownloadItemEntity>
+
     @Query("SELECT * FROM download_items WHERE status = :status")
     suspend fun getByStatus(status: String): List<DownloadItemEntity>
 

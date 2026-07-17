@@ -42,6 +42,30 @@ object RoomModule {
 
     @Provides
     @Singleton
+    fun provideSourceLockDao(database: KuroStreamDatabase): SourceLockDao {
+        return database.sourceLockDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeRowDao(database: KuroStreamDatabase): HomeRowDao {
+        return database.homeRowDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideBookmarkDao(database: KuroStreamDatabase): BookmarkDao {
+        return database.bookmarkDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAddonDao(database: KuroStreamDatabase): AddonDao {
+        return database.addonDao()
+    }
+
+    @Provides
+    @Singleton
     fun provideSettingsDataStore(@ApplicationContext context: Context): SettingsDataStore {
         return SettingsDataStoreImpl(context)
     }

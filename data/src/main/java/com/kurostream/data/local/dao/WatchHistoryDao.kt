@@ -24,6 +24,9 @@ interface WatchHistoryDao {
     @Query("SELECT * FROM watch_history WHERE profileId = :profileId ORDER BY watchedAt DESC")
     fun observeByProfile(profileId: String): Flow<List<WatchHistoryEntity>>
 
+    @Query("SELECT * FROM watch_history")
+    suspend fun getAll(): List<WatchHistoryEntity>
+
     @Query("SELECT * FROM watch_history WHERE mediaItemId = :mediaItemId AND profileId = :profileId")
     suspend fun getByMediaAndProfile(mediaItemId: String, profileId: String): WatchHistoryEntity?
 
