@@ -98,6 +98,12 @@ android {
         additionalParameters.addAll(listOf("--no-version-vectors", "--no-version-transitions"))
     }
 
+    // Disable detekt for this module due to ClassCastException bug in detekt 1.23.x
+    // See: https://github.com/detekt/detekt/issues/7434
+    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+        enabled = false
+    }
+
     // APK Size Optimization: ABI splits via bundle config (modern approach)
     // splits block is deprecated; use bundle { abi { enableSplit = true } } instead
 }
@@ -193,9 +199,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.leakcanary.android)
 
-    // Baseline Profile & Macrobenchmark
-    androidTestImplementation(libs.benchmark.macro.junit4)
-    androidTestImplementation(libs.benchmark.junit4)
+    // Baseline Profile & Macrobenchmark (disabled - artifacts not on Maven Central)
+//    androidTestImplementation(libs.benchmark.macro.junit4)
+//    androidTestImplementation(libs.benchmark.junit4)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
