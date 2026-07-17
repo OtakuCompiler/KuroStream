@@ -8,18 +8,16 @@ plugins {
     alias(libs.plugins.hilt) apply false
 
     alias(libs.plugins.spotless)
-    alias(libs.plugins.detekt)
     alias(libs.plugins.dependencycheck) apply false
 }
 
 val excludedDetektModules = setOf("tizenApp", "webosApp", "benchmark", "cache", "common", "data", "extensions")
 
 subprojects {
-    // Disable detekt entirely due to ClassCastException bug in detekt 1.23.x
-    // See: https://github.com/detekt/detekt/issues/7434
-    // if (name !in excludedDetektModules) {
-    //     apply(plugin = "io.gitlab.arturbosch.detekt")
-    // }
+    // Apply detekt plugin conditionally
+    if (name !in excludedDetektModules) {
+        apply(plugin = "io.gitlab.arturbosch.detekt")
+    }
 
     afterEvaluate {
         if (plugins.hasPlugin("io.gitlab.arturbosch.detekt")) {
