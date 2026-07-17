@@ -41,7 +41,6 @@ import javax.inject.Singleton
 class DemoCloudSyncProvider @Inject constructor(
     @ApplicationContext private val context: Context,
     private val database: KuroStreamDatabase,
-    private val settingsDataStore: SettingsDataStore
 ) : SyncProvider {
 
     override val providerName: String = "demo"
@@ -159,9 +158,9 @@ class DemoCloudSyncProvider @Inject constructor(
             DownloadItem(it.id, it.mediaItemId, it.profileId, it.localPath, DownloadStatus.valueOf(it.status), it.progress, it.totalBytes, it.downloadedBytes, it.startedAt, it.completedAt, it.errorMessage)
         } else emptyList()
         val settings = mapOf(
-            "skin_name" to settingsDataStore.skinName.first(),
-            "theme_mode" to settingsDataStore.themeMode.first(),
-            "subtitle_language" to settingsDataStore.subtitleLanguage.first()
+            "skin_name" to "default",
+            "theme_mode" to "system",
+            "subtitle_language" to "en"
         )
         return SyncPayload(profiles, watchHistory, favorites, downloads, settings, System.currentTimeMillis(), deviceId, 1)
     }
