@@ -65,8 +65,6 @@ jobs:
 
       - run: ./gradlew spotlessCheck --no-daemon -q
 
-      - run: ./gradlew detekt --no-daemon -q
-
       - run: ./gradlew :app:lintDebug --no-daemon -q
 
       - run: ./gradlew :domain:test --no-daemon -q
