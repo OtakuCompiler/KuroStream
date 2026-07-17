@@ -17,8 +17,6 @@ package com.kurostream.data.subtitle
 
 import android.content.Context
 import com.kurostream.core.common.result.Result
-import com.kurostream.core.common.result.Result.error
-import com.kurostream.core.common.result.Result.success
 import com.kurostream.domain.model.LanguagePair
 import com.kurostream.domain.model.SubtitleLine
 import com.kurostream.domain.model.TranslationResult
@@ -27,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.gpu.GpuDelegateFactory
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
@@ -44,7 +41,7 @@ class OfflineTranslatorImpl @Inject constructor(
 ) : OfflineTranslator {
 
     private var interpreter: Interpreter? = null
-    private var gpuDelegate: GpuDelegate? = null
+    private var gpuDelegate: org.tensorflow.lite.gpu.GpuDelegate? = null
     private var isInitialized = false
     private val modelInputSize = 128
     private val vocabSize = 32000
@@ -53,20 +50,16 @@ class OfflineTranslatorImpl @Inject constructor(
     override suspend fun initialize(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val options = Interpreter.Options().setNumThreads(4)
-            val gpuDelegateFactory = GpuDelegateFactory()
-            val gpuOptions = GpuDelegateFactory.Options().apply {
-                setMaxDelegatedPartitions(10)
-            }
-            gpuDelegate = gpuDelegateFactory.createDelegate(gpuOptions)
-            options.addDelegate(gpuDelegate!!)
+            val gpuDelegate = org.tensorflow.lite.gpu.GpuDelegate()
+            options.addDelegate(gpuDelegate)
+            this.gpuDelegate = gpuDelegate
 
             val modelBuffer = loadModelFile(modelName)
             interpreter = Interpreter(modelBuffer, options)
             isInitialized = true
-            success(Unit)
+            Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to initialize offline translator")
-            error(e)
+            Result.error(e)
         }
     }
 
@@ -75,13 +68,13 @@ class OfflineTranslatorImpl @Inject constructor(
         sourceLang: String,
         targetLang: String
     ): Result<TranslationResult> = withContext(Dispatchers.IO) {
-        if (!isInitialized) return@withContext error(IllegalStateException("Translator not initialized"))
+        if (!isInitialized) return@withContext Result.error(IllegalStateException("Translator not initialized"))
         try {
             val input = preprocessText(text, sourceLang)
             val output = runInference(input)
             val translated = decodeOutput(output, targetLang)
 
-            success(TranslationResult(
+            Result.success(TranslationResult(
                 originalText = text,
                 translatedText = translated,
                 sourceLanguage = sourceLang,
@@ -90,8 +83,7 @@ class OfflineTranslatorImpl @Inject constructor(
                 modelUsed = "tflite_offline"
             ))
         } catch (e: Exception) {
-            Timber.e(e, "Translation failed")
-            error(e)
+            Result.error(e)
         }
     }
 
@@ -100,20 +92,19 @@ class OfflineTranslatorImpl @Inject constructor(
         sourceLang: String,
         targetLang: String
     ): Result<List<TranslationResult>> = withContext(Dispatchers.IO) {
-        if (!isInitialized) return@withContext error(IllegalStateException("Translator not initialized"))
+        if (!isInitialized) return@withContext Result.error(IllegalStateException("Translator not initialized"))
         try {
             val results = lines.map { line ->
                 translate(line.text, sourceLang, targetLang).getOrNull()
             }.filterNotNull()
-            success(results)
+            Result.success(results)
         } catch (e: Exception) {
-            Timber.e(e, "Batch translation failed")
-            error(e)
+            Result.error(e)
         }
     }
 
     override fun getSupportedLanguages(): Result<List<LanguagePair>> {
-        return success(listOf(
+        return Result.success(listOf(
             LanguagePair("en", "zh", "English → Chinese"),
             LanguagePair("zh", "en", "Chinese → English"),
             LanguagePair("en", "es", "English → Spanish"),
@@ -187,7 +178,6 @@ class OfflineTranslatorImpl @Inject constructor(
             val channel = FileInputStream(file).channel
             return channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
         } catch (e: Exception) {
-            Timber.e(e, "Failed to load model file")
             throw IllegalStateException("Failed to load model: $modelName", e)
         }
     }

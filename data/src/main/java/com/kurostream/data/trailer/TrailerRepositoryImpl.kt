@@ -17,6 +17,7 @@ package com.kurostream.data.trailer
 
 import com.kurostream.core.common.result.Result
 import com.kurostream.data.remote.api.YouTubeApi
+import com.kurostream.data.remote.dto.youtube.YouTubeDtos
 import com.kurostream.domain.metadata.TrailerRepository
 import com.kurostream.domain.model.Trailer
 import kotlinx.coroutines.Dispatchers

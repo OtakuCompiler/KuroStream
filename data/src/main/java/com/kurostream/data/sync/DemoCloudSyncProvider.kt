@@ -19,8 +19,6 @@ import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.kurostream.core.common.result.Result
-import com.kurostream.core.common.result.Result.error
-import com.kurostream.core.common.result.Result.success
 import com.kurostream.data.local.database.KuroStreamDatabase
 import com.kurostream.domain.model.Profile
 import com.kurostream.domain.model.VideoQuality
@@ -67,38 +65,38 @@ class DemoCloudSyncProvider @Inject constructor(
 
     override suspend fun authenticate(credentials: Map<String, String>): Result<Unit> {
         return if (credentials["username"].isNullOrBlank()) {
-            error(IllegalArgumentException("Username required"))
+            Result.error(IllegalArgumentException("Username required"))
         } else {
             isAuthenticated = true
-            success(Unit)
+            Result.success(Unit)
         }
     }
 
     override suspend fun signOut(): Result<Unit> {
         isAuthenticated = false
-        return success(Unit)
+        return Result.success(Unit)
     }
 
     override suspend fun push(data: SyncPayload): Result<SyncTimestamp> = withContext(Dispatchers.IO) {
-        if (!isAuthenticated) return@withContext error(IllegalStateException("Not authenticated"))
+        if (!isAuthenticated) return@withContext Result.error(IllegalStateException("Not authenticated"))
         synchronized(lock) {
             val enriched = data.copy(timestamp = System.currentTimeMillis(), deviceId = deviceId)
             syncFile.writeText(gson.toJson(enriched))
-            success(SyncTimestamp(enriched.timestamp, System.currentTimeMillis()))
+            Result.success(SyncTimestamp(enriched.timestamp, System.currentTimeMillis()))
         }
     }
 
     suspend fun pushLocalState(): Result<SyncTimestamp> = push(buildPayloadFromLocal())
 
     override suspend fun pull(lastSyncTimestamp: Long?): Result<SyncPayload?> = withContext(Dispatchers.IO) {
-        if (!isAuthenticated) return@withContext error(IllegalStateException("Not authenticated"))
+        if (!isAuthenticated) return@withContext Result.error(IllegalStateException("Not authenticated"))
         synchronized(lock) {
-            if (!syncFile.exists()) return@withContext success(null)
+            if (!syncFile.exists()) return@withContext Result.success(null)
             val payload = gson.fromJson<SyncPayload>(syncFile.readText(), object : TypeToken<SyncPayload>() {}.type)
             if (lastSyncTimestamp != null && payload.timestamp <= lastSyncTimestamp) {
-                success(null)
+                Result.success(null)
             } else {
-                success(payload)
+                Result.success(payload)
             }
         }
     }
@@ -110,7 +108,7 @@ class DemoCloudSyncProvider @Inject constructor(
     override suspend fun deleteCloudData(): Result<Unit> = withContext(Dispatchers.IO) {
         synchronized(lock) {
             if (syncFile.exists()) syncFile.delete()
-            success(Unit)
+            Result.success(Unit)
         }
     }
 
