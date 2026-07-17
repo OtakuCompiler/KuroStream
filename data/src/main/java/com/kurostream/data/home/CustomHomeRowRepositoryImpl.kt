@@ -83,10 +83,11 @@ class CustomHomeRowRepositoryImpl @Inject constructor(
                 source = null,
             )
 
+            val yearRange = filter.yearRange
             val filtered = mediaList.filter { media ->
                 (filter.genres.isEmpty() || filter.genres.any { it in media.genres }) &&
                     (filter.studios.isEmpty() || filter.studios.any { it in media.studios }) &&
-                    (filter.yearRange == null || media.seasonYear?.let { it in filter.yearRange.start..filter.yearRange.end } ?: true) &&
+                    (yearRange == null || media.seasonYear?.let { it in yearRange.start..yearRange.end } ?: true) &&
                     (filter.mediaTypes.isEmpty() || filter.mediaTypes.any { it.name == media.type.name })
             }
 

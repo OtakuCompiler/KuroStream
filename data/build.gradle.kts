@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.appauth)
     implementation(libs.androidx.documentfile)
 
+    implementation(libs.timber)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core.jvm)
