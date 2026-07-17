@@ -17,10 +17,8 @@ subprojects {
     // Apply detekt plugin conditionally
     if (name !in excludedDetektModules) {
         apply(plugin = "io.gitlab.arturbosch.detekt")
-    }
-
-    afterEvaluate {
-        if (plugins.hasPlugin("io.gitlab.arturbosch.detekt")) {
+        
+        afterEvaluate {
             configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
                 toolVersion = libs.versions.detekt.get()
                 config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
