@@ -11,5 +11,5 @@ plugins {
     alias(libs.plugins.dependencycheck) apply false
 }
 
-// The detekt plugin is NOT applied globally to avoid spotless check failures on root project.
-// Modules that want detekt should apply the plugin and configure it in their own build.gradle.kts.
+// Detekt is NOT applied globally to avoid spotless check failures on root project
+// Modules that want detekt should apply the plugin and configure it in their own build.gradle.kts

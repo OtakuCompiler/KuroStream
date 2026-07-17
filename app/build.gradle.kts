@@ -100,9 +100,9 @@ android {
 
     // Disable detekt for this module due to ClassCastException bug in detekt 1.23.x
     // See: https://github.com/detekt/detekt/issues/7434
-    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-        enabled = false
-    }
+    // tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    //     enabled = false
+    // }
 
     // APK Size Optimization: ABI splits via bundle config (modern approach)
     // splits block is deprecated; use bundle { abi { enableSplit = true } } instead
