@@ -234,7 +234,11 @@ DeviceInfo(
                     )
                     trySend(Result.success(progress))
                 }
-            awaitClose { listener.remove() }
+            try {
+                awaitClose()
+            } finally {
+                listener.remove()
+            }
         }
     }
 

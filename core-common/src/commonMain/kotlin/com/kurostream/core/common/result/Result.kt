@@ -30,6 +30,7 @@ sealed class Result<out T> {
 
     val isSuccess: Boolean get() = this is Success
     val isError: Boolean get() = this is Error
+    val isFailure: Boolean get() = this is Error
     val isLoading: Boolean get() = this is Loading
 
     fun getOrNull(): T? = (this as? Success)?.data
