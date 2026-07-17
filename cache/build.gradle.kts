@@ -20,6 +20,11 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Disable detekt due to ClassCastException bug in detekt 1.23.x
+tasks.named("detekt") {
+    enabled = false
+}
+
 android {
     namespace = "com.kurostream.cache"
     compileSdk = libs.versions.compileSdk.get().toInt()
