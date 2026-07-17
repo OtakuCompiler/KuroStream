@@ -15,8 +15,20 @@
 
 package com.kurostream.launcher.di
 
-// MERGE NOTE: this file was shipped EMPTY (0 bytes) in the streambox_phases_81_90.zip
-// source archive — this is not something introduced during merging. Other real files
-// in this module (FirebaseAuthManager, JellyfinAuthManager, PlexExtensionsModule, etc.)
-// reference "FirebaseModule" and will not compile until a real implementation is written here.
-// See MERGE_REPORT_2.md, section "streambox (81-90) — files shipped empty".
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@InstallIn(SingletonComponent::class)
+@Module
+object FirebaseModule {
+
+    @Provides
+    @Singleton
+    fun provideFirebaseRemoteConfig(): FirebaseRemoteConfig {
+        return FirebaseRemoteConfig.getInstance()
+    }
+}

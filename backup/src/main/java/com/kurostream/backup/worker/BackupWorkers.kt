@@ -3,6 +3,7 @@ package com.kurostream.backup.worker
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import com.kurostream.backup.data.BackupRepositoryImpl
 import com.kurostream.core.common.result.Result
@@ -16,11 +17,11 @@ class AutoBackupWorker @AssistedInject constructor(
     private val repository: BackupRepositoryImpl,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): androidx.work.Result {
+    override suspend fun doWork(): ListenableWorker.Result {
         val config = repository.backupConfig.first()
 
         if (!config.autoBackupEnabled) {
-            return androidx.work.Result.success()
+            return ListenableWorker.Result.success()
         }
 
         val lastBackup = config.lastBackupTimestamp
@@ -28,16 +29,16 @@ class AutoBackupWorker @AssistedInject constructor(
         val now = System.currentTimeMillis()
 
         if (now - lastBackup < intervalMs) {
-            return androidx.work.Result.success()
+            return ListenableWorker.Result.success()
         }
 
-        val password = getBackupPassword() ?: return androidx.work.Result.success()
+        val password = getBackupPassword() ?: return ListenableWorker.Result.success()
 
         val result = repository.createBackup(config, password)
         return if (result is Result.Success) {
-            androidx.work.Result.success()
+            ListenableWorker.Result.success()
         } else {
-            androidx.work.Result.retry()
+            ListenableWorker.Result.retry()
         }
     }
 
@@ -53,19 +54,19 @@ class RestoreWorker @AssistedInject constructor(
     private val repository: BackupRepositoryImpl,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): androidx.work.Result {
-        val metadataId = inputData.getString("metadata_id") ?: return androidx.work.Result.failure()
+    override suspend fun doWork(): ListenableWorker.Result {
+        val metadataId = inputData.getString("metadata_id") ?: return ListenableWorker.Result.failure()
         val password = inputData.getString("password")
         val config = repository.backupConfig.first()
 
         val backupsResult = repository.listBackups(config)
-        if (backupsResult is Result.Error) return androidx.work.Result.failure()
+        if (backupsResult is Result.Error) return ListenableWorker.Result.failure()
 
         val metadata = backupsResult.getOrNull()?.firstOrNull { it.id == metadataId }
-            ?: return androidx.work.Result.failure()
+            ?: return ListenableWorker.Result.failure()
 
         val result = repository.restoreBackup(config, metadata, password)
-        return if (result is Result.Success) androidx.work.Result.success() else androidx.work.Result.failure()
+        return if (result is Result.Success) ListenableWorker.Result.success() else ListenableWorker.Result.failure()
     }
 }
 
@@ -76,13 +77,13 @@ class SyncWorker @AssistedInject constructor(
     private val repository: BackupRepositoryImpl,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): androidx.work.Result {
+    override suspend fun doWork(): ListenableWorker.Result {
         val config = repository.backupConfig.first()
-        if (!config.autoBackupEnabled) return androidx.work.Result.success()
+        if (!config.autoBackupEnabled) return ListenableWorker.Result.success()
 
-        val password = getBackupPassword() ?: return androidx.work.Result.success()
+        val password = getBackupPassword() ?: return ListenableWorker.Result.success()
         val result = repository.createBackup(config, password)
-        return if (result is Result.Success) androidx.work.Result.success() else androidx.work.Result.retry()
+        return if (result is Result.Success) ListenableWorker.Result.success() else ListenableWorker.Result.retry()
     }
 
     private fun getBackupPassword(): String? = null
