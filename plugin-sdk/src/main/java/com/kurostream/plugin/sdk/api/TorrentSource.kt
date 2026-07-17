@@ -16,6 +16,8 @@
 package com.kurostream.plugin.sdk.api
 
 import com.kurostream.core.common.result.Result
+import com.kurostream.domain.entity.ExtensionCapability
+import com.kurostream.domain.entity.VideoSource
 
 interface TorrentSource : ExtensionApi {
     override suspend fun getVideoSources(episodeId: String): Result<List<VideoSource>> {
