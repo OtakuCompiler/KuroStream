@@ -78,8 +78,9 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
-    kapt("com.squareup.retrofit2:retrofit:2.11.0")
-    kapt("com.squareup.retrofit2:converter-moshi:2.11.0")
+    // Use KSP for Retrofit annotation processing
+    // kapt("com.squareup.retrofit2:retrofit:2.11.0")
+    // kapt("com.squareup.retrofit2:converter-moshi:2.11.0")
 
     implementation(libs.work.runtime.ktx)
 
