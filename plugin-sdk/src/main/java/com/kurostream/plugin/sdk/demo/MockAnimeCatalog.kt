@@ -28,8 +28,8 @@ import com.kurostream.domain.entity.MediaType
 import com.kurostream.domain.entity.RowType
 import com.kurostream.domain.entity.Season
 import com.kurostream.domain.entity.SemanticVersion
-import com.kurostream.domain.entity.VideoQuality
 import com.kurostream.domain.entity.VideoSource
+import com.kurostream.domain.model.VideoQuality
 import com.kurostream.plugin.sdk.api.ExtensionApi
 import com.kurostream.plugin.sdk.api.ExtensionConfig
 

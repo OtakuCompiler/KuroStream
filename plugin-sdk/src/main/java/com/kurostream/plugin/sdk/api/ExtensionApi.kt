@@ -23,6 +23,7 @@ import com.kurostream.domain.entity.HomeRow
 import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.entity.SubtitleCandidate
 import com.kurostream.domain.entity.VideoSource
+import kotlinx.serialization.Serializable
 
 interface ExtensionApi {
     val extensionId: String

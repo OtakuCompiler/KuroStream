@@ -16,46 +16,16 @@
 package com.kurostream.plugin.sdk.api
 
 import com.kurostream.core.common.result.Result
-import com.kurostream.domain.entity.MediaItem
+import com.kurostream.core.common.result.Result.failure
+import com.kurostream.domain.entity.ExtensionCapability
+import com.kurostream.domain.entity.VideoSource
 
 interface TorrentSource : ExtensionApi {
     override suspend fun getVideoSources(episodeId: String): Result<List<VideoSource>> {
-        return Result.failure(UnsupportedOperationException("Torrent sources handled by TorrentService"))
+        return failure(UnsupportedOperationException("Torrent sources handled by TorrentService"))
     }
 
     override fun getCapabilities(): Set<ExtensionCapability> {
-        return setOf(ExtensionCapability.STREAMING, ExtensionCapability.TORRENT_STREAMING)
+        return setOf(ExtensionCapability.TORRENT_STREAM)
     }
-
-    suspend fun addMagnetLink(magnetUri: String, mediaId: String, episodeId: String): Result<TorrentStreamInfo>
-    suspend fun addTorrentFile(filePath: String, mediaId: String, episodeId: String): Result<TorrentStreamInfo>
-    suspend fun getTorrentStatus(infoHash: String): Result<TorrentStatusInfo>
-    suspend fun setFilePriority(infoHash: String, fileIndex: Int, priority: FilePriority): Result<Unit>
 }
-
-@Serializable
-data class TorrentStatusInfo(
-    val infoHash: String,
-    val name: String,
-    val status: TorrentStatus,
-    val progress: Float,
-    val downloadSpeed: Long,
-    val uploadSpeed: Long,
-    val peers: Int,
-    val seeds: Int,
-    val eta: Long,
-    val fileProgress: Map<Int, Float>,
-)
-
-enum class TorrentStatus {
-    QUEUED,
-    CHECKING,
-    DOWNLOADING_METADATA,
-    DOWNLOADING,
-    SEEDING,
-    PAUSED,
-    ERROR,
-    FINISHED,
-}
-
-enum class FilePriority { DONT_DOWNLOAD, LOW, NORMAL, HIGH }

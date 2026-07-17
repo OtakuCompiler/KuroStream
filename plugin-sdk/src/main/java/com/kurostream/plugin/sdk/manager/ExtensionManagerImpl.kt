@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,14 +26,14 @@ class ExtensionManagerImpl @Inject constructor(
     private val extensionConfig: ExtensionConfig
 ) : ExtensionManager {
 
-    private val lock = Any()
+    private val lock = Mutex()
     private val extensions = mutableMapOf<String, ExtensionEntry>()
     private val _allExtensions = MutableStateFlow<List<ExtensionInfo>>(emptyList())
 
     init {
         val demo = MockAnimeCatalog()
         val sandbox = ExtensionSandbox(demo, SandboxPolicy())
-        synchronized(lock) {
+        lock.withLock {
             extensions[demo.extensionId] = ExtensionEntry(demo.info.copy(isInstalled = true, isEnabled = true), sandbox)
         }
         emitState()
@@ -39,14 +41,14 @@ class ExtensionManagerImpl @Inject constructor(
 
     override fun observeAllExtensions(): StateFlow<List<ExtensionInfo>> = _allExtensions.asStateFlow()
     override fun observeEnabledExtensions() = _allExtensions.map { it.filter { e -> e.isEnabled } }
-    override fun getExtensionApi(extensionId: String): ExtensionApi? = synchronized(lock) {
+    override fun getExtensionApi(extensionId: String): ExtensionApi? = lock.withLock {
         extensions[extensionId]?.takeIf { it.info.isEnabled }?.sandbox
     }
-    override fun getEnabledApis(): List<ExtensionApi> = synchronized(lock) {
+    override fun getEnabledApis(): List<ExtensionApi> = lock.withLock {
         extensions.values.filter { it.info.isEnabled }.map { it.sandbox }
     }
 
-    override suspend fun install(path: String): Result<ExtensionInfo> = synchronized(lock) {
+    override suspend fun install(path: String): Result<ExtensionInfo> = lock.withLock {
         runCatching {
             val info = ExtensionInfo(
                 id = "stub_${System.currentTimeMillis()}", name = "Stub Extension", author = "Unknown",
@@ -61,11 +63,11 @@ class ExtensionManagerImpl @Inject constructor(
         }.getOrElse { Result.Error(it) }
     }
 
-    override suspend fun uninstall(extensionId: String): Result<Unit> = synchronized(lock) {
+    override suspend fun uninstall(extensionId: String): Result<Unit> = lock.withLock {
         runCatching { extensions.remove(extensionId)?.sandbox?.onDestroy(); emitState(); Result.Success(Unit) }.getOrElse { Result.Error(it) }
     }
 
-    override suspend fun enable(extensionId: String): Result<Unit> = synchronized(lock) {
+    override suspend fun enable(extensionId: String): Result<Unit> = lock.withLock {
         runCatching {
             val entry = extensions[extensionId] ?: throw IllegalArgumentException("Extension not found: $extensionId")
             entry.sandbox.onEnable()
@@ -74,7 +76,7 @@ class ExtensionManagerImpl @Inject constructor(
         }.getOrElse { Result.Error(it) }
     }
 
-    override suspend fun disable(extensionId: String): Result<Unit> = synchronized(lock) {
+    override suspend fun disable(extensionId: String): Result<Unit> = lock.withLock {
         runCatching {
             val entry = extensions[extensionId] ?: throw IllegalArgumentException("Extension not found: $extensionId")
             entry.sandbox.onDisable()
@@ -83,11 +85,11 @@ class ExtensionManagerImpl @Inject constructor(
         }.getOrElse { Result.Error(it) }
     }
 
-    override suspend fun refresh(): Result<Unit> = synchronized(lock) {
+    override suspend fun refresh(): Result<Unit> = lock.withLock {
         runCatching { emitState(); Result.Success(Unit) }.getOrElse { Result.Error(it) }
     }
 
-    private fun emitState() { _allExtensions.value = synchronized(lock) { extensions.values.map { it.info } } }
+    private fun emitState() { _allExtensions.value = lock.withLock { extensions.values.map { it.info } } }
     private data class ExtensionEntry(val info: ExtensionInfo, val sandbox: ExtensionSandbox)
 
     private class StubExtensionApi(override val info: ExtensionInfo) : ExtensionApi {

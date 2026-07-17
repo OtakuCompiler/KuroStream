@@ -51,11 +51,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
-    // Room schema export for migration verification
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-    }
 }
 
 dependencies {
