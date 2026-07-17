@@ -18,6 +18,7 @@ package com.kurostream.data.sync
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.kurostream.data.local.database.KuroStreamDatabase
 import com.kurostream.domain.model.Profile
 import com.kurostream.domain.model.VideoQuality
 import com.kurostream.domain.model.WatchHistory
@@ -39,12 +40,28 @@ import javax.inject.Singleton
 @Singleton
 class DemoCloudSyncProvider @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val profileDao: ProfileDao,
-    private val watchHistoryDao: WatchHistoryDao,
-    private val favoriteDao: FavoriteDao,
-    private val downloadItemDao: DownloadItemDao,
+    private val database: KuroStreamDatabase,
     private val settingsDataStore: SettingsDataStore
 ) : SyncProvider {
+
+    override val providerName: String = "demo"
+    override var isAuthenticated: Boolean = false
+        private set
+
+    private val gson = Gson()
+    private val syncFile = File(context.filesDir, "demo_cloud_sync.json")
+    private val deviceIdFile = File(context.filesDir, "demo_device_id.txt")
+    private val lock = Any()
+
+    private val deviceId: String by lazy {
+        if (deviceIdFile.exists()) deviceIdFile.readText().trim()
+        else UUID.randomUUID().toString().also { deviceIdFile.writeText(it) }
+    }
+
+    private val profileDao = database.profileDao()
+    private val watchHistoryDao = database.watchHistoryDao()
+    private val favoriteDao = database.favoriteDao()
+    private val downloadItemDao = database.downloadItemDao()
 
     override val providerName: String = "demo"
     override var isAuthenticated: Boolean = false
@@ -147,5 +164,9 @@ class DemoCloudSyncProvider @Inject constructor(
             "subtitle_language" to settingsDataStore.subtitleLanguage.first()
         )
         return SyncPayload(profiles, watchHistory, favorites, downloads, settings, System.currentTimeMillis(), deviceId, 1)
+    }
+
+    companion object {
+        private val lock = Any()
     }
 }
