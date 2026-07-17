@@ -52,7 +52,7 @@ class WebCrypto : PlatformCrypto {
 
     override suspend fun decryptString(encrypted: String, key: String): String {
         val bytes = encrypted.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-        return String(decrypt(bytes, key))
+        return decrypt(bytes, key).decodeToString()
     }
 
     override fun hash(data: String, algorithm: HashAlgorithm): String {
