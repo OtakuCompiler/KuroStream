@@ -73,6 +73,7 @@ dependencies {
     // WorkManager for scheduled backups
     implementation(libs.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
     // Retrofit for GitHub API
     implementation(libs.retrofit)
