@@ -41,10 +41,10 @@ class TmdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getTvDetails(id.toIntOrNull() ?: return@getOrFetch MetadataResult.NotFound)
-                response.body()?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                response.body()?.let { MetadataResult.Success(mapToDomain(it)) } ?: MetadataResult.NotFound
             } catch (e: Exception) {
                 Timber.e(e, "TMDB getAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
             }
         }
     }
@@ -54,10 +54,10 @@ class TmdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
             try {
                 val response = api.searchTv(query, page)
-                response.body()?.results?.map { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(response.body()?.results?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
                 Timber.e(e, "TMDB searchAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
             }
         }
     }
@@ -72,10 +72,10 @@ class TmdbMetadataProvider @Inject constructor(
                     else -> return@getOrFetch MetadataResult.NotFound
                 }
                 val response = api.findByExternalId(value, source)
-                response.body()?.tvResults?.firstOrNull()?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                response.body()?.tvResults?.firstOrNull()?.let { MetadataResult.Success(mapToDomain(it)) } ?: MetadataResult.NotFound
             } catch (e: Exception) {
                 Timber.e(e, "TMDB getAnimeByExternalId failed")
-                throw e
+                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
             }
         }
     }
@@ -91,10 +91,10 @@ class TmdbMetadataProvider @Inject constructor(
                     airDateGte = "${year}-${seasonStartMonth(season)}-01",
                     airDateLte = "${year}-${seasonEndMonth(season)}-31"
                 )
-                response.body()?.results?.map { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(response.body()?.results?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
                 Timber.e(e, "TMDB getSeasonalAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
             }
         }
     }
@@ -104,10 +104,10 @@ class TmdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) {
             try {
                 val response = api.getTrendingTv()
-                response.body()?.results?.take(limit)?.map { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(response.body()?.results?.take(limit)?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
                 Timber.e(e, "TMDB getTrendingAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
             }
         }
     }

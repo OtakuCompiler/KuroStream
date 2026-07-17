@@ -182,7 +182,7 @@ class MediaRepositoryImpl @Inject constructor(
         try {
             val response = malApi.getTopAnime()
             if (response.isSuccessful) {
-                response.body()?.data?.map { rankingNode ->
+                response.body()?.data?.mapNotNull { rankingNode ->
                     val anime = rankingNode.node
                     val titleStr = anime.title
                     val coverUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium
@@ -210,7 +210,7 @@ class MediaRepositoryImpl @Inject constructor(
                         deepLink = null,
                         lastUpdated = System.currentTimeMillis()
                     )
-                }
+                } ?: emptyList()
             } else emptyList()
         } catch (e: Exception) { emptyList() }
     }

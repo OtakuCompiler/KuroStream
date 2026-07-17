@@ -373,7 +373,7 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
         return providerData["_priority"]?.toIntOrNull() ?: 999
     }
 
-    private fun getEnabledProvidersFromSettings(): Set<String> {
+    private suspend fun getEnabledProvidersFromSettings(): Set<String> {
         return settingsDataStore.data
             .map { prefs ->
                 val enabled = prefs[com.kurostream.data.local.preferences.SettingsDataStore.Keys.METADATA_PROVIDERS_ENABLED] ?: "kitsu,anilist,mal,tmdb"

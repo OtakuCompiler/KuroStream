@@ -16,8 +16,16 @@
 package com.kurostream.data.metadata
 
 import com.kurostream.data.remote.api.MalApi
-import com.kurostream.data.remote.dto.mal.*
-import com.kurostream.domain.metadata.*
+import com.kurostream.data.remote.dto.mal.Anime
+import com.kurostream.data.remote.dto.mal.SearchNode
+import com.kurostream.data.remote.dto.mal.SeasonalAnime
+import com.kurostream.data.remote.dto.mal.TopAnime
+import com.kurostream.domain.metadata.AiringStatus
+import com.kurostream.domain.metadata.AnimeMetadata
+import com.kurostream.domain.metadata.AnimeThemes
+import com.kurostream.domain.metadata.MediaType
+import com.kurostream.domain.metadata.MetadataResult
+import com.kurostream.domain.metadata.Season
 import com.kurostream.domain.repository.CacheRepository
 import timber.log.Timber
 import javax.inject.Inject
@@ -27,7 +35,7 @@ import javax.inject.Singleton
 class MalMetadataProvider @Inject constructor(
     private val api: MalApi,
     private val cache: CacheRepository,
-) : MetadataProvider {
+) : com.kurostream.domain.metadata.MetadataProvider {
 
     override val providerId = "mal"
     override val providerName = "MyAnimeList"
@@ -68,7 +76,7 @@ class MalMetadataProvider @Inject constructor(
         }
     }
 
-    override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> {
+    override suspend fun getAnimeByExternalId(type: com.kurostream.domain.metadata.ExternalIdType, value: String): MetadataResult<AnimeMetadata> {
         return MetadataResult.NotFound
     }
 
@@ -77,7 +85,7 @@ class MalMetadataProvider @Inject constructor(
             try {
                 val response = api.getSeasonalAnime(year, season.name.lowercase(), 50, 0)
                 val list = response.body()?.data?.mapNotNull { seasonalNode ->
-                    mapSearchNodeToDomain(seasonalNode.node)
+                    mapSeasonalAnimeToDomain(seasonalNode.node)
                 } ?: emptyList()
                 MetadataResult.Success(list)
             } catch (e: Exception) {
@@ -92,7 +100,7 @@ class MalMetadataProvider @Inject constructor(
             try {
                 val response = api.getTopAnime("all", limit, 0)
                 val list = response.body()?.data?.mapNotNull { topNode ->
-                    mapSearchNodeToDomain(topNode.node)
+                    mapTopAnimeToDomain(topNode.node)
                 } ?: emptyList()
                 MetadataResult.Success(list)
             } catch (e: Exception) {
@@ -126,6 +134,78 @@ class MalMetadataProvider @Inject constructor(
         rank = node.rank,
         popularity = node.popularity,
         favorites = node.numFavorites,
+        ageRating = null,
+        sourceMaterial = null,
+        trailerUrl = null,
+        externalLinks = emptyList(),
+        characters = emptyList(),
+        staff = emptyList(),
+        relations = emptyList(),
+        themes = AnimeThemes(),
+        statistics = null,
+        providerId = providerId,
+    )
+
+    private fun mapSeasonalAnimeToDomain(anime: SeasonalAnime): AnimeMetadata = AnimeMetadata(
+        id = "mal_${anime.id}",
+        title = anime.title,
+        titleEnglish = anime.alternativeTitles?.en,
+        titleJapanese = anime.alternativeTitles?.ja,
+        synonyms = anime.alternativeTitles?.synonyms ?: emptyList(),
+        description = anime.synopsis?.replace("<br>", "\n"),
+        coverImageUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium,
+        bannerImageUrl = null,
+        type = mapMediaType(anime.mediaType),
+        status = mapStatus(anime.status),
+        episodes = anime.numEpisodes,
+        durationMinutes = null,
+        startDate = anime.startDate?.let { parseDate(it) },
+        endDate = anime.endDate?.let { parseDate(it) },
+        seasonYear = anime.startDate?.take(4)?.toIntOrNull(),
+        season = anime.startDate?.let { parseSeason(it) },
+        genres = emptyList(),
+        studios = emptyList(),
+        score = anime.mean,
+        scoredBy = anime.numScoringUsers,
+        rank = anime.rank,
+        popularity = anime.popularity,
+        favorites = anime.numFavorites,
+        ageRating = null,
+        sourceMaterial = null,
+        trailerUrl = null,
+        externalLinks = emptyList(),
+        characters = emptyList(),
+        staff = emptyList(),
+        relations = emptyList(),
+        themes = AnimeThemes(),
+        statistics = null,
+        providerId = providerId,
+    )
+
+    private fun mapTopAnimeToDomain(anime: TopAnime): AnimeMetadata = AnimeMetadata(
+        id = "mal_${anime.id}",
+        title = anime.title,
+        titleEnglish = anime.alternativeTitles?.en,
+        titleJapanese = anime.alternativeTitles?.ja,
+        synonyms = anime.alternativeTitles?.synonyms ?: emptyList(),
+        description = anime.synopsis?.replace("<br>", "\n"),
+        coverImageUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium,
+        bannerImageUrl = null,
+        type = mapMediaType(anime.mediaType),
+        status = mapStatus(anime.status),
+        episodes = anime.numEpisodes,
+        durationMinutes = null,
+        startDate = anime.startDate?.let { parseDate(it) },
+        endDate = anime.endDate?.let { parseDate(it) },
+        seasonYear = anime.startDate?.take(4)?.toIntOrNull(),
+        season = anime.startDate?.let { parseSeason(it) },
+        genres = emptyList(),
+        studios = emptyList(),
+        score = anime.mean,
+        scoredBy = anime.numScoringUsers,
+        rank = anime.rank,
+        popularity = anime.popularity,
+        favorites = anime.numFavorites,
         ageRating = null,
         sourceMaterial = null,
         trailerUrl = null,
