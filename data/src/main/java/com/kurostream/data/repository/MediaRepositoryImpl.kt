@@ -22,6 +22,7 @@ import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.entity.*
 import com.kurostream.data.remote.api.*
 import com.kurostream.data.remote.dto.anilist.*
+import com.kurostream.data.remote.dto.mal.MalDtos
 import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.model.*
 import com.kurostream.domain.repository.MediaRepository
@@ -74,7 +75,7 @@ class MediaRepositoryImpl @Inject constructor(
         try {
             val request = AniListSearchRequest(variables = mapOf("search" to query, "page" to 1, "perPage" to 20))
             val response = anilistApi.searchAnime(request)
-            if (response.isSuccessful) response.body()?.data?.Page?.media?.map { it.toDomain() } ?: emptyList()
+            if (response.isSuccessful) response.body()?.data?.Page?.media?.mapNotNull { it.toDomain() } ?: emptyList()
             else emptyList()
         } catch (e: Exception) { emptyList() }
     }
@@ -82,7 +83,7 @@ class MediaRepositoryImpl @Inject constructor(
     private suspend fun searchMal(query: String): List<MediaItem> = withContext(Dispatchers.IO) {
         try {
             val response = malApi.searchAnime(query = query, limit = 20)
-            if (response.isSuccessful) response.body()?.data?.map { it.node?.toDomain() }?.filterNotNull() ?: emptyList()
+            if (response.isSuccessful) response.body()?.data?.mapNotNull { it.node?.toDomain() }?.filterNotNull() ?: emptyList()
             else emptyList()
         } catch (e: Exception) { emptyList() }
     }
@@ -137,15 +138,15 @@ class MediaRepositoryImpl @Inject constructor(
     private suspend fun getAniListTrending(): List<MediaItem> = withContext(Dispatchers.IO) {
         try {
             val response = anilistApi.getTrendingAnime(AniListTrendingRequest())
-            if (response.isSuccessful) response.body()?.data?.Page?.media?.map { it.toDomain() } ?: emptyList()
+            if (response.isSuccessful) response.body()?.data?.Page?.media?.mapNotNull { it.toDomain() } ?: emptyList()
             else emptyList()
         } catch (e: Exception) { emptyList() }
     }
 
     private suspend fun getMalRanking(): List<MediaItem> = withContext(Dispatchers.IO) {
         try {
-            val response = malApi.getRanking(limit = 20)
-            if (response.isSuccessful) response.body()?.data?.map { it.node?.toDomain() }?.filterNotNull() ?: emptyList()
+            val response = malApi.getTopAnime()
+            if (response.isSuccessful) response.body()?.data?.mapNotNull { it.node?.toDomain() }?.filterNotNull() ?: emptyList()
             else emptyList()
         } catch (e: Exception) { emptyList() }
     }
@@ -222,11 +223,131 @@ class MediaRepositoryImpl @Inject constructor(
         } catch (e: Exception) { Result.error(e) }
     }
 
-    private fun MediaItemEntity.toDomain() = MediaItem(id, sourceId, sourceType, title, description, posterUrl, bannerUrl, MediaCategory.valueOf(category), releaseDate, rating, duration, streamUrl, metadataJson)
-    private fun MediaItem.toEntity() = MediaItemEntity(id, sourceId, sourceType, title, description, posterUrl, bannerUrl, category.name, releaseDate, rating, duration, streamUrl, metadataJson)
-    private fun AniListMedia.toDomain() = MediaItem("anilist_$id", id.toString(), "anilist", title?.english ?: title?.romaji ?: "Unknown", description, coverImage?.large ?: coverImage?.medium, bannerImage, MediaCategory.ANIME, seasonYear?.let { it * 10000L }, averageScore?.let { it / 10.0 }, duration?.let { it * 60L * 1000L }, null, null)
-    private fun MalAnime.toDomain() = MediaItem("mal_$id", id.toString(), "mal", title ?: alternativeTitles?.en ?: "Unknown", synopsis, mainPicture?.large ?: mainPicture?.medium, null, MediaCategory.ANIME, parseMalDate(startDate), mean, averageEpisodeDuration?.let { it * 1000L }, null, null)
-    private fun parseMalDate(dateStr: String): Long? = try { val p = dateStr.split("-"); if (p.size >= 3) java.util.Calendar.getInstance().apply { set(p[0].toInt(), p[1].toInt() - 1, p[2].toInt()) }.timeInMillis else null } catch (e: Exception) { null }
+    private fun MediaItemEntity.toDomain(): MediaItem {
+        return MediaItem(
+            id = id,
+            title = title,
+            originalTitle = null,
+            synopsis = description,
+            coverImageUrl = posterUrl,
+            bannerImageUrl = bannerUrl,
+            type = MediaType.valueOf(category),
+            status = AiringStatus.UNKNOWN, // MediaCategory doesn't map to AiringStatus
+            episodeNumber = null,
+            totalEpisodes = null,
+            durationMinutes = duration?.let { (it / 60000).toInt() },
+            seasonYear = releaseDate?.let { it / 10000 },
+            seasonQuarter = null,
+            genres = emptyList(),
+            studios = emptyList(),
+            rating = ContentRating.UNRATED,
+            score = rating,
+            sourceExtensionId = "local_$id",
+            deepLink = null,
+            lastUpdated = lastUpdated
+        )
+    }
+
+    private fun MediaItem.toEntity(): MediaItemEntity {
+        return MediaItemEntity(
+            id = id,
+            sourceId = id,
+            sourceType = "local",
+            title = title,
+            description = synopsis,
+            posterUrl = coverImageUrl,
+            bannerUrl = bannerImageUrl,
+            category = type.name,
+            releaseDate = seasonYear?.let { (it * 10000L) },
+            rating = score,
+            duration = durationMinutes?.let { it.toLong() * 60000 },
+            streamUrl = null,
+            metadataJson = deepLink,
+            lastUpdated = lastUpdated
+        )
+    }
+
+    private fun AniListMedia.toDomain(): MediaItem {
+        val titleStr = title?.english ?: title?.romaji ?: title?.native ?: "Unknown"
+        val coverUrl = coverImage?.large ?: coverImage?.medium
+        val airStatus = status?.let { AiringStatus.valueOf(it) } ?: AiringStatus.UNKNOWN
+        val seasonQtr = season?.let { Season.valueOf(it.uppercase()) }
+        val scoreVal = averageScore?.let { it / 10.0 }
+        val seasonYearVal = seasonYear
+        val seasonQuarterVal = seasonQtr
+        val durationMin = duration?.let { it / 60 }
+        val genreList = genres ?: emptyList()
+        val studioList = emptyList<String>()
+
+        return MediaItem(
+            id = "anilist_$id",
+            title = titleStr,
+            originalTitle = title?.native,
+            synopsis = description,
+            coverImageUrl = coverUrl,
+            bannerImageUrl = bannerImage,
+            type = MediaType.TV,
+            status = airStatus,
+            episodeNumber = null,
+            totalEpisodes = episodes,
+            durationMinutes = durationMin,
+            seasonYear = seasonYearVal,
+            seasonQuarter = seasonQuarterVal,
+            genres = genreList,
+            studios = studioList,
+            rating = ContentRating.UNRATED,
+            score = scoreVal,
+            sourceExtensionId = "anilist_$id",
+            deepLink = null,
+            lastUpdated = System.currentTimeMillis()
+        )
+    }
+
+    private fun MalDtos.SearchNode.toDomain(): MediaItem {
+        val anime = this.node ?: return MediaItem(
+            id = "mal_0",
+            title = "Unknown",
+            type = MediaType.TV,
+            status = AiringStatus.UNKNOWN,
+            sourceExtensionId = "mal_0"
+        )
+
+        val titleStr = anime.title
+        val coverUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium
+        val airStatus = anime.status?.let { AiringStatus.valueOf(it.uppercase()) } ?: AiringStatus.UNKNOWN
+        val scoreVal = anime.mean
+        val durationMin = anime.averageEpisodeDuration?.let { it / 60 }
+        val genreList = anime.genres?.map { it.name } ?: emptyList()
+
+        return MediaItem(
+            id = "mal_${anime.id}",
+            title = titleStr,
+            originalTitle = anime.alternativeTitles?.en,
+            synopsis = anime.synopsis,
+            coverImageUrl = coverUrl,
+            bannerImageUrl = null,
+            type = MediaType.TV,
+            status = airStatus,
+            episodeNumber = null,
+            totalEpisodes = anime.numEpisodes,
+            durationMinutes = durationMin,
+            seasonYear = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() },
+            seasonQuarter = null,
+            genres = genreList,
+            studios = anime.studios?.map { it.name } ?: emptyList(),
+            rating = ContentRating.UNRATED,
+            score = scoreVal,
+            sourceExtensionId = "mal_${anime.id}",
+            deepLink = null,
+            lastUpdated = System.currentTimeMillis()
+        )
+    }
+
+    private fun parseMalDate(dateStr: String): Long? = try {
+        val p = dateStr.split("-")
+        if (p.size >= 3) java.util.Calendar.getInstance().apply { set(p[0].toInt(), p[1].toInt() - 1, p[2].toInt()) }.timeInMillis else null
+    } catch (e: Exception) { null }
+
     private fun WatchHistoryEntity.toDomain() = WatchHistory(id, mediaItemId, profileId, position, duration, watchedAt, completionPercent, episodeNumber, seasonNumber)
     private fun WatchHistory.toEntity() = WatchHistoryEntity(id, mediaItemId, profileId, position, duration, watchedAt, completionPercent, episodeNumber, seasonNumber)
     private fun FavoriteEntity.toDomain() = Favorite(id, mediaItemId, profileId, addedAt, category)

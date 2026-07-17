@@ -93,6 +93,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core.jvm)
     implementation("androidx.lifecycle:lifecycle-service:${libs.versions.lifecycle.get()}")
     
     // TensorFlow Lite for offline translation
