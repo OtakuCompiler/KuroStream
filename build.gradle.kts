@@ -17,16 +17,21 @@ subprojects {
     // Apply detekt plugin conditionally
     if (name !in excludedDetektModules) {
         apply(plugin = "io.gitlab.arturbosch.detekt")
-        
-        afterEvaluate {
-            configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
-                toolVersion = libs.versions.detekt.get()
-                config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
-                buildUponDefaultConfig = true
-                allRules = false
-                parallel = true
+    }
+}
+
+// Configure detekt after all projects are evaluated, only for projects with the plugin
+gradle.projectsEvaluated {
+    subprojects { project ->
+        if (project.name !in excludedDetektModules) {
+            project.plugins.withType<io.gitlab.arturbosch.detekt.extensions.DetektExtension>().configureEach { ext ->
+                ext.toolVersion = libs.versions.detekt.get()
+                ext.config.setFrom(files("${rootProject.projectDir}/config/detekt/detekt.yml"))
+                ext.buildUponDefaultConfig = true
+                ext.allRules = false
+                ext.parallel = true
             }
-            tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+            project.tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
                 exclude("**/TvRepositoryAdapters.kt")
                 exclude("**/BenchmarkRunner.kt")
                 exclude("**/BackupSettingsScreen.kt")
