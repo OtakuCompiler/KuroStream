@@ -19,12 +19,15 @@ import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.domain.home.CustomHomeRow
 import com.kurostream.domain.home.CustomHomeRowRepository
+import com.kurostream.domain.home.PreviewItem
+import com.kurostream.domain.home.RowPreview
 import com.kurostream.domain.repository.MediaRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
@@ -64,76 +67,10 @@ class CustomHomeRowRepositoryImpl @Inject constructor(
         _customRows.value = rows.sortedBy { it.position }
     }
 
-    override suspend fun getCustomRows(): List<CustomHomeRow> = _customRows.value
+    override suspend fun getRows(): List<CustomHomeRow> = _customRows.value
 
-    override suspend fun createRow(row: CustomHomeRow): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            var rows = _customRows.value.toMutableList()
-            val newRow = row.copy(
-                position = rows.size,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-            )
-            rows.add(newRow)
-            _customRows.value = rows
-            saveRows(rows)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun updateRow(row: CustomHomeRow): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            var rows = _customRows.value.toMutableList()
-            val index = rows.indexOfFirst { it.id == row.id }
-            if (index >= 0) {
-                rows[index] = row.copy(updatedAt = System.currentTimeMillis())
-                _customRows.value = rows
-                saveRows(rows)
-                Result.success(Unit)
-            } else {
-                Result.failure(IllegalArgumentException("Row not found: ${row.id}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun deleteRow(rowId: String): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            var rows = _customRows.value.toMutableList()
-            rows.removeAll { it.id == rowId }
-            rows = rows.mapIndexed { idx, row -> row.copy(position = idx) }
-            _customRows.value = rows
-            saveRows(rows)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun reorderRows(rowIds: List<String>): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            val rows = _customRows.value.toMutableList()
-            val reordered = rowIds.mapNotNull { id ->
-                rows.find { it.id == id }
-            }.mapIndexed { idx, row ->
-                row.copy(position = idx, updatedAt = System.currentTimeMillis())
-            }
-            val remaining = rows.filter { it.id !in rowIds }
-            val allRows = reordered + remaining.mapIndexed { idx, row ->
-                row.copy(position = reordered.size + idx)
-            }
-            _customRows.value = allRows
-            saveRows(allRows)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    private suspend fun saveRows(rows: List<CustomHomeRow>) {
+    override suspend fun saveRows(rows: List<CustomHomeRow>) {
+        _customRows.value = rows.sortedBy { it.position }
         val jsonString = json.encodeToString(rows)
         settingsDataStore.setCustomHomeRows(jsonString)
     }
@@ -170,7 +107,7 @@ class CustomHomeRowRepositoryImpl @Inject constructor(
                 totalCount = mediaResult.getOrNull()?.size ?: 0,
             ))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.error(e)
         }
     }
 }

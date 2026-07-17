@@ -17,9 +17,9 @@ package com.kurostream.data.subtitle
 
 import android.content.Context
 import com.kurostream.core.common.result.Result
-import com.kurostream.domain.model.LanguagePair
-import com.kurostream.domain.model.SubtitleLine
-import com.kurostream.domain.model.TranslationResult
+import com.kurostream.domain.subtitle.LanguagePair
+import com.kurostream.domain.subtitle.SubtitleLine
+import com.kurostream.domain.subtitle.TranslationResult
 import com.kurostream.domain.subtitle.OfflineTranslator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

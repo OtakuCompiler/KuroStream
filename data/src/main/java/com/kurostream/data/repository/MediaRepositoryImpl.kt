@@ -21,7 +21,7 @@ import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.entity.*
 import com.kurostream.data.remote.api.*
 import com.kurostream.data.remote.dto.anilist.*
-import com.kurostream.data.remote.dto.mal.MalDtos
+import com.kurostream.data.remote.dto.mal.*
 import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.entity.MediaType
 import com.kurostream.domain.entity.AiringStatus

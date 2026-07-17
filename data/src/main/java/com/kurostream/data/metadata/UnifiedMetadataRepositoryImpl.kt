@@ -366,8 +366,8 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
     }
 
     private suspend fun saveEnabledProvidersToSettings(providers: Set<String>) {
-        settingsDataStore.editPreferences { prefs ->
-            prefs[com.kurostream.data.local.preferences.SettingsDataStore.Keys.METADATA_PROVIDERS_ENABLED] = providers.joinToString(",")
+        settingsDataStore.editPreferences {
+            this[com.kurostream.data.local.preferences.SettingsDataStore.Keys.METADATA_PROVIDERS_ENABLED] = providers.joinToString(",")
         }
     }
 }

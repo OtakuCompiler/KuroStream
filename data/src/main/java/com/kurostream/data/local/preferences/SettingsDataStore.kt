@@ -70,6 +70,11 @@ interface SettingsDataStore {
 
     suspend fun setSubtitleLanguage(value: String) = setString(Keys.SUBTITLE_LANGUAGE.name, value)
 
+    val customHomeRows: Flow<String>
+        get() = data.map { it[Keys.CUSTOM_HOME_ROWS] ?: "" }
+
+    suspend fun setCustomHomeRows(value: String) = setString(Keys.CUSTOM_HOME_ROWS.name, value)
+
     object Keys {
         val SOURCE_LOCK_ENABLED = booleanPreferencesKey("source_lock_enabled")
         val SOURCE_LOCK_FALLBACK_MODE = intPreferencesKey("source_lock_fallback_mode")
@@ -84,5 +89,6 @@ interface SettingsDataStore {
         val SKIN_NAME = stringPreferencesKey("skin_name")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val SUBTITLE_LANGUAGE = stringPreferencesKey("subtitle_language")
+        val CUSTOM_HOME_ROWS = stringPreferencesKey("custom_home_rows")
     }
 }
