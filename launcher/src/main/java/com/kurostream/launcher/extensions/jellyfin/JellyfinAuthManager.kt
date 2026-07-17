@@ -118,7 +118,7 @@ class JellyfinAuthManager @Inject constructor(
                     val request = chain.request().newBuilder()
                         .addHeader("X-Emby-Token", token)
                         .addHeader("X-Emby-Authorization", 
-                            "MediaBrowser Client="$CLIENT_NAME", Device="$DEVICE_ID", DeviceId="$DEVICE_ID", Version="$CLIENT_VERSION"")
+                            "MediaBrowser Client=\"${CLIENT_NAME}\", Device=\"${DEVICE_ID}\", DeviceId=\"${DEVICE_ID}\", Version=\"${CLIENT_VERSION}\"")
                         .build()
                     chain.proceed(request)
                 }

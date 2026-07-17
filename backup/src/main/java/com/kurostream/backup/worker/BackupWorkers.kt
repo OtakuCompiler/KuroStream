@@ -1,17 +1,18 @@
 package com.kurostream.backup.worker
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.kurostream.backup.data.BackupRepositoryImpl
 import com.kurostream.core.common.result.Result
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 
-@AndroidEntryPoint
-class AutoBackupWorker @Inject constructor(
-    @Suppress("UNUSED_PARAMETER") context: Context,
-    params: WorkerParameters,
+@HiltWorker
+class AutoBackupWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
     private val repository: BackupRepositoryImpl,
 ) : CoroutineWorker(context, params) {
 
@@ -45,10 +46,10 @@ class AutoBackupWorker @Inject constructor(
     }
 }
 
-@AndroidEntryPoint
-class RestoreWorker @Inject constructor(
-    context: Context,
-    params: WorkerParameters,
+@HiltWorker
+class RestoreWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
     private val repository: BackupRepositoryImpl,
 ) : CoroutineWorker(context, params) {
 
@@ -68,10 +69,10 @@ class RestoreWorker @Inject constructor(
     }
 }
 
-@AndroidEntryPoint
-class SyncWorker @Inject constructor(
-    context: Context,
-    params: WorkerParameters,
+@HiltWorker
+class SyncWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
     private val repository: BackupRepositoryImpl,
 ) : CoroutineWorker(context, params) {
 
