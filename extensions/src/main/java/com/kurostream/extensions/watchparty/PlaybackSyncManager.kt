@@ -124,13 +124,13 @@ class PlaybackSyncManager @Inject constructor(
 
     fun dispose() { syncJob?.cancel(); syncScope.cancel() }
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val jsonSerializer = Json { ignoreUnknownKeys = true }
 
     private fun serializeSyncMessage(message: PlaybackSyncMessage): String {
-        return json.encodeToString(message)
+        return jsonSerializer.encodeToString(message)
     }
 
-    private fun deserializeSyncMessage(json: String): PlaybackSyncMessage {
-        return json.decodeFromString<PlaybackSyncMessage>()
+    private fun deserializeSyncMessage(jsonString: String): PlaybackSyncMessage {
+        return jsonSerializer.decodeFromString<PlaybackSyncMessage>(jsonString)
     }
 }

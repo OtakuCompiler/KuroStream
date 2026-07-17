@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+    kapt(libs.retrofit)
 
     implementation(libs.work.runtime.ktx)
 
