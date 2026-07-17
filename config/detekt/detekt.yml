@@ -4,6 +4,8 @@ build:
     - '**/TvRepositoryAdapters.kt'
     - '**/BenchmarkRunner.kt'
     - '**/BackupSettingsScreen.kt'
+    - '**/PlayerViewModel.kt'
+    - '**/BackupModule.kt'
 
 processors:
   active: true

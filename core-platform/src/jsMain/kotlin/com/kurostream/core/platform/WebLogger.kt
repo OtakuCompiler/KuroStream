@@ -15,26 +15,29 @@
 
 package com.kurostream.core.platform
 
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.js.Date
 import kotlin.js.unsafeCast
 import kotlin.js.json
 
 @JsModule("console")
+@JsNonModule
 external fun consoleLog(level: String, tag: String, message: String, throwable: Any?)
 
 @JsModule("console")
+@JsNonModule
 external fun consoleWarn(tag: String, message: String, throwable: Any?)
 
 @JsModule("console")
+@JsNonModule
 external fun consoleError(tag: String, message: String, throwable: Any?)
 
 external fun reloadPage()
 
 class WebLogger : PlatformLogger {
-    private val minLevel = MutableStateFlow(LogLevel.INFO)
     private val enabledTags = mutableSetOf<String>()
+    private val minLevel = LogLevel.INFO
 
     private val _logs = MutableSharedFlow<LogEntry>(replay = 1000)
     override val logs = _logs.asStateFlow()
@@ -68,7 +71,7 @@ class WebLogger : PlatformLogger {
     }
 
     private fun log(level: LogLevel, tag: String, message: String, throwable: Throwable?) {
-        if (level.ordinal >= minLevel.value.ordinal && isTagEnabled(tag)) {
+        if (level.ordinal >= minLevel.ordinal && isTagEnabled(tag)) {
             val entry = LogEntry(level, tag, message, throwable)
             _logs.tryEmit(entry)
 
@@ -77,12 +80,13 @@ class WebLogger : PlatformLogger {
                 LogLevel.VERBOSE, LogLevel.INFO -> consoleLog("log", tag, message, throwable)
                 LogLevel.WARN -> consoleWarn(tag, message, throwable)
                 LogLevel.ERROR, LogLevel.FATAL -> consoleError(tag, message, throwable)
+                else -> consoleLog("log", tag, message, throwable)
             }
         }
     }
 
     override fun setMinLevel(level: LogLevel) {
-        minLevel.value = level
+        minLevel = level
     }
 
     override fun enableTag(tag: String) {
@@ -100,6 +104,6 @@ class WebLogger : PlatformLogger {
         val tag: String,
         val message: String,
         val throwable: Throwable?,
-        val timestamp: Long = System.currentTimeMillis()
+        val timestamp: Long = Date.now()
     )
 }
