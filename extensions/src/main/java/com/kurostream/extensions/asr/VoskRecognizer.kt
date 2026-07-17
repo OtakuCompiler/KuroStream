@@ -54,10 +54,10 @@ class VoskRecognizer @Inject constructor(private val context: Context) {
         }
     }
 
-    fun startListening(sampleRate: Float = 16000f): Flow<AsrResult> = callbackFlow {
+    fun startListening(sampleRate: Int = 16000): Flow<AsrResult> = callbackFlow {
         val currentModel = model ?: run { trySend(AsrResult.Error("Model not initialized")); close(); return@callbackFlow }
         val recognizer = Recognizer(currentModel, sampleRate)
-        speechService = SpeechService(recognizer, sampleRate.toInt())
+        speechService = SpeechService(recognizer, sampleRate)
         speechService?.startListening(object : org.vosk.android.RecognitionListener {
             override fun onPartialResult(hypothesis: String?) { hypothesis?.let { _partialResults.value = it } }
             override fun onResult(hypothesis: String?) { hypothesis?.let { _transcription.value += " $it"; trySend(AsrResult.Partial(it)) } }

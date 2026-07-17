@@ -163,6 +163,6 @@ private fun StremioStream.toStreamSource(): StreamSource = StreamSource(
 )
 
 private fun extractQuality(title: String): String {
-    val regex = Regex("(\d{3,4}p|4K|HDR|SD|HD|FHD|UHD)", RegexOption.IGNORE_CASE)
+    val regex = Regex("(?i)(\\d{3,4}p|4K|HDR|SD|HD|FHD|UHD)")
     return regex.find(title)?.value ?: "Unknown"
 }

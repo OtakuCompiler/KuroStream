@@ -17,6 +17,7 @@ package com.kurostream.extensions.watchparty
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 @JsonClass(generateAdapter = true)
 data class WatchPartySession(
@@ -49,6 +50,7 @@ data class SignalingMessage(
     @Json(name = "sessionId") val sessionId: String? = null
 )
 
+@Serializable
 @JsonClass(generateAdapter = true)
 data class PlaybackSyncMessage(
     @Json(name = "action") val action: SyncAction,
@@ -65,3 +67,6 @@ data class WebRtcConfig(val iceServers: List<IceServer> = listOf(
 ))
 
 data class IceServer(val urls: String, val username: String? = null, val credential: String? = null)
+
+@Serializable
+data class PlaybackState(val isPlaying: Boolean = false, val positionMs: Long = 0, val playbackRate: Float = 1.0f, val timestamp: Long = System.currentTimeMillis())

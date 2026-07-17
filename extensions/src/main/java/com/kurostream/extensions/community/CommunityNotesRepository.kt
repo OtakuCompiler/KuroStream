@@ -30,7 +30,7 @@ class CommunityNotesRepository @Inject constructor() {
             CommunityNote("n2", "demo_1", null, 120000, "SubWatcher", null, "The foreshadowing in this scene becomes important in episode 12. Pay attention to the background details!", NoteType.FUN_FACT, 567, "2026-07-02T14:30:00Z"),
             CommunityNote("n3", "demo_1", null, 180000, "SpoilerAlert", null, "[SPOILER] The character who appears in the background here is actually the main antagonist.", NoteType.SPOILER, 89, "2026-07-03T08:15:00Z"),
             CommunityNote("n4", "demo_1", null, 240000, "TranslatorPro", null, "The original Japanese line here has a double meaning that doesn't translate well to English.", NoteType.TRANSLATION, 312, "2026-07-04T16:45:00Z"),
-            CommunityNote("n5", "demo_1", null, 300000, "MemeLord", null, "This is where the "I am the bone of my sword" meme originated from!", NoteType.MEME, 1024, "2026-07-05T20:00:00Z")
+            CommunityNote("n5", "demo_1", null, 300000, "MemeLord", null, "This is where the \"I am the bone of my sword\" meme originated from!", NoteType.MEME, 1024, "2026-07-05T20:00:00Z")
         )
     )
 

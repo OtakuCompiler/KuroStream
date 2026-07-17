@@ -134,18 +134,3 @@ class PlaybackSyncManager @Inject constructor(
         return json.decodeFromString<PlaybackSyncMessage>()
     }
 }
-
-@Serializable
-data class PlaybackSyncMessage(
-    val action: SyncAction,
-    val timestamp: Long,
-    val positionMs: Long,
-    val senderId: String
-)
-
-enum class SyncAction {
-    PLAY, PAUSE, SEEK, PING, PONG
-}
-
-@Serializable
-data class PlaybackState(val isPlaying: Boolean = false, val positionMs: Long = 0, val playbackRate: Float = 1.0f, val timestamp: Long = System.currentTimeMillis())

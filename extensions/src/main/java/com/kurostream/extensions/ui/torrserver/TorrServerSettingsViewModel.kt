@@ -26,7 +26,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TorrServerSettingsViewModel @Inject constructor(
-    private val config: TorrServerConfig,
+    private val torrServerConfig: TorrServerConfig,
     private val repository: TorrServerRepository
 ) : ViewModel() {
 
@@ -35,12 +35,12 @@ class TorrServerSettingsViewModel @Inject constructor(
 
     init {
         _config.value = ConfigUiState(
-            serverUrl = config.serverUrl,
-            cacheSize = config.cacheSize,
-            preloadBuffer = config.preloadBuffer,
-            connectionsLimit = config.connectionsLimit,
-            useDiskCache = config.useDiskCache,
-            removeAfterStop = config.removeAfterStop
+            serverUrl = torrServerConfig.serverUrl,
+            cacheSize = torrServerConfig.cacheSize,
+            preloadBuffer = torrServerConfig.preloadBuffer,
+            connectionsLimit = torrServerConfig.connectionsLimit,
+            useDiskCache = torrServerConfig.useDiskCache,
+            removeAfterStop = torrServerConfig.removeAfterStop
         )
     }
 
@@ -52,6 +52,10 @@ class TorrServerSettingsViewModel @Inject constructor(
         _config.value = _config.value.copy(cacheSize = size)
     }
 
+    fun updatePreloadBuffer(buffer: Int) {
+        _config.value = _config.value.copy(preloadBuffer = buffer)
+    }
+
     fun updateConnectionsLimit(limit: Int) {
         _config.value = _config.value.copy(connectionsLimit = limit)
     }
@@ -60,12 +64,18 @@ class TorrServerSettingsViewModel @Inject constructor(
         _config.value = _config.value.copy(useDiskCache = use)
     }
 
+    fun updateRemoveAfterStop(remove: Boolean) {
+        _config.value = _config.value.copy(removeAfterStop = remove)
+    }
+
     fun saveSettings() {
         val state = _config.value
-        config.serverUrl = state.serverUrl
-        config.cacheSize = state.cacheSize
-        config.connectionsLimit = state.connectionsLimit
-        config.useDiskCache = state.useDiskCache
+        torrServerConfig.serverUrl = state.serverUrl
+        torrServerConfig.cacheSize = state.cacheSize
+        torrServerConfig.preloadBuffer = state.preloadBuffer
+        torrServerConfig.connectionsLimit = state.connectionsLimit
+        torrServerConfig.useDiskCache = state.useDiskCache
+        torrServerConfig.removeAfterStop = state.removeAfterStop
         viewModelScope.launch {
             repository.updateSettings()
         }

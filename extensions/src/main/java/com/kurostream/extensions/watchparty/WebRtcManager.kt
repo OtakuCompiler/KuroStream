@@ -71,10 +71,9 @@ class WebRtcManager @Inject constructor(private val context: Context) {
             override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {}
         }
         val pc = factory.createPeerConnection(pcConfig, observer)
-        peerConnections[participantId] = pc
+        pc?.let { peerConnections[participantId] = it }
         val init = DataChannel.Init().apply { ordered = true; maxRetransmits = 30 }
-        val dc = pc?.createDataChannel("sync", init)
-        dc?.let { setupDataChannel(participantId, it) }
+        pc?.createDataChannel("sync", init)?.let { setupDataChannel(participantId, it) }
         return pc
     }
 
