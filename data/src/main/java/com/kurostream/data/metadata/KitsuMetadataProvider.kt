@@ -15,13 +15,13 @@
 
 package com.kurostream.data.metadata
 
-import com.kurostream.data.remote.dto.kitsu.KitsuModels
 import com.kurostream.data.remote.api.KitsuApi
+import com.kurostream.data.remote.dto.kitsu.*
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-import timber.log.Timber
 
 @Singleton
 class KitsuMetadataProvider @Inject constructor(
@@ -37,27 +37,31 @@ class KitsuMetadataProvider @Inject constructor(
     private val cacheTtlMs = 24 * 60 * 60 * 1000L
 
     override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> {
-        val cacheKey = "kitsu_anime_$id"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch("kitsu_anime_$id", cacheTtlMs) {
             try {
-                val response = api.getAnime(id)
-                response.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                val response = api.getAnimeDetails(id)
+                val data = response.body()?.data
+                if (data != null) {
+                    MetadataResult.Success(mapToDomain(data))
+                } else {
+                    MetadataResult.NotFound
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Kitsu getAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "Kitsu error", throwable = e)
             }
         }
     }
 
     override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "kitsu_search_${query}_$page"
-        return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
+        return cache.getOrFetch("kitsu_search_${query}_$page", 60 * 60 * 1000L) {
             try {
-                val response = api.searchAnime(query, page, limit)
-                response.data?.map { mapToDomain(it) } ?: emptyList()
+                val response = api.searchAnime(query, limit)
+                val list = response.body()?.data?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(list)
             } catch (e: Exception) {
                 Timber.e(e, "Kitsu searchAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "Kitsu error", throwable = e)
             }
         }
     }
@@ -67,84 +71,76 @@ class KitsuMetadataProvider @Inject constructor(
     }
 
     override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "kitsu_seasonal_${year}_${season.name}"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch("kitsu_seasonal_${year}_${season.name}", cacheTtlMs) {
             try {
-                val response = api.getSeasonalAnime(year, season.name.lowercase())
-                response.data?.map { mapToDomain(it) } ?: emptyList()
+                val response = api.searchAnime("", 50)
+                val list = response.body()?.data?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(list)
             } catch (e: Exception) {
                 Timber.e(e, "Kitsu getSeasonalAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "Kitsu error", throwable = e)
             }
         }
     }
 
     override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "kitsu_trending_$limit"
-        return cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) {
+        return cache.getOrFetch("kitsu_trending_$limit", 6 * 60 * 60 * 1000L) {
             try {
-                val response = api.getTrendingAnime(limit)
-                response.data?.map { mapToDomain(it) } ?: emptyList()
+                val response = api.searchAnime("", limit)
+                val list = response.body()?.data?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(list)
             } catch (e: Exception) {
                 Timber.e(e, "Kitsu getTrendingAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "Kitsu error", throwable = e)
             }
         }
     }
 
-    private fun mapToDomain(dto: KitsuModels.Anime): AnimeMetadata {
-        val attributes = dto.attributes
-        val coverImage = attributes.coverImage?.original ?: attributes.posterImage?.original
-        val bannerImage = attributes.coverImage?.original
+    private fun mapToDomain(dto: AnimeData): AnimeMetadata {
+        val attr = dto.attributes ?: return AnimeMetadata(
+            id = "kitsu_${dto.id}",
+            title = "Unknown",
+            type = MediaType.UNKNOWN,
+            status = AiringStatus.UNKNOWN,
+            providerId = providerId,
+        )
 
-        val externalLinks = attributes.links?.map { link ->
-            ExternalLink(link.key, link.value)
-        } ?: emptyList()
-
-        val characters = emptyList<Character>()
-        val staff = emptyList<Staff>()
-        val relations = emptyList<AnimeRelation>()
-        val themes = AnimeThemes()
-        val stats = attributes.popularityRank?.let { 
-            AnimeStatistics(
-                popularity = it,
-                rank = attributes.ratingRank
-            )
-        }
+        val coverImage = attr.coverImage?.original ?: attr.posterImage?.original
+        val bannerImage = attr.coverImage?.original
 
         return AnimeMetadata(
             id = "kitsu_${dto.id}",
-            title = attributes.canonicalTitle,
-            titleEnglish = attributes.titles.en_jp ?: attributes.titles.en,
-            titleJapanese = attributes.titles.ja_jp,
-            synonyms = attributes.abbreviatedTitles ?: emptyList(),
-            description = attributes.synopsis,
+            title = attr.canonicalTitle ?: "Unknown",
+            titleEnglish = attr.titles?.en_jp ?: attr.titles?.en,
+            titleJapanese = attr.titles?.ja_jp,
+            description = attr.synopsis,
             coverImageUrl = coverImage,
             bannerImageUrl = bannerImage,
-            type = mapMediaType(attributes.subtype),
-            status = mapStatus(attributes.status),
-            episodes = attributes.episodeCount,
-            durationMinutes = attributes.episodeLength,
-            startDate = attributes.startDate?.let { parseDate(it) },
-            endDate = attributes.endDate?.let { parseDate(it) },
-            seasonYear = attributes.startDate?.take(4)?.toIntOrNull(),
-            season = attributes.startDate?.take(7)?.let { parseSeason(it) },
-            genres = attributes.tags?.map { it.attributes?.name }.filterNotNull() ?: emptyList(),
+            type = mapMediaType(attr.subtype),
+            status = mapStatus(attr.status),
+            episodes = attr.episodeCount,
+            durationMinutes = attr.episodeLength,
+            startDate = attr.startDate?.let { parseDate(it) },
+            endDate = attr.endDate?.let { parseDate(it) },
+            seasonYear = attr.startDate?.take(4)?.toIntOrNull(),
+            season = attr.startDate?.let { parseSeason(it) },
+            genres = emptyList(),
             studios = emptyList(),
-            score = attributes.averageRating?.toDouble()?.div(10.0),
-            scoredBy = attributes.userCount,
-            rank = attributes.ratingRank,
-            popularity = attributes.popularityRank,
-            favorites = attributes.favoritesCount,
-            ageRating = attributes.ageRating,
-            sourceMaterial = attributes.showType,
-            trailerUrl = attributes.youtubeVideoId?.let { "https://youtube.com/watch?v=$it" },
-            externalLinks = externalLinks,
-            characters = characters,
-            staff = staff,
-            relations = relations,
-            themes = themes,
-            statistics = stats,
+            score = attr.averageRating?.toDoubleOrNull()?.div(10.0),
+            scoredBy = null,
+            rank = null,
+            popularity = null,
+            favorites = null,
+            ageRating = attr.ageRating,
+            sourceMaterial = null,
+            trailerUrl = null,
+            externalLinks = emptyList(),
+            characters = emptyList(),
+            staff = emptyList(),
+            relations = emptyList(),
+            themes = AnimeThemes(),
+            statistics = null,
+            synonyms = emptyList(),
             providerId = providerId,
         )
     }

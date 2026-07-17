@@ -37,27 +37,31 @@ class ImdbMetadataProvider @Inject constructor(
     private val cacheTtlMs = 24 * 60 * 60 * 1000L
 
     override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> {
-        val cacheKey = "imdb_anime_$id"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch("imdb_anime_$id", cacheTtlMs) {
             try {
                 val response = api.getTitle(id)
-                response.body()?.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                val title = response.body()?.data
+                if (title != null) {
+                    MetadataResult.Success(mapToDomain(title))
+                } else {
+                    MetadataResult.NotFound
+                }
             } catch (e: Exception) {
                 Timber.e(e, "IMDb getAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "IMDb error", throwable = e)
             }
         }
     }
 
     override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "imdb_search_${query}_$page"
-        return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
+        return cache.getOrFetch("imdb_search_${query}_$page", 60 * 60 * 1000L) {
             try {
                 val response = api.searchTitles(query, limit)
-                MetadataResult.Success(response.body()?.data?.map { mapToDomain(it) } ?: emptyList())
+                val list = response.body()?.data?.map { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(list)
             } catch (e: Exception) {
                 Timber.e(e, "IMDb searchAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "IMDb error", throwable = e)
             }
         }
     }
