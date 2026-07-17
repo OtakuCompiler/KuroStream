@@ -61,7 +61,7 @@ android {
     }
 
     buildFeatures {
-        prefabPublishing = true
+        // prefabPublishing = true - disabled for CI, requires native build
     }
 
     buildTypes {
