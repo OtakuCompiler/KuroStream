@@ -29,6 +29,10 @@ interface CacheManager {
     val stats: StateFlow<CacheStats>
 }
 
+inline suspend fun <reified T : Any> CacheManager.get(key: String): T? {
+    return get(key, T::class.java)
+}
+
 data class CacheStats(
     val namespace: String,
     val memoryHits: Long,

@@ -15,7 +15,11 @@
 
 package com.kurostream.data.remote.api
 
-import com.kurostream.data.remote.dto.tmdb.TmdbDtos
+import com.kurostream.data.remote.dto.tmdb.DiscoverResponse
+import com.kurostream.data.remote.dto.tmdb.ExternalIdResponse
+import com.kurostream.data.remote.dto.tmdb.SearchResponse
+import com.kurostream.data.remote.dto.tmdb.TrendingResponse
+import com.kurostream.data.remote.dto.tmdb.TvShow
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -26,14 +30,14 @@ interface TmdbApi {
     suspend fun getTvDetails(
         @Path("id") id: Int,
         @Query("append_to_response") appendToResponse: String = "external_ids,credits,videos,content_ratings",
-    ): Response<TmdbDtos.TvShow>
+    ): Response<TvShow>
 
     @GET("search/tv")
     suspend fun searchTv(
         @Query("query") query: String,
         @Query("page") page: Int = 1,
         @Query("language") language: String = "en-US",
-    ): Response<TmdbDtos.SearchResponse>
+    ): Response<SearchResponse>
 
     @GET("discover/tv")
     suspend fun discoverTv(
@@ -43,17 +47,17 @@ interface TmdbApi {
         @Query("air_date.lte") airDateLte: String? = null,
         @Query("page") page: Int = 1,
         @Query("language") language: String = "en-US",
-    ): Response<TmdbDtos.DiscoverResponse>
+    ): Response<DiscoverResponse>
 
     @GET("find/{external_id}")
     suspend fun findByExternalId(
         @Path("external_id") externalId: String,
         @Query("external_source") externalSource: String,
         @Query("language") language: String = "en-US",
-    ): Response<TmdbDtos.ExternalIdResponse>
+    ): Response<ExternalIdResponse>
 
     @GET("trending/tv/week")
     suspend fun getTrendingTv(
         @Query("language") language: String = "en-US",
-    ): Response<TmdbDtos.TrendingResponse>
+    ): Response<TrendingResponse>
 }

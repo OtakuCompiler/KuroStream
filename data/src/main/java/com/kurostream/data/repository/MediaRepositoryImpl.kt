@@ -17,7 +17,6 @@ package com.kurostream.data.repository
 
 import com.kurostream.cache.CacheNamespaceManager
 import com.kurostream.core.common.result.Result
-import com.kurostream.core.common.result.Resource
 import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.entity.*
 import com.kurostream.data.remote.api.*
@@ -30,10 +29,9 @@ import com.kurostream.domain.entity.ContentRating
 import com.kurostream.domain.entity.Season
 import com.kurostream.domain.model.*
 import com.kurostream.domain.repository.MediaRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -64,16 +62,16 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun saveMediaItems(items: List<MediaItem>) { mediaItemDao.insertAll(items.map { it.toEntity() }) }
     override suspend fun deleteMediaItem(id: String) { mediaItemDao.deleteById(id) }
 
-    override suspend fun searchRemote(query: String, source: String?): Result<List<MediaItem>> {
+    override suspend fun searchRemote(query: String, source: String?): List<MediaItem> {
         val cacheKey = "search_${source}_${query}"
-        cacheManager.searchResults.get<List<MediaItem>>(cacheKey)?.let { return Result.success(it) }
+        cacheManager.searchResults.get<List<MediaItem>>(cacheKey)?.let { return it }
         val results = when (source) {
             "anilist" -> searchAniList(query)
             "mal" -> searchMal(query)
             else -> searchAllSources(query)
         }
         cacheManager.searchResults.put(cacheKey, results, SEARCH_CACHE_TTL)
-        return Result.success(results)
+        return results
     }
 
     private suspend fun searchAniList(query: String): List<MediaItem> = withContext(Dispatchers.IO) {
@@ -88,7 +86,7 @@ class MediaRepositoryImpl @Inject constructor(
     private suspend fun searchMal(query: String): List<MediaItem> = withContext(Dispatchers.IO) {
         try {
             val response = malApi.searchAnime(query = query, limit = 20)
-            if (response.isSuccessful) response.body()?.data?.mapNotNull { it.node?.toDomain() }?.filterNotNull() ?: emptyList()
+            if (response.isSuccessful) response.body()?.data?.mapNotNull { it.node.toDomain() } ?: emptyList()
             else emptyList()
         } catch (e: Exception) { emptyList() }
     }
@@ -97,47 +95,78 @@ class MediaRepositoryImpl @Inject constructor(
         return (searchAniList(query) + searchMal(query)).distinctBy { it.id }
     }
 
-    override suspend fun getRemoteDetails(mediaId: String, source: String): Result<MediaItem?> {
+    override suspend fun getRemoteDetails(mediaId: String, source: String): MediaItem? {
         val cacheKey = "details_${source}_${mediaId}"
-        cacheManager.metadata.get<MediaItem>(cacheKey)?.let { return Result.success(it) }
-        val result = when (source) {
-            "anilist" -> getAniListDetails(mediaId.toIntOrNull() ?: return Result.error(RuntimeException("Invalid media ID")))
-            "mal" -> getMalDetails(mediaId.toIntOrNull() ?: return Result.error(RuntimeException("Invalid media ID")))
-            else -> Result.error(RuntimeException("Unknown source: $source"))
+        cacheManager.metadata.get<MediaItem>(cacheKey)?.let { return it }
+        val mediaItem = when (source) {
+            "anilist" -> getAniListDetails(mediaId.toIntOrNull() ?: return null)
+            "mal" -> getMalDetails(mediaId.toIntOrNull() ?: return null)
+            else -> return null
         }
-        return result.map { mediaItem ->
+        if (mediaItem != null) {
             cacheManager.metadata.put(cacheKey, mediaItem, METADATA_CACHE_TTL)
-            mediaItem
         }
+        return mediaItem
     }
 
-    private suspend fun getAniListDetails(id: Int): Result<MediaItem?> = withContext(Dispatchers.IO) {
+    private suspend fun getAniListDetails(id: Int): MediaItem? = withContext(Dispatchers.IO) {
         try {
             val request = AniListAnimeDetailsRequest(variables = mapOf("id" to id))
             val response = anilistApi.getAnimeDetails(request)
-            if (response.isSuccessful) Result.success(response.body()?.data?.Media?.toDomain())
-            else Result.error(RuntimeException("AniList API error: ${response.code()}"))
-        } catch (e: Exception) { Result.error(e) }
+            if (response.isSuccessful) response.body()?.data?.Media?.toDomain()
+            else null
+        } catch (e: Exception) { null }
     }
 
-    private suspend fun getMalDetails(id: Int): Result<MediaItem?> = withContext(Dispatchers.IO) {
+    private suspend fun getMalDetails(id: Int): MediaItem? = withContext(Dispatchers.IO) {
         try {
-            val response = malApi.getAnimeDetails(animeId = id)
-            if (response.isSuccessful) Result.success(response.body()?.data?.toDomain())
-            else Result.error(RuntimeException("MAL API error: ${response.code()}"))
-        } catch (e: Exception) { Result.error(e) }
+            val response = malApi.getAnimeDetails(id = id.toString())
+            if (response.isSuccessful) {
+                val anime = response.body() ?: return@withContext null
+                MediaItem(
+                    id = "mal_${anime.id}",
+                    title = anime.title,
+                    originalTitle = anime.alternativeTitles?.en,
+                    synopsis = anime.synopsis,
+                    coverImageUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium,
+                    bannerImageUrl = null,
+                    type = MediaType.TV,
+                    status = anime.status?.let { AiringStatus.valueOf(it.uppercase()) } ?: AiringStatus.UNKNOWN,
+                    episodeNumber = null,
+                    totalEpisodes = anime.numEpisodes,
+                    durationMinutes = anime.averageEpisodeDuration?.let { it / 60 },
+                    seasonYear = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() },
+                    seasonQuarter = anime.startSeason?.let { season ->
+                        when (season.season?.lowercase()) {
+                            "winter" -> Season.WINTER
+                            "spring" -> Season.SPRING
+                            "summer" -> Season.SUMMER
+                            "fall" -> Season.FALL
+                            else -> null
+                        }
+                    },
+                    genres = anime.genres?.map { it.name } ?: emptyList(),
+                    studios = anime.studios?.map { it.name } ?: emptyList(),
+                    rating = com.kurostream.domain.entity.ContentRating.UNRATED,
+                    score = anime.mean,
+                    sourceExtensionId = "mal_${anime.id}",
+                    deepLink = null,
+                    lastUpdated = System.currentTimeMillis()
+                )
+            } else null
+        } catch (e: Exception) { null }
     }
 
-    override suspend fun getTrending(source: String?): Result<List<MediaItem>> {
+    override suspend fun getTrending(source: String?): List<MediaItem> {
         val cacheKey = "trending_${source ?: "all"}"
-        cacheManager.searchResults.get<List<MediaItem>>(cacheKey)?.let { return Result.success(it) }
+        cacheManager.searchResults.get<List<MediaItem>>(cacheKey)?.let { return it }
         val results = when (source) {
             "anilist" -> getAniListTrending()
             "mal" -> getMalRanking()
             else -> getAniListTrending() + getMalRanking()
         }
         cacheManager.searchResults.put(cacheKey, results, SEARCH_CACHE_TTL)
-        return Result.success(results)
+        return results
     }
 
     private suspend fun getAniListTrending(): List<MediaItem> = withContext(Dispatchers.IO) {
@@ -151,8 +180,37 @@ class MediaRepositoryImpl @Inject constructor(
     private suspend fun getMalRanking(): List<MediaItem> = withContext(Dispatchers.IO) {
         try {
             val response = malApi.getTopAnime()
-            if (response.isSuccessful) response.body()?.data?.mapNotNull { it.node?.toDomain() }?.filterNotNull() ?: emptyList()
-            else emptyList()
+            if (response.isSuccessful) {
+                response.body()?.data?.map { rankingNode ->
+                    val anime = rankingNode.node
+                    val titleStr = anime.title
+                    val coverUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium
+                    val airStatus = anime.status?.let { AiringStatus.valueOf(it.uppercase()) } ?: AiringStatus.UNKNOWN
+                    val seasonYearVal = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() }
+                    MediaItem(
+                        id = "mal_${anime.id}",
+                        title = titleStr,
+                        originalTitle = anime.alternativeTitles?.en,
+                        synopsis = anime.synopsis,
+                        coverImageUrl = coverUrl,
+                        bannerImageUrl = null,
+                        type = MediaType.TV,
+                        status = airStatus,
+                        episodeNumber = null,
+                        totalEpisodes = anime.numEpisodes,
+                        durationMinutes = null,
+                        seasonYear = seasonYearVal,
+                        seasonQuarter = null,
+                        genres = emptyList(),
+                        studios = emptyList(),
+                        rating = com.kurostream.domain.entity.ContentRating.UNRATED,
+                        score = anime.mean,
+                        sourceExtensionId = "mal_${anime.id}",
+                        deepLink = null,
+                        lastUpdated = System.currentTimeMillis()
+                    )
+                }
+            } else emptyList()
         } catch (e: Exception) { emptyList() }
     }
 
@@ -310,51 +368,34 @@ class MediaRepositoryImpl @Inject constructor(
     }
 
     private fun SearchNode.toDomain(): MediaItem {
-        val anime = this.node ?: return MediaItem(
-            id = "mal_0",
-            title = "Unknown",
-            type = MediaType.TV,
-            status = AiringStatus.UNKNOWN,
-            sourceExtensionId = "mal_0"
-        )
-
-        val titleStr = anime.title
-        val coverUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium
-        val airStatus = anime.status?.let { AiringStatus.valueOf(it.uppercase()) } ?: AiringStatus.UNKNOWN
-        val scoreVal = anime.mean
-        val durationMin = anime.averageEpisodeDuration?.let { it / 60 }
-        val genreList = anime.genres?.map { it.name } ?: emptyList()
-        val seasonYearVal = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() }
-        val seasonQuarterVal = anime.startSeason?.let { season ->
-            when (season.season?.lowercase()) {
-                "winter" -> Season.WINTER
-                "spring" -> Season.SPRING
-                "summer" -> Season.SUMMER
-                "fall" -> Season.FALL
-                else -> null
-            }
-        }
-        val studioList = anime.studios?.map { it.name } ?: emptyList()
+        val titleStr = title
+        val coverUrl = mainPicture?.large ?: mainPicture?.medium
+        val airStatus = status?.let { AiringStatus.valueOf(it.uppercase()) } ?: AiringStatus.UNKNOWN
+        val scoreVal = mean
+        val durationMin = averageEpisodeDuration?.let { it / 60 }
+        val genreList = genres?.map { it.name } ?: emptyList()
+        val seasonYearVal = startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() }
+        val seasonQuarterVal = null // SearchNode doesn't provide startSeason
 
         return MediaItem(
-            id = "mal_${anime.id}",
-            title = anime.title,
-            originalTitle = anime.alternativeTitles?.en,
-            synopsis = anime.synopsis,
-            coverImageUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium,
+            id = "mal_$id",
+            title = titleStr,
+            originalTitle = alternativeTitles?.en,
+            synopsis = synopsis,
+            coverImageUrl = coverUrl,
             bannerImageUrl = null,
             type = MediaType.TV,
             status = airStatus,
             episodeNumber = null,
-            totalEpisodes = anime.numEpisodes,
+            totalEpisodes = numEpisodes,
             durationMinutes = durationMin,
             seasonYear = seasonYearVal,
             seasonQuarter = seasonQuarterVal,
-            genres = anime.genres?.map { it.name } ?: emptyList(),
-            studios = studioList,
+            genres = genreList,
+            studios = emptyList(),
             rating = com.kurostream.domain.entity.ContentRating.UNRATED,
-            score = anime.mean,
-            sourceExtensionId = "mal_${anime.id}",
+            score = scoreVal,
+            sourceExtensionId = "mal_$id",
             deepLink = null,
             lastUpdated = System.currentTimeMillis()
         )

@@ -14,8 +14,9 @@
 // along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.kurostream.domain.sync
-import com.kurostream.core.platform.platformCurrentTimeMillis
 
+import com.kurostream.core.common.result.Result
+import com.kurostream.core.platform.platformCurrentTimeMillis
 import com.kurostream.domain.model.*
 
 interface SyncProvider {

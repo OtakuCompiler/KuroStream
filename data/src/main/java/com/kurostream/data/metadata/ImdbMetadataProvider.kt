@@ -16,7 +16,7 @@
 package com.kurostream.data.metadata
 
 import com.kurostream.data.remote.api.ImdbApi
-import com.kurostream.data.remote.dto.imdb.ImdbDtos
+import com.kurostream.data.remote.dto.imdb.Title
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
 import javax.inject.Inject
@@ -41,7 +41,7 @@ class ImdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getTitle(id)
-                response.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                response.body()?.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
             } catch (e: Exception) {
                 Timber.e(e, "IMDb getAnime failed")
                 throw e
@@ -54,7 +54,7 @@ class ImdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
             try {
                 val response = api.searchTitles(query, limit)
-                MetadataResult.Success(response.data?.map { mapToDomain(it) } ?: emptyList())
+                MetadataResult.Success(response.body()?.data?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
                 Timber.e(e, "IMDb searchAnime failed")
                 throw e
@@ -77,7 +77,7 @@ class ImdbMetadataProvider @Inject constructor(
         return MetadataResult.Success(emptyList())
     }
 
-    private fun mapToDomain(dto: ImdbDtos.Title): AnimeMetadata {
+    private fun mapToDomain(dto: Title): AnimeMetadata {
         return AnimeMetadata(
             id = "imdb_${dto.id}",
             title = dto.titleText?.text ?: dto.originalTitleText?.text ?: "",
@@ -103,7 +103,7 @@ class ImdbMetadataProvider @Inject constructor(
             ageRating = dto.certificates?.edges?.firstOrNull()?.node?.rating,
             sourceMaterial = null,
             durationMinutes = dto.runtime?.seconds?.div(60)?.toInt(),
-            episodeCount = dto.episodes?.episodes?.firstOrNull()?.totalEpisodes,
+            episodes = dto.episodes?.episodes?.firstOrNull()?.totalEpisodes,
             trailerUrl = dto.primaryVideos?.edges?.firstOrNull()?.node?.playbackURLs?.firstOrNull()?.url,
             externalLinks = listOf(ExternalLink("imdb", "https://imdb.com/title/${dto.id}")),
             characters = emptyList(),
@@ -116,7 +116,7 @@ class ImdbMetadataProvider @Inject constructor(
     }
 
     private fun mapMediaType(type: String?): MediaType = when (type?.lowercase()) {
-        "tvSeries", "tvMiniSeries", "tvSeries" -> MediaType.TV
+        "tvseries", "tvMiniSeries", "tvSeries" -> MediaType.TV
         "movie", "tvMovie" -> MediaType.MOVIE
         "tvSpecial" -> MediaType.SPECIAL
         "tvShort" -> MediaType.ONA

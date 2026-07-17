@@ -16,7 +16,7 @@
 package com.kurostream.data.metadata
 
 import com.kurostream.data.remote.api.TvdbApi
-import com.kurostream.data.remote.dto.tvdb.TvdbDtos
+import com.kurostream.data.remote.dto.tvdb.Series
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
 import javax.inject.Inject
@@ -41,7 +41,7 @@ class TvdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getSeries(id)
-                response.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                response.body()?.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
             } catch (e: Exception) {
                 Timber.e(e, "TVDB getAnime failed")
                 throw e
@@ -54,7 +54,7 @@ class TvdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
             try {
                 val response = api.searchSeries(query, page, limit)
-                MetadataResult.Success(response.data?.map { mapToDomain(it) } ?: emptyList())
+                MetadataResult.Success(response.body()?.data?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
                 Timber.e(e, "TVDB searchAnime failed")
                 throw e
@@ -74,7 +74,7 @@ class TvdbMetadataProvider @Inject constructor(
         return MetadataResult.Success(emptyList())
     }
 
-    private fun mapToDomain(dto: TvdbDtos.Series): AnimeMetadata {
+    private fun mapToDomain(dto: Series): AnimeMetadata {
         return AnimeMetadata(
             id = "tvdb_${dto.id}",
             title = dto.name,
@@ -100,7 +100,7 @@ class TvdbMetadataProvider @Inject constructor(
             ageRating = dto.contentRating,
             sourceMaterial = null,
             durationMinutes = dto.runtime?.div(60)?.toInt(),
-            episodeCount = dto.episodeCount,
+            episodes = dto.episodeCount,
             trailerUrl = null,
             externalLinks = emptyList(),
             characters = emptyList(),

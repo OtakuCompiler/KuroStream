@@ -15,45 +15,29 @@
 
 package com.kurostream.data.remote.api
 
-import com.kurostream.data.remote.dto.anilist.AniListDtos
-import com.kurostream.data.remote.dto.mal.MalDtos
-import com.kurostream.data.remote.dto.tmdb.TmdbDtos
+import com.kurostream.data.remote.dto.anilist.AniListAnimeDetailsRequest
+import com.kurostream.data.remote.dto.anilist.AniListAnimeDetailsResponse
+import com.kurostream.data.remote.dto.anilist.AniListSearchRequest
+import com.kurostream.data.remote.dto.anilist.AniListSearchResponse
+import com.kurostream.data.remote.dto.anilist.AniListTrendingRequest
+import com.kurostream.data.remote.dto.anilist.AniListTrendingResponse
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.Headers
-import retrofit2.http.Path
-import retrofit2.http.Query
+import retrofit2.http.POST
 
 interface AniListApi {
     @POST("graphql")
-    suspend fun getAnime(
-        @Body query: AniListQuery
-    ): Response<AniListDtos.MediaResponse>
-
-    @POST("graphql")
     suspend fun searchAnime(
-        @Body query: AniListQuery
-    ): Response<AniListDtos.SearchResponse>
+        @Body request: AniListSearchRequest
+    ): Response<AniListSearchResponse>
 
     @POST("graphql")
-    suspend fun getAnimeByExternalId(
-        @Body query: AniListQuery
-    ): Response<AniListDtos.MediaResponse>
-
-    @POST("graphql")
-    suspend fun getSeasonalAnime(
-        @Body query: AniListQuery
-    ): Response<AniListDtos.SeasonalResponse>
+    suspend fun getAnimeDetails(
+        @Body request: AniListAnimeDetailsRequest
+    ): Response<AniListAnimeDetailsResponse>
 
     @POST("graphql")
     suspend fun getTrendingAnime(
-        @Body query: AniListQuery
-    ): Response<AniListDtos.TrendingResponse>
+        @Body request: AniListTrendingRequest
+    ): Response<AniListTrendingResponse>
 }
-
-data class AniListQuery(
-    val query: String,
-    val variables: Map<String, Any> = emptyMap(),
-)

@@ -15,8 +15,12 @@
 
 package com.kurostream.data.remote.api
 
-import com.kurostream.data.remote.dto.tvdb.TvdbDtos
-import com.kurostream.data.remote.dto.imdb.ImdbDtos
+import com.kurostream.data.remote.dto.tvdb.EpisodesResponse as TvdbEpisodesResponse
+import com.kurostream.data.remote.dto.tvdb.SearchResponse as TvdbSearchResponse
+import com.kurostream.data.remote.dto.tvdb.SeriesResponse
+import com.kurostream.data.remote.dto.imdb.EpisodesResponse as ImdbEpisodesResponse
+import com.kurostream.data.remote.dto.imdb.SearchResponse as ImdbSearchResponse
+import com.kurostream.data.remote.dto.imdb.TitleResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -29,7 +33,7 @@ interface TvdbApi {
         @Path("id") id: String,
         @Header("Authorization") auth: String,
         @Header("Accept") accept: String = "application/json",
-    ): Response<TvdbDtos.SeriesResponse>
+    ): Response<SeriesResponse>
 
     @GET("search/series")
     suspend fun searchSeries(
@@ -38,7 +42,7 @@ interface TvdbApi {
         @Query("limit") limit: Int = 20,
         @Header("Authorization") auth: String,
         @Header("Accept") accept: String = "application/json",
-    ): Response<TvdbDtos.SearchResponse>
+    ): Response<TvdbSearchResponse>
 
     @GET("series/{id}/episodes")
     suspend fun getEpisodes(
@@ -46,7 +50,7 @@ interface TvdbApi {
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 100,
         @Header("Authorization") auth: String,
-    ): Response<TvdbDtos.EpisodesResponse>
+    ): Response<TvdbEpisodesResponse>
 }
 
 interface ImdbApi {
@@ -55,17 +59,17 @@ interface ImdbApi {
         @Path("id") id: String,
         @Query("includeFullPlot") includeFullPlot: Boolean = true,
         @Query("includeEpisodes") includeEpisodes: Boolean = false,
-    ): Response<ImdbDtos.TitleResponse>
+    ): Response<TitleResponse>
 
     @GET("search/title")
     suspend fun searchTitles(
         @Query("q") query: String,
         @Query("limit") limit: Int = 20,
-    ): Response<ImdbDtos.SearchResponse>
+    ): Response<ImdbSearchResponse>
 
     @GET("title/{id}/episodes")
     suspend fun getEpisodes(
         @Path("id") id: String,
         @Query("season") season: Int? = null,
-    ): Response<ImdbDtos.EpisodesResponse>
+    ): Response<ImdbEpisodesResponse>
 }

@@ -15,7 +15,9 @@
 
 package com.kurostream.data.remote.api
 
-import com.kurostream.data.remote.dto.youtube.YouTubeDtos
+import com.kurostream.data.remote.dto.youtube.SearchResponse
+import com.kurostream.data.remote.dto.youtube.VideoListResponse
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -29,12 +31,12 @@ interface YouTubeApi {
         @Query("videoSyndicated") videoSyndicated: String = "true",
         @Query("maxResults") maxResults: Int = 10,
         @Query("key") apiKey: String,
-    ): retrofit2.Response<YouTubeDtos.SearchResponse>
+    ): Response<SearchResponse>
 
     @GET("videos")
     suspend fun getVideoDetails(
         @Query("part") part: String = "snippet,contentDetails,statistics",
         @Query("id") videoIds: String,
         @Query("key") apiKey: String,
-    ): retrofit2.Response<YouTubeDtos.VideoListResponse>
+    ): Response<VideoListResponse>
 }

@@ -21,6 +21,9 @@ import com.kurostream.data.remote.dto.youtube.YouTubeDtos
 import com.kurostream.domain.metadata.TrailerRepository
 import com.kurostream.domain.model.Trailer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 import javax.inject.Inject
@@ -82,7 +85,7 @@ class TrailerRepositoryImpl @Inject constructor(
     }
 
     override fun observeTrailerAvailability(animeId: String): Flow<Boolean> {
-        return kotlinx.coroutines.flow.flow {
+        return flow {
             emit(false) // Initial value
             // In a real implementation, this would observe the trailer cache
         }.distinctUntilChanged()

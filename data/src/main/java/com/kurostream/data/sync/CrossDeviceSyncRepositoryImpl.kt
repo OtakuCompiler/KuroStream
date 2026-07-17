@@ -15,7 +15,6 @@
 
 package com.kurostream.data.sync
 
-import android.os.Build
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
 import com.kurostream.core.common.result.Result

@@ -153,6 +153,5 @@ class DemoCloudSyncProvider @Inject constructor(
     }
 
     companion object {
-        private val lock = Any()
     }
 }
