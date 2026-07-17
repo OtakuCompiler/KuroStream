@@ -42,7 +42,9 @@ class SourceLockRepositoryImpl @Inject constructor(
 ) : SourceLockRepository {
 
     private val _settings = MutableStateFlow<SourceLockSettings?>(null)
-    val settings: Flow<SourceLockSettings> = _settings.asStateFlow()
+    val settings: Flow<SourceLockSettings> = _settings
+        .filterNotNull()
+        .asStateFlow()
 
     override suspend fun getLock(seriesId: String): SourceLock? {
         return withContext(Dispatchers.IO) {

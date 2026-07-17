@@ -24,12 +24,10 @@ import com.kurostream.domain.sync.CrossDeviceSyncRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 import javax.inject.Singleton
-import timber.log.Timber
 
 @Singleton
 class CrossDeviceSyncRepositoryImpl @Inject constructor(
@@ -43,7 +41,6 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
         try {
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Sync failed")
             Result.error(e)
         }
     }
@@ -84,7 +81,6 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
             docRef.set(data)
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to sync watch progress")
             Result.error(e)
         }
     }
@@ -116,7 +112,6 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
             )
             Result.success(progress)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to get remote watch progress")
             Result.error(e)
         }
     }
@@ -145,7 +140,6 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
             }
             Result.success(progressList)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to get all remote watch progress")
             Result.error(e)
         }
     }
@@ -164,7 +158,6 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
                 .set(data)
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to register device")
             Result.error(e)
         }
     }
@@ -176,12 +169,11 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
                 .update("lastActive", FieldValue.serverTimestamp())
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to update device heartbeat")
             Result.error(e)
         }
     }
 
-    override suspend fun getDevicesForProfile(profileId: String): Result<List<DeviceInfo>> = withContext(Dispatchers.IO) {
+    override suspend fun getDevicesForProfile(profileId: String): Result<List<CrossDeviceSyncRepository.DeviceInfo>> = withContext(Dispatchers.IO) {
         try {
             val snapshot = firestore.collection(COLLECTION_DEVICE_STATE)
                 .whereEqualTo("profileId", profileId)
@@ -189,18 +181,17 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
                 .await()
 
             val devices = snapshot.documents.map { doc ->
-                val data = doc.data ?: DeviceInfo(doc.id, "", "", 0, "")
-DeviceInfo(
+                val data = doc.data ?: return@map CrossDeviceSyncRepository.DeviceInfo(doc.id, "", "", 0, "")
+                CrossDeviceSyncRepository.DeviceInfo(
                     deviceId = doc.id,
-                    profileId = data["profileId"] as String,
-                    deviceName = data["deviceName"] as String,
+                    profileId = data["profileId"] as? String ?: "",
+                    deviceName = data["deviceName"] as? String ?: "",
                     lastActive = (data["lastActive"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0,
                     appVersion = data["appVersion"] as? String ?: "",
                 )
             }
             Result.success(devices)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to get devices for profile")
             Result.error(e)
         }
     }
@@ -241,12 +232,4 @@ DeviceInfo(
             }
         }
     }
-
-    data class DeviceInfo(
-        val deviceId: String,
-        val profileId: String,
-        val deviceName: String,
-        val lastActive: Long,
-        val appVersion: String,
-    )
 }

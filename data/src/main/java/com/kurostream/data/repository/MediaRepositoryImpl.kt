@@ -324,25 +324,36 @@ class MediaRepositoryImpl @Inject constructor(
         val scoreVal = anime.mean
         val durationMin = anime.averageEpisodeDuration?.let { it / 60 }
         val genreList = anime.genres?.map { it.name } ?: emptyList()
+        val seasonYearVal = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() }
+        val seasonQuarterVal = anime.startSeason?.let { season ->
+            when (season.season?.lowercase()) {
+                "winter" -> Season.WINTER
+                "spring" -> Season.SPRING
+                "summer" -> Season.SUMMER
+                "fall" -> Season.FALL
+                else -> null
+            }
+        }
+        val studioList = anime.studios?.map { it.name } ?: emptyList()
 
         return MediaItem(
             id = "mal_${anime.id}",
-            title = titleStr,
+            title = anime.title,
             originalTitle = anime.alternativeTitles?.en,
             synopsis = anime.synopsis,
-            coverImageUrl = coverUrl,
+            coverImageUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium,
             bannerImageUrl = null,
             type = MediaType.TV,
             status = airStatus,
             episodeNumber = null,
             totalEpisodes = anime.numEpisodes,
             durationMinutes = durationMin,
-            seasonYear = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() },
-            seasonQuarter = null,
-            genres = genreList,
-            studios = anime.studios?.map { it.name } ?: emptyList(),
-            rating = ContentRating.UNRATED,
-            score = scoreVal,
+            seasonYear = seasonYearVal,
+            seasonQuarter = seasonQuarterVal,
+            genres = anime.genres?.map { it.name } ?: emptyList(),
+            studios = studioList,
+            rating = com.kurostream.domain.entity.ContentRating.UNRATED,
+            score = anime.mean,
             sourceExtensionId = "mal_${anime.id}",
             deepLink = null,
             lastUpdated = System.currentTimeMillis()

@@ -82,11 +82,11 @@ class SyncWorker @AssistedInject constructor(
             val lastSync = settingsDataStore.lastSyncTimestamp.first()
 
             val pushResult = syncProvider.pushLocalState()
-            if (pushResult.isFailure) return@withContext Result.retry()
+            if (pushResult.isError) return@withContext Result.retry()
             val pushTimestamp = pushResult.getOrNull()?.timestamp ?: System.currentTimeMillis()
 
             val pullResult = syncProvider.pull(lastSync)
-            if (pullResult.isFailure) return@withContext Result.retry()
+            if (pullResult.isError) return@withContext Result.retry()
 
             pullResult.getOrNull()?.let { remote ->
                 val local = syncProvider.buildPayloadFromLocal()

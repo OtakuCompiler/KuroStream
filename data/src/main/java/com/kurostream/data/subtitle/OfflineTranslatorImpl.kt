@@ -28,19 +28,12 @@ import kotlinx.coroutines.withContext
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.GpuDelegate
 import org.tensorflow.lite.gpu.GpuDelegateFactory
-import org.tensorflow.lite.support.common.FileUtil
-import org.tensorflow.lite.support.common.ops.NormalizeOp
-import org.tensorflow.lite.support.image.TensorImage
-import org.tensorflow.lite.task.text.nlclassifier.NLClassifier
-import org.tensorflow.lite.task.text.nlclassifier.NLClassifierOptions
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -82,7 +75,7 @@ class OfflineTranslatorImpl @Inject constructor(
         sourceLang: String,
         targetLang: String
     ): Result<TranslationResult> = withContext(Dispatchers.IO) {
-        if (!isInitialized) return error(IllegalStateException("Translator not initialized"))
+        if (!isInitialized) return@withContext error(IllegalStateException("Translator not initialized"))
         try {
             val input = preprocessText(text, sourceLang)
             val output = runInference(input)
@@ -107,7 +100,7 @@ class OfflineTranslatorImpl @Inject constructor(
         sourceLang: String,
         targetLang: String
     ): Result<List<TranslationResult>> = withContext(Dispatchers.IO) {
-        if (!isInitialized) return error(IllegalStateException("Translator not initialized"))
+        if (!isInitialized) return@withContext error(IllegalStateException("Translator not initialized"))
         try {
             val results = lines.map { line ->
                 translate(line.text, sourceLang, targetLang).getOrNull()
@@ -207,5 +200,10 @@ class OfflineTranslatorImpl @Inject constructor(
         fun decode(tokens: IntArray): String {
             return tokens.filter { it > 0 }.joinToString(" ") { "[TOKEN_$it]" }
         }
+    }
+
+    companion object {
+        private const val modelInputSize = 128
+        private const val vocabSize = 32000
     }
 }

@@ -16,32 +16,29 @@
 package com.kurostream.data.trailer
 
 import com.kurostream.core.common.result.Result
-import com.kurostream.data.remote.dto.tmdb.TmdbDtos
-import com.kurostream.data.remote.api.TmdbApi
 import com.kurostream.data.remote.api.YouTubeApi
 import com.kurostream.domain.metadata.TrailerRepository
 import com.kurostream.domain.model.Trailer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class TrailerRepositoryImpl @Inject constructor(
     private val youTubeApi: YouTubeApi,
-    private val tmdbApi: TmdbApi,
 ) : TrailerRepository {
 
     override suspend fun getTrailerForAnime(animeId: String): Result<Trailer> = withContext(Dispatchers.IO) {
         try {
-            // Fallback to YouTube search since TMDB API needs proper external ID mapping
             val searchQuery = "$animeId trailer"
-            val youtubeResult = youTubeApi.searchVideos(
+            val youtubeResult: Response<YouTubeDtos.SearchResponse> = youTubeApi.searchVideos(
                 query = searchQuery,
                 maxResults = 5,
                 apiKey = "YOUTUBE_API_KEY" // Should be provided via DI
             )
-            youtubeResult.data?.items?.firstOrNull { it.id?.videoId != null }?.let { item ->
+            youtubeResult.body()?.items?.firstOrNull { it.id?.videoId != null }?.let { item ->
                 val url = "https://www.youtube.com/watch?v=${item.id.videoId}"
                 return@withContext Result.success(Trailer(
                     url = url,
@@ -60,12 +57,12 @@ class TrailerRepositoryImpl @Inject constructor(
 
     override suspend fun searchTrailers(query: String): Result<List<Trailer>> = withContext(Dispatchers.IO) {
         try {
-            val youtubeResult = youTubeApi.searchVideos(
+            val youtubeResult: Response<YouTubeDtos.SearchResponse> = youTubeApi.searchVideos(
                 query = query,
                 maxResults = 10,
                 apiKey = "YOUTUBE_API_KEY"
             )
-            val trailers = youtubeResult.data?.items?.mapNotNull { item ->
+            val trailers = youtubeResult.body()?.items?.mapNotNull { item ->
                 item.id?.videoId?.let { videoId ->
                     Trailer(
                         url = "https://www.youtube.com/watch?v=$videoId",

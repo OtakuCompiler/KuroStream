@@ -66,6 +66,8 @@ data class ExternalIds(
     val facebookId: String?,
     val instagramId: String?,
     val twitterId: String?,
+    val youtubeId: String?,
+    val tiktokId: String?,
 )
 
 @Serializable
@@ -119,4 +121,15 @@ data class TrendingResponse(
     val results: List<TvShow> = emptyList(),
     val totalPages: Int,
     val totalResults: Int,
+)
+
+@Serializable
+data class ExternalIdResponse(
+    val id: Int?,
+    val imdb_id: String?,
+    val facebook_id: String?,
+    val instagram_id: String?,
+    val twitter_id: String?,
+    val youtube_id: String?,
+    val tiktok_id: String?,
 )
