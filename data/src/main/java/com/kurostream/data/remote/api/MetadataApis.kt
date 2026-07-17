@@ -31,7 +31,7 @@ interface TvdbApi {
     @GET("series/{id}")
     suspend fun getSeries(
         @Path("id") id: String,
-        @Header("Authorization") auth: String,
+        @Header("Authorization") auth: String = "",
         @Header("Accept") accept: String = "application/json",
     ): Response<SeriesResponse>
 
@@ -40,7 +40,7 @@ interface TvdbApi {
         @Query("name") name: String,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
-        @Header("Authorization") auth: String,
+        @Header("Authorization") auth: String = "",
         @Header("Accept") accept: String = "application/json",
     ): Response<TvdbSearchResponse>
 
@@ -49,7 +49,7 @@ interface TvdbApi {
         @Path("id") id: String,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 100,
-        @Header("Authorization") auth: String,
+        @Header("Authorization") auth: String = "",
     ): Response<TvdbEpisodesResponse>
 }
 

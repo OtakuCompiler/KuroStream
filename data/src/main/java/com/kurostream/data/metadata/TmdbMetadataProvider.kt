@@ -15,8 +15,8 @@
 
 package com.kurostream.data.metadata
 
-import com.kurostream.data.remote.dto.tmdb.TmdbDtos
 import com.kurostream.data.remote.api.TmdbApi
+import com.kurostream.data.remote.dto.tmdb.TvShow
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
 import javax.inject.Inject
@@ -40,8 +40,8 @@ class TmdbMetadataProvider @Inject constructor(
         val cacheKey = "tmdb_anime_$id"
         return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
-                val response = api.getTvDetails(id)
-                response.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                val response = api.getTvDetails(id.toIntOrNull() ?: return@getOrFetch MetadataResult.NotFound)
+                response.body()?.let { mapToDomain(it) } ?: MetadataResult.NotFound
             } catch (e: Exception) {
                 Timber.e(e, "TMDB getAnime failed")
                 throw e
@@ -54,7 +54,7 @@ class TmdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
             try {
                 val response = api.searchTv(query, page)
-                response.data?.results?.map { mapToDomain(it) } ?: emptyList()
+                response.body()?.results?.map { mapToDomain(it) } ?: emptyList()
             } catch (e: Exception) {
                 Timber.e(e, "TMDB searchAnime failed")
                 throw e
@@ -69,10 +69,10 @@ class TmdbMetadataProvider @Inject constructor(
                 val source = when (type) {
                     ExternalIdType.IMDB_ID -> "imdb_id"
                     ExternalIdType.TVDB_ID -> "tvdb_id"
-                    else -> return@getAnimeByExternalId MetadataResult.NotFound
+                    else -> return@getOrFetch MetadataResult.NotFound
                 }
-                val response = api.findByExternalId(source, value)
-                response.data?.tvResults?.firstOrNull()?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                val response = api.findByExternalId(value, source)
+                response.body()?.tvResults?.firstOrNull()?.let { mapToDomain(it) } ?: MetadataResult.NotFound
             } catch (e: Exception) {
                 Timber.e(e, "TMDB getAnimeByExternalId failed")
                 throw e
@@ -84,8 +84,14 @@ class TmdbMetadataProvider @Inject constructor(
         val cacheKey = "tmdb_seasonal_${year}_${season.name}"
         return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
-                val response = api.getDiscoverTv(page = 1, withKeywords = "anime", firstAirDateYear = year, airDateGte = "${year}-${seasonStartMonth(season)}-01", airDateLte = "${year}-${seasonEndMonth(season)}-31")
-                response.data?.results?.map { mapToDomain(it) } ?: emptyList()
+                val response = api.discoverTv(
+                    page = 1,
+                    withKeywords = "anime",
+                    firstAirDateYear = year,
+                    airDateGte = "${year}-${seasonStartMonth(season)}-01",
+                    airDateLte = "${year}-${seasonEndMonth(season)}-31"
+                )
+                response.body()?.results?.map { mapToDomain(it) } ?: emptyList()
             } catch (e: Exception) {
                 Timber.e(e, "TMDB getSeasonalAnime failed")
                 throw e
@@ -97,8 +103,8 @@ class TmdbMetadataProvider @Inject constructor(
         val cacheKey = "tmdb_trending_$limit"
         return cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) {
             try {
-                val response = api.getTrendingTv("week")
-                response.data?.results?.take(limit)?.map { mapToDomain(it) } ?: emptyList()
+                val response = api.getTrendingTv()
+                response.body()?.results?.take(limit)?.map { mapToDomain(it) } ?: emptyList()
             } catch (e: Exception) {
                 Timber.e(e, "TMDB getTrendingAnime failed")
                 throw e
@@ -106,7 +112,7 @@ class TmdbMetadataProvider @Inject constructor(
         }
     }
 
-    private fun mapToDomain(dto: TmdbDtos.TvDetail): AnimeMetadata {
+    private fun mapToDomain(dto: TvShow): AnimeMetadata {
         val posterPath = dto.posterPath
         val backdropPath = dto.backdropPath
         val coverImage = posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
@@ -115,36 +121,11 @@ class TmdbMetadataProvider @Inject constructor(
         val externalLinks = dto.externalIds?.let { ids ->
             mutableListOf<ExternalLink>().apply {
                 ids.imdbId?.let { add(ExternalLink("imdb", "https://imdb.com/title/$it")) }
-                ids.tvdbId?.let { add(ExternalLink("tvdb", "https://thetvdb.com/series/$it")) }
                 ids.facebookId?.let { add(ExternalLink("facebook", "https://facebook.com/$it")) }
                 ids.instagramId?.let { add(ExternalLink("instagram", "https://instagram.com/$it")) }
                 ids.twitterId?.let { add(ExternalLink("twitter", "https://twitter.com/$it")) }
             }
         } ?: emptyList()
-
-        val characters = dto.credits?.cast?.take(20)?.map { actor ->
-            Character(
-                id = actor.id.toString(),
-                name = actor.name,
-                role = actor.character,
-                imageUrl = actor.profilePath?.let { "https://image.tmdb.org/t/p/w185$it" },
-                voiceActors = emptyList()
-            )
-        } ?: emptyList()
-
-        val staff = dto.credits?.crew?.take(20)?.map { crew ->
-            Staff(
-                id = crew.id.toString(),
-                name = crew.name,
-                role = crew.job,
-                imageUrl = crew.profilePath?.let { "https://image.tmdb.org/t/p/w185$it" }
-            )
-        } ?: emptyList()
-
-        val themes = AnimeThemes(
-            openings = dto.networks?.map { it.name } ?: emptyList(),
-            endings = emptyList()
-        )
 
         val stats = AnimeStatistics(
             scoreDistribution = emptyMap(),
@@ -157,12 +138,12 @@ class TmdbMetadataProvider @Inject constructor(
             id = "tmdb_${dto.id}",
             title = dto.name,
             titleEnglish = dto.originalName,
-            titleJapanese = dto.originCountry?.firstOrNull()?.let { if (it == "JP") dto.name else null },
+            titleJapanese = if (dto.originCountry.contains("JP")) dto.name else null,
             synonyms = emptyList(),
             description = dto.overview,
             coverImageUrl = coverImage,
             bannerImageUrl = bannerImage,
-            type = mapMediaType(dto.type),
+            type = MediaType.TV,
             status = mapStatus(dto.status),
             episodes = dto.numberOfEpisodes,
             durationMinutes = dto.episodeRunTime?.firstOrNull(),
@@ -170,9 +151,9 @@ class TmdbMetadataProvider @Inject constructor(
             endDate = dto.lastAirDate?.let { parseDate(it) },
             seasonYear = dto.firstAirDate?.take(4)?.toIntOrNull(),
             season = dto.firstAirDate?.take(7)?.let { parseSeason(it) },
-            genres = dto.genres?.map { it.name } ?: emptyList(),
-            studios = dto.networks?.map { it.name } ?: emptyList(),
-            score = dto.voteAverage?.toDouble(),
+            genres = dto.genres.map { it.name },
+            studios = dto.networks.map { it.name },
+            score = dto.voteAverage,
             scoredBy = dto.voteCount,
             rank = dto.popularity?.toInt(),
             popularity = dto.popularity?.toInt(),
@@ -181,22 +162,13 @@ class TmdbMetadataProvider @Inject constructor(
             sourceMaterial = null,
             trailerUrl = dto.videos?.results?.firstOrNull { it.site == "YouTube" }?.let { "https://youtube.com/watch?v=${it.key}" },
             externalLinks = externalLinks,
-            characters = characters,
-            staff = staff,
+            characters = emptyList(),
+            staff = emptyList(),
             relations = emptyList(),
-            themes = themes,
+            themes = AnimeThemes(),
             statistics = stats,
             providerId = providerId,
         )
-    }
-
-    private fun mapMediaType(type: String?): MediaType = when (type) {
-        "Scripted" -> MediaType.TV
-        "Documentary" -> MediaType.TV
-        "News" -> MediaType.TV
-        "Miniseries" -> MediaType.SPECIAL
-        "Animation" -> MediaType.TV
-        else -> MediaType.TV
     }
 
     private fun mapStatus(status: String?): AiringStatus = when (status) {

@@ -18,7 +18,7 @@ package com.kurostream.data.remote.dto.tmdb
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TmdbDtos
+data class TmdbDtos(val placeholder: String = "")
 
 @Serializable
 data class TvShow(
@@ -132,4 +132,34 @@ data class ExternalIdResponse(
     val twitter_id: String?,
     val youtube_id: String?,
     val tiktok_id: String?,
+)
+
+@Serializable
+data class CreditsResponse(
+    val id: Int? = null,
+    val cast: List<CastMember> = emptyList(),
+    val crew: List<CrewMember> = emptyList(),
+)
+
+@Serializable
+data class CastMember(
+    val id: Int,
+    val name: String,
+    val character: String,
+    val profilePath: String? = null,
+    val order: Int = 0,
+)
+
+@Serializable
+data class CrewMember(
+    val id: Int,
+    val name: String,
+    val job: String,
+    val profilePath: String? = null,
+)
+
+@Serializable
+data class FindByExternalIdResponse(
+    val tvResults: List<TvShow> = emptyList(),
+    val movieResults: List<TvShow> = emptyList(),
 )

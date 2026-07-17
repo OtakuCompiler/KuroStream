@@ -24,6 +24,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -89,6 +90,10 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
                         }
                         providerErrors[provider.providerId] = result.providerErrors.values.joinToString(", ")
                     }
+                    is MetadataResult.NotFound -> { /* provider returned not found, skip */ }
+                    is MetadataResult.RateLimited -> {
+                        providerErrors[provider.providerId] = "Rate limited, retry after ${result.retryAfterMs}ms"
+                    }
                 }
             } catch (e: Exception) {
                 providerErrors[provider.providerId] = e.message ?: "Unknown error"
@@ -102,7 +107,7 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
                 MetadataResult.Success(bestResult)
             }
         } else {
-            MetadataResult.Error("No provider returned data", providerErrors)
+            MetadataResult.Error("No provider returned data", providerErrors = providerErrors)
         }
     }
 
@@ -142,6 +147,10 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
                         }
                         providerErrors[provider.providerId] = result.providerErrors.values.joinToString(", ")
                     }
+                    is MetadataResult.NotFound -> { /* skip */ }
+                    is MetadataResult.RateLimited -> {
+                        providerErrors[provider.providerId] = "Rate limited, retry after ${result.retryAfterMs}ms"
+                    }
                 }
             } catch (e: Exception) {
                 providerErrors[provider.providerId] = e.message ?: "Unknown error"
@@ -159,7 +168,7 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
                 MetadataResult.Success(results)
             }
         } else {
-            MetadataResult.Error("No results found", providerErrors)
+            MetadataResult.Error("No results found", providerErrors = providerErrors)
         }
     }
 
@@ -199,6 +208,10 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
                         }
                         providerErrors[provider.providerId] = result.providerErrors.values.joinToString(", ")
                     }
+                    is MetadataResult.NotFound -> { /* skip */ }
+                    is MetadataResult.RateLimited -> {
+                        providerErrors[provider.providerId] = "Rate limited, retry after ${result.retryAfterMs}ms"
+                    }
                 }
             } catch (e: Exception) {
                 providerErrors[provider.providerId] = e.message ?: "Unknown error"
@@ -215,7 +228,7 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
                 MetadataResult.Success(results)
             }
         } else {
-            MetadataResult.Error("No seasonal anime found", providerErrors)
+            MetadataResult.Error("No seasonal anime found", providerErrors = providerErrors)
         }
     }
 
@@ -255,6 +268,10 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
                         }
                         providerErrors[provider.providerId] = result.providerErrors.values.joinToString(", ")
                     }
+                    is MetadataResult.NotFound -> { /* skip */ }
+                    is MetadataResult.RateLimited -> {
+                        providerErrors[provider.providerId] = "Rate limited, retry after ${result.retryAfterMs}ms"
+                    }
                 }
             } catch (e: Exception) {
                 providerErrors[provider.providerId] = e.message ?: "Unknown error"
@@ -272,14 +289,14 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
                 MetadataResult.Success(results)
             }
         } else {
-            MetadataResult.Error("No trending anime found", providerErrors)
+            MetadataResult.Error("No trending anime found", providerErrors = providerErrors)
         }
     }
 
     override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<UnifiedAnimeDetails> = withContext(Dispatchers.IO) {
         for (provider in allProviders) {
             if (!provider.isEnabled || !_enabledProviders.value.contains(provider.providerId)) continue
-            
+
             try {
                 val result = provider.getAnimeByExternalId(type, value)
                 if (result is MetadataResult.Success) {
@@ -311,9 +328,9 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
     }
 
     private fun convertToUnified(data: AnimeMetadata, sourceProviderId: String): UnifiedAnimeDetails {
-        val providerData = mutableMapOf<String, Any>()
+        val providerData = mutableMapOf<String, String>()
         providerData["_source"] = sourceProviderId
-        providerData["_priority"] = allProviders.find { it.providerId == sourceProviderId }?.priority ?: 999
+        providerData["_priority"] = (allProviders.find { it.providerId == sourceProviderId }?.priority ?: 999).toString()
 
         return UnifiedAnimeDetails(
             id = data.id,
@@ -340,20 +357,20 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
             ageRating = data.ageRating,
             sourceMaterial = data.sourceMaterial,
             durationMinutes = data.durationMinutes,
-            episodeCount = data.episodeCount,
+            episodeCount = data.episodes,
             trailerUrl = data.trailerUrl,
-            externalLinks = data.externalLinks.map { ExternalLink(it.siteName, it.url) },
+            externalLinks = data.externalLinks.map { ExternalLink(it.site, it.url) },
             characters = data.characters.map { Character(it.id, it.name, it.role, it.imageUrl) },
             staff = data.staff.map { Staff(it.id, it.name, it.role, it.imageUrl) },
-            relations = data.relations.map { AnimeRelation(it.relationType, it.targetId, it.targetTitle, it.targetType) },
+            relations = data.relations.map { AnimeRelation(it.relationType, it.relatedAnimeId, it.relatedTitle, it.targetId, it.targetTitle, it.targetType) },
             themes = data.themes,
-            statistics = data.statistics?.let { AnimeStatistics(it.scoreDistribution, it.statusDistribution, it.totalMembers, it.totalFavorites) },
+            statistics = data.statistics?.let { AnimeStatistics(scoreDistribution = it.scoreDistribution, statusDistribution = it.statusDistribution, totalMembers = it.totalMembers, totalFavorites = it.totalFavorites) },
             providerData = providerData,
         )
     }
 
-    private fun getProviderPriority(providerData: Map<String, Any>): Int {
-        return providerData["_priority"] as? Int ?: 999
+    private fun getProviderPriority(providerData: Map<String, String>): Int {
+        return providerData["_priority"]?.toIntOrNull() ?: 999
     }
 
     private fun getEnabledProvidersFromSettings(): Set<String> {

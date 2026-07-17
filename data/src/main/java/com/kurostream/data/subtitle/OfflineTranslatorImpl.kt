@@ -23,8 +23,8 @@ import com.kurostream.domain.subtitle.TranslationResult
 import com.kurostream.domain.subtitle.OfflineTranslator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.absoluteValue
 import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.gpu.GpuDelegate
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
@@ -50,12 +50,7 @@ class OfflineTranslatorImpl @Inject constructor(
     override suspend fun initialize(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val options = Interpreter.Options().setNumThreads(4)
-            val gpuDelegate = org.tensorflow.lite.gpu.GpuDelegate()
-            options.addDelegate(gpuDelegate)
-            this.gpuDelegate = gpuDelegate
-
-            val modelBuffer = loadModelFile(modelName)
-            interpreter = Interpreter(modelBuffer, options)
+            interpreter = Interpreter(loadModelFile(modelName), options)
             isInitialized = true
             Result.success(Unit)
         } catch (e: Exception) {
@@ -140,9 +135,7 @@ class OfflineTranslatorImpl @Inject constructor(
 
     private fun runInference(input: ByteBuffer): ByteBuffer {
         val output = ByteBuffer.allocateDirect(modelInputSize * vocabSize * 4)
-        val inputs = arrayOf<Any>(input)
-        val outputs = arrayOf<Any>(output)
-        interpreter?.runForMultipleInputsOutputs(inputs, outputs)
+        interpreter?.run(input, output)
         return output
     }
 

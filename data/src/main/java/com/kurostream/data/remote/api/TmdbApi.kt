@@ -16,7 +16,7 @@
 package com.kurostream.data.remote.api
 
 import com.kurostream.data.remote.dto.tmdb.DiscoverResponse
-import com.kurostream.data.remote.dto.tmdb.ExternalIdResponse
+import com.kurostream.data.remote.dto.tmdb.FindByExternalIdResponse
 import com.kurostream.data.remote.dto.tmdb.SearchResponse
 import com.kurostream.data.remote.dto.tmdb.TrendingResponse
 import com.kurostream.data.remote.dto.tmdb.TvShow
@@ -54,7 +54,7 @@ interface TmdbApi {
         @Path("external_id") externalId: String,
         @Query("external_source") externalSource: String,
         @Query("language") language: String = "en-US",
-    ): Response<ExternalIdResponse>
+    ): Response<FindByExternalIdResponse>
 
     @GET("trending/tv/week")
     suspend fun getTrendingTv(

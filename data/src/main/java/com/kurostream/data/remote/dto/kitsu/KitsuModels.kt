@@ -3,7 +3,7 @@ package com.kurostream.data.remote.dto.kitsu
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class KitsuModels
+data class KitsuModels(val placeholder: String = "")
 
 @Serializable
 data class AnimeDetail(

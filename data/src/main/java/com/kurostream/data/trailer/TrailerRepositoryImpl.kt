@@ -17,7 +17,7 @@ package com.kurostream.data.trailer
 
 import com.kurostream.core.common.result.Result
 import com.kurostream.data.remote.api.YouTubeApi
-import com.kurostream.data.remote.dto.youtube.YouTubeDtos
+import com.kurostream.data.remote.dto.youtube.SearchResponse
 import com.kurostream.domain.metadata.TrailerRepository
 import com.kurostream.domain.model.Trailer
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +37,7 @@ class TrailerRepositoryImpl @Inject constructor(
     override suspend fun getTrailerForAnime(animeId: String): Result<Trailer> = withContext(Dispatchers.IO) {
         try {
             val searchQuery = "$animeId trailer"
-            val youtubeResult: Response<YouTubeDtos.SearchResponse> = youTubeApi.searchVideos(
+            val youtubeResult: Response<SearchResponse> = youTubeApi.searchVideos(
                 query = searchQuery,
                 maxResults = 5,
                 apiKey = "YOUTUBE_API_KEY" // Should be provided via DI
@@ -61,7 +61,7 @@ class TrailerRepositoryImpl @Inject constructor(
 
     override suspend fun searchTrailers(query: String): Result<List<Trailer>> = withContext(Dispatchers.IO) {
         try {
-            val youtubeResult: Response<YouTubeDtos.SearchResponse> = youTubeApi.searchVideos(
+            val youtubeResult: Response<SearchResponse> = youTubeApi.searchVideos(
                 query = query,
                 maxResults = 10,
                 apiKey = "YOUTUBE_API_KEY"

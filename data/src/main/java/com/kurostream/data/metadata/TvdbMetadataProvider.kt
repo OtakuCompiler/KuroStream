@@ -41,10 +41,10 @@ class TvdbMetadataProvider @Inject constructor(
         return cache.getOrFetch(cacheKey, cacheTtlMs) {
             try {
                 val response = api.getSeries(id)
-                response.body()?.data?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                response.body()?.data?.let { MetadataResult.Success(mapToDomain(it)) } ?: MetadataResult.NotFound
             } catch (e: Exception) {
                 Timber.e(e, "TVDB getAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "TVDB error", throwable = e)
             }
         }
     }
@@ -57,7 +57,7 @@ class TvdbMetadataProvider @Inject constructor(
                 MetadataResult.Success(response.body()?.data?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
                 Timber.e(e, "TVDB searchAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "TVDB error", throwable = e)
             }
         }
     }

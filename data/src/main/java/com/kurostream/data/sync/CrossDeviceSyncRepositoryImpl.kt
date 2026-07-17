@@ -23,7 +23,7 @@ import com.kurostream.domain.sync.CrossDeviceSyncRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.awaitClose
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
@@ -211,7 +211,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
                         trySend(Result.success(null))
                         return@addSnapshotListener
                     }
-                    val data = snapshot.data ?: return@addSnapshotListener trySend(Result.success(null))
+                    val data = snapshot.data ?: run { trySend(Result.success(null)); return@addSnapshotListener }
                     val progress = WatchProgress(
                         id = snapshot.id,
                         mediaItemId = data["mediaId"] as String,
@@ -225,9 +225,7 @@ class CrossDeviceSyncRepositoryImpl @Inject constructor(
                     )
                     trySend(Result.success(progress))
                 }
-            try {
-                awaitClose()
-            } finally {
+            awaitClose {
                 listener.remove()
             }
         }

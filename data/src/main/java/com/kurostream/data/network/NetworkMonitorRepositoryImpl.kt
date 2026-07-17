@@ -26,6 +26,7 @@ import com.kurostream.core.common.result.Result
 import com.kurostream.domain.network.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -96,7 +97,7 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
             .build()
 
         connectivityManager.registerNetworkCallback(request, networkCallback)
-        
+
         // Start periodic stats collection
         scope.launch {
             while (isMonitoring) {
@@ -106,12 +107,12 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun stopMonitoring() = withContext(Dispatchers.IO) {
+    override suspend fun stopMonitoring() {
         isMonitoring = false
         if (::networkCallback.isInitialized) {
             connectivityManager.unregisterNetworkCallback(networkCallback)
         }
-        scope.cancel()
+        scope.coroutineContext[Job]?.children?.forEach { it.cancel() }
     }
 
     override fun observeNetworkStats() = _networkStats.asStateFlow()
@@ -249,7 +250,7 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
             val connection = url.openConnection()
             connection.connectTimeout = 10000
             connection.readTimeout = 30000
-            
+
             val inputStream = connection.getInputStream()
             val buffer = ByteArray(8192)
             var totalBytes = 0L
@@ -259,10 +260,10 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
                 bytesRead = inputStream.read(buffer)
             }
             inputStream.close()
-            
+
             val durationSeconds = (System.currentTimeMillis() - startTime) / 1000.0
             val downloadSpeedMbps = (totalBytes * 8) / (durationSeconds * 1_000_000)
-            
+
             SpeedTestResult(
                 downloadSpeedMbps = downloadSpeedMbps,
                 uploadSpeedMbps = downloadSpeedMbps * 0.5, // Estimate
@@ -295,7 +296,7 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
                 val address = java.net.InetAddress.getByName(host)
                 val reachable = address.isReachable(2000)
                 val elapsed = (System.nanoTime() - start) / 1_000_000.0
-                
+
                 if (reachable) {
                     minMs = minOf(minMs, elapsed)
                     maxMs = maxOf(maxMs, elapsed)
@@ -321,11 +322,13 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
     override suspend fun getNetworkInterfaceInfo(): List<NetworkInterfaceInfo> = withContext(Dispatchers.IO) {
         val interfaces = mutableListOf<NetworkInterfaceInfo>()
         try {
-            java.net.NetworkInterface.getNetworkInterfaces().asIterable().forEach { ni ->
+            val networkInterfaces = java.net.NetworkInterface.getNetworkInterfaces()
+            while (networkInterfaces.hasMoreElements()) {
+                val ni = networkInterfaces.nextElement()
                 if (ni.isUp && !ni.isLoopback) {
-                    val addresses = ni.interfaceAddresses.map { it.address.hostAddress }.toList()
+                    val addresses = ni.interfaceAddresses.map { it.address.hostAddress }
                     val ipv4 = addresses.find { it.contains(".") } ?: ""
-                    
+
                     interfaces.add(NetworkInterfaceInfo(
                         name = ni.name,
                         displayName = ni.displayName,
@@ -356,7 +359,7 @@ class NetworkMonitorRepositoryImpl @Inject constructor(
         try {
             val file = java.io.File("/etc/resolv.conf")
             if (file.exists()) {
-                file.readText().forEachLine { line ->
+                file.readText().lines().forEach { line ->
                     if (line.startsWith("nameserver")) {
                         dnsServers.add(line.substringAfter("nameserver").trim())
                     }

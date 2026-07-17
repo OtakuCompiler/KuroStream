@@ -18,7 +18,7 @@ package com.kurostream.data.remote.dto.youtube
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class YouTubeDtos
+data class YouTubeDtos(val placeholder: String = "")
 
 @Serializable
 data class SearchResponse(

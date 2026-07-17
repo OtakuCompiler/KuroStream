@@ -18,7 +18,7 @@ package com.kurostream.data.remote.dto.imdb
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ImdbDtos
+data class ImdbDtos(val placeholder: String = "")
 
 @Serializable
 data class Title(

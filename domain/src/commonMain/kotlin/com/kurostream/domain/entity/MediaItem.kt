@@ -43,6 +43,6 @@ data class MediaItem(
 )
 
 enum class MediaType { TV, MOVIE, OVA, ONA, SPECIAL, MUSIC }
-enum class AiringStatus { AIRING, FINISHED, NOT_YET_AIRED, CANCELLED }
+enum class AiringStatus { AIRING, FINISHED, NOT_YET_AIRED, CANCELLED, UNKNOWN }
 enum class Season { WINTER, SPRING, SUMMER, FALL }
 enum class ContentRating { G, PG, PG13, R17, R, UNRATED }

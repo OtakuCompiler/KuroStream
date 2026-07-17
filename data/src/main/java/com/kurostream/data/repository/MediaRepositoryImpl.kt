@@ -16,6 +16,7 @@
 package com.kurostream.data.repository
 
 import com.kurostream.cache.CacheNamespaceManager
+import com.kurostream.cache.get
 import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.entity.*
@@ -131,7 +132,7 @@ class MediaRepositoryImpl @Inject constructor(
                     coverImageUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium,
                     bannerImageUrl = null,
                     type = MediaType.TV,
-                    status = anime.status?.let { AiringStatus.valueOf(it.uppercase()) } ?: AiringStatus.UNKNOWN,
+                    status = safeParseAiringStatus(anime.status),
                     episodeNumber = null,
                     totalEpisodes = anime.numEpisodes,
                     durationMinutes = anime.averageEpisodeDuration?.let { it / 60 },
@@ -185,7 +186,7 @@ class MediaRepositoryImpl @Inject constructor(
                     val anime = rankingNode.node
                     val titleStr = anime.title
                     val coverUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium
-                    val airStatus = anime.status?.let { AiringStatus.valueOf(it.uppercase()) } ?: AiringStatus.UNKNOWN
+                    val airStatus = safeParseAiringStatus(anime.status)
                     val seasonYearVal = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() }
                     MediaItem(
                         id = "mal_${anime.id}",
@@ -300,7 +301,7 @@ class MediaRepositoryImpl @Inject constructor(
             episodeNumber = null,
             totalEpisodes = null,
             durationMinutes = duration?.let { (it / 60000).toInt() },
-            seasonYear = releaseDate?.let { it / 10000 },
+            seasonYear = releaseDate?.let { (it / 10000).toInt() },
             seasonQuarter = null,
             genres = emptyList(),
             studios = emptyList(),
@@ -334,7 +335,7 @@ class MediaRepositoryImpl @Inject constructor(
     private fun AniListMedia.toDomain(): MediaItem {
         val titleStr = title?.english ?: title?.romaji ?: title?.native ?: "Unknown"
         val coverUrl = coverImage?.large ?: coverImage?.medium
-        val airStatus = status?.let { AiringStatus.valueOf(it) } ?: AiringStatus.UNKNOWN
+        val airStatus = safeParseAiringStatus(status)
         val seasonQtr = season?.let { Season.valueOf(it.uppercase()) }
         val scoreVal = averageScore?.let { it / 10.0 }
         val seasonYearVal = seasonYear
@@ -370,12 +371,9 @@ class MediaRepositoryImpl @Inject constructor(
     private fun SearchNode.toDomain(): MediaItem {
         val titleStr = title
         val coverUrl = mainPicture?.large ?: mainPicture?.medium
-        val airStatus = status?.let { AiringStatus.valueOf(it.uppercase()) } ?: AiringStatus.UNKNOWN
+        val airStatus = safeParseAiringStatus(status)
         val scoreVal = mean
-        val durationMin = averageEpisodeDuration?.let { it / 60 }
-        val genreList = genres?.map { it.name } ?: emptyList()
         val seasonYearVal = startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() }
-        val seasonQuarterVal = null // SearchNode doesn't provide startSeason
 
         return MediaItem(
             id = "mal_$id",
@@ -388,10 +386,10 @@ class MediaRepositoryImpl @Inject constructor(
             status = airStatus,
             episodeNumber = null,
             totalEpisodes = numEpisodes,
-            durationMinutes = durationMin,
+            durationMinutes = null, // SearchNode doesn't provide averageEpisodeDuration
             seasonYear = seasonYearVal,
-            seasonQuarter = seasonQuarterVal,
-            genres = genreList,
+            seasonQuarter = null, // SearchNode doesn't provide startSeason
+            genres = emptyList(), // SearchNode doesn't provide genres
             studios = emptyList(),
             rating = com.kurostream.domain.entity.ContentRating.UNRATED,
             score = scoreVal,
@@ -399,6 +397,16 @@ class MediaRepositoryImpl @Inject constructor(
             deepLink = null,
             lastUpdated = System.currentTimeMillis()
         )
+    }
+
+    private fun safeParseAiringStatus(status: String?): AiringStatus {
+        return when (status?.uppercase()) {
+            "FINISHED", "FINISHED_AIRING", "ENDED" -> AiringStatus.FINISHED
+            "AIRING", "CURRENTLY_AIRING", "RELEASING" -> AiringStatus.AIRING
+            "NOT_YET_AIRED", "NOT_YET_RELEASED", "UPCOMING" -> AiringStatus.NOT_YET_AIRED
+            "CANCELLED", "CANCELED" -> AiringStatus.CANCELLED
+            else -> AiringStatus.UNKNOWN
+        }
     }
 
     private fun parseMalDate(dateStr: String): Long? = try {

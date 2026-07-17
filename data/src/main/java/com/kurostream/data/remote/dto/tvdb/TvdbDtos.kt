@@ -18,7 +18,7 @@ package com.kurostream.data.remote.dto.tvdb
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TvdbDtos
+data class TvdbDtos(val placeholder: String = "")
 
 @Serializable
 data class Series(
