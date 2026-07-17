@@ -24,12 +24,9 @@ import com.kurostream.data.cache.CacheManagerImpl
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.data.local.preferences.SettingsDataStoreImpl
 import com.kurostream.data.metadata.*
-import com.kurostream.data.network.NetworkMonitorRepository
 import com.kurostream.data.network.NetworkMonitorRepositoryImpl
 import com.kurostream.data.repository.*
-import com.kurostream.data.subtitle.OfflineTranslator
 import com.kurostream.data.subtitle.OfflineTranslatorImpl
-import com.kurostream.data.sync.CrossDeviceSyncRepository
 import com.kurostream.data.sync.CrossDeviceSyncRepositoryImpl
 // import com.kurostream.data.trailer.TrailerRepository
 // import com.kurostream.data.trailer.TrailerRepositoryImpl

@@ -15,14 +15,13 @@
 
 package com.kurostream.data.metadata
 
-import com.kurostream.data.remote.dto.anilist.AniListDtos
 import com.kurostream.data.remote.api.AniListApi
+import com.kurostream.data.remote.dto.anilist.*
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
-import kotlinx.serialization.json.Json
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-import timber.log.Timber
 
 @Singleton
 class AniListMetadataProvider @Inject constructor(
@@ -38,203 +37,142 @@ class AniListMetadataProvider @Inject constructor(
     private val cacheTtlMs = 24 * 60 * 60 * 1000L // 24 hours
 
     override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> {
-        val cacheKey = "anilist_anime_$id"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch("anilist_anime_$id", cacheTtlMs) {
             try {
-                val response = api.getAnime(id)
-                if (response.data?.media == null) {
-                    return@getAnime MetadataResult.NotFound
+                val response = api.getAnimeDetails(AniListAnimeDetailsRequest(variables = mapOf("id" to id)))
+                val media = response.body()?.data?.Media
+                if (media == null) {
+                    MetadataResult.NotFound
+                } else {
+                    MetadataResult.Success(mapToDomain(media))
                 }
-                mapToDomain(response.data!!.media!!)
             } catch (e: Exception) {
                 Timber.e(e, "AniList getAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "AniList error", throwable = e)
             }
         }
     }
 
     override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "anilist_search_${query}_$page"
-        return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
+        return cache.getOrFetch("anilist_search_${query}_$page", 60 * 60 * 1000L) {
             try {
-                val response = api.searchAnime(query, page, limit)
-                response.data?.page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                val response = api.searchAnime(AniListSearchRequest(variables = mapOf("search" to query, "page" to page, "perPage" to limit)))
+                val list = response.body()?.data?.Page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(list)
             } catch (e: Exception) {
                 Timber.e(e, "AniList searchAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "AniList error", throwable = e)
             }
         }
     }
 
     override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> {
-        val cacheKey = "anilist_external_${type.name}_$value"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch("anilist_external_${type.name}_$value", cacheTtlMs) {
             try {
                 val query = when (type) {
                     ExternalIdType.MAL_ID -> "idMal:$value"
                     ExternalIdType.ANILIST_ID -> "id:$value"
                     ExternalIdType.TMDB_ID -> "idTmdb:$value"
-                    else -> return@getAnimeByExternalId MetadataResult.NotFound
+                    else -> return@getOrFetch MetadataResult.NotFound
                 }
-                val response = api.getAnimeByExternalId(query)
-                response.data?.media?.let { mapToDomain(it) } ?: MetadataResult.NotFound
+                val response = api.getAnimeDetails(AniListAnimeDetailsRequest(variables = mapOf("id" to query)))
+                val media = response.body()?.data?.Media
+                if (media != null) MetadataResult.Success(mapToDomain(media)) else MetadataResult.NotFound
             } catch (e: Exception) {
                 Timber.e(e, "AniList getAnimeByExternalId failed")
-                throw e
+                MetadataResult.Error(e.message ?: "AniList error", throwable = e)
             }
         }
     }
 
     override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "anilist_seasonal_${year}_${season.name}"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch("anilist_seasonal_${year}_${season.name}", cacheTtlMs) {
             try {
-                val response = api.getSeasonalAnime(year, season.name.lowercase())
-                response.data?.page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                val response = api.searchAnime(
+                    AniListSearchRequest(variables = mapOf(
+                        "search" to "",
+                        "page" to 1,
+                        "perPage" to 50,
+                        "season" to season.name.lowercase(),
+                        "seasonYear" to year
+                    ))
+                )
+                val list = response.body()?.data?.Page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(list)
             } catch (e: Exception) {
                 Timber.e(e, "AniList getSeasonalAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "AniList error", throwable = e)
             }
         }
     }
 
     override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "anilist_trending_$limit"
-        return cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) {
+        return cache.getOrFetch("anilist_trending_$limit", 6 * 60 * 60 * 1000L) {
             try {
-                val response = api.getTrendingAnime(limit)
-                response.data?.page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                val response = api.getTrendingAnime(AniListTrendingRequest(variables = mapOf("page" to 1, "perPage" to limit)))
+                val list = response.body()?.data?.Page?.media?.mapNotNull { mapToDomain(it) } ?: emptyList()
+                MetadataResult.Success(list)
             } catch (e: Exception) {
                 Timber.e(e, "AniList getTrendingAnime failed")
-                throw e
+                MetadataResult.Error(e.message ?: "AniList error", throwable = e)
             }
         }
     }
 
-    private fun mapToDomain(dto: AniListDtos.Media): AnimeMetadata {
-        val coverImage = dto.coverImage?.extraLarge ?: dto.coverImage?.large ?: dto.coverImage?.medium
-        val bannerImage = dto.bannerImage
-        
-        val externalLinks = dto.externalLinks?.map { link ->
-            ExternalLink(link.site, link.url)
-        } ?: emptyList()
-
-        val characters = dto.characters?.edges?.mapNotNull { edge ->
-            edge.node?.let { char ->
-                val voiceActors = char.voiceActors?.mapNotNull { va ->
-                    va.person?.let { person ->
-                        VoiceActor(
-                            id = person.id.toString(),
-                            name = person.name.full,
-                            language = va.languageV2 ?: "Japanese",
-                            imageUrl = person.image?.large
-                        )
-                    }
-                } ?: emptyList()
-                
-                Character(
-                    id = char.id.toString(),
-                    name = char.name.full,
-                    role = char.role?.name ?: "Main",
-                    imageUrl = char.image?.large,
-                    voiceActors = voiceActors
-                )
-            }
-        } ?: emptyList()
-
-        val staff = dto.staff?.edges?.mapNotNull { edge ->
-            edge.node?.let { s ->
-                Staff(
-                    id = s.id.toString(),
-                    name = s.name.full,
-                    role = s.primaryOccupations?.firstOrNull() ?: "Staff",
-                    imageUrl = s.image?.large
-                )
-            }
-        } ?: emptyList()
-
-        val relations = dto.relations?.edges?.mapNotNull { edge ->
-            edge.node?.let { rel ->
-                AnimeRelation(
-                    relationType = rel.relationType?.name ?: "Related",
-                    relatedAnimeId = rel.id.toString(),
-                    relatedTitle = rel.title?.romaji ?: rel.title?.english ?: "Unknown"
-                )
-            }
-        } ?: emptyList()
-
-        val themes = AnimeThemes(
-            openings = dto.streamingEpisodes?.mapNotNull { ep ->
-                ep.title?.let { ThemeSong(title = it, artist = "", videoUrl = ep.url) }
-            } ?: emptyList(),
-            endings = emptyList()
-        )
-
-        val stats = dto.statistics?.let { s ->
-            AnimeStatistics(
-                watching = s.statusDistribution?.getValue("CURRENT") ?: 0,
-                completed = s.statusDistribution?.getValue("COMPLETED") ?: 0,
-                onHold = s.statusDistribution?.getValue("PAUSED") ?: 0,
-                dropped = s.statusDistribution?.getValue("DROPPED") ?: 0,
-                planToWatch = s.statusDistribution?.getValue("PLANNING") ?: 0,
-                scoreDistribution = s.scoreDistribution?.associate { it.score to it.amount } ?: emptyMap(),
-                statusDistribution = s.statusDistribution ?: emptyMap(),
-            )
-        }
-
+    private fun mapToDomain(media: AniListMedia): AnimeMetadata {
         return AnimeMetadata(
-            id = "anilist_${dto.id}",
-            title = dto.title.romaji,
-            titleEnglish = dto.title.english,
-            titleJapanese = dto.title.native,
-            synonyms = dto.synonyms ?: emptyList(),
-            description = dto.description?.replace("<br>", "\n").replace("<i>", "").replace("</i>", ""),
-            coverImageUrl = coverImage,
-            bannerImageUrl = bannerImage,
-            type = mapMediaType(dto.format),
-            status = mapStatus(dto.status),
-            episodes = dto.episodes,
-            durationMinutes = dto.duration,
-            startDate = dto.startDate?.toEpochMillis(),
-            endDate = dto.endDate?.toEpochMillis(),
-            seasonYear = dto.seasonYear,
-            season = dto.season?.let { Season.valueOf(it.uppercase()) },
-            genres = dto.genres ?: emptyList(),
-            studios = dto.studios?.nodes?.map { it.name } ?: emptyList(),
-            score = dto.averageScore?.div(10.0),
-            scoredBy = dto.meanScore,
-            rank = dto.popularityRank,
-            popularity = dto.popularity,
-            favorites = dto.favourites,
-            ageRating = dto.ageRating,
-            sourceMaterial = dto.source?.name,
-            trailerUrl = dto.trailer?.let { "https://youtube.com/watch?v=${it.id}" },
-            externalLinks = externalLinks,
-            characters = characters,
-            staff = staff,
-            relations = relations,
-            themes = themes,
-            statistics = stats,
+            id = "anilist_${media.id}",
+            title = media.title?.romaji ?: "Unknown",
+            titleEnglish = media.title?.english,
+            titleJapanese = media.title?.native,
+            description = media.description?.replace("<br>", "\n")?.replace("<i>", "")?.replace("</i>", ""),
+            coverImageUrl = media.coverImage?.large ?: media.coverImage?.medium,
+            bannerImageUrl = media.bannerImage,
+            type = mapMediaType(media.status),
+            status = mapStatus(media.status),
+            episodes = media.episodes,
+            durationMinutes = media.duration,
+            startDate = null,
+            endDate = null,
+            seasonYear = media.seasonYear,
+            season = media.season?.let { Season.valueOf(it.uppercase()) },
+            genres = media.genres ?: emptyList(),
+            studios = emptyList(),
+            score = media.averageScore?.div(10.0),
+            scoredBy = null,
+            rank = null,
+            popularity = null,
+            favorites = null,
+            ageRating = null,
+            sourceMaterial = null,
+            trailerUrl = null,
+            externalLinks = emptyList(),
+            characters = emptyList(),
+            staff = emptyList(),
+            relations = emptyList(),
+            themes = AnimeThemes(),
+            statistics = null,
+            synonyms = emptyList(),
             providerId = providerId,
         )
     }
 
-    private fun mapMediaType(format: AniListDtos.MediaFormat?): MediaType = when (format) {
-        AniListDtos.MediaFormat.TV -> MediaType.TV
-        AniListDtos.MediaFormat.MOVIE -> MediaType.MOVIE
-        AniListDtos.MediaFormat.OVA -> MediaType.OVA
-        AniListDtos.MediaFormat.ONA -> MediaType.ONA
-        AniListDtos.MediaFormat.SPECIAL -> MediaType.SPECIAL
-        AniListDtos.MediaFormat.MUSIC -> MediaType.MUSIC
+    private fun mapMediaType(status: String?): MediaType = when (status?.uppercase()) {
+        "TV" -> MediaType.TV
+        "MOVIE" -> MediaType.MOVIE
+        "OVA" -> MediaType.OVA
+        "ONA" -> MediaType.ONA
+        "SPECIAL" -> MediaType.SPECIAL
+        "MUSIC" -> MediaType.MUSIC
         else -> MediaType.TV
     }
 
-    private fun mapStatus(status: AniListDtos.MediaStatus?): AiringStatus = when (status) {
-        AniListDtos.MediaStatus.RELEASING -> AiringStatus.AIRING
-        AniListDtos.MediaStatus.FINISHED -> AiringStatus.FINISHED
-        AniListDtos.MediaStatus.NOT_YET_RELEASED -> AiringStatus.NOT_YET_AIRED
-        AniListDtos.MediaStatus.CANCELLED -> AiringStatus.CANCELLED
-        AniListDtos.MediaStatus.HIATUS -> AiringStatus.AIRING
+    private fun mapStatus(status: String?): AiringStatus = when (status?.uppercase()) {
+        "RELEASING" -> AiringStatus.AIRING
+        "FINISHED" -> AiringStatus.FINISHED
+        "NOT_YET_RELEASED" -> AiringStatus.NOT_YET_AIRED
+        "CANCELLED" -> AiringStatus.CANCELLED
+        "HIATUS" -> AiringStatus.AIRING
         else -> AiringStatus.UNKNOWN
     }
 }

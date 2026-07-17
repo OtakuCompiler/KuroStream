@@ -17,6 +17,7 @@ package com.kurostream.data.home
 
 import com.kurostream.core.common.result.Result
 import com.kurostream.data.local.preferences.SettingsDataStore
+import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.home.CustomHomeRow
 import com.kurostream.domain.home.CustomHomeRowRepository
 import com.kurostream.domain.home.PreviewItem
@@ -44,7 +45,6 @@ class CustomHomeRowRepositoryImpl @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
     private val _customRows = MutableStateFlow<List<CustomHomeRow>>(emptyList())
-    override val customRows = _customRows.asStateFlow()
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     init {
@@ -64,13 +64,13 @@ class CustomHomeRowRepositoryImpl @Inject constructor(
                 emptyList()
             }
         }
-        _customRows.value = rows.sortedBy { it.position }
+        _customRows.value = rows
     }
 
     override suspend fun getRows(): List<CustomHomeRow> = _customRows.value
 
     override suspend fun saveRows(rows: List<CustomHomeRow>) {
-        _customRows.value = rows.sortedBy { it.position }
+        _customRows.value = rows
         val jsonString = json.encodeToString(rows)
         settingsDataStore.setCustomHomeRows(jsonString)
     }
@@ -78,33 +78,32 @@ class CustomHomeRowRepositoryImpl @Inject constructor(
     suspend fun generatePreview(row: CustomHomeRow): Result<RowPreview> = withContext(Dispatchers.IO) {
         try {
             val filter = row.filter
-            val mediaResult = mediaRepository.searchMedia(
+            val mediaList = mediaRepository.searchRemote(
                 query = "",
-                genres = filter.genres,
-                studios = filter.studios,
-                yearStart = filter.yearRange?.start,
-                yearEnd = filter.yearRange?.end,
-                minRating = filter.ratingRange?.min,
-                maxRating = filter.ratingRange?.max,
-                status = filter.status,
-                mediaTypes = filter.mediaTypes,
-                limit = row.limit,
+                source = null,
             )
 
-            val items = mediaResult.getOrNull()?.take(5)?.map { media ->
+            val filtered = mediaList.filter { media ->
+                (filter.genres.isEmpty() || filter.genres.any { it in media.genres }) &&
+                    (filter.studios.isEmpty() || filter.studios.any { it in media.studios }) &&
+                    (filter.yearRange == null || media.seasonYear?.let { it in filter.yearRange.start..filter.yearRange.end } ?: true) &&
+                    (filter.mediaTypes.isEmpty() || filter.mediaTypes.any { it.name == media.type.name })
+            }
+
+            val items = filtered.take(5).map { media ->
                 PreviewItem(
                     id = media.id,
                     title = media.title,
                     posterUrl = media.coverImageUrl,
                     rating = media.score,
-                    year = media.releaseDate?.let { java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).year }
+                    year = media.seasonYear,
                 )
-            } ?: emptyList()
+            }
 
             Result.success(RowPreview(
                 row = row,
                 sampleItems = items,
-                totalCount = mediaResult.getOrNull()?.size ?: 0,
+                totalCount = filtered.size,
             ))
         } catch (e: Exception) {
             Result.error(e)

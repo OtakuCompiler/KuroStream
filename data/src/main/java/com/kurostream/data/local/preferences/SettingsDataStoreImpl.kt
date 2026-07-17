@@ -21,16 +21,19 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "kurostream_settings")
 
 @Singleton
 class SettingsDataStoreImpl @Inject constructor(
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) : SettingsDataStore {
 
-    private val dataStore: DataStore<Preferences> = context.preferencesDataStore("kurostream_settings")
+    private val dataStore: DataStore<Preferences> = context.dataStore
 
     override val data: Flow<Preferences> = dataStore.data
 
