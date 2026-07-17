@@ -15,49 +15,74 @@
 
 package com.kurostream.core.platform
 
-class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
-    private var minLevel = LogLevel.DEBUG
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlin.js.unsafeCast
+import kotlin.js.json
+
+@JsModule("console")
+external fun consoleLog(level: String, tag: String, message: String, throwable: Any?)
+
+@JsModule("console")
+external fun consoleWarn(tag: String, message: String, throwable: Any?)
+
+@JsModule("console")
+external fun consoleError(tag: String, message: String, throwable: Any?)
+
+external fun reloadPage()
+
+class WebLogger : PlatformLogger {
+    private val minLevel = MutableStateFlow(LogLevel.INFO)
     private val enabledTags = mutableSetOf<String>()
 
+    private val _logs = MutableSharedFlow<LogEntry>(replay = 1000)
+    override val logs = _logs.asStateFlow()
+
+    init {
+        // Initialization
+    }
+
     override fun verbose(tag: String, message: String, throwable: Throwable?) {
-        if (minLevel.priority <= LogLevel.VERBOSE.priority && isTagEnabled(tag)) {
-            consoleLog("verbose", tag, message, throwable)
-        }
+        log(LogLevel.VERBOSE, tag, message, throwable)
     }
 
     override fun debug(tag: String, message: String, throwable: Throwable?) {
-        if (minLevel.priority <= LogLevel.DEBUG.priority && isTagEnabled(tag)) {
-            consoleLog("debug", tag, message, throwable)
-        }
+        log(LogLevel.DEBUG, tag, message, throwable)
     }
 
     override fun info(tag: String, message: String, throwable: Throwable?) {
-        if (minLevel.priority <= LogLevel.INFO.priority && isTagEnabled(tag)) {
-            consoleLog("info", tag, message, throwable)
-        }
+        log(LogLevel.INFO, tag, message, throwable)
     }
 
     override fun warn(tag: String, message: String, throwable: Throwable?) {
-        if (minLevel.priority <= LogLevel.WARN.priority && isTagEnabled(tag)) {
-            consoleWarn(tag, message, throwable)
-        }
+        log(LogLevel.WARN, tag, message, throwable)
     }
 
     override fun error(tag: String, message: String, throwable: Throwable?) {
-        if (minLevel.priority <= LogLevel.ERROR.priority && isTagEnabled(tag)) {
-            consoleError(tag, message, throwable)
-        }
+        log(LogLevel.ERROR, tag, message, throwable)
     }
 
     override fun fatal(tag: String, message: String, throwable: Throwable?) {
-        if (minLevel.priority <= LogLevel.FATAL.priority && isTagEnabled(tag)) {
-            consoleError(tag, message, throwable)
-            reloadPage()
+        log(LogLevel.FATAL, tag, message, throwable)
+    }
+
+    private fun log(level: LogLevel, tag: String, message: String, throwable: Throwable?) {
+        if (level.ordinal >= minLevel.value.ordinal && isTagEnabled(tag)) {
+            val entry = LogEntry(level, tag, message, throwable)
+            _logs.tryEmit(entry)
+
+            when (level) {
+                LogLevel.DEBUG -> consoleLog("debug", tag, message, throwable)
+                LogLevel.VERBOSE, LogLevel.INFO -> consoleLog("log", tag, message, throwable)
+                LogLevel.WARN -> consoleWarn(tag, message, throwable)
+                LogLevel.ERROR, LogLevel.FATAL -> consoleError(tag, message, throwable)
+            }
         }
     }
 
     override fun setMinLevel(level: LogLevel) {
-        minLevel = level
+        minLevel.value = level
     }
 
     override fun enableTag(tag: String) {
@@ -70,20 +95,11 @@ class WebLogger(private val tag: String = "KuroStream") : PlatformLogger {
 
     private fun isTagEnabled(tag: String): Boolean = enabledTags.isEmpty() || enabledTags.contains(tag)
 
-    @Suppress("UNUSED_PARAMETER")
-    external fun consoleLog(level: String, tag: String, message: String, throwable: Throwable?): Unit
-
-    external fun consoleWarn(tag: String, message: String, throwable: Throwable?): Unit
-
-    external fun consoleError(tag: String, message: String, throwable: Throwable?): Unit
-
-    external fun reloadPage(): Unit
-
-    companion object {
-        init {
-            load()
-        }
-    }
-
-    external fun load(): Unit
+    data class LogEntry(
+        val level: LogLevel,
+        val tag: String,
+        val message: String,
+        val throwable: Throwable?,
+        val timestamp: Long = System.currentTimeMillis()
+    )
 }

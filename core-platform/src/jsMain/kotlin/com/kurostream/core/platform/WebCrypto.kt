@@ -17,17 +17,19 @@ package com.kurostream.core.platform
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.js.unsafeCast
+import kotlin.js.json
 
 class WebCrypto : PlatformCrypto {
     private val keys = mutableMapOf<String, String>()
 
     override suspend fun encrypt(data: ByteArray, key: String): ByteArray {
-        val keyData = keys[key]?.toByteArray() ?: throw IllegalArgumentException("Key not found")
+        val keyData = stringToByteArray(keys[key] ?: throw IllegalArgumentException("Key not found"))
         return xorCrypt(data, keyData)
     }
 
     override suspend fun decrypt(data: ByteArray, key: String): ByteArray {
-        val keyData = keys[key]?.toByteArray() ?: throw IllegalArgumentException("Key not found")
+        val keyData = stringToByteArray(keys[key] ?: throw IllegalArgumentException("Key not found"))
         return xorCrypt(data, keyData)
     }
 
@@ -46,13 +48,13 @@ class WebCrypto : PlatformCrypto {
     }
 
     override suspend fun encryptString(text: String, key: String): String {
-        val encrypted = encrypt(text.toByteArray(), key)
+        val encrypted = encrypt(text.encodeToByteArray(), key)
         return encrypted.joinToString("") { toHex(it) }
     }
 
     override suspend fun decryptString(encrypted: String, key: String): String {
         val bytes = encrypted.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-        return String(decrypt(bytes, key))
+        return String(decrypt(bytes, key).decodeToString())
     }
 
     override fun hash(data: String, algorithm: HashAlgorithm): String {
@@ -77,7 +79,7 @@ class WebCrypto : PlatformCrypto {
     private fun simpleHash(data: String, algorithm: HashAlgorithm): String {
         var hash = 0L
         for (char in data) {
-            hash = (hash * 31 + char.code) and 0xFFFFFFFFFFFFFFFFL
+            hash = (hash * 31 + char.code) and 0x7FFFFFFFL
         }
         return when (algorithm) {
             HashAlgorithm.MD5 -> hash.toString(16).padStart(32, '0')
@@ -86,11 +88,15 @@ class WebCrypto : PlatformCrypto {
             HashAlgorithm.SHA_512 -> hash.toString(16).padStart(128, '0')
         }
     }
-    
+
     private fun toHex(byte: Byte): String {
         val hexChars = "0123456789abcdef"
         val high = (byte.toInt() and 0xFF) ushr 4
         val low = byte.toInt() and 0xF
         return hexChars[high].toString() + hexChars[low].toString()
+    }
+
+    private fun stringToByteArray(str: String): ByteArray {
+        return str.encodeToByteArray()
     }
 }
