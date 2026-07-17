@@ -23,7 +23,6 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp")
-    id("kotlin-kapt")
 }
 
 android {
@@ -61,12 +60,12 @@ dependencies {
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
-    kapt(libs.androidx.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     implementation(libs.datastore.preferences)
     implementation(libs.datastore.core)
@@ -78,8 +77,6 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
-    kapt("com.squareup.retrofit2:retrofit:2.11.0")
-    kapt("com.squareup.retrofit2:converter-moshi:2.11.0")
 
     implementation(libs.work.runtime.ktx)
 
