@@ -6,13 +6,13 @@ import com.kurostream.data.local.database.KuroStreamDatabase
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.data.local.preferences.SettingsDataStoreImpl
 import dagger.hilt.InstallIn
-import dagger.hilt.components.ApplicationComponent
+import dagger.hilt.components.SingletonComponent
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Singleton
 
-@InstallIn(ApplicationComponent::class)
+@InstallIn(SingletonComponent::class)
 @Module
 object RoomModule {
 
