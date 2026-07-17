@@ -1,21 +1,20 @@
 build:
   maxIssues: 100
-
-excludes:
-  - '**/TvRepositoryAdapters.kt'
-  - '**/BenchmarkRunner.kt'
-  - '**/BackupSettingsScreen.kt'
-  - '**/PlayerViewModel.kt'
-  - '**/BackupModule.kt'
+  exclude:
+    - '**/TvRepositoryAdapters.kt'
+    - '**/BenchmarkRunner.kt'
+    - '**/BackupSettingsScreen.kt'
+    - '**/PlayerViewModel.kt'
+    - '**/BackupModule.kt'
 
 processors:
   active: true
-  excludes:
+  exclude:
     - 'DetektProgressListener'
 
 console-reports:
   active: true
-  excludes:
+  exclude:
     - 'ProjectStatisticsReport'
     - 'ComplexityReport'
     - 'NotificationReport'
