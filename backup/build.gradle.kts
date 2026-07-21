@@ -80,12 +80,16 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 
     // Crypto for encryption
     implementation(libs.security.crypto)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
+
+    // DataStore
+    implementation(libs.datastore.preferences)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

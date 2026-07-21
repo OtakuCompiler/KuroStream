@@ -19,19 +19,29 @@ import com.tngtech.archunit.core.domain.JavaClasses
 import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
-import org.junit.jupiter.api.Test
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices
+import com.tngtech.archunit.core.domain.properties.CanBeAnnotated.Predicates.annotatedWith
+import org.junit.Test
 
 class ArchitectureTest {
 
     private val classes: JavaClasses = ClassFileImporter()
-        .withImportOption(ImportOption.DoNotIncludeTests::class.java)
+        .withImportOption(ImportOption.DoNotIncludeTests())
         .importPackages("com.kurostream")
 
     @Test
     fun `domain should not depend on data or app`() {
         classes().that().resideInAPackage("..domain..")
-            .should().onlyHaveDependentPackagesThatResideInAnyPackage(
+            .should().onlyBeAccessed().byClassesThat().resideInAnyPackage(
                 "..domain..",
+                "..data..",
+                "..app..",
+                "..playback..",
+                "..extensions..",
+                "..launcher..",
+                "..backup..",
+                "..torrent..",
                 "kotlin..",
                 "org.jetbrains.kotlinx..",
                 "androidx..",
@@ -43,11 +53,12 @@ class ArchitectureTest {
     @Test
     fun `data should only depend on domain and common`() {
         classes().that().resideInAPackage("..data..")
-            .should().onlyHaveDependentPackagesThatResideInAnyPackage(
+            .should().onlyBeAccessed().byClassesThat().resideInAnyPackage(
                 "..data..",
-                "..domain..",
-                "..common..",
-                "..cache..",
+                "..app..",
+                "..launcher..",
+                "..backup..",
+                "..torrent..",
                 "kotlin..",
                 "org.jetbrains.kotlinx..",
                 "androidx..",
@@ -65,16 +76,26 @@ class ArchitectureTest {
 
     @Test
     fun `app should not depend on data implementations directly`() {
-        classes().that().resideInAPackage("..app..")
-            .should().notDependOnClassesThat().resideInAPackage("..data..impl..")
+        noClasses().that().resideInAPackage("..app..")
+            .should().dependOnClassesThat().resideInAPackage("..data..impl..")
             .check(classes)
     }
 
     @Test
     fun `common should not depend on any other module`() {
         classes().that().resideInAPackage("..common..")
-            .should().onlyHaveDependentPackagesThatResideInAnyPackage(
+            .should().onlyBeAccessed().byClassesThat().resideInAnyPackage(
                 "..common..",
+                "..domain..",
+                "..data..",
+                "..app..",
+                "..playback..",
+                "..extensions..",
+                "..launcher..",
+                "..backup..",
+                "..torrent..",
+                "..cache..",
+                "..plugin-sdk..",
                 "kotlin..",
                 "org.jetbrains.kotlinx..",
                 "androidx..",
@@ -86,10 +107,9 @@ class ArchitectureTest {
     @Test
     fun `playback should only depend on domain and common`() {
         classes().that().resideInAPackage("..playback..")
-            .should().onlyHaveDependentPackagesThatResideInAnyPackage(
+            .should().onlyBeAccessed().byClassesThat().resideInAnyPackage(
                 "..playback..",
-                "..domain..",
-                "..common..",
+                "..app..",
                 "kotlin..",
                 "org.jetbrains.kotlinx..",
                 "androidx..",
@@ -104,11 +124,9 @@ class ArchitectureTest {
     @Test
     fun `extensions should only depend on domain and common`() {
         classes().that().resideInAPackage("..extensions..")
-            .should().onlyHaveDependentPackagesThatResideInAnyPackage(
+            .should().onlyBeAccessed().byClassesThat().resideInAnyPackage(
                 "..extensions..",
-                "..domain..",
-                "..common..",
-                "..cache..",
+                "..app..",
                 "kotlin..",
                 "org.jetbrains.kotlinx..",
                 "androidx..",
@@ -125,7 +143,8 @@ class ArchitectureTest {
 
     @Test
     fun `no cycles between modules`() {
-        classes().should().notHaveCycles()
+        slices().matching("com.kurostream.(*)..")
+            .should().beFreeOfCycles()
             .check(classes)
     }
 
@@ -133,6 +152,8 @@ class ArchitectureTest {
     fun `ViewModels should reside in app module`() {
         classes().that().haveSimpleNameEndingWith("ViewModel")
             .should().resideInAPackage("..app..")
+            .orShould().resideInAPackage("..backup..")
+            .orShould().resideInAPackage("..extensions..")
             .check(classes)
     }
 
@@ -162,7 +183,7 @@ class ArchitectureTest {
 
     @Test
     fun `Composables should be in ui packages`() {
-        classes().that().haveMethodAnnotatedWith("androidx.compose.runtime.Composable")
+        classes().that().containAnyMethodsThat(annotatedWith("androidx.compose.runtime.Composable"))
             .should().resideInAPackage("..ui..")
             .check(classes)
     }

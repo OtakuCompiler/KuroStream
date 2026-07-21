@@ -37,12 +37,12 @@ class BackupDataCollector @Inject constructor(
                     createdAt = it.createdAt, lastUsedAt = it.createdAt
                 )
             },
-            settings = settingsDataStore.data.first().map { (key, value) ->
+            settings = settingsDataStore.data.first().asMap().map { (key, value) ->
                 SettingBackup(key = key.name, value = value?.toString() ?: "")
             },
             downloads = downloadDao.getAll().map {
                 DownloadBackup(
-                    id = it.id, mediaId = it.mediaItemId, episodeId = null,
+                    id = it.id, mediaId = it.mediaItemId, episodeId = "",
                     title = "", filePath = it.localPath, fileSize = it.totalBytes,
                     progress = it.progress, status = it.status, quality = null,
                     addedAt = it.startedAt, completedAt = it.completedAt
@@ -51,7 +51,7 @@ class BackupDataCollector @Inject constructor(
             watchHistory = watchHistoryDao.getAll().map {
                 WatchHistoryBackup(
                     id = it.id, profileId = it.profileId, mediaId = it.mediaItemId,
-                    episodeId = it.episodeNumber?.toString(), progress = it.completionPercent,
+                    episodeId = it.episodeNumber?.toString() ?: "", progress = it.completionPercent,
                     currentTime = it.position, totalTime = it.duration,
                     watchedAt = it.watchedAt
                 )

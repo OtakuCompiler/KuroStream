@@ -17,7 +17,7 @@ package com.kurostream.backup.di
 
 import com.kurostream.backup.domain.GitHubApiService
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.SingletonComponent
+import dagger.hilt.components.SingletonComponent
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton

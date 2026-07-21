@@ -1,6 +1,7 @@
 package com.kurostream.backup.data
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.kurostream.backup.domain.GitHubApiService
@@ -9,8 +10,16 @@ import com.kurostream.core.common.result.Result
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
+
+@Serializable
+data class TokenResponse(
+    val accessToken: String,
+    val tokenType: String? = null,
+    val scope: String? = null
+)
 
 @Singleton
 class GitHubAuthManager @Inject constructor(
@@ -20,9 +29,11 @@ class GitHubAuthManager @Inject constructor(
     private val masterKey: MasterKey by lazy {
         MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
     }
-    private val encryptedPrefs by lazy {
+    private val encryptedPrefs: SharedPreferences by lazy {
         EncryptedSharedPreferences.create(
-            "github_auth", masterKey, context,
+            context,
+            "github_auth",
+            masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
@@ -38,8 +49,8 @@ class GitHubAuthManager @Inject constructor(
         return if (token != null && username != null) {
             GitHubAuthState(
                 isAuthenticated = true, accessToken = token, username = username,
-                userId = if (userId > 0) userId else null,
-                avatarUrl = avatarUrl, expiresAt = if (expiresAt > 0) expiresAt else null,
+                userId = if (userId > 0L) userId else null,
+                avatarUrl = avatarUrl, expiresAt = if (expiresAt > 0L) expiresAt else null,
             )
         } else GitHubAuthState()
     }
@@ -49,11 +60,11 @@ class GitHubAuthManager @Inject constructor(
             val tokenResult = pollForToken(deviceCode, interval)
             if (tokenResult is Result.Error) return@withContext tokenResult
 
-            val accessToken = tokenResult.data.accessToken
+            val accessToken = (tokenResult as Result.Success).data.accessToken
             val userResult = apiService.getUser("Bearer $accessToken")
             if (userResult is Result.Error) return@withContext userResult
 
-            val user = userResult.data
+            val user = (userResult as Result.Success).data
             val authState = GitHubAuthState(
                 isAuthenticated = true, accessToken = accessToken,
                 username = user.login, userId = user.id, avatarUrl = user.avatarUrl,
@@ -89,9 +100,9 @@ class GitHubAuthManager @Inject constructor(
         encryptedPrefs.edit()
             .putString("access_token", state.accessToken ?: "")
             .putString("username", state.username ?: "")
-            .putLong("user_id", state.userId ?: -1)
+            .putLong("user_id", state.userId ?: -1L)
             .putString("avatar_url", state.avatarUrl ?: "")
-            .putLong("expires_at", state.expiresAt ?: -1)
+            .putLong("expires_at", state.expiresAt ?: -1L)
             .apply()
     }
 }
