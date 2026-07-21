@@ -18,12 +18,15 @@ package com.kurostream.domain.legacy.usecase
 import com.kurostream.core.common.dispatcher.TestDispatcherProvider
 import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.HomeRow
+import com.kurostream.domain.entity.RowType
 import com.kurostream.domain.legacy.repository.MediaRepository
 import com.kurostream.domain.legacy.repository.ProfileRepository
+import com.kurostream.domain.model.Profile
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -31,20 +34,20 @@ class GetHomeRowsTest {
 
     private val mediaRepository: MediaRepository = mockk()
     private val profileRepository: ProfileRepository = mockk()
-    private val dispatcherProvider = TestDispatcherProvider
+    private val dispatcherProvider = TestDispatcherProvider()
 
     private val useCase = GetHomeRows(mediaRepository, profileRepository, dispatcherProvider)
 
     @Test
-    fun `invoke returns home rows for active profile`() = runBlockingTest {
+    fun `invoke returns home rows for active profile`() = runTest {
         val profileId = "profile1"
         val homeRows = listOf(
-            HomeRow("Trending", listOf()),
-            HomeRow("Continue Watching", listOf())
+            HomeRow("1", "Trending", RowType.TRENDING, emptyList()),
+            HomeRow("2", "Continue Watching", RowType.CONTINUE_WATCHING, emptyList())
         )
 
-        coEvery { profileRepository.observeActiveProfile() } returns flowOf(Profile(profileId, "Test", false))
-        coEvery { mediaRepository.observeHomeRows(profileId) } returns flowOf(Result.Success(homeRows))
+        coEvery { profileRepository.observeActiveProfile() } returns flowOf<Profile?>(Profile(profileId, "Test", isPremium = false))
+        coEvery { mediaRepository.observeHomeRows(profileId) } returns flowOf<Result<List<HomeRow>>>(Result.Success(homeRows))
 
         val results = useCase().toList()
 
@@ -54,23 +57,23 @@ class GetHomeRowsTest {
     }
 
     @Test
-    fun `invoke returns empty list when no active profile`() = runBlockingTest {
-        coEvery { profileRepository.observeActiveProfile() } returns flowOf(null)
+    fun `invoke returns empty list when no active profile`() = runTest {
+        coEvery { profileRepository.observeActiveProfile() } returns flowOf<Profile?>(null)
 
         val results = useCase().toList()
 
         assertEquals(1, results.size)
         assertTrue(results[0].isSuccess)
-        assertEquals(emptyList(), results[0].getOrNull())
+        assertEquals(emptyList<HomeRow>(), results[0].getOrNull())
     }
 
     @Test
-    fun `invoke propagates error from media repository`() = runBlockingTest {
+    fun `invoke propagates error from media repository`() = runTest {
         val profileId = "profile1"
         val exception = Exception("Network error")
 
-        coEvery { profileRepository.observeActiveProfile() } returns flowOf(Profile(profileId, "Test", false))
-        coEvery { mediaRepository.observeHomeRows(profileId) } returns flowOf(Result.Error(exception))
+        coEvery { profileRepository.observeActiveProfile() } returns flowOf<Profile?>(Profile(profileId, "Test", isPremium = false))
+        coEvery { mediaRepository.observeHomeRows(profileId) } returns flowOf<Result<List<HomeRow>>>(Result.Error(exception))
 
         val results = useCase().toList()
 
@@ -78,9 +81,3 @@ class GetHomeRowsTest {
         assertEquals(exception, results[0].exceptionOrNull())
     }
 }
-
-data class Profile(
-    val id: String,
-    val displayName: String,
-    val isPremium: Boolean
-)

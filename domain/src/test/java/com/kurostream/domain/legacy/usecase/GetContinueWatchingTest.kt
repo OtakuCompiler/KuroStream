@@ -18,12 +18,18 @@ package com.kurostream.domain.legacy.usecase
 import com.kurostream.core.common.dispatcher.TestDispatcherProvider
 import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.MediaItem
+import com.kurostream.domain.entity.MediaType
+import com.kurostream.domain.entity.AiringStatus
+import com.kurostream.domain.entity.Season
+import com.kurostream.domain.entity.ContentRating
 import com.kurostream.domain.legacy.repository.MediaRepository
 import com.kurostream.domain.legacy.repository.ProfileRepository
+import com.kurostream.domain.model.Profile
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -31,42 +37,37 @@ class GetContinueWatchingTest {
 
     private val mediaRepository: MediaRepository = mockk()
     private val profileRepository: ProfileRepository = mockk()
-    private val dispatcherProvider = TestDispatcherProvider
+    private val dispatcherProvider = TestDispatcherProvider()
 
     private val useCase = GetContinueWatching(mediaRepository, profileRepository, dispatcherProvider)
 
     @Test
-    fun `invoke returns continue watching items`() = runBlockingTest {
+    fun `invoke returns continue watching items`() = runTest {
         val profileId = "profile1"
         val continueWatching = listOf(
-            MediaItem("1", "One Piece", "One Piece", "Pirate adventure", "poster.jpg", "banner.jpg", MediaItem.MediaType.TV, MediaItem.AiringStatus.AIRING, 1000, 1100, 24, 1999, MediaItem.Season.FALL, listOf("Adventure", "Fantasy"), listOf("Toei Animation"), MediaItem.ContentRating.R17, 9.5, "anilist", "deeplink"),
-            MediaItem("2", "Naruto", "Naruto", "Ninja adventure", "poster2.jpg", "banner2.jpg", MediaItem.MediaType.TV, MediaItem.AiringStatus.FINISHED, 220, 220, 23, 2002, MediaItem.Season.FALL, listOf("Action", "Adventure"), listOf("Pierrot"), MediaItem.ContentRating.R17, 9.1, "anilist", "deeplink")
+            MediaItem("1", "One Piece", "One Piece", "Pirate adventure", "poster.jpg", "banner.jpg", MediaType.TV, AiringStatus.AIRING, 1000, 1100, 24, 1999, Season.FALL, listOf("Adventure", "Fantasy"), listOf("Toei Animation"), ContentRating.R17, 9.5, "anilist", "deeplink"),
+            MediaItem("2", "Naruto", "Naruto", "Ninja adventure", "poster2.jpg", "banner2.jpg", MediaType.TV, AiringStatus.FINISHED, 220, 220, 23, 2002, Season.FALL, listOf("Action", "Adventure"), listOf("Pierrot"), ContentRating.R17, 9.1, "anilist", "deeplink")
         )
 
-        coEvery { profileRepository.observeActiveProfile() } returns flowOf(Profile(profileId, "Test", false))
-        coEvery { mediaRepository.observeWatchHistory(profileId) } returns flowOf(Result.Success(continueWatching))
+        coEvery { profileRepository.observeActiveProfile() } returns flowOf<Profile?>(Profile(id = profileId, displayName = "Test", isPremium = false))
+        coEvery { mediaRepository.getTrending(1, 20) } returns Result.Success(continueWatching)
 
         val results = useCase().toList()
 
-        assertEquals(1, results.size)
-        assertTrue(results[0].isSuccess)
-        assertEquals(continueWatching, results[0].getOrNull())
+        assertEquals(2, results.size)
+        assertTrue(results[0].isLoading)
+        assertTrue(results[1].isSuccess)
+        assertEquals(continueWatching, results[1].getOrNull())
     }
 
     @Test
-    fun `invoke returns empty when no active profile`() = runBlockingTest {
-        coEvery { profileRepository.observeActiveProfile() } returns flowOf(null)
+    fun `invoke returns empty when no active profile`() = runTest {
+        coEvery { profileRepository.observeActiveProfile() } returns flowOf<Profile?>(null)
 
         val results = useCase().toList()
 
         assertEquals(1, results.size)
         assertTrue(results[0].isSuccess)
-        assertEquals(emptyList(), results[0].getOrNull())
+        assertEquals(emptyList<MediaItem>(), results[0].getOrNull())
     }
 }
-
-data class Profile(
-    val id: String,
-    val displayName: String,
-    val isPremium: Boolean
-)

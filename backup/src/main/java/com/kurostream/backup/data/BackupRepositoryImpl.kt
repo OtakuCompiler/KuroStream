@@ -12,8 +12,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
+
+@Serializable
+data class DeviceCodeResponse(
+    val deviceCode: String,
+    val interval: Int
+)
 
 @Singleton
 class BackupRepositoryImpl @Inject constructor(
@@ -26,10 +34,10 @@ class BackupRepositoryImpl @Inject constructor(
 ) : BackupRepository {
 
     private val _authState = MutableStateFlow(authManager.loadAuthState())
-    override val authState: Flow<GitHubAuthState> = _authState.distinctUntilChanged()
+    private val authState: Flow<GitHubAuthState> = _authState.asStateFlow()
 
     private val _backupConfig = MutableStateFlow(BackupConfig())
-    override val backupConfig: Flow<BackupConfig> = _backupConfig.distinctUntilChanged()
+    private val backupConfig: Flow<BackupConfig> = _backupConfig.asStateFlow()
 
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true; encodeDefaults = true }
 
@@ -47,8 +55,8 @@ class BackupRepositoryImpl @Inject constructor(
             gistId = prefs.getString("backup_gist_id", null),
             repoOwner = prefs.getString("backup_repo_owner", null),
             repoName = prefs.getString("backup_repo_name", null),
-            repoBranch = prefs.getString("backup_repo_branch", "main"),
-            repoPath = prefs.getString("backup_repo_path", "kurostream_backup.json.enc"),
+            repoBranch = prefs.getString("backup_repo_branch", "main") ?: "main",
+            repoPath = prefs.getString("backup_repo_path", "kurostream_backup.json.enc") ?: "kurostream_backup.json.enc",
             autoBackupEnabled = prefs.getBoolean("backup_auto_enabled", false),
             autoBackupIntervalDays = prefs.getInt("backup_auto_interval_days", 7),
             lastBackupTimestamp = prefs.getLong("backup_last_timestamp", 0),
@@ -62,8 +70,8 @@ class BackupRepositoryImpl @Inject constructor(
             val deviceCodeResponse = requestDeviceCode()
             if (deviceCodeResponse is Result.Error) return@withContext deviceCodeResponse
 
-            val deviceCode = deviceCodeResponse.data
-            authManager.authenticate(deviceCode.deviceCode, deviceCode.interval) { state ->
+            val responseData = (deviceCodeResponse as Result.Success).data
+            authManager.authenticate(responseData.deviceCode, responseData.interval) { state ->
                 _authState.value = state
             }
         } catch (e: Exception) {
@@ -114,7 +122,7 @@ class BackupRepositoryImpl @Inject constructor(
                     val result = apiService.createGist(authHeader, request)
                     if (result is Result.Error) return@withContext result
 
-                    val gist = result.data
+                    val gist = (result as Result.Success).data
                     updateBackupConfig(config.copy(gistId = gist.id, lastBackupTimestamp = timestamp))
 
                     BackupMetadata(
@@ -137,8 +145,9 @@ class BackupRepositoryImpl @Inject constructor(
 
                     updateBackupConfig(config.copy(lastBackupTimestamp = timestamp))
 
+                    val responseData = (result as Result.Success).data
                     BackupMetadata(
-                        id = result.data.content?.sha ?: "repo_$timestamp",
+                        id = responseData.content?.sha ?: "repo_$timestamp",
                         type = BackupType.REPOSITORY, timestamp = timestamp,
                         size = encryptedData.size.toLong(), description = "Repository backup",
                         repoUrl = "https://github.com/${config.repoOwner}/${config.repoName}",
@@ -178,7 +187,7 @@ class BackupRepositoryImpl @Inject constructor(
                 BackupType.REPOSITORY -> {
                     val result = apiService.getFile(authHeader, config.repoOwner!!, config.repoName!!, config.repoPath, config.repoBranch)
                     if (result is Result.Success && result.data != null) {
-                        val file = result.data!!
+                        val file = (result as Result.Success).data!!
                         Result.Success(listOf(BackupMetadata(
                             id = file.sha, type = BackupType.REPOSITORY, timestamp = 0, size = file.size,
                             repoUrl = "https://github.com/${config.repoOwner}/${config.repoName}",
@@ -200,12 +209,12 @@ class BackupRepositoryImpl @Inject constructor(
                 BackupType.GIST -> {
                     val result = apiService.getGist(authHeader, metadata.id)
                     if (result is Result.Error) return@withContext result
-                    result.data.files.values.first().content ?: return@withContext Result.Error(Exception("Empty gist content"))
+                    (result as Result.Success).data.files.values.first().content ?: return@withContext Result.Error(Exception("Empty gist content"))
                 }
                 BackupType.REPOSITORY -> {
                     val result = apiService.getFile(authHeader, config.repoOwner!!, config.repoName!!, config.repoPath, config.repoBranch)
                     if (result is Result.Error) return@withContext result
-                    result.data?.content ?: return@withContext Result.Error(Exception("Empty file content"))
+                    (result as Result.Success).data?.content ?: return@withContext Result.Error(Exception("Empty file content"))
                 }
             }
 
@@ -236,9 +245,15 @@ class BackupRepositoryImpl @Inject constructor(
                 BackupType.REPOSITORY -> {
                     val result = apiService.getFile(authHeader, config.repoOwner!!, config.repoName!!, config.repoPath, config.repoBranch)
                     if (result is Result.Success && result.data != null) {
-                        apiService.deleteFile(authHeader, config.repoOwner!!, config.repoName!!, config.repoPath,
-                            RepoContentRequest(message = "Delete backup", content = "", sha = result.data!!.sha)
+                        val file = (result as Result.Success).data!!
+                        val deleteResult = apiService.deleteFile(authHeader, config.repoOwner!!, config.repoName!!, config.repoPath,
+                            RepoContentRequest(message = "Delete backup", content = "", sha = file.sha)
                         )
+                        if (deleteResult is Result.Error) {
+                            Result.Error(deleteResult.exception)
+                        } else {
+                            Result.Success(Unit)
+                        }
                     } else {
                         Result.Success(Unit)
                     }

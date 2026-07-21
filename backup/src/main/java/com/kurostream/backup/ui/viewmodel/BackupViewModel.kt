@@ -18,7 +18,6 @@ package com.kurostream.backup.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kurostream.backup.domain.*
-import com.kurostream.backup.repository.BackupRepository
 import com.kurostream.core.common.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -28,8 +27,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sharingStarted
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,10 +42,10 @@ class BackupViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     private val _authState = repository.observeAuthState()
-        .stateIn(viewModelScope.coroutineContext, sharingStarted.WhileSubscribed(), GitHubAuthState())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), GitHubAuthState())
 
     private val _backupConfig = repository.observeBackupConfig()
-        .stateIn(viewModelScope.coroutineContext, sharingStarted.WhileSubscribed(), BackupConfig())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), BackupConfig())
 
     init {
         observeData()
@@ -70,6 +71,7 @@ class BackupViewModel @Inject constructor(
                 is Result.Error -> {
                     _uiState.update { it.copy(errorMessage = result.exception.message) }
                 }
+                else -> {}
             }
         }
     }
@@ -97,6 +99,7 @@ class BackupViewModel @Inject constructor(
                 is Result.Error -> {
                     _uiState.update { it.copy(errorMessage = result.exception.message) }
                 }
+                else -> {}
             }
         }
     }
@@ -124,6 +127,7 @@ class BackupViewModel @Inject constructor(
                 is Result.Error -> {
                     _uiState.update { it.copy(errorMessage = result.exception.message) }
                 }
+                else -> {}
             }
         }
     }

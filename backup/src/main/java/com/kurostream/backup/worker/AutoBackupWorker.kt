@@ -19,7 +19,7 @@ class AutoBackupWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): ListenableWorker.Result {
-        val config = repository.backupConfig.first()
+        val config = repository.observeBackupConfig().first()
 
         if (!config.autoBackupEnabled) {
             return ListenableWorker.Result.success()

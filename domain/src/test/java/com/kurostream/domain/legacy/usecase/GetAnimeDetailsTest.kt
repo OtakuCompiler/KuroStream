@@ -18,44 +18,58 @@ package com.kurostream.domain.legacy.usecase
 import com.kurostream.core.common.dispatcher.TestDispatcherProvider
 import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.AnimeDetails
+import com.kurostream.domain.entity.MediaItem
+import com.kurostream.domain.entity.MediaType
+import com.kurostream.domain.entity.AiringStatus
+import com.kurostream.domain.entity.Season
+import com.kurostream.domain.entity.ContentRating
 import com.kurostream.domain.legacy.repository.MediaRepository
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 
 class GetAnimeDetailsTest {
 
     private val mediaRepository: MediaRepository = mockk()
-    private val dispatcherProvider = TestDispatcherProvider
+    private val dispatcherProvider = TestDispatcherProvider()
 
     private val useCase = GetAnimeDetails(mediaRepository, dispatcherProvider)
 
     @Test
-    fun `invoke returns anime details`() = runBlockingTest {
+    fun `invoke returns anime details`() = runTest {
         val mediaId = "anime123"
-        val details = AnimeDetails(
-            mediaId = mediaId,
+        val mediaItem = MediaItem(
+            id = mediaId,
             title = "Fullmetal Alchemist: Brotherhood",
-            description = "Two brothers search for the Philosopher's Stone",
+            originalTitle = "Fullmetal Alchemist: Brotherhood",
+            synopsis = "Two brothers search for the Philosopher's Stone",
             coverImageUrl = "cover.jpg",
             bannerImageUrl = "banner.jpg",
+            type = MediaType.TV,
+            status = AiringStatus.FINISHED,
+            episodeNumber = 1,
+            totalEpisodes = 64,
+            durationMinutes = 24,
+            seasonYear = 2009,
+            seasonQuarter = Season.SPRING,
             genres = listOf("Action", "Adventure", "Fantasy"),
             studios = listOf("Bones"),
-            rating = MediaItem.ContentRating.R17,
+            rating = ContentRating.R17,
             score = 9.9,
-            totalEpisodes = 64,
-            status = MediaItem.AiringStatus.FINISHED,
-            seasonYear = 2009,
-            seasonQuarter = MediaItem.Season.SPRING,
+            sourceExtensionId = "anilist",
+            deepLink = "deeplink"
+        )
+        val details = AnimeDetails(
+            mediaItem = mediaItem,
             relatedAnime = emptyList(),
             characters = emptyList(),
             staff = emptyList()
         )
 
-        coEvery { mediaRepository.getAnimeDetails(mediaId) } returns flow { emit(Result.Loading); emit(Result.Success(details)) }
+        coEvery { mediaRepository.getAnimeDetails(mediaId) } returns Result.Success(details)
 
         val results = useCase(mediaId).toList()
 
@@ -65,11 +79,11 @@ class GetAnimeDetailsTest {
     }
 
     @Test
-    fun `invoke propagates error from repository`() = runBlockingTest {
+    fun `invoke propagates error from repository`() = runTest {
         val mediaId = "notfound"
         val exception = Exception("Anime not found")
 
-        coEvery { mediaRepository.getAnimeDetails(mediaId) } returns flow { emit(Result.Loading); emit(Result.Error(exception)) }
+        coEvery { mediaRepository.getAnimeDetails(mediaId) } returns Result.Error(exception)
 
         val results = useCase(mediaId).toList()
 

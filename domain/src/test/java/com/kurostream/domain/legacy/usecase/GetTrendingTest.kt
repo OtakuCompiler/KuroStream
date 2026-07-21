@@ -18,29 +18,33 @@ package com.kurostream.domain.legacy.usecase
 import com.kurostream.core.common.dispatcher.TestDispatcherProvider
 import com.kurostream.core.common.result.Result
 import com.kurostream.domain.entity.MediaItem
+import com.kurostream.domain.entity.MediaType
+import com.kurostream.domain.entity.AiringStatus
+import com.kurostream.domain.entity.Season
+import com.kurostream.domain.entity.ContentRating
 import com.kurostream.domain.legacy.repository.MediaRepository
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 
 class GetTrendingTest {
 
     private val mediaRepository: MediaRepository = mockk()
-    private val dispatcherProvider = TestDispatcherProvider
+    private val dispatcherProvider = TestDispatcherProvider()
 
     private val useCase = GetTrending(mediaRepository, dispatcherProvider)
 
     @Test
-    fun `invoke returns trending media`() = runBlockingTest {
+    fun `invoke returns trending media`() = runTest {
         val trending = listOf(
-            MediaItem("1", "Jujutsu Kaisen", "Jujutsu Kaisen", "Cursed energy battles", "poster.jpg", "banner.jpg", MediaItem.MediaType.TV, MediaItem.AiringStatus.FINISHED, 24, 24, 23, 2020, MediaItem.Season.FALL, listOf("Action", "Supernatural"), listOf("MAPPA"), MediaItem.ContentRating.R17, 9.2, "anilist", "deeplink"),
-            MediaItem("2", "Demon Slayer", "Kimetsu no Yaiba", "Tanjiro's journey", "poster2.jpg", "banner2.jpg", MediaItem.MediaType.TV, MediaItem.AiringStatus.FINISHED, 26, 26, 24, 2019, MediaItem.Season.SPRING, listOf("Action", "Historical"), listOf("Ufotable"), MediaItem.ContentRating.R17, 9.0, "anilist", "deeplink")
+            MediaItem("1", "Jujutsu Kaisen", "Jujutsu Kaisen", "Cursed energy battles", "poster.jpg", "banner.jpg", MediaType.TV, AiringStatus.FINISHED, 24, 24, 23, 2020, Season.FALL, listOf("Action", "Supernatural"), listOf("MAPPA"), ContentRating.R17, 9.2, "anilist", "deeplink"),
+            MediaItem("2", "Demon Slayer", "Kimetsu no Yaiba", "Tanjiro's journey", "poster2.jpg", "banner2.jpg", MediaType.TV, AiringStatus.FINISHED, 26, 26, 24, 2019, Season.SPRING, listOf("Action", "Historical"), listOf("Ufetable"), ContentRating.R17, 9.0, "anilist", "deeplink")
         )
 
-        coEvery { mediaRepository.getTrending() } returns flow { emit(Result.Loading); emit(Result.Success(trending)) }
+        coEvery { mediaRepository.getTrending(1, 25) } returns Result.Success(trending)
 
         val results = useCase().toList()
 
@@ -50,10 +54,10 @@ class GetTrendingTest {
     }
 
     @Test
-    fun `invoke propagates error from repository`() = runBlockingTest {
+    fun `invoke propagates error from repository`() = runTest {
         val exception = Exception("Failed to fetch trending")
 
-        coEvery { mediaRepository.getTrending() } returns flow { emit(Result.Loading); emit(Result.Error(exception)) }
+        coEvery { mediaRepository.getTrending(1, 25) } returns Result.Error(exception)
 
         val results = useCase().toList()
 

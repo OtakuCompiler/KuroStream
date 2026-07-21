@@ -21,7 +21,7 @@ class RestoreWorker @AssistedInject constructor(
     override suspend fun doWork(): ListenableWorker.Result {
         val metadataId = inputData.getString("metadata_id") ?: return ListenableWorker.Result.failure()
         val password = inputData.getString("password")
-        val config = repository.backupConfig.first()
+        val config = repository.observeBackupConfig().first()
 
         val backupsResult = repository.listBackups(config)
         if (backupsResult is Result.Error) return ListenableWorker.Result.failure()
