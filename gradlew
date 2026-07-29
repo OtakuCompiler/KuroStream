@@ -105,3 +105,4 @@ fi
 eval set -- "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS"
 
 exec "$JAVACMD" "$@" -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
+# TEST MARKER FIX VERIFIED
