@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- KuroStream TV App Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="primary">#FF1A1A2E</color>
+    <color name="primary_dark">#FF0F0F1A</color>
+    <color name="accent">#FFE94560</color>
+    <color name="accent_light">#FFFF6B81</color>
+    <color name="background">#FF121212</color>
+    <color name="surface">#FF1E1E2E</color>
+    <color name="surface_variant">#FF2A2A3E</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="on_surface">#FFFFFFFF</color>
+    <color name="on_background">#FFFFFFFF</color>
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFB0B0C0</color>
+    <color name="divider">#FF333350</color>
+    <color name="error">#FFFF5252</color>
+    <color name="success">#FF4CAF50</color>
+    <color name="transparent">#00000000</color>
+    <color name="overlay">#80000000</color>
+</resources>

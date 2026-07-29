@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- KuroStream TV App Dimensions (large screens / 1080p+ TV) -->
+    <dimen name="spacing_xs">6dp</dimen>
+    <dimen name="spacing_sm">12dp</dimen>
+    <dimen name="spacing_md">20dp</dimen>
+    <dimen name="spacing_lg">28dp</dimen>
+    <dimen name="spacing_xl">36dp</dimen>
+    <dimen name="spacing_xxl">56dp</dimen>
+
+    <dimen name="card_corner_radius">12dp</dimen>
+    <dimen name="card_elevation">6dp</dimen>
+    <dimen name="card_padding">20dp</dimen>
+
+    <dimen name="icon_size_sm">32dp</dimen>
+    <dimen name="icon_size_md">40dp</dimen>
+    <dimen name="icon_size_lg">56dp</dimen>
+    <dimen name="icon_size_xl">80dp</dimen>
+
+    <dimen name="text_size_sm">14sp</dimen>
+    <dimen name="text_size_md">16sp</dimen>
+    <dimen name="text_size_lg">18sp</dimen>
+    <dimen name="text_size_xl">22sp</dimen>
+    <dimen name="text_size_xxl">28sp</dimen>
+
+    <dimen name="poster_width">260dp</dimen>
+    <dimen name="poster_height">390dp</dimen>
+    <dimen name="poster_corner_radius">6dp</dimen>
+
+    <dimen name="min_touch_target">56dp</dimen>
+    <dimen name="focus_scale">1.08</dimen>
+    <dimen name="focus_border_width">3dp</dimen>
+</resources>

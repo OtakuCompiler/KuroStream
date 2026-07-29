@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KuroStream Extension Manifest",
+  "description": "Schema for KuroStream extension manifests",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "version",
+    "versionName",
+    "author",
+    "pluginClassName",
+    "apiVersion",
+    "capabilities"
+  ],
+  "properties": {
+    "id": {
+      "description": "Unique identifier for the extension (reverse domain notation)",
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$",
+      "minLength": 5,
+      "maxLength": 100
+    },
+    "name": {
+      "description": "Human-readable name of the extension",
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 50
+    },
+    "description": {
+      "description": "Description of what the extension does",
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 500
+    },
+    "version": {
+      "description": "Version code (integer) for the extension",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647
+    },
+    "versionName": {
+      "description": "Human-readable version string",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$",
+      "minLength": 3,
+      "maxLength": 20
+    },
+    "author": {
+      "description": "Author or organization that created the extension",
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 50
+    },
+    "repositoryUrl": {
+      "description": "URL to the extension's source code repository",
+      "type": "string",
+      "format": "uri"
+    },
+    "pluginClassName": {
+      "description": "Fully qualified name of the main plugin class",
+      "type": "string",
+      "pattern": "^[a-zA-Z_$][a-zA-Z0-9_$]*(\.[a-zA-Z_$][a-zA-Z0-9_$]*)+$",
+      "minLength": 5,
+      "maxLength": 200
+    },
+    "apiVersion": {
+      "description": "API version that the extension targets",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "minAppVersion": {
+      "description": "Minimum app version required for this extension",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "minLength": 3,
+      "maxLength": 20
+    },
+    "maxAppVersion": {
+      "description": "Maximum app version this extension is compatible with",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "minLength": 3,
+      "maxLength": 20
+    },
+    "capabilities": {
+      "description": "List of capabilities that the extension requires",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "CATALOG_BROWSE",
+          "VIDEO_SOURCE",
+          "SUBTITLE_SOURCE",
+          "TRACKING",
+          "SYNC_PROVIDER",
+          "TORRENT_STREAMING",
+          "METADATA_PROVIDER",
+          "RECOMMENDATIONS",
+          "DOWNLOAD_MANAGER"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 20,
+      "uniqueItems": true
+    },
+    "language": {
+      "description": "Primary language of the extension content",
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "minLength": 2,
+      "maxLength": 10
+    },
+    "tvTypes": {
+      "description": "List of TV types that the extension supports",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "anime",
+          "movie",
+          "tv",
+          "documentary",
+          "cartoon",
+          "ova",
+          "ona",
+          "special"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "requiresResources": {
+      "description": "Whether the extension requires additional resources",
+      "type": "boolean",
+      "default": false
+    },
+    "iconUrl": {
+      "description": "URL to the extension's icon",
+      "type": "string",
+      "format": "uri"
+    },
+    "screenshots": {
+      "description": "List of URLs to extension screenshots",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "maxItems": 10
+    }
+  },
+  "additionalProperties": false
+}

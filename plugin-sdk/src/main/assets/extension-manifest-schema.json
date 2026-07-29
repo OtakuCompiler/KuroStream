@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KuroStream Extension Manifest",
+  "description": "Schema for KuroStream extension manifest files",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "author",
+    "version",
+    "packageName",
+    "minAppVersion"
+  ],
+  "properties": {
+    "id": {
+      "description": "Unique identifier for the extension (reverse domain notation)",
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$"
+    },
+    "name": {
+      "description": "Human-readable name of the extension",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "author": {
+      "description": "Name of the extension author",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "version": {
+      "description": "Extension version in semantic version format",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "description": "Description of what the extension does",
+      "type": "string",
+      "maxLength": 200
+    },
+    "iconUrl": {
+      "description": "URL to the extension icon",
+      "type": "string",
+      "format": "uri"
+    },
+    "packageName": {
+      "description": "Android package name for the extension",
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$"
+    },
+    "capabilities": {
+      "description": "List of capabilities the extension provides",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "CATALOG_BROWSE",
+          "CATALOG_SEARCH",
+          "EPISODE_LIST",
+          "VIDEO_SOURCE",
+          "SUBTITLE_SOURCE",
+          "TRACKING",
+          "SYNC_PROVIDER",
+          "TORRENT_STREAMING",
+          "TORRENT_DOWNLOAD",
+          "TORRENT_SEEDING",
+          "LIVE_TV",
+          "CLOUD_SYNC"
+        ]
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "minAppVersion": {
+      "description": "Minimum KuroStream app version required",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "targetAppVersion": {
+      "description": "Target KuroStream app version (optional)",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "metadata": {
+      "description": "Additional metadata for the extension",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
