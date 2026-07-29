@@ -55,6 +55,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit)
     implementation(libs.okhttp)
+    implementation(libs.moshi.kotlin)
+    ksp(libs.moshi.codegen)
     implementation(libs.timber)
     implementation(libs.coil)
 }

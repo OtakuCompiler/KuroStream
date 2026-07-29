@@ -27,6 +27,7 @@ dagger = "2.52"
 javaxInject = "1"
 detekt = "1.23.7"
 spotless = "6.25.0"
+moshi = "1.15.1"
 
 [libraries]
 okhttp-brotli = { group = "com.squareup.okhttp3", name = "okhttp-brotli", version.ref = "okhttp" }
@@ -132,6 +133,8 @@ test-turbine = { group = "app.cash.turbine", name = "turbine", version = "1.2.0"
 # Code Quality
 detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
+moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+moshi-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
