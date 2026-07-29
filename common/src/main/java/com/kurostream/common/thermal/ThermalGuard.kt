@@ -20,7 +20,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import timber.log.Timber
-import timber.log.Timber
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver

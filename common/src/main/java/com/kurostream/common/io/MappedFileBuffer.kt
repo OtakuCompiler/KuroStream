@@ -2,7 +2,6 @@ package com.kurostream.common.io
 
 import android.os.Build
 import timber.log.Timber
-import timber.log.Timber
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.MappedByteBuffer

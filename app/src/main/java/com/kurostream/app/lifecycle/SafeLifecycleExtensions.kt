@@ -217,7 +217,7 @@ fun StrictModeDebug() {
 }
 
 @Composable
-fun StrictModeDebug(onViolation: (String) -> Unit = { Log.w("StrictMode", it) }) {
+fun StrictModeDebug(onViolation: (String) -> Unit = { Timber.tag("StrictMode").w(it) }) {
     DisposableEffect(Unit) {
         if (com.kurostream.app.BuildConfig.DEBUG) {
             val originalThreadPolicy = StrictMode.getThreadPolicy()
@@ -252,7 +252,7 @@ fun rememberLeakSafeScope(): CoroutineScope {
 @Composable
 fun LaunchedEffectLeakSafe(
     key: Any?,
-    onLeakDetected: (String) -> Unit = { Log.w("LeakSafe", it) },
+    onLeakDetected: (String) -> Unit = { Timber.tag("LeakSafe").w(it) },
     block: suspend CoroutineScope.() -> Unit
 ) {
     LaunchedEffect(key) {

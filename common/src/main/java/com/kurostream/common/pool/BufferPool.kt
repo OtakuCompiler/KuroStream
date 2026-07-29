@@ -17,7 +17,6 @@ package com.kurostream.common.pool
 
 import android.os.Build
 import timber.log.Timber
-import timber.log.Timber
 import java.lang.ref.Cleaner
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger

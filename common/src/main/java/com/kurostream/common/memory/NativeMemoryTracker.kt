@@ -2,7 +2,6 @@ package com.kurostream.common.memory
 
 import android.os.Debug
 import timber.log.Timber
-import timber.log.Timber
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -70,7 +69,7 @@ class NativeMemoryTracker(
                 try {
                     collectAndReport()
                 } catch (e: Exception) {
-                    Log.w("NativeMemoryTracker", "Tracking error", e)
+                    Timber.tag("NativeMemoryTracker").w("Tracking error", e)
                 }
                 delay(reportingIntervalMs)
             }
@@ -142,10 +141,8 @@ class NativeMemoryTracker(
         // Log alerts
         when (alertLevel) {
             AlertLevel.NORMAL -> { /* No alert needed */ }
-            AlertLevel.WARNING -> Log.w("NativeMemoryTracker",
-                "Native heap warning: ${formatBytes(nativeHeap)} / ${formatBytes(nativeMax)} (${(nativePercent * 100).toInt()}%)")
-            AlertLevel.CRITICAL -> Log.e("NativeMemoryTracker",
-                "Native heap CRITICAL: ${formatBytes(nativeHeap)} / ${formatBytes(nativeMax)} (${(nativePercent * 100).toInt()}%)")
+            AlertLevel.WARNING -> Timber.tag("NativeMemoryTracker").w("Native heap warning: ${formatBytes(nativeHeap)} / ${formatBytes(nativeMax)} (${(nativePercent * 100).toInt()}%)")
+            AlertLevel.CRITICAL -> Timber.tag("NativeMemoryTracker").e("Native heap CRITICAL: ${formatBytes(nativeHeap)} / ${formatBytes(nativeMax)} (${(nativePercent * 100).toInt()}%)")
         }
     }
     
