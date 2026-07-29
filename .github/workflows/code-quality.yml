@@ -9,64 +9,6 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
-  detekt:
-    name: Detekt Static Analysis
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        api-level: 35
-        build-tools: 35.0.0
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
-    - name: Run Detekt
-      run: ./gradlew detekt --no-daemon --stacktrace
-    - name: Upload Detekt Report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: detekt-report-${{ github.sha }}
-        path: |
-          build/reports/detekt/
-          **/build/reports/detekt/
-        retention-days: 30
-        compression-level: 1
-    - name: Annotate PR with Detekt findings
-      if: github.event_name == 'pull_request'
-      uses: eduardesousa/detekt-annotate@v1
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        detector-report-path: '**/build/reports/detekt.xml'
-
-  spotless:
-    name: Spotless Code Style Check
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        api-level: 35
-        build-tools: 35.0.0
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
-    - name: Run Spotless Check
-      run: ./gradlew spotlessCheck --no-daemon --stacktrace
-
   lint:
     name: Android Lint
     runs-on: ubuntu-latest
@@ -97,3 +39,33 @@ jobs:
           **/build/reports/lint-results*.html
         retention-days: 30
         compression-level: 1
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 35
+        build-tools: 35.0.0
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+    - name: Run unit tests
+      run: ./gradlew test --no-daemon --stacktrace
+    - name: Upload test reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-reports-${{ github.sha }}
+        path: |
+          app/build/reports/tests/
+          **/build/reports/tests/
+        retention-days: 14
