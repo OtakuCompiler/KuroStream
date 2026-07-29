@@ -1,6 +1,3 @@
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.slideOutOfContainer
-import androidx.compose.animation.slideIntoContainer
 // This file is part of KuroStream.
 //
 // KuroStream is free software: you can redistribute it and/or modify
@@ -19,6 +16,9 @@ import androidx.compose.animation.slideIntoContainer
 package com.kurostream.app.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideOutOfContainer
+import androidx.compose.animation.slideIntoContainer
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -124,7 +124,7 @@ fun TvNavHost(
             )
         }
 
-composable<SearchRoute> {
+        composable<SearchRoute> {
             SearchScreen(
                 onMediaClick = { mediaId ->
                     navController.navigate(DetailsRoute(mediaId))

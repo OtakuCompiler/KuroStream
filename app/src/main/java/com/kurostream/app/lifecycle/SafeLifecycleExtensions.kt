@@ -164,6 +164,7 @@ fun LifecycleOwner.launchWhenStarted(block: suspend CoroutineScope.() -> Unit) {
             Timber.tag("LifecycleExt").e("Exception in launchWhenStarted: ${e.message}", e)
         }
     }
+    }
 }
 
 @Suppress("DEPRECATION")
@@ -175,6 +176,7 @@ fun LifecycleOwner.launchWhenResumed(block: suspend CoroutineScope.() -> Unit) {
         } catch (e: Exception) {
             Timber.tag("LifecycleExt").e("Exception in launchWhenResumed: ${e.message}", e)
         }
+    }
     }
 }
 
