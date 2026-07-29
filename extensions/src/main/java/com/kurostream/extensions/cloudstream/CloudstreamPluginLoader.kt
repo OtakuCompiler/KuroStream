@@ -85,10 +85,10 @@ class CloudstreamPluginLoader @Inject constructor(
             )
 
             loadedPlugins[manifest.id] = plugin
-            Timber.tag(TAG).i(, "Loaded plugin: ${manifest.name} v${manifest.version}")
+            Timber.tag(TAG).i("Loaded plugin: ${manifest.name} v${manifest.version}")
             Result.success(manifest)
         } catch (e: Exception) {
-            Timber.tag(TAG).e(, "Failed to load plugin", e)
+            Timber.tag(TAG).e(e, "Failed to load plugin")
             Result.failure(e)
         }
     }
@@ -150,7 +150,7 @@ class CloudstreamPluginLoader @Inject constructor(
             val json = zip.getInputStream(entry).bufferedReader().use { it.readText() }
             parseManifest(JSONObject(json))
         } catch (e: Exception) {
-            Timber.tag(TAG).e(, "Failed to extract manifest", e)
+            Timber.tag(TAG).e(e, "Failed to extract manifest")
             null
         }
     }
