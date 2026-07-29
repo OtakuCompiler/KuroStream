@@ -1,7 +1,7 @@
 package com.kurostream.torrent.prefetch
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.frostwire.jlibtorrent.Session
 import com.frostwire.jlibtorrent.Sha1Hash
 import com.frostwire.jlibtorrent.TorrentHandle
@@ -57,7 +57,7 @@ class PeerWarmupManager @Inject constructor() {
         if (peers.isEmpty()) return
 
         warmupJobs[infoHash] = scope.launch(Dispatchers.IO) {
-            Log.i(TAG, "Warming up ${peers.size} peers for $infoHash")
+            Timber.tag(TAG).i(, "Warming up ${peers.size} peers for $infoHash")
             val sortedPeers = peers.sortedByDescending { it.connectionQuality }.take(30)
 
             for (peer in sortedPeers) {
@@ -75,7 +75,7 @@ class PeerWarmupManager @Inject constructor() {
                         _warmedPeersCount.value = warmedUpCount.get()
                     }
                 } catch (e: Exception) {
-                    Log.d(TAG, "Failed to warm up peer ${peer.address}:${peer.port}")
+                    Timber.tag(TAG).d(, "Failed to warm up peer ${peer.address}:${peer.port}")
                 }
                 delay(50)
             }

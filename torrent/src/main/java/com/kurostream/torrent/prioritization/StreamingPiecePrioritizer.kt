@@ -1,7 +1,7 @@
 package com.kurostream.torrent.prioritization
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.frostwire.jlibtorrent.TorrentHandle
 import com.frostwire.jlibtorrent.TorrentInfo
 import kotlinx.coroutines.*
@@ -72,9 +72,9 @@ class StreamingPiecePrioritizer @Inject constructor() {
 
         try {
             handle.setPiecePriorities(priorities)
-            Log.d(TAG, "Prioritized ${numPieces} pieces for streaming at position $currentPiece")
+            Timber.tag(TAG).d(, "Prioritized ${numPieces} pieces for streaming at position $currentPiece")
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to set piece priorities", e)
+            Timber.tag(TAG).w(, "Failed to set piece priorities", e)
         }
     }
 
@@ -127,7 +127,7 @@ class StreamingPiecePrioritizer @Inject constructor() {
             try {
                 handle.setPiecePriorities(priorities)
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to update piece priorities", e)
+                Timber.tag(TAG).w(, "Failed to update piece priorities", e)
             }
         }
     }

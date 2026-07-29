@@ -1,7 +1,7 @@
 package com.kurostream.torrent.engine
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.RandomAccessFile
@@ -55,20 +55,20 @@ class WriteCoalescer @Inject constructor() {
                 try {
                     flushPendingWrites()
                 } catch (e: Exception) {
-                    Log.w(TAG, "Flush failed", e)
+                    Timber.tag(TAG).w("Flush failed", e)
                 }
                 delay(flushIntervalMs)
             }
         }
 
-        Log.i(TAG, "Write coalescer started (interval: ${flushIntervalMs}ms, buffer: ${maxBufferSize / 1024}KB)")
+        Timber.tag(TAG).i("Write coalescer started (interval: ${flushIntervalMs}ms, buffer: ${maxBufferSize / 1024}KB)")
     }
 
     fun stop() {
         isRunning.set(false)
         flushJob?.cancel()
         flushJob = null
-        Log.i(TAG, "Write coalescer stopped. Stats: ${getStats()}")
+        Timber.tag(TAG).i("Write coalescer stopped. Stats: ${getStats()}")
     }
 
     suspend fun flushPendingWrites() = withContext(Dispatchers.IO) {
@@ -98,7 +98,7 @@ class WriteCoalescer @Inject constructor() {
                 coalescedWrites.addAndGet(mergedWrites.size.toLong())
                 flushCount.incrementAndGet()
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to write to ${file.name}", e)
+                Timber.tag(TAG).e("Failed to write to ${file.name}", e)
             }
         }
     }

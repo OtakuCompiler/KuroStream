@@ -1,7 +1,7 @@
 package com.kurostream.common.memory
 
 import android.os.Debug
-import android.util.Log
+import timber.log.Timber
 import timber.log.Timber
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

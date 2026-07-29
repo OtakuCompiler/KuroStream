@@ -19,7 +19,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
+import timber.log.Timber
 import timber.log.Timber
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.Lifecycle
@@ -207,19 +207,19 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
         handler.post {
             when (stage) {
                 ThrottleStage.WARNING -> {
-                    Log.w("ThermalGuard", "⚠️ Temperature ${_currentTempCelsius.value}°C ≥ $warningThreshold°C — Starting throttling")
+                    Timber.tag("ThermalGuard").w("⚠️ Temperature ${_currentTempCelsius.value}°C ≥ $warningThreshold°C — Starting throttling")
                     ThermalThrottleCallback.onWarningStage()
                 }
                 ThrottleStage.CRITICAL -> {
                     val now = System.currentTimeMillis()
                     if (now - lastWarningShown > 30000) { // Show toast max once per 30s
                         lastWarningShown = now
-                        Log.e("ThermalGuard", "🔥 CRITICAL: Temperature ${_currentTempCelsius.value}°C ≥ $criticalThreshold°C — Aggressive throttling active")
+                        Timber.tag("ThermalGuard").e("🔥 CRITICAL: Temperature ${_currentTempCelsius.value}°C ≥ $criticalThreshold°C — Aggressive throttling active")
                         ThermalThrottleCallback.onCriticalStage()
                     }
                 }
                 ThrottleStage.NONE -> {
-                    Log.i("ThermalGuard", "✅ Temperature normalized: ${_currentTempCelsius.value}°C")
+                    Timber.tag("ThermalGuard").i("✅ Temperature normalized: ${_currentTempCelsius.value}°C")
                     ThermalThrottleCallback.onNormalized()
                 }
             }

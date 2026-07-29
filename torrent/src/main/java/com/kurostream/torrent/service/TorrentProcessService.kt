@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.IBinder
 import android.os.Messenger
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.kurostream.torrent.engine.TorrentEngine
 import com.kurostream.torrent.engine.WriteCoalescer
 import dagger.hilt.android.AndroidEntryPoint
@@ -38,7 +38,7 @@ class TorrentProcessService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.i(TAG, "Torrent process service created")
+        Timber.tag(TAG).i(, "Torrent process service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -57,15 +57,15 @@ class TorrentProcessService : Service() {
                             } else {
                                 engine.addTorrentFile(uri, savePath ?: defaultSavePath, sequential)
                             }
-                            Log.i(TAG, "Torrent added in process: $uri")
+                            Timber.tag(TAG).i(, "Torrent added in process: $uri")
                         } catch (e: Exception) {
-                            Log.e(TAG, "Failed to add torrent in process", e)
+                            Timber.tag(TAG).e(, "Failed to add torrent in process", e)
                         }
                     }
                 }
             }
             ACTION_STOP -> {
-                Log.i(TAG, "Stopping torrent engine in process")
+                Timber.tag(TAG).i(, "Stopping torrent engine in process")
                 engine.stop()
                 stopSelf()
             }
@@ -79,6 +79,6 @@ class TorrentProcessService : Service() {
     override fun onDestroy() {
         engine.stop()
         super.onDestroy()
-        Log.i(TAG, "Torrent process service destroyed")
+        Timber.tag(TAG).i(, "Torrent process service destroyed")
     }
 }

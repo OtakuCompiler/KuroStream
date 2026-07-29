@@ -1,7 +1,7 @@
 package com.kurostream.common.io
 
 import android.os.Build
-import android.util.Log
+import timber.log.Timber
 import timber.log.Timber
 import java.io.File
 import java.io.RandomAccessFile
@@ -28,7 +28,7 @@ object MappedFileBuffer {
                 buffer
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to map file: ${file.name}", e)
+            Timber.tag(TAG).e("Failed to map file: ${file.name}", e)
             null
         }
     }
@@ -49,7 +49,7 @@ object MappedFileBuffer {
                     cleanMethod.invoke(cleaner)
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to clean MappedByteBuffer", e)
+                Timber.tag(TAG).w("Failed to clean MappedByteBuffer", e)
             }
         }
     }

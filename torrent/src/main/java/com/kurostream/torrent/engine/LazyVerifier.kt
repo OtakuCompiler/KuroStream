@@ -1,7 +1,7 @@
 package com.kurostream.torrent.engine
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.frostwire.jlibtorrent.TorrentHandle
 import com.frostwire.jlibtorrent.TorrentInfo
 import kotlinx.coroutines.*
@@ -70,7 +70,7 @@ class LazyVerifier @Inject constructor() {
                 false
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Piece verification failed for piece $pieceIndex", e)
+            Timber.tag(TAG).w("Piece verification failed for piece $pieceIndex", e)
             false
         }
     }
@@ -85,7 +85,7 @@ class LazyVerifier @Inject constructor() {
             }
         }
 
-        Log.i(TAG, "Lazy background verification started")
+        Timber.tag(TAG).i("Lazy background verification started")
     }
 
     fun stopBackgroundVerification() {

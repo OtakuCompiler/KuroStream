@@ -1,7 +1,7 @@
 package com.kurostream.torrent.streaming
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.kurostream.torrent.domain.TorrentInfo
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,7 +80,7 @@ class HttpFallbackManager @Inject constructor(
 
         val now = System.currentTimeMillis()
         if (state.fallbackAttempts >= MAX_FALLBACK_ATTEMPTS) {
-            Log.d(TAG, "Max fallback attempts reached for $infoHash")
+            Timber.tag(TAG).d(, "Max fallback attempts reached for $infoHash")
             return false
         }
 
@@ -89,13 +89,13 @@ class HttpFallbackManager @Inject constructor(
         }
 
         if (torrentSpeedBps < MIN_TORRENT_SPEED_BPS) {
-            Log.w(TAG, "Torrent speed ${formatSpeed(torrentSpeedBps)} below threshold ${formatSpeed(MIN_TORRENT_SPEED_BPS)}, triggering HTTP fallback for $infoHash")
+            Timber.tag(TAG).w(, "Torrent speed ${formatSpeed(torrentSpeedBps)} below threshold ${formatSpeed(MIN_TORRENT_SPEED_BPS)}, triggering HTTP fallback for $infoHash")
 
             if (httpUrl != null) {
                 triggerFallback(infoHash, fileIndex, httpUrl, httpHeaders, torrentSpeedBps)
                 return true
             } else {
-                Log.w(TAG, "No HTTP fallback URL available for $infoHash")
+                Timber.tag(TAG).w(, "No HTTP fallback URL available for $infoHash")
             }
         }
 
@@ -141,7 +141,7 @@ class HttpFallbackManager @Inject constructor(
                         successfulFallbacks = _globalFallbackState.value.successfulFallbacks + 1,
                     )}
 
-                    Log.i(TAG, "HTTP fallback activated for $infoHash: $verifiedUrl")
+                    Timber.tag(TAG).i(, "HTTP fallback activated for $infoHash: $verifiedUrl")
 
                     monitorFallbackHealth(infoHash, state)
                 } else {
@@ -167,18 +167,18 @@ class HttpFallbackManager @Inject constructor(
             return if (response.isSuccessful) {
                 val contentLength = response.header("Content-Length")?.toLongOrNull()
                 if (contentLength != null && contentLength > 0) {
-                    Log.d(TAG, "HTTP source verified: $url, size: $contentLength")
+                    Timber.tag(TAG).d(, "HTTP source verified: $url, size: $contentLength")
                     url
                 } else {
-                    Log.w(TAG, "HTTP source missing Content-Length: $url")
+                    Timber.tag(TAG).w(, "HTTP source missing Content-Length: $url")
                     url
                 }
             } else {
-                Log.w(TAG, "HTTP source verification failed: ${response.code()} $url")
+                Timber.tag(TAG).w(, "HTTP source verification failed: ${response.code()} $url")
                 null
             }
         } catch (e: Exception) {
-            Log.w(TAG, "HTTP source verification error: ${e.message}")
+            Timber.tag(TAG).w(, "HTTP source verification error: ${e.message}")
             null
         }
     }
@@ -197,13 +197,13 @@ class HttpFallbackManager @Inject constructor(
                 state.httpSpeed = httpSpeed
 
                 if (torrentSpeed > MIN_TORRENT_SPEED_BPS * 2 && state.canReturnToTorrent) {
-                    Log.i(TAG, "Torrent speed recovered (${formatSpeed(torrentSpeed)}), switching back from HTTP fallback for $infoHash")
+                    Timber.tag(TAG).i(, "Torrent speed recovered (${formatSpeed(torrentSpeed)}), switching back from HTTP fallback for $infoHash")
                     returnToTorrent(infoHash)
                     break
                 }
 
                 if (httpSpeed < MIN_TORRENT_SPEED_BPS / 2) {
-                    Log.w(TAG, "HTTP fallback also slow (${formatSpeed(httpSpeed)}), trying alternative source for $infoHash")
+                    Timber.tag(TAG).w(, "HTTP fallback also slow (${formatSpeed(httpSpeed)}), trying alternative source for $infoHash")
                     tryAlternativeSource(infoHash)
                     break
                 }
@@ -253,7 +253,7 @@ class HttpFallbackManager @Inject constructor(
     }
 
     private fun handleFallbackFailure(infoHash: String, state: FallbackState, reason: String) {
-        Log.e(TAG, "HTTP fallback failed for $infoHash: $reason")
+        Timber.tag(TAG).e(, "HTTP fallback failed for $infoHash: $reason")
         state.isFallbackActive = false
         state.fallbackUrl = null
 
@@ -269,7 +269,7 @@ class HttpFallbackManager @Inject constructor(
         val state = fallbackStates[infoHash] ?: return
         if (!state.isFallbackActive) return
 
-        Log.i(TAG, "Returning to torrent streaming for $infoHash")
+        Timber.tag(TAG).i(, "Returning to torrent streaming for $infoHash")
         state.isFallbackActive = false
         state.fallbackUrl = null
         state.canReturnToTorrent = false
@@ -303,7 +303,7 @@ class HttpFallbackManager @Inject constructor(
             title = title,
             quality = quality,
         )
-        Log.d(TAG, "Registered HTTP fallback source for $infoHash: $url")
+        Timber.tag(TAG).d(, "Registered HTTP fallback source for $infoHash: $url")
     }
 
     fun shutdown() {

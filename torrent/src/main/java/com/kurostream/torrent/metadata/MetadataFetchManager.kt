@@ -1,7 +1,7 @@
 package com.kurostream.torrent.metadata
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.frostwire.jlibtorrent.Sha1Hash
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,13 +79,13 @@ class MetadataFetchManager @Inject constructor() {
                     val result = job.await()
                     if (result != null) {
                         val (url, bytes) = result
-                        Log.i(TAG, "Fetched metadata for $infoHash from $url (${bytes.size} bytes)")
+                        Timber.tag(TAG).i(, "Fetched metadata for $infoHash from $url (${bytes.size} bytes)")
                         metadataCache[infoHash] = bytes
                         injectMetadata(infoHash, bytes, session)
                         return@launch
                     }
                 }
-                Log.d(TAG, "No metadata found for $infoHash from any source")
+                Timber.tag(TAG).d(, "No metadata found for $infoHash from any source")
             } finally {
                 activeFetches.remove(infoHash)
                 _activeFetchCount.value = activeFetches.size
@@ -101,10 +101,10 @@ class MetadataFetchManager @Inject constructor() {
             val handle = session.findTorrent(Sha1Hash(infoHash))
             if (handle.isValid) {
                 handle.addMetadata(metadata)
-                Log.i(TAG, "Injected metadata for $infoHash (${metadata.size} bytes)")
+                Timber.tag(TAG).i(, "Injected metadata for $infoHash (${metadata.size} bytes)")
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to inject metadata for $infoHash", e)
+            Timber.tag(TAG).w(, "Failed to inject metadata for $infoHash", e)
         }
     }
 

@@ -6,7 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.kurostream.torrent.domain.TorrentSessionSettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -89,7 +89,7 @@ class AdaptiveLimitsCalculator @Inject constructor(
             else -> 8
         }
 
-        Log.i(TAG, "Optimal settings: maxConn=$maxConnections, perTorrent=$connectionsPerTorrent, " +
+        Timber.tag(TAG).i(, "Optimal settings: maxConn=$maxConnections, perTorrent=$connectionsPerTorrent, " +
                 "uploadSlots=$maxUploadSlots, halfOpen=$halfOpenConnections " +
                 "[${capabilities.totalMemoryMb}MB RAM, ${capabilities.cpuCores} cores, ${capabilities.networkType}]")
 

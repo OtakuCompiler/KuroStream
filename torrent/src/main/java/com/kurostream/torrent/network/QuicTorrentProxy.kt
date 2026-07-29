@@ -1,7 +1,7 @@
 package com.kurostream.torrent.network
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
@@ -22,12 +22,12 @@ class QuicTorrentProxy @Inject constructor() {
 
     fun enable() {
         isEnabled = true
-        Log.i(TAG, "QUIC tracker proxy enabled (experimental)")
+        Timber.tag(TAG).i(, "QUIC tracker proxy enabled (experimental)")
     }
 
     fun disable() {
         isEnabled = false
-        Log.i(TAG, "QUIC tracker proxy disabled")
+        Timber.tag(TAG).i(, "QUIC tracker proxy disabled")
     }
 
     fun isQuicSupported(): Boolean {
@@ -71,7 +71,7 @@ class QuicTorrentProxy @Inject constructor() {
                 AnnounceResult.Failed("HTTP ${response.code}")
             }
         } catch (e: Exception) {
-            Log.d(TAG, "QUIC announce failed for $trackerUrl", e)
+            Timber.tag(TAG).d(, "QUIC announce failed for $trackerUrl", e)
             AnnounceResult.Failed(e.message ?: "Unknown error")
         }
     }

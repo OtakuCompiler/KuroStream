@@ -1,0 +1,6 @@
+build:
+  maxIssues: 0
+  weights:
+  - complexity: 2
+  - style: 1
+  - comments: 1

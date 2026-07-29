@@ -82,7 +82,7 @@ class UiTextureAtlas(
         }
         
         if (currentY + paddedHeight > maxSize) {
-            Log.w(TAG, "Atlas full, cannot add $name")
+            Timber.w(TAG, "Atlas full, cannot add $name")
             return false
         }
         

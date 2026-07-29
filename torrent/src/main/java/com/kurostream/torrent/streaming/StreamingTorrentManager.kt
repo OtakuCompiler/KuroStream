@@ -1,7 +1,7 @@
 package com.kurostream.torrent.streaming
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.frostwire.jlibtorrent.Session
 import com.frostwire.jlibtorrent.TorrentHandle
 import com.frostwire.jlibtorrent.TorrentInfo
@@ -246,7 +246,7 @@ class StreamingTorrentManager @Inject constructor(
                     (status.pieces?.count { it } ?: 0).toFloat() / (endPiece - startPiece + 1)
                 } else 0f
 
-                Log.d(TAG, "Stream health: $infoHash buffer=${bufferHealth.bufferedMs}ms speed=${formatSpeed(downloadSpeed)} peers=$peers seeds=$seeds pieceProgress=${String.format("%.1f%%", pieceProgress * 100)}")
+                Timber.tag(TAG).d(, "Stream health: $infoHash buffer=${bufferHealth.bufferedMs}ms speed=${formatSpeed(downloadSpeed)} peers=$peers seeds=$seeds pieceProgress=${String.format("%.1f%%", pieceProgress * 100)}")
 
                 delay(1000)
             }
@@ -272,7 +272,7 @@ class StreamingTorrentManager @Inject constructor(
             return
         }
 
-        Log.w(TAG, "Buffer underrun detected for $infoHash, retry ${state.totalRetries + 1}/$MAX_RETRIES after ${exponentialDelay}ms")
+        Timber.tag(TAG).w(, "Buffer underrun detected for $infoHash, retry ${state.totalRetries + 1}/$MAX_RETRIES after ${exponentialDelay}ms")
 
         retryJobs[infoHash]?.cancel()
         val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -302,7 +302,7 @@ class StreamingTorrentManager @Inject constructor(
     }
 
     private fun triggerHttpFallback(infoHash: String, state: StreamState) {
-        Log.w(TAG, "Max retries reached for $infoHash, triggering HTTP fallback")
+        Timber.tag(TAG).w(, "Max retries reached for $infoHash, triggering HTTP fallback")
         streamStates[infoHash] = state.copy(fallbackTriggered = true)
         updateGlobalHealth()
     }

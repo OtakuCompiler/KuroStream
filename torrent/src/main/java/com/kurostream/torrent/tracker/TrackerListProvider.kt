@@ -1,7 +1,7 @@
 package com.kurostream.torrent.tracker
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -125,7 +125,7 @@ class TrackerListProvider @Inject constructor() {
                 try {
                     refreshTrackerList()
                 } catch (e: Exception) {
-                    Log.w(TAG, "Tracker refresh failed", e)
+                    Timber.tag(TAG).w(, "Tracker refresh failed", e)
                 }
                 delay(6 * 60 * 60 * 1000L) // Every 6 hours
             }
@@ -151,15 +151,15 @@ class TrackerListProvider @Inject constructor() {
                         .map { it.trim() }
                         .filter { it.startsWith("udp://") || it.startsWith("http://") || it.startsWith("https://") }
                     allTrackers.addAll(trackers)
-                    Log.i(TAG, "Fetched ${trackers.size} trackers from $url")
+                    Timber.tag(TAG).i(, "Fetched ${trackers.size} trackers from $url")
                 } catch (e: Exception) {
-                    Log.w(TAG, "Failed to fetch trackers from $url", e)
+                    Timber.tag(TAG).w(, "Failed to fetch trackers from $url", e)
                 }
             }
         }
 
         _trackerCount.value = allTrackers.size
-        Log.i(TAG, "Total trackers available: ${allTrackers.size}")
+        Timber.tag(TAG).i(, "Total trackers available: ${allTrackers.size}")
     }
 
     fun reportTrackerResult(url: String, alive: Boolean, responseTimeMs: Long, peersFound: Int) {

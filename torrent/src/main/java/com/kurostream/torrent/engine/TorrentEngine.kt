@@ -58,7 +58,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sharingStarted
 import kotlinx.coroutines.withContext
-import android.util.Log
+import timber.log.Timber
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -170,7 +170,7 @@ class TorrentEngine @Inject constructor(
 
     private fun initializeOptimizations() {
         torrentPieceCache.configure(64)
-        Log.i(TAG, "All torrent optimizations initialized")
+        Timber.tag(TAG).i("All torrent optimizations initialized")
     }
 
     private fun startAlertProcessor() {
@@ -218,7 +218,7 @@ class TorrentEngine @Inject constructor(
                 try {
                     metadataFetchManager.fetchMetadata(infoHash, session!!, this)
                 } catch (e: Exception) {
-                    Log.d(TAG, "Metadata fetch failed for $infoHash", e)
+                    Timber.tag(TAG).d("Metadata fetch failed for $infoHash", e)
                 }
             }
 
@@ -306,13 +306,13 @@ class TorrentEngine @Inject constructor(
                 val bytes = com.frostwire.jlibtorrent.bencode(data)
                 file.writeBytes(bytes)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to save resume data for $infoHash", e)
+                Timber.tag(TAG).e("Failed to save resume data for $infoHash", e)
             }
         }
     }
 
     private fun handleSaveResumeDataFailedAlert(alert: com.frostwire.jlibtorrent.SaveResumeDataFailedAlert) {
-        Log.w(TAG, "Failed to save resume data: ${alert.error.message()}")
+        Timber.tag(TAG).w("Failed to save resume data: ${alert.error.message()}")
     }
 
     private fun handleStateChangedAlert(alert: com.frostwire.jlibtorrent.StateChangedAlert) {
@@ -410,14 +410,14 @@ class TorrentEngine @Inject constructor(
                     launch {
                         val cached = torrentMetadataCache.getCachedMetadata(infoHash)
                         if (cached != null) {
-                            Log.i(TAG, "Cache hit for $infoHash: ${cached.name}")
+                            Timber.tag(TAG).i("Cache hit for $infoHash: ${cached.name}")
                         }
                     }
 
                     Result.success(torrentStates[infoHash]?.value!!)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error adding magnet", e)
+                Timber.tag(TAG).e("Error adding magnet", e)
                 Result.failure(e)
             }
         }
@@ -444,7 +444,7 @@ class TorrentEngine @Inject constructor(
                     Result.success(torrentStates[infoHash]?.value!!)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error adding torrent file", e)
+                Timber.tag(TAG).e("Error adding torrent file", e)
                 Result.failure(e)
             }
         }
@@ -855,7 +855,7 @@ class TorrentEngine @Inject constructor(
                     initTorrentState(handle)
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to load resume data from ${file.name}", e)
+                Timber.tag(TAG).w("Failed to load resume data from ${file.name}", e)
             }
         }
     }

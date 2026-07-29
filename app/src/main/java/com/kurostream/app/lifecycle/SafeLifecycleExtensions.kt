@@ -29,7 +29,7 @@ fun SafeLaunchedEffect(
         try {
             block()
         } catch (e: Exception) {
-            Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
+            Timber.tag("SafeLaunchedEffect").e("Exception in LaunchedEffect: ${e.message}", e)
         }
     }
 }
@@ -44,7 +44,7 @@ fun SafeLaunchedEffect(
         try {
             block()
         } catch (e: Exception) {
-            Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
+            Timber.tag("SafeLaunchedEffect").e("Exception in LaunchedEffect: ${e.message}", e)
         }
     }
 }
@@ -60,7 +60,7 @@ fun SafeLaunchedEffect(
         try {
             block()
         } catch (e: Exception) {
-            Log.e("SafeLaunchedEffect", "Exception in LaunchedEffect: ${e.message}", e)
+            Timber.tag("SafeLaunchedEffect").e("Exception in LaunchedEffect: ${e.message}", e)
         }
     }
 }
@@ -103,7 +103,7 @@ fun SafeViewModelScope(
             try {
                 block()
             } catch (e: Exception) {
-                Log.e("SafeViewModelScope", "Exception in ViewModelScope: ${e.message}", e)
+                Timber.tag("SafeViewModelScope").e("Exception in ViewModelScope: ${e.message}", e)
             }
         }
     }
@@ -136,7 +136,7 @@ open class LeakSafeViewModel : ViewModel() {
             try {
                 block()
             } catch (e: Exception) {
-                Log.e("LeakSafeViewModel", "Exception in viewModelScope: ${e.message}", e)
+                Timber.tag("LeakSafeViewModel").e("Exception in viewModelScope: ${e.message}", e)
             }
         }
         _cleanupJobs.add(job)
@@ -149,7 +149,7 @@ fun ViewModel.launchInViewModelScope(block: suspend CoroutineScope.() -> Unit): 
         try {
             block()
         } catch (e: Exception) {
-            Log.e("ViewModelExt", "Exception in viewModelScope: ${e.message}", e)
+            Timber.tag("ViewModelExt").e("Exception in viewModelScope: ${e.message}", e)
         }
     }
 }
@@ -161,7 +161,7 @@ fun LifecycleOwner.launchWhenStarted(block: suspend CoroutineScope.() -> Unit) {
         try {
             block()
         } catch (e: Exception) {
-            Log.e("LifecycleExt", "Exception in launchWhenStarted: ${e.message}", e)
+            Timber.tag("LifecycleExt").e("Exception in launchWhenStarted: ${e.message}", e)
         }
     }
 }
@@ -173,7 +173,7 @@ fun LifecycleOwner.launchWhenResumed(block: suspend CoroutineScope.() -> Unit) {
         try {
             block()
         } catch (e: Exception) {
-            Log.e("LifecycleExt", "Exception in launchWhenResumed: ${e.message}", e)
+            Timber.tag("LifecycleExt").e("Exception in launchWhenResumed: ${e.message}", e)
         }
     }
 }
@@ -184,7 +184,7 @@ fun LifecycleOwner.launchWhenCreated(block: suspend CoroutineScope.() -> Unit) {
         try {
             block()
         } catch (e: Exception) {
-            Log.e("LifecycleExt", "Exception in launchWhenCreated: ${e.message}", e)
+            Timber.tag("LifecycleExt").e("Exception in launchWhenCreated: ${e.message}", e)
         }
     }
 }
@@ -208,7 +208,7 @@ fun StrictModeDebug() {
                     .build()
             )
             
-            Log.d("StrictMode", "StrictMode enabled for debug build")
+            Timber.tag("StrictMode").d("StrictMode enabled for debug build")
         }
         
         onDispose {
@@ -259,7 +259,7 @@ fun LaunchedEffectLeakSafe(
         try {
             block()
         } catch (e: Exception) {
-            Log.e("LaunchedEffectLeakSafe", "Exception: ${e.message}", e)
+            Timber.tag("LaunchedEffectLeakSafe").e("Exception: ${e.message}", e)
         }
     }
 }
@@ -274,7 +274,7 @@ class ViewModelScopeTracker(
             try {
                 block()
             } catch (e: Exception) {
-                Log.e("ViewModelScopeTracker", "Exception: ${e.message}", e)
+                Timber.tag("ViewModelScopeTracker").e("Exception: ${e.message}", e)
             }
         }
         _activeScopes.add(job)

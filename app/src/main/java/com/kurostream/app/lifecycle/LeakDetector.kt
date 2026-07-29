@@ -23,7 +23,7 @@ object LeakDetector {
         
         if (com.kurostream.app.BuildConfig.DEBUG) {
             schedulePeriodicCheck()
-            Log.d("LeakDetector", "Leak detection enabled")
+            Timber.tag("LeakDetector").d( "Leak detection enabled")
         }
     }
     
@@ -61,7 +61,7 @@ object LeakDetector {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("LeakDetector", "Error during leak check", e)
+                Timber.tag("LeakDetector").e( "Error during leak check", e)
             }
         }, 30, 30, TimeUnit.SECONDS)
     }

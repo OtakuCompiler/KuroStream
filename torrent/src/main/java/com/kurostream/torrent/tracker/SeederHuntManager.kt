@@ -1,7 +1,7 @@
 package com.kurostream.torrent.tracker
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.frostwire.jlibtorrent.AlertListener
 import com.frostwire.jlibtorrent.Session
 import com.frostwire.jlibtorrent.TorrentHandle
@@ -83,7 +83,7 @@ class SeederHuntManager @Inject constructor(
 
                     delay(interval)
                 } catch (e: Exception) {
-                    Log.w(TAG, "Hunt cycle failed for $infoHash", e)
+                    Timber.tag(TAG).w(, "Hunt cycle failed for $infoHash", e)
                     delay(30_000L)
                 }
             }

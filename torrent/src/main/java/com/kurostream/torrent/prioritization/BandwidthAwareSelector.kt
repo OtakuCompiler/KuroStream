@@ -1,7 +1,7 @@
 package com.kurostream.torrent.prioritization
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.frostwire.jlibtorrent.TorrentHandle
 import com.frostwire.jlibtorrent.TorrentInfo
 import javax.inject.Inject
@@ -102,7 +102,7 @@ class BandwidthAwareSelector @Inject constructor() {
             }
         }
 
-        Log.d(TAG, "Applied ${profile.label} profile to torrent")
+        Timber.tag(TAG).d(, "Applied ${profile.label} profile to torrent")
     }
 
     fun getState(): BandwidthState = lastState

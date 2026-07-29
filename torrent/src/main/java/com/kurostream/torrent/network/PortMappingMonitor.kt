@@ -1,7 +1,7 @@
 package com.kurostream.torrent.network
 
 import timber.log.Timber
-import android.util.Log
+import timber.log.Timber
 import com.frostwire.jlibtorrent.AlertListener
 import com.frostwire.jlibtorrent.Session
 import kotlinx.coroutines.*
@@ -41,18 +41,18 @@ class PortMappingMonitor @Inject constructor() {
         )
         _mappingState.value = mapping
         if (errorMessage == null) {
-            Log.i(TAG, "Port mapping successful: $protocol:$externalPort")
+            Timber.tag(TAG).i(, "Port mapping successful: $protocol:$externalPort")
         } else {
-            Log.w(TAG, "Port mapping failed: $protocol - $errorMessage")
+            Timber.tag(TAG).w(, "Port mapping failed: $protocol - $errorMessage")
         }
     }
 
     fun onMapPortAlert(success: Boolean, port: Int) {
         if (success) {
             _mappingState.value = PortMapping(port, "TCP/UDP", true)
-            Log.i(TAG, "UPnP/NAT-PMP port mapping successful on port $port")
+            Timber.tag(TAG).i(, "UPnP/NAT-PMP port mapping successful on port $port")
         } else {
-            Log.w(TAG, "UPnP/NAT-PMP port mapping failed on port $port")
+            Timber.tag(TAG).w(, "UPnP/NAT-PMP port mapping failed on port $port")
         }
     }
 

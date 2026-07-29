@@ -16,7 +16,7 @@
 package com.kurostream.common.pool
 
 import android.os.Build
-import android.util.Log
+import timber.log.Timber
 import timber.log.Timber
 import java.lang.ref.Cleaner
 import java.nio.ByteBuffer
@@ -380,7 +380,7 @@ object BufferPool {
                     }
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to clean DirectByteBuffer", e)
+                Timber.tag(TAG).w("Failed to clean DirectByteBuffer", e)
             }
         }
     }

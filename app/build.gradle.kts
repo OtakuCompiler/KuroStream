@@ -85,6 +85,7 @@ dependencies {
     implementation(project(":cache"))
     implementation(project(":ui"))
     implementation(project(":launcher"))
+  implementation(project(":torrent"))
     implementation(project(":marketplace"))
 
     implementation(platform(libs.androidx.compose.bom))
