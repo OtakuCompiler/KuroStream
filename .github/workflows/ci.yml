@@ -23,7 +23,17 @@ jobs:
         build-tools: 35.0.0
         ndk: 27.1.12297006
         cmake: 3.22.1
+    - name: Show GRADLE_OPTS and JAVA_OPTS
+      run: |
+        echo "GRADLE_OPTS=${GRADLE_OPTS:-<empty>}"
+        echo "JAVA_OPTS=${JAVA_OPTS:-<empty>}"
+        env | grep -iE "GRADLE|JAVA" | sort
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
+      id: gradle
+    - name: Show env after gradle setup
+      run: |
+        echo "GRADLE_OPTS=${GRADLE_OPTS:-<empty>}"
+        echo "JAVA_OPTS=${JAVA_OPTS:-<empty>}"
     - name: Build with Gradle
       run: ./gradlew assembleDebug --no-daemon --stacktrace
