@@ -32,5 +32,5 @@ include(":marketplace")
 include(":playback")
 include(":plugin-sdk")
 include(":tizenApp")
-include(":torrent")
+// include(":torrent")  // excluded — dl.frostwire.com/maven is dead (404), jlibtorrent cannot be resolved
 include(":ui")
