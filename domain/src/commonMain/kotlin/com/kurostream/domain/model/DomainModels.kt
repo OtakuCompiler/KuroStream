@@ -53,3 +53,50 @@ data class SubtitleResult(
     val downloadCount: Int, val rating: Float, val fps: Double,
     val hearingImpaired: Boolean, val downloadUrl: String?
 )
+
+data class CatalogItem(
+    val id: String,
+    val title: String,
+    val posterUrl: String?,
+    val backdropUrl: String?,
+    val type: String,
+    val year: String?,
+    val rating: Float?,
+    val genres: List<String>,
+    val source: String
+)
+
+data class Episode(
+    val id: String,
+    val title: String,
+    val episodeNumber: Int,
+    val seasonNumber: Int,
+    val thumbnail: String?,
+    val overview: String?,
+    val released: String?
+)
+
+data class MediaDetail(
+    val id: String,
+    val title: String,
+    val description: String?,
+    val posterUrl: String?,
+    val backdropUrl: String?,
+    val type: String,
+    val rating: Float?,
+    val genres: List<String>,
+    val cast: List<String>,
+    val director: List<String>,
+    val year: String?,
+    val runtime: String?,
+    val episodes: List<Episode>
+)
+
+data class StreamSource(
+    val url: String?,
+    val name: String,
+    val quality: String,
+    val headers: Map<String, String>,
+    val isHls: Boolean,
+    val isDash: Boolean
+)
