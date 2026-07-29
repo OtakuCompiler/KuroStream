@@ -80,7 +80,6 @@ dependencies {
     implementation(project(":core-platform"))
     implementation(project(":domain"))
     implementation(project(":data"))
-    implementation(project(":playback"))
     implementation(project(":extensions"))
     implementation(project(":plugin-sdk"))
     implementation(project(":cache"))
