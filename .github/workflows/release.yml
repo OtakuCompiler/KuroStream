@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: 'Version code (integer)'
+        required: true
+        type: string
+      version_name:
+        description: 'Version name (e.g. 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-release:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 35
+        build-tools: 35.0.0
+        ndk: 27.1.12297006
+        cmake: 3.22.1
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Grant gradlew execute permission
+      run: chmod +x ./gradlew
+
+    - name: Extract version from tag
+      if: startsWith(github.ref, 'refs/tags/')
+      id: version
+      run: |
+        TAG=${GITHUB_REF#refs/tags/}
+        VERSION_NAME=${TAG#v}
+        VERSION_CODE=$(echo $VERSION_NAME | awk -F. '{printf "%d%03d%03d", $1, $2, $3}')
+        echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+        echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+        echo "Tag: $TAG, Version: $VERSION_NAME, Code: $VERSION_CODE"
+
+    - name: Assemble Release APKs
+      run: ./gradlew assembleRelease --no-daemon --stacktrace
+      env:
+        VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        VERSION_NAME: ${{ steps.version.outputs.version_name }}
+
+    - name: Bundle Release AAB
+      run: ./gradlew bundleRelease --no-daemon --stacktrace
+      env:
+        VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        VERSION_NAME: ${{ steps.version.outputs.version_name }}
+
+    - name: Sign APK with debug key (unsigned builds for distribution)
+      run: |
+        ls -la app/build/outputs/apk/release/
+        ls -la app/build/outputs/bundle/release/
+
+    - name: Upload Release APKs
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apk-${{ github.ref_name }}
+        path: app/build/outputs/apk/release/*.apk
+        retention-days: 90
+        compression-level: 1
+
+    - name: Upload Release Bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-bundle-${{ github.ref_name }}
+        path: app/build/outputs/bundle/release/*.aab
+        retention-days: 90
+        compression-level: 1
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        name: KuroStream ${{ github.ref_name }}
+        body: |
+          ## KuroStream ${{ github.ref_name }}
+
+          ### Download
+          - **TV/Phone/Tablet (APK):** Download `app-release.apk` from the assets below
+          - **Google Play (AAB):** Download `app-release.aab`
+
+          ### Installation
+          ```bash
+          adb install -r kurostream-tv-release.apk
+          ```
+
+          ### What's Changed
+          See the [full changelog](https://github.com/OtakuCompiler/kurostream/compare/v${{ steps.version.outputs.version_name }}...v${{ github.ref_name }}).
+        files: |
+          app/build/outputs/apk/release/*.apk
+          app/build/outputs/bundle/release/*.aab
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Release Notes
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: release-metadata-${{ github.sha }}
+        path: |
+          app/build/outputs/mapping/release/*.txt
+        retention-days: 90
