@@ -27,9 +27,10 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import com.kurostream.app.navigation.TvNavHost
 import com.kurostream.app.ui.screens.splash.SplashScreen
 
+import com.kurostream.app.ui.theme.AnimeStreamTVTheme
 import com.kurostream.app.ui.theme.DynamicThemeProvider
-import com.kurostream.app.ui.theme.DynamicTheme
-import com.kurostream.app.ui.theme.DynamicTheme
+import com.kurostream.app.ui.theme.TvDarkColorScheme
+import com.kurostream.app.ui.theme.toDynamicPalette
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

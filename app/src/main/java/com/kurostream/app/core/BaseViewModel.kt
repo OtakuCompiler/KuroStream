@@ -30,9 +30,9 @@ abstract class BaseViewModel(
         viewModelScope.coroutineContext + supervisorJob + exceptionHandler
     )
 
-    protected val ioDispatcher get() = dispatchers?.io ?: kotlinx.coroutines.Dispatchers.IO
-    protected val mainDispatcher get() = dispatchers?.main ?: kotlinx.coroutines.Dispatchers.Main
-    protected val defaultDispatcher get() = dispatchers?.default ?: kotlinx.coroutines.Dispatchers.Default
+    protected val ioDispatcher get() = dispatchers?.io() ?: kotlinx.coroutines.Dispatchers.IO
+    protected val mainDispatcher get() = dispatchers?.main() ?: kotlinx.coroutines.Dispatchers.Main
+    protected val defaultDispatcher get() = dispatchers?.default() ?: kotlinx.coroutines.Dispatchers.Default
 
     /**
      * Launch a coroutine on the main dispatcher with automatic error logging.

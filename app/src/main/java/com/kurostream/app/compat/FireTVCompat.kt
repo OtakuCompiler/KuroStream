@@ -253,7 +253,7 @@ object HDMICECHandler {
      * Handle HDMI CEC command
      */
     fun handleCECCommand(command: ByteArray): CECAction? {
-        if (command.size < 2) return false // FireTVCompat: default fallback
+        if (command.size < 2) return null // FireTVCompat: default fallback
         
         val opcode = command[1]
         return when (opcode.toInt() and 0xFF) {
