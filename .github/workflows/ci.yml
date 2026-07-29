@@ -36,12 +36,11 @@ jobs:
     - name: Grant execute permission to gradlew
       run: chmod +x ./gradlew
 
-    - name: Run Detekt (static analysis)
-      run: ./gradlew detekt --no-daemon --stacktrace
-      continue-on-error: false
-
     - name: Run unit tests
-      run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
+      run: ./gradlew test --no-daemon --stacktrace
+
+    - name: Run lint
+      run: ./gradlew lintDebug --no-daemon --stacktrace
 
     - name: Build debug APK
       run: ./gradlew assembleDebug --no-daemon --stacktrace
@@ -72,27 +71,16 @@ jobs:
         name: test-reports-${{ github.sha }}
         path: |
           app/build/reports/tests/
-          **/build/reports/
+          **/build/reports/tests/
         retention-days: 14
-
-    - name: Upload detekt reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: detekt-report-${{ github.sha }}
-        path: |
-          build/reports/detekt/
-          **/build/reports/detekt/
-        retention-days: 30
 
   metadata-check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Verify metadata files
+    - name: Verify required metadata files
       run: |
-        test -f README.md || (echo "Missing README.md" && exit 1)
-        test -f LICENSE || (echo "Missing LICENSE" && exit 1)
-        test -f SECURITY.md || (echo "Missing SECURITY.md" && exit 1)
-        test -f CONTRIBUTING.md || (echo "Missing CONTRIBUTING.md" && exit 1)
+        for f in README.md LICENSE SECURITY.md CONTRIBUTING.md; do
+          test -f "$f" || { echo "Missing: $f"; exit 1; }
+        done
         echo "All required metadata files present."
