@@ -6,7 +6,6 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.common.Player
-import androidx.media3.common.SeekParameters
 import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -47,7 +46,6 @@ class Media3Player @Inject constructor(
                     setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
                 }
             )
-            .setSeekParameters(SeekParameters.CLOSEST_SYNC)
             .build()
     }
 }
