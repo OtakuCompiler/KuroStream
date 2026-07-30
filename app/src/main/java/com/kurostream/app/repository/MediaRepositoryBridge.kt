@@ -3,6 +3,7 @@ package com.kurostream.app.repository
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.model.Episode
 import com.kurostream.app.model.PlaybackUrl
+import com.kurostream.domain.result.Result as DomainResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -111,9 +112,13 @@ class MediaRepositoryBridge @Inject constructor(
     override suspend fun getPlaybackUrl(mediaId: String, episodeId: String?): Result<PlaybackUrl> {
         return try {
             val result = domainRepo.getPlaybackUrl(mediaId, episodeId)
-            result.getOrNull()?.let {
-                Result.success(PlaybackUrl(url = it.url, headers = it.headers, quality = it.quality))
-            } ?: Result.failure(Exception("Playback URL not found"))
+            when (result) {
+                is DomainResult.Success -> {
+                    val r = result.data
+                    Result.success(PlaybackUrl(url = r.url, headers = r.headers, quality = r.quality))
+                }
+                else -> Result.failure(Exception("Playback URL not found"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -122,9 +127,13 @@ class MediaRepositoryBridge @Inject constructor(
     override suspend fun getNextEpisode(mediaId: String, episodeId: String?): Result<Episode> {
         return try {
             val result = domainRepo.getNextEpisode(mediaId, episodeId)
-            result.getOrNull()?.let {
-                Result.success(Episode(id = it.id, number = it.number, title = it.title))
-            } ?: Result.failure(Exception("Next episode not found"))
+            when (result) {
+                is DomainResult.Success -> {
+                    val e = result.data
+                    Result.success(Episode(id = e.id, number = e.episodeNumber, title = e.title))
+                }
+                else -> Result.failure(Exception("Next episode not found"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

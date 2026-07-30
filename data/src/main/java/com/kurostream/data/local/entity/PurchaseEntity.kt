@@ -16,5 +16,7 @@ data class PurchaseEntity(
     @ColumnInfo(name = "refunded_at") val refundedAt: Long? = null,
     @ColumnInfo(name = "refund_reason") val refundReason: String? = null,
     val isPremium: Boolean = false,
-    val isConsumed: Boolean = false
+    val isConsumed: Boolean = false,
+    val downloadUrl: String = "",
+    val checksum: String = ""
 )

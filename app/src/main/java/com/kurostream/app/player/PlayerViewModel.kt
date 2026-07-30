@@ -27,7 +27,7 @@ import com.kurostream.app.model.PlaybackUrl
 import com.kurostream.domain.repository.SettingsRepository
 import com.kurostream.app.repository.TvRepositories.MediaRepository
 import com.kurostream.app.repository.TvRepositories.WatchProgressRepository
-import com.kurostream.domain.result.Result
+import com.kurostream.domain.result.Result as DomainResult
 import com.kurostream.common.memory.LowRamDevice
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -152,19 +152,22 @@ class PlayerViewModel @Inject constructor(
       _uiState.update { it.copy(isBuffering = true) }
 
       val result = mediaRepository.getPlaybackUrl(mediaId, episodeId)
-    result.fold(
-        onSuccess = { playbackUrl ->
+    when (result) {
+        is DomainResult.Success -> {
+            val playbackUrl = result.data
             _uiState.update { it.copy(title = playbackUrl.title) }
             val mediaItem = ExoMediaItem.fromUri(playbackUrl.url)
             player.setMediaItem(mediaItem, startPositionMs)
             player.prepare()
             player.play()
-        },
-        onError = { error ->
-            _uiState.update { it.copy(error = error.message, isBuffering = false) }
-        },
-        onLoading = { _uiState.update { it.copy(isBuffering = true) } }
-    )
+        }
+        is DomainResult.Error -> {
+            _uiState.update { it.copy(error = result.exception.message, isBuffering = false) }
+        }
+        is DomainResult.Loading -> {
+            _uiState.update { it.copy(isBuffering = true) }
+        }
+    }
     } catch (e: Exception) {
       _uiState.update { it.copy(error = e.message, isBuffering = false) }
     }

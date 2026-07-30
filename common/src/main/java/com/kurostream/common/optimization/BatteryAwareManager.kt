@@ -40,4 +40,8 @@ class BatteryAwareManager private constructor(context: Context) {
             powerManager.isPowerSaveMode
         } else false
     }
+
+    fun shouldReduceImageQuality(): Boolean {
+        return isLowPowerMode() || getBatteryLevel() < 20
+    }
 }

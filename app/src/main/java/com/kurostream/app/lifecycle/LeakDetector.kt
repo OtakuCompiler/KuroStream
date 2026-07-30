@@ -4,7 +4,6 @@ import android.app.Application
 import android.os.Build
 import android.os.Debug
 import timber.log.Timber
-import timber.log.Timber
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
