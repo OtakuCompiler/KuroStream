@@ -104,28 +104,27 @@ class PlayerViewModel @Inject constructor(
         }
 
         val isLowRam = LowRamDevice.isLowRamDevice()
-        player = PlayerConfig.create(application, lowRam = isLowRam)
-            playerReady = true
-            .apply {
-                addListener(object : Player.Listener {
-                    override fun onPlaybackStateChanged(state: Int) {
-                        _uiState.update {
-                            it.copy(
-                                isBuffering = state == Player.STATE_BUFFERING,
-                                duration = if (state == Player.STATE_READY) duration.coerceAtLeast(0) else it.duration
-                            )
-                        }
+        player = PlayerConfig.create(application, lowRam = isLowRam).apply {
+            addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(state: Int) {
+                    _uiState.update {
+                        it.copy(
+                            isBuffering = state == Player.STATE_BUFFERING,
+                            duration = if (state == Player.STATE_READY) it.duration.coerceAtLeast(0L) else it.duration
+                        )
                     }
+                }
 
-                    override fun onIsPlayingChanged(playing: Boolean) {
-                        _uiState.update { it.copy(isPlaying = playing) }
-                    }
+                override fun onIsPlayingChanged(playing: Boolean) {
+                    _uiState.update { it.copy(isPlaying = playing) }
+                }
 
-                    override fun onPlayerError(error: PlaybackException) {
-                        _uiState.update { it.copy(error = error.message, isBuffering = false) }
-                    }
-                })
-            }
+                override fun onPlayerError(error: PlaybackException) {
+                    _uiState.update { it.copy(error = error.message, isBuffering = false) }
+                }
+            })
+        }
+        playerReady = true
 
   viewModelScope.launch {
     try {
