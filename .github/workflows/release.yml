@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      GRADLE_OPTS: "-Xmx3072m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
     steps:
     - uses: actions/checkout@v4
 
@@ -57,16 +59,10 @@ jobs:
         echo "Tag: $TAG, Version: $VERSION_NAME, Code: $VERSION_CODE"
 
     - name: Assemble Release APKs
-      run: ./gradlew assembleRelease --no-daemon --stacktrace
-      env:
-        VERSION_CODE: ${{ steps.version.outputs.version_code }}
-        VERSION_NAME: ${{ steps.version.outputs.version_name }}
+      run: ./gradlew assembleRelease --no-daemon --stacktrace --no-parallel
 
     - name: Bundle Release AAB
-      run: ./gradlew bundleRelease --no-daemon --stacktrace
-      env:
-        VERSION_CODE: ${{ steps.version.outputs.version_code }}
-        VERSION_NAME: ${{ steps.version.outputs.version_name }}
+      run: ./gradlew bundleRelease --no-daemon --stacktrace --no-parallel
 
     - name: Sign APK with debug key (unsigned builds for distribution)
       run: |
