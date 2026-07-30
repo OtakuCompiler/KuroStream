@@ -1,5 +1,6 @@
 package com.kurostream.common.network
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -26,6 +27,7 @@ class AdaptiveBitrateController(private val context: Context) {
     private val _currentQuality = MutableStateFlow(StreamingQuality.AUTO)
     val currentQuality: StateFlow<StreamingQuality> = _currentQuality.asStateFlow()
 
+    @SuppressLint("MissingPermission")
     fun evaluateNetworkCondition(): NetworkCondition {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = cm.activeNetwork ?: return NetworkCondition()
