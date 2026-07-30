@@ -118,97 +118,67 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAniListRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
+    fun provideAniListApi(client: OkHttpClient): AniListApi {
+        val retrofit = Retrofit.Builder()
             .baseUrl(ANILIST_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideAniListApi(retrofit: Retrofit): AniListApi {
         return retrofit.create(AniListApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideMalRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
+    fun provideMalApi(client: OkHttpClient): MalApi {
+        val retrofit = Retrofit.Builder()
             .baseUrl(MAL_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideMalApi(retrofit: Retrofit): MalApi {
         return retrofit.create(MalApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideTmdbRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
+    fun provideTmdbApi(client: OkHttpClient): TmdbApi {
+        val retrofit = Retrofit.Builder()
             .baseUrl(TMDB_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideTmdbApi(retrofit: Retrofit): TmdbApi {
         return retrofit.create(TmdbApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideKitsuRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
+    fun provideKitsuApi(client: OkHttpClient): KitsuApi {
+        val retrofit = Retrofit.Builder()
             .baseUrl(KITSU_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideKitsuApi(retrofit: Retrofit): KitsuApi {
         return retrofit.create(KitsuApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideOpenSubtitlesRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
+    fun provideOpenSubtitlesApi(client: OkHttpClient): OpenSubtitlesApi {
+        val retrofit = Retrofit.Builder()
             .baseUrl(OPENSUBTITLES_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideOpenSubtitlesApi(retrofit: Retrofit): OpenSubtitlesApi {
         return retrofit.create(OpenSubtitlesApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideYouTubeRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
+    fun provideYouTubeApi(client: OkHttpClient): YouTubeApi {
+        val retrofit = Retrofit.Builder()
             .baseUrl(YOUTUBE_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideYouTubeApi(retrofit: Retrofit): YouTubeApi {
         return retrofit.create(YouTubeApi::class.java)
     }
 }

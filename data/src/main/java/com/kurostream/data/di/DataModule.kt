@@ -16,6 +16,7 @@
 package com.kurostream.data.di
 
 // import android.content.Context
+import com.kurostream.cache.CacheNamespaceManager
 import com.kurostream.data.cache.CacheManager
 import com.kurostream.data.cache.CacheManagerImpl
 // import com.kurostream.data.home.CustomHomeRowRepository
@@ -78,6 +79,10 @@ object DataModule {
     @Provides
     @Singleton
     fun provideCacheManager(impl: CacheManagerImpl): CacheManager = impl
+
+    @Provides
+    @Singleton
+    fun provideCacheNamespaceManager(impl: CacheManagerImpl): CacheNamespaceManager = impl
 
     @Provides
     @Singleton
