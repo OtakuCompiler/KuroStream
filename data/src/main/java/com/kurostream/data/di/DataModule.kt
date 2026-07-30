@@ -72,6 +72,10 @@ object DataModule {
 
     @Provides
     @Singleton
+    fun provideCacheRepository(impl: CacheManagerImpl): com.kurostream.domain.repository.CacheRepository = impl
+
+    @Provides
+    @Singleton
     fun provideNetworkMonitorRepository(impl: NetworkMonitorRepositoryImpl): NetworkMonitorRepository = impl
 
     @Provides
@@ -82,14 +86,9 @@ object DataModule {
     @Singleton
     fun provideOfflineTranslator(impl: OfflineTranslatorImpl): OfflineTranslator = impl
 
-    @Provides
-    @Singleton
-    fun provideAniListMetadataProvider(impl: AniListMetadataProvider): MetadataProvider = impl
+    // Providers are auto-discovered by Hilt via @Inject constructors on each implementation.
+    // MetadataProvider implementations are injected directly where needed.
 
-    @Provides
-    @Singleton
-    @Named("tmdb")
-    fun provideTmdbMetadataProvider(impl: TmdbMetadataProvider): MetadataProvider = impl
 }
 
 @Module
