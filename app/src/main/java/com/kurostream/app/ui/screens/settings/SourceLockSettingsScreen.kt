@@ -93,7 +93,7 @@ fun SourceLockSettingsScreen(
         // Description
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.colors(
+            colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ) {
@@ -183,7 +183,7 @@ fun SourceLockCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.colors(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
     ) {

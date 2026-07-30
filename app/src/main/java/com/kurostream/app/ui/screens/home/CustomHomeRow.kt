@@ -308,7 +308,8 @@ fun SeasonalRow(
             contentPadding = PaddingValues(horizontal = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(items = items) { item ->
+            items(count = items.size) { index ->
+                val item = items[index]
                 MediaCard(
                     item = item,
                     onClick = { onItemClick(item.id) }
@@ -399,7 +400,8 @@ fun BecauseYouWatchedRow(
             contentPadding = PaddingValues(horizontal = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(items = recommendations) { item ->
+            items(count = recommendations.size) { index ->
+                val item = recommendations[index]
                 MediaCard(
                     item = item,
                     onClick = { onItemClick(item.id) }
