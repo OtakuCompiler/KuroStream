@@ -1,5 +1,6 @@
 package com.kurostream.common.network
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -84,6 +85,7 @@ class UltraNetworkManager @Inject constructor(
             .build()
     }
 
+    @SuppressLint("MissingPermission")
     fun startMonitoring() {
         val networkRequest = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -115,6 +117,7 @@ class UltraNetworkManager @Inject constructor(
         Timber.d("UltraNetworkManager started monitoring")
     }
 
+    @SuppressLint("MissingPermission")
     private fun updateNetworkState() {
         val activeNetwork = connectivityManager.activeNetwork
         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
