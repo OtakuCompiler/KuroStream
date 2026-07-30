@@ -67,11 +67,6 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.15"
     }
-    lint {
-        baseline = file("lint-baseline.xml")
-        abortOnError = false
-        warningsAsErrors = false
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
