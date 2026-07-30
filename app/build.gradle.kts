@@ -64,7 +64,6 @@ android {
         compose = true
         buildConfig = true
     }
-    lint { isAbortOnError = false }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.15"
     }
