@@ -29,7 +29,6 @@ import androidx.compose.foundation.background
 fun HomeScreen(
     onMediaClick: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onDownloadsClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onAddonsClick: () -> Unit,
     onTorrentsClick: () -> Unit,
@@ -42,7 +41,6 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     if (uiState.skin == Skin.ARCTIC_FUSE) {
-        // ===== ARCTIC FUSE 3 LAYOUT =====
         ArcticFuseHomeScreen(
             heroItems = uiState.heroItems,
             continueWatching = uiState.continueWatching,
@@ -55,7 +53,6 @@ fun HomeScreen(
             onPlay = { item -> onMediaClick(item.id) },
             onRetry = { viewModel.retry() },
             onSearchClick = onSearchClick,
-            onDownloadsClick = onDownloadsClick,
             onSettingsClick = onSettingsClick,
             onAddonsClick = onAddonsClick,
             onTorrentsClick = onTorrentsClick,
@@ -65,7 +62,6 @@ fun HomeScreen(
             onLibraryClick = onLibraryClick,
         )
     } else {
-        // ===== STANDARD LAYOUT =====
         Row(modifier = Modifier.fillMaxSize().background(TvBackground)) {
             SidebarNavigation(
                 selectedItem = "home",
@@ -73,7 +69,6 @@ fun HomeScreen(
                     when (id) {
                         "home" -> { /* already on home */ }
                         "search" -> onSearchClick()
-                        "downloads" -> onDownloadsClick()
                         "settings" -> onSettingsClick()
                         "addons" -> onAddonsClick()
                         "torrents" -> onTorrentsClick()
@@ -89,7 +84,6 @@ fun HomeScreen(
                 onMediaClick = onMediaClick,
                 onPlayClick = { item -> onMediaClick(item.id) },
                 onSearchClick = onSearchClick,
-                onDownloadsClick = onDownloadsClick,
                 onSettingsClick = onSettingsClick,
                 onAddonsClick = onAddonsClick,
                 onTorrentsClick = onTorrentsClick,

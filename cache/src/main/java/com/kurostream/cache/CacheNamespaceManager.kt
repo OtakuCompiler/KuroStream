@@ -8,4 +8,5 @@ interface CacheNamespaceManager {
 interface CacheNamespace {
     fun <T> get(key: String): T?
     fun put(key: String, value: Any?, ttlMillis: Long)
+    fun clear()
 }

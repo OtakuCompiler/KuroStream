@@ -59,7 +59,7 @@
     <!-- Audio Focus -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
-    <!-- Boot Completed for resuming downloads after reboot -->
+    <!-- Boot Completed for app maintenance -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Vibration for Haptic Feedback -->
@@ -102,7 +102,6 @@
 <application
     android:name="com.kurostream.app.AnimeStreamTvApplication"
     android:allowBackup="true"
-    android:backupAgent="com.kurostream.app.BackupAgent"
     android:dataExtractionRules="@xml/data_extraction_rules"
     android:fullBackupContent="@xml/backup_rules"
     android:hardwareAccelerated="true"
@@ -115,27 +114,32 @@
     android:banner="@drawable/banner"
     android:supportsRtl="true"
     android:theme="@style/Theme.AnimeStreamTV"
-    android:usesCleartextTraffic="true"
     tools:replace="android:allowBackup,android:icon,android:label,android:theme">
 
 
 <!-- Leanback Launcher Activity -->
-<activity
-    android:name="com.kurostream.app.MainActivity"
-    android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden|keyboard|navigation"
-    android:exported="true"
-    android:launchMode="singleTask"
-    android:screenOrientation="landscape"
-    android:theme="@style/Theme.AnimeStreamTV.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-            </intent-filter>
-        </activity>
+    <activity
+        android:name="com.kurostream.app.MainActivity"
+        android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden|keyboard|navigation"
+        android:exported="true"
+        android:launchMode="singleTask"
+        android:screenOrientation="landscape"
+        android:theme="@style/Theme.AnimeStreamTV.NoActionBar">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+        </intent-filter>
+        <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="kurostream" android:host="play" />
+        </intent-filter>
+    </activity>
 
 <!-- Player Activity -->
 <activity
@@ -203,13 +207,6 @@
         </service>
         -->
 
-<!-- Download Worker -->
-    <service
-        android:name="com.kurostream.data.worker.DownloadWorker"
-        android:exported="false"
-        android:permission="android.permission.BIND_JOB_SERVICE"
-        tools:ignore="Instantiatable" />
-
 <!-- Sync Worker -->
     <service
         android:name="com.kurostream.data.worker.SyncWorker"
@@ -234,22 +231,13 @@
             android:isolatedProcess="true" />
         -->
 
-        <!-- Boot Receiver for Auto-start Downloads -->
+        <!-- Boot Receiver -->
         <receiver
             android:name="com.kurostream.data.receiver.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Network Change Receiver -->
-        <receiver
-            android:name="com.kurostream.data.receiver.NetworkChangeReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
 
@@ -281,9 +269,6 @@
             tools:node="merge">
             <meta-data
                 android:name="com.kurostream.app.startup.KuroStreamInitializer"
-                android:value="androidx.startup" />
-            <meta-data
-                android:name="com.kurostream.app.startup.BackgroundWorkInitializer"
                 android:value="androidx.startup" />
         </provider>
 

@@ -126,8 +126,8 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Playback Section
-            SettingsSection(title = "Playback") {
+            // Torrent Section
+            SettingsSection(title = "Streaming") {
                 ToggleRow("Auto-play Next Episode", uiState.autoPlayNextEnabled) {
                     viewModel.setAutoPlayNextEnabled(it)
                 }
@@ -145,30 +145,6 @@ fun SettingsScreen(
                 }
                 ToggleRow("Ambient Mode", uiState.ambientModeEnabled) {
                     viewModel.setAmbientModeEnabled(it)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Disk Buffer Section
-            SettingsSection(title = "Disk Buffer") {
-                ToggleRow("Delete on Shutdown", uiState.diskBufferDeleteOnShutdown) {
-                    viewModel.setDiskBufferDeleteOnShutdown(it)
-                }
-                ToggleRow("Cache Compression", uiState.vodCacheCompressionEnabled) {
-                    viewModel.setVodCacheCompressionEnabled(it)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Torrent Section
-            SettingsSection(title = "Torrent") {
-                ToggleRow("Seed While Idle", uiState.seedWhileIdleEnabled) {
-                    viewModel.setSeedWhileIdleEnabled(it)
-                }
-                ToggleRow("Sequential Download", uiState.sequentialDownloadEnabled) {
-                    viewModel.setSequentialDownloadEnabled(it)
                 }
             }
 

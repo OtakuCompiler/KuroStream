@@ -82,13 +82,6 @@ interface SettingsRepository {
     suspend fun setDiskBufferDeleteOnShutdown(enabled: Boolean)
     suspend fun setVodCacheCompressionEnabled(enabled: Boolean)
 
-    // ── Torrent ────────────────────────────────────────────────────────
-    suspend fun setSeedWhileIdleEnabled(enabled: Boolean)
-    suspend fun setSequentialDownloadEnabled(enabled: Boolean)
-    suspend fun setSeedRatioLimit(limit: Float)
-    suspend fun setGlobalDownloadLimit(kbps: Long)
-    suspend fun setGlobalUploadLimit(kbps: Long)
-
     // ── Player Subtitle ───────────────────────────────────────────────
     fun observePlayerSubtitleSettings(): Flow<PlayerSubtitleSettings>
     fun getPlayerSubtitleSettings(): PlayerSubtitleSettings

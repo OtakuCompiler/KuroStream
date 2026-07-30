@@ -48,7 +48,6 @@ import com.kurostream.app.ui.theme.TvBackground
 fun TvTopAppBar(
     showBackground: Boolean,
     onSearchClick: () -> Unit,
-    onDownloadsClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onAddonsClick: () -> Unit,
     onTorrentsClick: () -> Unit,
@@ -86,9 +85,6 @@ fun TvTopAppBar(
         ) {
             IconButton(onClick = onSearchClick) {
                 Icon(Icons.Default.Search, contentDescription = "Search")
-            }
-            IconButton(onClick = onDownloadsClick) {
-                Icon(Icons.Default.Star, contentDescription = "Downloads")
             }
             IconButton(onClick = onTorrentsClick) {
                 Icon(Icons.Default.PlayArrow, contentDescription = "Torrents")

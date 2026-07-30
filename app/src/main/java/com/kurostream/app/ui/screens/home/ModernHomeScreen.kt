@@ -37,7 +37,6 @@ fun ModernHomeScreen(
     onMediaClick: (String) -> Unit,
     onPlayClick: (MediaItem) -> Unit,
     onSearchClick: () -> Unit,
-    onDownloadsClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onAddonsClick: () -> Unit,
     onTorrentsClick: () -> Unit,

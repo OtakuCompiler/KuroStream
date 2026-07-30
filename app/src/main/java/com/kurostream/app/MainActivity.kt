@@ -15,6 +15,7 @@
 
 package com.kurostream.app
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,7 +27,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import com.kurostream.app.navigation.TvNavHost
 import com.kurostream.app.ui.screens.splash.SplashScreen
-
 import com.kurostream.app.ui.theme.AnimeStreamTVTheme
 import com.kurostream.app.ui.theme.DynamicThemeProvider
 import com.kurostream.app.ui.theme.TvDarkColorScheme
@@ -36,12 +36,21 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 @OptIn(ExperimentalTvMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+
+    private var deepLinkMediaId: String? = null
+    private var deepLinkEpisodeId: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        intent?.data?.let { uri ->
+            handleDeepLink(uri)
+        }
+
         setContent {
             var showSplash by remember { mutableStateOf(true) }
             val defaultPalette = remember { TvDarkColorScheme.toDynamicPalette() }
-            
+
             AnimeStreamTVTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (showSplash) {
@@ -59,9 +68,38 @@ class MainActivity : ComponentActivity() {
                                 navController = navController,
                                 modifier = Modifier.fillMaxSize()
                             )
+
+                            LaunchedEffect(Unit) {
+                                deepLinkMediaId?.let { mediaId ->
+                                    val route = com.kurostream.app.navigation.PlayerRoute(
+                                        mediaId = mediaId,
+                                        episodeId = deepLinkEpisodeId,
+                                        startPositionMs = 0L
+                                    )
+                                    navController.navigate(route)
+                                    deepLinkMediaId = null
+                                }
+                            }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        intent?.data?.let { uri ->
+            handleDeepLink(uri)
+        }
+    }
+
+    private fun handleDeepLink(uri: Uri) {
+        if (uri.scheme == "kurostream" && uri.host == "play") {
+            val mediaId = uri.getQueryParameter("id")
+            if (!mediaId.isNullOrBlank() && mediaId.matches(Regex("^[a-zA-Z0-9_-]+$"))) {
+                deepLinkMediaId = mediaId
+                deepLinkEpisodeId = uri.getQueryParameter("episode")
             }
         }
     }

@@ -18,6 +18,7 @@ package com.kurostream.app.player
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -35,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class PlayerActivity : ComponentActivity() {
 
     private val viewModel: PlayerViewModel by viewModels()
+    private var wakeLock: PowerManager.WakeLock? = null
 
     companion object {
         private const val EXTRA_MEDIA_ID = "media_id"
@@ -56,15 +58,21 @@ class PlayerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val mediaId = intent.getStringExtra(EXTRA_MEDIA_ID) ?: return finish()
+        val episodeId = intent.getStringExtra(EXTRA_EPISODE_ID)
+        val startPosition = intent.getLongExtra(EXTRA_START_POSITION, 0L)
+
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ON_AFTER_RELEASE,
+            "KuroStream::PlayerWakeLock"
+        ).apply { acquire(10 * 60 * 1000L) }
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).apply {
             hide(WindowInsetsCompat.Type.systemBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
-
-        val mediaId = intent.getStringExtra(EXTRA_MEDIA_ID) ?: return finish()
-        val episodeId = intent.getStringExtra(EXTRA_EPISODE_ID)
-        val startPosition = intent.getLongExtra(EXTRA_START_POSITION, 0L)
 
         viewModel.preparePlayback(mediaId, episodeId, startPosition)
 
@@ -85,6 +93,9 @@ class PlayerActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        wakeLock?.let {
+            if (it.isHeld) it.release()
+        }
         super.onDestroy()
         viewModel.releasePlayer()
     }

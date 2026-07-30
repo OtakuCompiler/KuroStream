@@ -297,63 +297,6 @@ class SettingsViewModel @Inject constructor(
             } catch (e: Exception) {
                 /* ignore settings error */
             }
-        }
-    }
-
-    // Torrent settings
-    fun setSeedWhileIdleEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                settingsRepository.setSeedWhileIdleEnabled(enabled)
-                _uiState.update { it.copy(seedWhileIdleEnabled = enabled) }
-            } catch (e: Exception) {
-                /* ignore settings error */
-            }
-        }
-    }
-
-    fun setSequentialDownloadEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                settingsRepository.setSequentialDownloadEnabled(enabled)
-                _uiState.update { it.copy(sequentialDownloadEnabled = enabled) }
-            } catch (e: Exception) {
-                /* ignore settings error */
-            }
-        }
-    }
-
-    fun setSeedRatioLimit(limit: Float) {
-        viewModelScope.launch {
-            try {
-                settingsRepository.setSeedRatioLimit(limit)
-                _uiState.update { it.copy(seedRatioLimit = limit) }
-            } catch (e: Exception) {
-                /* ignore settings error */
-            }
-        }
-    }
-
-    fun setGlobalDownloadLimit(kbps: Long) {
-        viewModelScope.launch {
-            try {
-                settingsRepository.setGlobalDownloadLimit(kbps)
-                _uiState.update { it.copy(globalDownloadLimitKbps = kbps) }
-            } catch (e: Exception) {
-                /* ignore settings error */
-            }
-        }
-    }
-
-    fun setGlobalUploadLimit(kbps: Long) {
-        viewModelScope.launch {
-            try {
-                settingsRepository.setGlobalUploadLimit(kbps)
-                _uiState.update { it.copy(globalUploadLimitKbps = kbps) }
-            } catch (e: Exception) {
-                /* ignore settings error */
-            }
-        }
     }
 }
 
@@ -374,17 +317,10 @@ data class SettingsUiState(
     val predictivePrecacheEnabled: Boolean = true,
     val aiUpscalingEnabled: Boolean = false,
     val frameInterpolationEnabled: Boolean = false,
-    // Disk Buffer Settings
     val diskBufferSizeMb: Int = 200,
     val diskBufferReadAheadMb: Int = 4,
     val diskBufferLocation: String = "internal",
     val diskBufferDeleteOnShutdown: Boolean = false,
-    // Torrent Settings
-    val seedWhileIdleEnabled: Boolean = true,
-    val sequentialDownloadEnabled: Boolean = true,
-    val seedRatioLimit: Float = 2.0f,
-    val globalDownloadLimitKbps: Long = -1,
-    val globalUploadLimitKbps: Long = -1,
     val lowLatencyUpscalingEnabled: Boolean = false,
     val vodCacheCompressionEnabled: Boolean = true,
     val reduceMotionEnabled: Boolean = false,

@@ -15,13 +15,9 @@
 
 package com.kurostream.data.di
 
-// import android.content.Context
 import com.kurostream.cache.CacheNamespaceManager
 import com.kurostream.data.cache.CacheManager
 import com.kurostream.data.cache.CacheManagerImpl
-// import com.kurostream.data.home.CustomHomeRowRepository
-// import com.kurostream.data.home.CustomHomeRowRepositoryImpl
-// import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.data.local.preferences.SettingsDataStoreImpl
 import com.kurostream.data.metadata.*
@@ -29,20 +25,14 @@ import com.kurostream.data.network.NetworkMonitorRepositoryImpl
 import com.kurostream.data.repository.*
 import com.kurostream.data.subtitle.OfflineTranslatorImpl
 import com.kurostream.data.sync.CrossDeviceSyncRepositoryImpl
-// import com.kurostream.data.trailer.TrailerRepository
-// import com.kurostream.data.trailer.TrailerRepositoryImpl
-// import com.kurostream.domain.metadata.MetadataProvider
-// import com.kurostream.domain.metadata.UnifiedMetadataRepository
 import com.kurostream.domain.network.NetworkMonitorRepository
 import com.kurostream.domain.repository.*
 import com.kurostream.domain.subtitle.OfflineTranslator
 import com.kurostream.domain.sync.CrossDeviceSyncRepository
-// import com.kurostream.domain.trailer.TrailerRepository
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.Module
 import dagger.Provides
-// import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Named
@@ -70,10 +60,6 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideDownloadRepository(impl: DownloadRepositoryImpl): DownloadRepository = impl
-
-    @Provides
-    @Singleton
     fun provideSourceLockRepository(impl: SourceLockRepositoryImpl): SourceLockRepository = impl
 
     @Provides
@@ -96,8 +82,14 @@ object DataModule {
     @Singleton
     fun provideOfflineTranslator(impl: OfflineTranslatorImpl): OfflineTranslator = impl
 
-    // DAO providers moved to RoomModule (ApplicationComponent) for KSP compatibility
-    // SettingsDataStore also moved to RoomModule (ApplicationComponent) for KSP compatibility
+    @Provides
+    @Singleton
+    fun provideAniListMetadataProvider(impl: AniListMetadataProvider): MetadataProvider = impl
+
+    @Provides
+    @Singleton
+    @Named("tmdb")
+    fun provideTmdbMetadataProvider(impl: TmdbMetadataProvider): MetadataProvider = impl
 }
 
 @Module

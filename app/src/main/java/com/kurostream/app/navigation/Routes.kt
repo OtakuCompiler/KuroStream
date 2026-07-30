@@ -27,9 +27,6 @@ data class DetailsRoute(val mediaId: String)
 object SearchRoute
 
 @Serializable
-object DownloadsRoute
-
-@Serializable
 object SettingsRoute
 
 @Serializable

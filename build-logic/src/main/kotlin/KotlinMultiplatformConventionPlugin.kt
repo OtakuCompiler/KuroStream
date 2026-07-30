@@ -37,7 +37,7 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
                     }
                     val commonTest by getting {
                         dependencies {
-                            implementation(libs.junit)
+                            implementation("junit:junit:4.13.2")
                         }
                     }
                 }

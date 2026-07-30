@@ -128,7 +128,7 @@ class PlayerViewModel @Inject constructor(
   viewModelScope.launch {
     try {
       while (isActive) {
-        if (player.isPlaying) {
+        if (::player.isInitialized && player.isPlaying) {
           _uiState.update {
             it.copy(
               currentPosition = player.currentPosition.coerceAtLeast(0),

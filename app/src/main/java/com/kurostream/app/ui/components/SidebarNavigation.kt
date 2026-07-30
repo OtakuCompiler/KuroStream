@@ -75,7 +75,6 @@ fun SidebarNavigation(
         listOf(
             SidebarItem("home", "Home", { Text("\uD83C\uDFE0", fontSize = 20.sp) }, "home"),
             SidebarItem("search", "Search", { Text("\uD83D\uDD0D", fontSize = 20.sp) }, "search"),
-            SidebarItem("downloads", "Downloads", { Text("\u2B07\uFE0F", fontSize = 20.sp) }, "downloads"),
             SidebarItem("settings", "Settings", { Text("\u2699\uFE0F", fontSize = 20.sp) }, "settings"),
             SidebarItem("addons", "Add-ons", { Text("\uD83E\uDDE9", fontSize = 20.sp) }, "addons"),
             SidebarItem("torrents", "Torrents", { Text("\u26A1", fontSize = 20.sp) }, "torrents"),

@@ -40,7 +40,6 @@ class MediaRepositoryImpl @Inject constructor(
     private val mediaItemDao: MediaItemDao,
     private val watchHistoryDao: WatchHistoryDao,
     private val favoriteDao: FavoriteDao,
-    private val downloadItemDao: DownloadItemDao,
     private val anilistApi: AniListApi,
     private val malApi: MalApi,
     private val openSubtitlesApi: OpenSubtitlesApi,
@@ -78,17 +77,31 @@ class MediaRepositoryImpl @Inject constructor(
         try {
             val request = AniListSearchRequest(variables = mapOf("search" to query, "page" to 1, "perPage" to 20))
             val response = anilistApi.searchAnime(request)
-            if (response.isSuccessful) response.body()?.data?.Page?.media?.mapNotNull { it.toDomain() } ?: emptyList()
-            else emptyList()
-        } catch (e: Exception) { emptyList() }
+            if (response.isSuccessful) {
+                response.body()?.data?.Page?.media?.mapNotNull { it.toDomain() } ?: emptyList()
+            } else {
+                Timber.w("AniList search failed: HTTP ${response.code()} — ${response.message()}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "AniList search exception for query: $query")
+            emptyList()
+        }
     }
 
     private suspend fun searchMal(query: String): List<MediaItem> = withContext(Dispatchers.IO) {
         try {
             val response = malApi.searchAnime(query = query, limit = 20)
-            if (response.isSuccessful) response.body()?.data?.mapNotNull { it.node.toDomain() } ?: emptyList()
-            else emptyList()
-        } catch (e: Exception) { emptyList() }
+            if (response.isSuccessful) {
+                response.body()?.data?.mapNotNull { it.node.toDomain() } ?: emptyList()
+            } else {
+                Timber.w("MAL search failed: HTTP ${response.code()} — ${response.message()}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "MAL search exception for query: $query")
+            emptyList()
+        }
     }
 
     private suspend fun searchAllSources(query: String): List<MediaItem> {
@@ -173,8 +186,14 @@ class MediaRepositoryImpl @Inject constructor(
         try {
             val response = anilistApi.getTrendingAnime(AniListTrendingRequest())
             if (response.isSuccessful) response.body()?.data?.Page?.media?.mapNotNull { it.toDomain() } ?: emptyList()
-            else emptyList()
-        } catch (e: Exception) { emptyList() }
+            else {
+                Timber.w("AniList trending failed: HTTP ${response.code()} — ${response.message()}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "AniList trending exception")
+            emptyList()
+        }
     }
 
     private suspend fun getMalRanking(): List<MediaItem> = withContext(Dispatchers.IO) {
@@ -210,8 +229,14 @@ class MediaRepositoryImpl @Inject constructor(
                         lastUpdated = System.currentTimeMillis()
                     )
                 } ?: emptyList()
-            } else emptyList()
-        } catch (e: Exception) { emptyList() }
+            } else {
+                Timber.w("MAL ranking failed: HTTP ${response.code()} — ${response.message()}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "MAL ranking exception")
+            emptyList()
+        }
     }
 
     override fun observeWatchHistory(profileId: String): Flow<List<WatchHistory>> {
@@ -240,23 +265,6 @@ class MediaRepositoryImpl @Inject constructor(
         favoriteDao.deleteByMediaAndProfile(mediaItemId, profileId)
     }
 
-    override fun observeDownloads(profileId: String): Flow<List<DownloadItem>> {
-        return downloadItemDao.observeByProfile(profileId).map { it.map { e -> e.toDomain() } }
-    }
-
-    override suspend fun getDownload(mediaItemId: String, profileId: String): DownloadItem? {
-        return downloadItemDao.getByMediaAndProfile(mediaItemId, profileId)?.toDomain()
-    }
-
-    override suspend fun saveDownload(download: DownloadItem) { downloadItemDao.insert(download.toEntity()) }
-
-    override suspend fun updateDownloadProgress(id: String, progress: Float, status: DownloadStatus) {
-        downloadItemDao.updateProgress(id, status.name, progress)
-    }
-
-    override suspend fun deleteDownload(id: String) {
-        // Simplified - needs proper ID-based lookup
-    }
 
     override suspend fun searchSubtitles(query: String, languages: List<String>, episodeInfo: EpisodeInfo?): List<SubtitleResult> = withContext(Dispatchers.IO) {
         try {
@@ -417,8 +425,6 @@ class MediaRepositoryImpl @Inject constructor(
     private fun WatchHistory.toEntity() = WatchHistoryEntity(id, mediaItemId, profileId, position, duration, watchedAt, completionPercent, episodeNumber, seasonNumber)
     private fun FavoriteEntity.toDomain() = Favorite(id, mediaItemId, profileId, addedAt, category)
     private fun Favorite.toEntity() = FavoriteEntity(id, mediaItemId, profileId, addedAt, category)
-    private fun DownloadItemEntity.toDomain() = DownloadItem(id, mediaItemId, profileId, localPath, DownloadStatus.valueOf(status), progress, totalBytes, downloadedBytes, startedAt, completedAt, errorMessage)
-    private fun DownloadItem.toEntity() = DownloadItemEntity(id, mediaItemId, profileId, localPath, status.name, progress, totalBytes, downloadedBytes, startedAt, completedAt, errorMessage)
 
     override suspend fun getMediaItems(): List<String> = mediaItemDao.search("").map { it.id }
     override suspend fun getMediaItem(id: String): String? = mediaItemDao.getById(id)?.id

@@ -1,8 +1,21 @@
+// This file is part of KuroStream.
+//
+// KuroStream is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KuroStream is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
+
 package com.kurostream.domain.repository
 
 import com.kurostream.domain.entity.MediaItem
-import com.kurostream.domain.model.DownloadItem
-import com.kurostream.domain.model.DownloadStatus
 import com.kurostream.domain.model.EpisodeInfo
 import com.kurostream.domain.model.Favorite
 import com.kurostream.domain.model.MediaCategory
@@ -14,7 +27,6 @@ import kotlinx.coroutines.flow.Flow
 interface MediaRepository {
     suspend fun getMediaItems(): List<String>
     suspend fun getMediaItem(id: String): String?
-    /** Observe all media items as a flow for home screen display */
     fun observeAllMediaItems(): Flow<List<MediaItem>>
     suspend fun search(query: String): List<String>
 
@@ -27,12 +39,6 @@ interface MediaRepository {
     suspend fun saveMediaItem(item: MediaItem)
     suspend fun saveMediaItems(items: List<MediaItem>)
     suspend fun deleteMediaItem(id: String)
-
-    fun observeDownloads(profileId: String): Flow<List<DownloadItem>>
-    suspend fun getDownload(mediaItemId: String, profileId: String): DownloadItem?
-    suspend fun saveDownload(download: DownloadItem)
-    suspend fun updateDownloadProgress(id: String, progress: Float, status: DownloadStatus)
-    suspend fun deleteDownload(id: String)
 
     fun observeFavorites(profileId: String): Flow<List<Favorite>>
     suspend fun isFavorite(mediaItemId: String, profileId: String): Boolean

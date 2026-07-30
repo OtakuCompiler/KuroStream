@@ -58,7 +58,6 @@ fun ArcticFuseHomeScreen(
     onRetry: () -> Unit = {},
     // Navigation callbacks
     onSearchClick: () -> Unit = {},
-    onDownloadsClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onAddonsClick: () -> Unit = {},
     onTorrentsClick: () -> Unit = {},

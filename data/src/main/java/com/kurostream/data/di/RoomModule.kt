@@ -57,11 +57,6 @@ object RoomModule {
         return database.favoriteDao()
     }
 
-    @Provides
-    @Singleton
-    fun provideDownloadItemDao(database: KuroStreamDatabase): DownloadItemDao {
-        return database.downloadItemDao()
-    }
 
     @Provides
     @Singleton

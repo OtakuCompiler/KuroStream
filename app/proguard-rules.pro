@@ -38,5 +38,7 @@
 -assumenosideeffects class timber.log.Timber { *; }
 
 # General
--keep public class * { public protected *; }
+-keep public class com.kurostream.app.AnimeStreamTvApplication { *; }
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Application
 -keepclassmembers enum * { public static **[] values(); public static ** valueOf(java.lang.String); }

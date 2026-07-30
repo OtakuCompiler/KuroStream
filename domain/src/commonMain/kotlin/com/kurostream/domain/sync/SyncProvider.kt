@@ -33,7 +33,6 @@ data class SyncPayload(
     val profiles: List<Profile> = emptyList(),
     val watchHistory: List<WatchHistory> = emptyList(),
     val favorites: List<Favorite> = emptyList(),
-    val downloads: List<DownloadItem> = emptyList(),
     val settings: Map<String, String> = emptyMap(),
     val timestamp: Long = System.currentTimeMillis(),
     val deviceId: String = "",

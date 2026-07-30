@@ -21,14 +21,13 @@ import androidx.room.TypeConverters
 import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.entity.*
 
-@Database(
+    @Database(
     entities = [
         MediaItemEntity::class,
         MediaItemFts::class,
         ProfileEntity::class,
         WatchHistoryEntity::class,
         FavoriteEntity::class,
-        DownloadItemEntity::class,
         SourceLockEntity::class,
         SourceLockSettingsEntity::class,
         SourceLockFallbackEntity::class,
@@ -46,7 +45,6 @@ abstract class KuroStreamDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
     abstract fun watchHistoryDao(): WatchHistoryDao
     abstract fun favoriteDao(): FavoriteDao
-    abstract fun downloadItemDao(): DownloadItemDao
     abstract fun sourceLockDao(): SourceLockDao
     abstract fun homeRowDao(): HomeRowDao
     abstract fun bookmarkDao(): BookmarkDao

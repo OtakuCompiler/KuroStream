@@ -17,7 +17,6 @@ dependencyResolutionManagement {
 rootProject.name = "KuroStream"
 includeBuild("build-logic")
 include(":app")
-include(":backup")
 include(":benchmark")
 include(":cache")
 include(":common")

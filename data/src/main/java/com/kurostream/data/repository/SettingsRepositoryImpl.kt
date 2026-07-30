@@ -42,11 +42,6 @@ class SettingsRepositoryImpl @Inject constructor() : SettingsRepository {
     private val diskBufferLocationFlow = MutableStateFlow("internal")
     private val diskBufferDeleteOnShutdownFlow = MutableStateFlow(false)
     private val vodCacheCompressionFlow = MutableStateFlow(true)
-    private val seedWhileIdleFlow = MutableStateFlow(true)
-    private val sequentialDownloadFlow = MutableStateFlow(true)
-    private val seedRatioLimitFlow = MutableStateFlow(2.0f)
-    private val globalDownloadLimitFlow = MutableStateFlow(-1L)
-    private val globalUploadLimitFlow = MutableStateFlow(-1L)
 
     // ── Subtitle flows ─────────────────────────────────────────────────
     private val subtitleFontSizeFlow = MutableStateFlow(24f)
@@ -118,13 +113,6 @@ class SettingsRepositoryImpl @Inject constructor() : SettingsRepository {
     override suspend fun setDiskBufferLocation(location: String) { diskBufferLocationFlow.value = location }
     override suspend fun setDiskBufferDeleteOnShutdown(enabled: Boolean) { diskBufferDeleteOnShutdownFlow.value = enabled }
     override suspend fun setVodCacheCompressionEnabled(enabled: Boolean) { vodCacheCompressionFlow.value = enabled }
-
-    // ── Torrent ────────────────────────────────────────────────────────
-    override suspend fun setSeedWhileIdleEnabled(enabled: Boolean) { seedWhileIdleFlow.value = enabled }
-    override suspend fun setSequentialDownloadEnabled(enabled: Boolean) { sequentialDownloadFlow.value = enabled }
-    override suspend fun setSeedRatioLimit(limit: Float) { seedRatioLimitFlow.value = limit }
-    override suspend fun setGlobalDownloadLimit(kbps: Long) { globalDownloadLimitFlow.value = kbps }
-    override suspend fun setGlobalUploadLimit(kbps: Long) { globalUploadLimitFlow.value = kbps }
 
     // ── Player Subtitle ───────────────────────────────────────────────
     override fun observePlayerSubtitleSettings(): Flow<PlayerSubtitleSettings> = playerSubtitleSettingsFlow

@@ -18,40 +18,18 @@ package com.kurostream.data.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import com.kurostream.data.worker.DownloadWorker
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
-/**
- * Resumes pending downloads after device boot or app package replacement.
- *
- * Enqueues a unique tagged work request ([DownloadWorker.UNIQUE_WORK_NAME]) that the
- * download pipeline can pick up. The actual enumeration of pending downloads is
- * delegated to the worker layer; this receiver only kicks off the resume flow.
- */
+@AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
-                Timber.i("Boot/replaced received — resuming downloads")
-                enqueueResumeDownloads(context)
+                Timber.i("Boot/replaced received")
             }
         }
-    }
-
-    private fun enqueueResumeDownloads(context: Context) {
-        val request = OneTimeWorkRequestBuilder<DownloadWorker>()
-            .addTag(DownloadWorker.UNIQUE_WORK_NAME)
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            DownloadWorker.UNIQUE_WORK_NAME,
-            ExistingWorkPolicy.KEEP,
-            request,
-        )
     }
 }

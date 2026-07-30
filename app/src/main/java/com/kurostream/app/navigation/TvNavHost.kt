@@ -33,7 +33,6 @@ import com.kurostream.app.player.PlayerScreen
 import com.kurostream.app.player.PlayerViewModel
 import com.kurostream.app.ui.screens.addons.AddonsScreen
 import com.kurostream.app.ui.screens.details.DetailsScreen
-import com.kurostream.app.ui.screens.downloads.DownloadsScreen
 import com.kurostream.app.ui.screens.home.HomeScreen
 import com.kurostream.app.ui.screens.favorites.FavoritesScreen
 import com.kurostream.app.ui.screens.history.HistoryScreen
@@ -92,9 +91,6 @@ fun TvNavHost(
                 onSearchClick = {
                     navController.navigate(SearchRoute)
                 },
-                onDownloadsClick = {
-                    navController.navigate(DownloadsRoute)
-                },
                 onSettingsClick = {
                     navController.navigate(SettingsRoute)
                 },
@@ -129,12 +125,6 @@ fun TvNavHost(
                     navController.navigate(DetailsRoute(mediaId))
                 },
                 onClose = { navController.popBackStack() }
-            )
-        }
-
-        composable<DownloadsRoute> {
-            DownloadsScreen(
-                onBackClick = { navController.popBackStack() }
             )
         }
 

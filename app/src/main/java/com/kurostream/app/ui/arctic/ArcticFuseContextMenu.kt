@@ -102,7 +102,7 @@ private fun ContextRow(
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val fr = remember { FocusRequester() }
-    LaunchedEffect(Unit) { /* keep focus requester alive */ }
+    LaunchedEffect(visible) { /* keep focus requester alive */ }
 
     Row(
         modifier = Modifier

@@ -1,57 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Disable cleartext traffic in production -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
-            <certificates src="system"/>
+            <certificates src="system" />
         </trust-anchors>
     </base-config>
 
-    <!-- Certificate pinning for AniList API -->
     <domain-config>
         <domain includeSubdomains="true">graphql.anilist.co</domain>
-        <pin-set expiration="2026-12-31">
-            <!-- Primary pin (replace with actual SPKI hash after first run) -->
-            <pin digest="SHA-256">sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
-            <!-- Backup pin -->
-            <pin digest="SHA-256">sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
-        </pin-set>
+        <domain includeSubdomains="true">api.myanimelist.net</domain>
+        <domain includeSubdomains="true">api.themoviedb.org</domain>
+        <domain includeSubdomains="true">kitsu.io</domain>
         <trust-anchors>
-            <certificates src="system"/>
+            <certificates src="system" />
         </trust-anchors>
     </domain-config>
 
-    <!-- Certificate pinning for MyAnimeList -->
-    <domain-config>
-        <domain includeSubdomains="true">api.myanimelist.net</domain>
-        <pin-set expiration="2026-12-31">
-            <pin digest="SHA-256">sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
-            <pin digest="SHA-256">sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
-        </pin-set>
-    </domain-config>
-
-    <!-- Certificate pinning for TMDB -->
-    <domain-config>
-        <domain includeSubdomains="true">api.themoviedb.org</domain>
-        <pin-set expiration="2026-12-31">
-            <pin digest="SHA-256">sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
-            <pin digest="SHA-256">sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
-        </pin-set>
-    </domain-config>
-
-    <!-- Certificate pinning for Kitsu -->
-    <domain-config>
-        <domain includeSubdomains="true">kitsu.io</domain>
-        <pin-set expiration="2026-12-31">
-            <pin digest="SHA-256">sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
-            <pin digest="SHA-256">sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
-        </pin-set>
-    </domain-config>
-
-    <!-- Debug config (only active in debug builds) -->
     <debug-overrides>
         <trust-anchors>
-            <certificates src="user"/>
+            <certificates src="user" />
         </trust-anchors>
     </debug-overrides>
 </network-security-config>

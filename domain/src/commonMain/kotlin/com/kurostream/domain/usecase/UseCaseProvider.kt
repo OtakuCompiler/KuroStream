@@ -18,7 +18,6 @@ package com.kurostream.domain.usecase
 import com.kurostream.domain.repository.MediaRepository
 import com.kurostream.domain.repository.ProfileRepository
 import com.kurostream.domain.repository.SettingsRepository
-import com.kurostream.domain.usecase.download.*
 import com.kurostream.domain.usecase.favorite.*
 import com.kurostream.domain.usecase.media.*
 import com.kurostream.domain.usecase.profile.*
@@ -58,15 +57,6 @@ class UseCaseProvider(
         addFavoriteUseCase = addFavorite,
         removeFavoriteUseCase = removeFavorite
     )
-
-    // Download use cases
-    val getDownloads = GetDownloadsUseCase(mediaRepository)
-    val getDownload = GetDownloadUseCase(mediaRepository)
-    val saveDownload = SaveDownloadUseCase(mediaRepository)
-    val updateDownloadProgress = UpdateDownloadProgressUseCase(mediaRepository)
-    val deleteDownload = DeleteDownloadUseCase(mediaRepository)
-    val pauseDownload = PauseDownloadUseCase(updateDownloadProgress)
-    val resumeDownload = ResumeDownloadUseCase(updateDownloadProgress)
 
     // Subtitle use cases
     val searchSubtitles = SearchSubtitlesUseCase(mediaRepository)
