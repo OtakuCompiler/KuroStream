@@ -32,19 +32,10 @@ class LibraryViewModel @Inject constructor(
     }
 
     private fun loadLibrary() {
-        mediaRepository.getMediaItems()
-            .map { items ->
-                when {
-                    items.isEmpty() -> RowState.Success(emptyList())
-                    else -> RowState.Success(items)
-                }
+        viewModelScope.launch {
+            mediaRepository.getMediaItems().collect { items ->
+                _uiState.value = RowState.Success(items)
             }
-            .catch { e ->
-                Timber.e(e, "Failed to load library")
-                emit(RowState.Error(e.message ?: "Failed to load library"))
-            }
-            .collect { state ->
-                _uiState.value = state
-            }
+        }
     }
 }

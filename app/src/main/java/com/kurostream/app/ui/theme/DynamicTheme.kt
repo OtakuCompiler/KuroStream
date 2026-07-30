@@ -145,7 +145,6 @@ fun generateAmoledBlackScheme() = androidx.tv.material3.darkColorScheme(
     background = Color.Black, onBackground = Color(0xFFE0E0E0), surface = Color.Black, onSurface = Color(0xFFE0E0E0),
     surfaceVariant = Color(0xFF0A0A0A), onSurfaceVariant = Color(0xFFB0B0C0),
     error = Color(0xFFCF6679), onError = Color.White, errorContainer = Color(0xFFCF6679).copy(alpha = 0.12f), onErrorContainer = Color(0xFFCF6679),
-    outline = Color(0xFF7C4DFF).copy(alpha = 0.3f), outlineVariant = Color(0xFF7C4DFF).copy(alpha = 0.12f),
 )
 
 fun generateScheduledTheme(isNight: Boolean, useAmoled: Boolean = false) = when {

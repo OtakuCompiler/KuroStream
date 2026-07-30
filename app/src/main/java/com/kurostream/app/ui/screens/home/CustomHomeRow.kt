@@ -92,8 +92,8 @@ fun CustomHomeRow(
 ) {
     val filteredItems = remember(items, filterGenres, filterStudios, filterYear) {
         items.filter { item ->
-            val genreMatch = filterGenres.isEmpty() || item.genres.any { it in filterGenres }
-            val studioMatch = filterStudios.isEmpty() || item.format in filterStudios
+            val genreMatch = filterGenres.isEmpty() || item.genre.any { it in filterGenres }
+            val studioMatch = filterStudios.isEmpty() || item.source in filterStudios
             val yearMatch = filterYear == null || item.year == filterYear
             genreMatch && studioMatch && yearMatch
         }
@@ -308,7 +308,7 @@ fun SeasonalRow(
             contentPadding = PaddingValues(horizontal = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(items) { item ->
+            items(items = items) { item ->
                 MediaCard(
                     item = item,
                     onClick = { onItemClick(item.id) }
@@ -399,7 +399,7 @@ fun BecauseYouWatchedRow(
             contentPadding = PaddingValues(horizontal = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(recommendations) { item ->
+            items(items = recommendations) { item ->
                 MediaCard(
                     item = item,
                     onClick = { onItemClick(item.id) }

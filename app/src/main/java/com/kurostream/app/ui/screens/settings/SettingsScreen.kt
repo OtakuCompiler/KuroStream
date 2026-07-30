@@ -177,10 +177,6 @@ fun SettingsScreen(
             // Advanced link
             Button(
                 onClick = { /* Navigate to advanced settings */ },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AFSurface,
-                    contentColor = AFTextDim,
-                )
             ) {
                 Text("Advanced Settings")
             }
