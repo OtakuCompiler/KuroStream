@@ -1,5 +1,6 @@
 package com.kurostream.common.audio
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -48,10 +49,13 @@ class AudioSessionManager(private val context: Context) {
         }
     }
 
+    @SuppressLint("NewApi")
     fun abandonAudioFocus() {
-        audioFocusRequest?.let {
-            audioManager.abandonAudioFocusRequest(it)
-            audioFocusRequest = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let {
+                audioManager.abandonAudioFocusRequest(it)
+                audioFocusRequest = null
+            }
         }
         currentFocus = AudioFocusState.NO_FOCUS
     }
