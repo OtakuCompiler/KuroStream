@@ -13,7 +13,8 @@ jobs:
     name: Android Lint
     runs-on: ubuntu-latest
     env:
-      GRADLE_OPTS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+      GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+      KOTLIN_DAEMON_JVMARGS: "-Xmx1024m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -46,7 +47,8 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     env:
-      GRADLE_OPTS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+      GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+      KOTLIN_DAEMON_JVMARGS: "-Xmx1024m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17

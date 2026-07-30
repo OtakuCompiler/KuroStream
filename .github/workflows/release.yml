@@ -23,6 +23,7 @@ jobs:
       contents: write
     env:
       GRADLE_OPTS: "-Xmx3072m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+      KOTLIN_DAEMON_JVMARGS: "-Xmx1024m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
     steps:
     - uses: actions/checkout@v4
 
