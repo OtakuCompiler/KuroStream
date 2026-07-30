@@ -82,11 +82,11 @@ fun ArcticFuseContextMenu(
                         .border(width = 1.dp, color = AFBorderStrong, shape = RoundedCornerShape(AFRadius.lg))
                         .padding(vertical = AFSpacing.px2),
                 ) {
-                    ContextRow(ArcticContextAction.Play, "Play", { IconPlay() }) { onAction(it, item); onClose() }
-                    ContextRow(ArcticContextAction.Watchlist, "Add to Watchlist", { IconAdd() }) { onAction(it, item); onClose() }
-                    ContextRow(ArcticContextAction.Favourite, "Add to Favourites", { IconFav() }) { onAction(it, item); onClose() }
-                    ContextRow(ArcticContextAction.MarkWatched, "Mark as Watched", { IconCheck() }) { onAction(it, item); onClose() }
-                    ContextRow(ArcticContextAction.Info, "Info", { IconInfo() }) { onAction(it, item); onClose() }
+                    ContextRow(action = ArcticContextAction.Play, label = "Play", icon = { IconPlay() }, onClick = { onAction(it, item); onClose() })
+                    ContextRow(action = ArcticContextAction.Watchlist, label = "Add to Watchlist", icon = { IconAdd() }, onClick = { onAction(it, item); onClose() })
+                    ContextRow(action = ArcticContextAction.Favourite, label = "Add to Favourites", icon = { IconFav() }, onClick = { onAction(it, item); onClose() })
+                    ContextRow(action = ArcticContextAction.MarkWatched, label = "Mark as Watched", icon = { IconCheck() }, onClick = { onAction(it, item); onClose() })
+                    ContextRow(action = ArcticContextAction.Info, label = "Info", icon = { IconInfo() }, onClick = { onAction(it, item); onClose() })
                 }
             }
         }

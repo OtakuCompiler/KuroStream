@@ -67,6 +67,7 @@ class PlayerViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     lateinit var player: ExoPlayer
+    private var playerReady = false
 
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
@@ -104,6 +105,7 @@ class PlayerViewModel @Inject constructor(
 
         val isLowRam = LowRamDevice.isLowRamDevice()
         player = PlayerConfig.create(application, lowRam = isLowRam)
+            playerReady = true
             .apply {
                 addListener(object : Player.Listener {
                     override fun onPlaybackStateChanged(state: Int) {
@@ -128,7 +130,7 @@ class PlayerViewModel @Inject constructor(
   viewModelScope.launch {
     try {
       while (isActive) {
-        if (this::player.isInitialized && player.isPlaying) {
+        if (playerReady && player.isPlaying) {
           _uiState.update {
             it.copy(
               currentPosition = player.currentPosition.coerceAtLeast(0),
