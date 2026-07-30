@@ -27,6 +27,7 @@ import com.kurostream.app.model.PlaybackUrl
 import com.kurostream.domain.repository.SettingsRepository
 import com.kurostream.app.repository.TvRepositories.MediaRepository
 import com.kurostream.app.repository.TvRepositories.WatchProgressRepository
+import com.kurostream.app.model.PlaybackUrl
 import com.kurostream.domain.result.Result as DomainResult
 import com.kurostream.common.memory.LowRamDevice
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -153,8 +154,8 @@ class PlayerViewModel @Inject constructor(
 
       val result = mediaRepository.getPlaybackUrl(mediaId, episodeId)
     when (result) {
-        is DomainResult.Success -> {
-            val playbackUrl = result.data
+        is DomainResult.Success<*> -> {
+            val playbackUrl = result.data as PlaybackUrl
             _uiState.update { it.copy(title = playbackUrl.title) }
             val mediaItem = ExoMediaItem.fromUri(playbackUrl.url)
             player.setMediaItem(mediaItem, startPositionMs)

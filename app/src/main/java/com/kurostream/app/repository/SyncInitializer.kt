@@ -26,16 +26,7 @@ import timber.log.Timber
 @Suppress("DEPRECATION")
 class SyncInitializer : Initializer<Unit> {
     override fun create(context: Context): Unit {
-        try {
-            val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-            firestore.firestoreSettings = com.google.firebase.firestore.FirebaseFirestoreSettings.Builder()
-                .setPersistenceEnabled(true)
-                .setCacheSizeBytes(com.google.firebase.firestore.FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
-                .build()
-            Timber.d("SyncInitializer: Firestore initialized")
-        } catch (e: Exception) {
-            Timber.w("SyncInitializer: Firebase unavailable (no google-services.json) — sync disabled")
-        }
+        Timber.d("SyncInitializer: Firebase not configured — sync disabled")
     }
 
     override fun dependencies(): List<Class<out Initializer<*>>> = emptyList()

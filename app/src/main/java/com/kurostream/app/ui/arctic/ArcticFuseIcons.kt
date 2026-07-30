@@ -121,7 +121,7 @@ fun IconLibrary(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier =
 
 @Composable
 fun IconMovies(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) =
-    IconLibrary(tint, size, modifier)
+    IconLibrary(tint, iconSize, modifier)
 
 // ---------------------------------------------------------------------
 // Downloads — downward arrow inside a thin square box. Straight shaft,
@@ -306,7 +306,7 @@ fun IconFav(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Mod
 
 @Composable
 fun IconFavOutline(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) =
-    IconFav(tint, size, modifier)
+    IconFav(tint, iconSize, modifier)
 
 // ---------------------------------------------------------------------
 // Remaining utility icons (player controls, buttons, badges) redrawn in

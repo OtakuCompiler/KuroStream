@@ -62,8 +62,6 @@ val TvHighContrastColorScheme = androidx.tv.material3.darkColorScheme(
     onError = Color(0xFF000000),           // Black
     errorContainer = Color(0xFFCC0000),    // Dark red
     onErrorContainer = Color(0xFFFFFFFF),  // White
-    outline = Color(0xFFFFFFFF),           // White borders
-    outlineVariant = Color(0xFF999999),    // Medium gray
     scrim = Color(0xFF000000),
     surfaceTint = Color(0xFFFFFFFF),
     inverseSurface = Color(0xFFFFFFFF),
@@ -97,8 +95,6 @@ val TvDarkColorScheme = androidx.tv.material3.darkColorScheme(
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFCF6679).copy(alpha = 0.15f),
     onErrorContainer = Color(0xFFCF6679),
-    outline = Color(0xFF7C4DFF).copy(alpha = 0.3f),
-    outlineVariant = Color(0xFF7C4DFF).copy(alpha = 0.15f),
     scrim = Color(0xFF000000),
     surfaceTint = Color(0xFF7C4DFF),
     inverseSurface = Color(0xFFE0E0E0),

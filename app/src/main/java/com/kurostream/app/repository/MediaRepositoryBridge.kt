@@ -113,8 +113,8 @@ class MediaRepositoryBridge @Inject constructor(
         return try {
             val result = domainRepo.getPlaybackUrl(mediaId, episodeId)
             when (result) {
-                is DomainResult.Success -> {
-                    val r = result.data
+                is DomainResult.Success<*> -> {
+                    val r = result.data as com.kurostream.domain.model.PlaybackUrl
                     Result.success(PlaybackUrl(url = r.url, headers = r.headers, quality = r.quality))
                 }
                 else -> Result.failure(Exception("Playback URL not found"))
@@ -128,8 +128,8 @@ class MediaRepositoryBridge @Inject constructor(
         return try {
             val result = domainRepo.getNextEpisode(mediaId, episodeId)
             when (result) {
-                is DomainResult.Success -> {
-                    val e = result.data
+                is DomainResult.Success<*> -> {
+                    val e = result.data as com.kurostream.domain.model.Episode
                     Result.success(Episode(id = e.id, number = e.episodeNumber, title = e.title))
                 }
                 else -> Result.failure(Exception("Next episode not found"))

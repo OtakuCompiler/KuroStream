@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.repository.TvRepositories.MediaRepository
 import com.kurostream.app.repository.TvRepositories.WatchProgressRepository
-import com.kurostream.app.ui.theme.SkinSystem.Skin
+import com.kurostream.app.ui.theme.Skin
 import com.kurostream.app.repository.SettingsRepositoryAdapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import timber.log.Timber
