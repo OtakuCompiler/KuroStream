@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -18,16 +19,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.kurostream.data.debrid.DebridService.DebridProvider
+import com.kurostream.data.debrid.DebridService
 
 @Composable
 fun DebridSetupScreen(
-    viewModel: DebridSetupViewModel = hiltViewModel(),
     onBack: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    var selectedProvider by remember { mutableStateOf<DebridProvider?>(null) }
+    val debridService = remember { DebridService }
+    var selectedProvider by remember { mutableStateOf<DebridService.DebridProvider?>(null) }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp),
@@ -38,7 +38,7 @@ fun DebridSetupScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DebridProvider.values().forEach { provider ->
+        DebridService.DebridProvider.values().forEach { provider ->
             OutlinedCard(
                 onClick = { selectedProvider = provider },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -52,7 +52,7 @@ fun DebridSetupScreen(
 
         selectedProvider?.let { provider ->
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { uriHandler.openUri(viewModel.getAffiliateLink(provider)) }) {
+            Button(onClick = { uriHandler.openUri(debridService.getAffiliateLink(provider)) }) {
                 Text("Sign Up for ${provider.displayName}")
             }
         }

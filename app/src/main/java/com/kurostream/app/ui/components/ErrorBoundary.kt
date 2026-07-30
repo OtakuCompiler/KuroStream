@@ -22,18 +22,28 @@ fun ErrorBoundary(
     fallback: @Composable (Throwable) -> Unit = { DefaultErrorFallback(it) },
     content: @Composable () -> Unit
 ) {
-    var error by remember { mutableStateOf<Throwable?>(null) }
+    val errorState = remember { mutableStateOf<Throwable?>(null) }
 
+    val error = errorState.value
     if (error != null) {
-        fallback(error!!)
-    } else {
-        try {
-            content()
-        } catch (e: Throwable) {
-            Timber.e(e, "Compose error boundary caught")
-            error = e
-        }
+        fallback(error)
+        return
     }
+
+    // Composable content is allowed here because we don't wrap it in try/catch
+    // Error handling must be done at call sites or with LaunchedEffect/side-effect
+    content()
+}
+
+// Caller-facing helper to use inside a ViewModel or side-effect to propagate errors
+inline fun <T> safeComposeCall(
+    fallback: (Throwable) -> T,
+    block: () -> T
+): T = try {
+    block()
+} catch (e: Throwable) {
+    Timber.e(e, "Compose error boundary caught")
+    fallback(e)
 }
 
 @Composable
