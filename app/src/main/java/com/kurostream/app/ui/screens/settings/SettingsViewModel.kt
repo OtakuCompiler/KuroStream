@@ -294,9 +294,10 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setDiskBufferDeleteOnShutdown(enabled)
                 _uiState.update { it.copy(diskBufferDeleteOnShutdown = enabled) }
-            } catch (e: Exception) {
+            }             catch (e: Exception) {
                 /* ignore settings error */
             }
+        }
     }
 }
 
