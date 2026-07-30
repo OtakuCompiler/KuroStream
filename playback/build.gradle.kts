@@ -25,4 +25,5 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.timber)
     implementation(libs.javax.inject)
+    implementation(libs.hilt.android)
 }
