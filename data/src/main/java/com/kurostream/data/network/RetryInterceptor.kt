@@ -36,6 +36,5 @@ class RetryInterceptor(
         throw lastException ?: IOException("Max retries exceeded")
     }
 
-    private val Int.shouldRetry: Boolean
-        get() = this in 500..599 || this == 408 || this == 429
+    private fun Int.shouldRetry(): Boolean = this in 500..599 || this == 408 || this == 429
 }
