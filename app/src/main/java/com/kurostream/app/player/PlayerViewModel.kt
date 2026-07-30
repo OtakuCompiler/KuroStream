@@ -66,7 +66,7 @@ class PlayerViewModel @Inject constructor(
     private val watchProgressRepository: WatchProgressRepository
 ) : AndroidViewModel(application) {
 
-    val player: ExoPlayer
+    lateinit var player: ExoPlayer
 
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
@@ -128,7 +128,7 @@ class PlayerViewModel @Inject constructor(
   viewModelScope.launch {
     try {
       while (isActive) {
-        if (::player.isInitialized && player.isPlaying) {
+        if (this::player.isInitialized && player.isPlaying) {
           _uiState.update {
             it.copy(
               currentPosition = player.currentPosition.coerceAtLeast(0),

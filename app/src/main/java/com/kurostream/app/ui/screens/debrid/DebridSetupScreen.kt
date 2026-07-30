@@ -26,7 +26,6 @@ fun DebridSetupScreen(
     onBack: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    val debridService = remember { DebridService }
     var selectedProvider by remember { mutableStateOf<DebridService.DebridProvider?>(null) }
 
     Column(
@@ -52,7 +51,7 @@ fun DebridSetupScreen(
 
         selectedProvider?.let { provider ->
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { uriHandler.openUri(debridService.getAffiliateLink(provider)) }) {
+            Button(onClick = { uriHandler.openUri(provider.signupUrl) }) {
                 Text("Sign Up for ${provider.displayName}")
             }
         }

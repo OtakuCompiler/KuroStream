@@ -99,6 +99,7 @@ private fun ContextRow(
     label: String,
     icon: @Composable () -> Unit,
     onClick: (ArcticContextAction) -> Unit,
+    visible: Boolean = true,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val fr = remember { FocusRequester() }
