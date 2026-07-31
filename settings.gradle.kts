@@ -30,6 +30,6 @@ include(":launcher")
 include(":marketplace")
 include(":playback")
 include(":plugin-sdk")
-include(":tizenApp")
+// include(":tizenApp")  // removed — directory missing from workspace; no remaining source/runtime references found
 // include(":torrent")  // excluded — dl.frostwire.com/maven is dead (404), jlibtorrent cannot be resolved
 include(":ui")

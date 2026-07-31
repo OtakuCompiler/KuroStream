@@ -72,4 +72,45 @@ one thing this file exists to prevent.
 ## Open items (not attempted this pass)
 - Build verification: cannot run `./gradlew :torrent:compileDebugKotlin` — no network access in this environment. Every fix is static-text only.
 - jlibtorrent API compatibility: unknown whether the 2.0.13.6 API matches every call site. Known risky patterns: `SessionManager.start()`, `handle.addMetadata()`, `TorrentHandle.connectPeer(PeerInfo(...))`, `session.dhtState()?.nodes` — plausible based on library docs but unverified.
-- Unused imports across the module (e.g., `timber.log.Timber` in files that now use `android.util.Log`, native `TorrentInfo` import in files that don't use the type) — these are warnings, not errors.
+- Unused imports across the module (e.g., `timber.log.Timber` in files that now use `android.util.Log`, native `TorrentInfo` import in files that don't use the type) — these are warnings, not errors.# Phase 0 — Baseline
+
+Date: 2026-07-31
+
+## Compile attempt
+Command: `bash gradlew :data:compileDebugKotlin :app:compileDebugKotlin --no-daemon --stacktrace --console=plain`
+
+First failure (before fix): `:tizenApp` directory missing from workspace, Gradle configuration error.
+Fix applied: removed `include(":tizenApp")` from `settings.gradle.kts` (no code references to tizenApp found anywhere in the project).
+
+Second failure: `SDK location not found. Define a valid SDK location with an ANDROID_HOME environment variable or by setting the sdk.dir path...`
+Root cause: `/usr/local/android-sdk` exists but contains no platforms/build-tools/cmdline-tools. Local environment does not have a functional Android SDK installed.
+
+**Phase 0 verification status: UNVERIFIED — local Gradle build is blocked by missing Android SDK.**
+
+## Module/folder check
+Modules listed in `settings.gradle.kts` vs filesystem:
+
+| Module | settings.gradle.kts | Directory exists | build.gradle.kts exists |
+|--------|---------------------|------------------|------------------------|
+| :app | yes | YES | YES |
+| :benchmark | yes | YES | YES |
+| :cache | yes | YES | YES |
+| :common | yes | YES | YES |
+| :config | yes | YES | YES |
+| :core-common | yes | YES | YES |
+| :core-platform | yes | YES | YES |
+| :data | yes | YES | YES |
+| :domain | yes | YES | YES |
+| :extensions | yes | YES | YES |
+| :launcher | yes | YES | YES |
+| :marketplace | yes | YES | YES |
+| :playback | yes | YES | YES |
+| :plugin-sdk | yes | YES | YES |
+| :tizenApp | yes | NO | NO |
+| :ui | yes | YES | YES |
+
+Action taken: removed `:tizenApp` from `settings.gradle.kts` with a comment.
+
+## LOC baseline
+- Kotlin source files: 366
+- Total LOC: 41,862
