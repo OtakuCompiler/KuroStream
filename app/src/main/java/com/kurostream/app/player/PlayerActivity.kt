@@ -58,11 +58,21 @@ class PlayerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val mediaId = intent.getStringExtra(EXTRA_MEDIA_ID) ?: return finish()
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+
+        val mediaId = intent.getStringExtra(EXTRA_MEDIA_ID).orEmpty()
+        if (mediaId.isBlank()) {
+            finish()
+            return
+        }
         val episodeId = intent.getStringExtra(EXTRA_EPISODE_ID)
         val startPosition = intent.getLongExtra(EXTRA_START_POSITION, 0L)
 
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val powerManager = getSystemService(Context.POWER_SERVICE)
+        if (powerManager !is PowerManager) {
+            finish()
+            return
+        }
         wakeLock = powerManager.newWakeLock(
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ON_AFTER_RELEASE,
             "KuroStream::PlayerWakeLock"
@@ -92,10 +102,17 @@ class PlayerActivity : ComponentActivity() {
         viewModel.saveProgress()
     }
 
-    override fun onDestroy() {
+    override fun onStop() {
+        super.onStop()
         wakeLock?.let {
-            if (it.isHeld) it.release()
+            if (it.isHeld) {
+                it.release()
+            }
         }
+        wakeLock = null
+    }
+
+    override fun onDestroy() {
         super.onDestroy()
         viewModel.releasePlayer()
     }
