@@ -11,14 +11,9 @@ import android.opengl.EGL14
 import android.opengl.EGLConfig
 import android.opengl.EGLContext
 import android.opengl.EGLDisplay
-import android.opengl.EGLSurface
-import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.util.Log
 import com.kurostream.players.render.EnhancedUpscaleEngine
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.FloatBuffer
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,7 +23,7 @@ class OpenGLRenderer @Inject constructor(
 ) : VideoRenderer {
 
     private var eglDisplay: EGLDisplay = EGL14.EGL_NO_DISPLAY
-    private var eglContext: EGLContext? = null
+    private var eglContextHandle: EGLContext? = null
     private var upscaler: EnhancedUpscaleEngine? = null
     private var fboTexture = 0
     private var fboId = 0
@@ -72,8 +67,8 @@ class OpenGLRenderer @Inject constructor(
                 EGL14.EGL_CONTEXT_CLIENT_VERSION, if (profile.supportsOpenGlEs3) 3 else 2,
                 EGL14.EGL_NONE,
             )
-            eglContext = EGL14.eglCreateContext(eglDisplay, config, EGL14.EGL_NO_CONTEXT, contextAttribs, 0)
-            if (eglContext == null || eglContext == EGL14.EGL_NO_CONTEXT) {
+            eglContextHandle = EGL14.eglCreateContext(eglDisplay, config, EGL14.EGL_NO_CONTEXT, contextAttribs, 0)
+            if (eglContextHandle == null || eglContextHandle == EGL14.EGL_NO_CONTEXT) {
                 Log.w(TAG, "EGL context creation failed")
                 return false
             }
@@ -84,7 +79,7 @@ class OpenGLRenderer @Inject constructor(
                 Log.w(TAG, "Pbuffer creation failed")
                 return false
             }
-            EGL14.eglMakeCurrent(eglDisplay, pbuffer, pbuffer, eglContext)
+            EGL14.eglMakeCurrent(eglDisplay, pbuffer, pbuffer, eglContextHandle)
 
             upscaler = EnhancedUpscaleEngine(profile).also { it.initialize() }
             createPassthroughProgram()
@@ -126,19 +121,19 @@ class OpenGLRenderer @Inject constructor(
                 EGL14.EGL_NO_SURFACE,
                 EGL14.EGL_NO_CONTEXT,
             )
-            eglContext?.let { EGL14.eglDestroyContext(eglDisplay, it) }
+            eglContextHandle?.let { EGL14.eglDestroyContext(eglDisplay, it) }
             upscaler?.release()
         } catch (t: Throwable) {
             Log.w(TAG, "release error", t)
         } finally {
-            eglContext = null
+            eglContextHandle = null
             upscaler = null
             eglDisplay = EGL14.EGL_NO_DISPLAY
         }
     }
 
     override val eglContext: EGLContext?
-        get() = eglContext
+        get() = eglContextHandle
 
     override val isInitialized: Boolean
         get() = isInit

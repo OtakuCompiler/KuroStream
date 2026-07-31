@@ -8,16 +8,10 @@
 package com.kurostream.players.render
 
 import android.opengl.GLES20
-import android.opengl.GLES30
 import android.util.Log
 import com.kurostream.playback.kurovision.KuroVisionDeviceProfile
 import com.kurostream.playback.kurovision.KuroVisionQualityMode
 import com.kurostream.playback.kurovision.UpscaleAlgorithm
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.FloatBuffer
-import javax.microedition.khronos.egl.EGLConfig
-import javax.microedition.khronos.opengles.GL10
 
 class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
 

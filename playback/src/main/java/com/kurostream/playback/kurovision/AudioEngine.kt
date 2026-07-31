@@ -7,9 +7,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.playback.kurovision
 
-import android.media.AudioFormat
-import android.media.AudioManager
-import android.media.audiofx.AudioEffect
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
 import android.util.Log
@@ -33,10 +30,6 @@ class KuroAudioEngine @Inject constructor(
         try {
             equalizer = Equalizer(0, audioSessionId).apply {
                 enabled = true
-            }
-            loudnessEnhancer = LoudnessEnhancer(audioSessionId).apply {
-                enabled = true
-                setTargetGain(0)
             }
             loudnessEnhancer = LoudnessEnhancer(audioSessionId).apply {
                 enabled = true

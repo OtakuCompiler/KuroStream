@@ -9,14 +9,8 @@
 package com.kurostream.playback.kurovision
 
 import android.content.Context
-import android.opengl.GLES11Ext
-import android.opengl.GLES20
-import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 

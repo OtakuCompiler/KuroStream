@@ -6,9 +6,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.playback.kurovision
 
-import android.opengl.GLES11Ext
 import android.opengl.GLES20
-import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentLinkedQueue
