@@ -41,13 +41,11 @@ dependencies {
     // Real jlibtorrent (was previously only backed by a 34-line local stub
     // with empty classes — every method call on these types would have
     // failed to resolve). Version matches the current release documented in
-    // the library's own README as of this pass. Not build-verified: no
-    // network access here to confirm these actually resolve/download, or
-    // that this module's existing code calls match this version's real API.
-    val jlibtorrentVersion = "2.0.13.6"
-    implementation("com.frostwire:jlibtorrent:$jlibtorrentVersion")
-    implementation("com.frostwire:jlibtorrent-android-arm:$jlibtorrentVersion")
-    implementation("com.frostwire:jlibtorrent-android-arm64:$jlibtorrentVersion")
-    implementation("com.frostwire:jlibtorrent-android-x86:$jlibtorrentVersion")
-    implementation("com.frostwire:jlibtorrent-android-x86_64:$jlibtorrentVersion")
+    // the library's own release listing as of this pass (2026-07-31).
+    // Not build-verified here: no network access to confirm resolution.
+    implementation(libs.jlibtorrent)
+    implementation(libs.jlibtorrent.android.arm)
+    implementation(libs.jlibtorrent.android.arm64)
+    implementation(libs.jlibtorrent.android.x86)
+    implementation(libs.jlibtorrent.android.x86_64)
 }

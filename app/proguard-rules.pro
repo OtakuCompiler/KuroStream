@@ -34,6 +34,18 @@
 -keep class androidx.media3.** { *; }
 -dontwarn androidx.media3.**
 
+# Keep VLC
+-keep class org.videolan.libvlc.** { *; }
+-dontwarn org.videolan.libvlc.**
+
+# Keep MPV
+-keep class dev.jdtech.mpv.** { *; }
+-dontwarn dev.jdtech.mpv.**
+
+# Keep jlibtorrent
+-keep class com.frostwire.jlibtorrent.** { *; }
+-dontwarn com.frostwire.jlibtorrent.**
+
 # Keep Timber
 -assumenosideeffects class timber.log.Timber { *; }
 

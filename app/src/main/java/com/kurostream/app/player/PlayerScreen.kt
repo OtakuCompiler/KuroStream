@@ -103,7 +103,7 @@ fun PlayerScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val player = viewModel.currentPlayer
+    val engine = viewModel.currentEngine
     var controlsVisible by remember { mutableStateOf(true) }
     var showSettings by remember { mutableStateOf(false) }
     var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
@@ -192,7 +192,7 @@ fun PlayerScreen(
         AndroidView(
             factory = {
                 PlayerView(context).apply {
-                    this.player = player
+                    (engine?.nativePlayer() as? androidx.media3.common.Player)?.let { player = it }
                     useController = false
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     playerViewRef = this

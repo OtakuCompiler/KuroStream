@@ -21,6 +21,11 @@ import java.io.File
 /**
  * Restricted ClassLoader for extension sandbox.
  * Blocks dangerous classes and packages, and prevents reflection attacks.
+ *
+ * WARNING: This is a blocklist-based isolation pattern. It is known to be
+ * bypassable via indirect reflection, parent-loader lookup, and JNI calls.
+ * Do NOT load untrusted third-party code through this classloader until the
+ * sandbox is properly hardened (out of scope for this pass).
  */
 class SandboxClassLoader(
     private val parent: ClassLoader?,

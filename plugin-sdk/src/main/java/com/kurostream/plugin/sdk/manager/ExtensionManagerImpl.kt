@@ -17,11 +17,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import android.content.Context
+import android.content.pm.PackageManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ExtensionManagerImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val signatureVerifier: SignatureVerifier,
     private val extensionConfig: ExtensionConfig,
     private val manifestValidator: ExtensionManifestValidator
@@ -112,24 +115,61 @@ class ExtensionManagerImpl @Inject constructor(
     }
     
     private fun extractManifestFromApk(path: String): String? {
-        // This is a stub implementation for now
-        // In a real implementation, we would use something like:
-        // - APK parser library
-        // - Android's PackageManager
-        // - aapt command line tool
-        
-        // For testing purposes, return a sample manifest
-        return """{
-            "id": "com.example.animecatalog",
-            "name": "Anime Catalog",
-            "version": 1,
-            "versionName": "1.0.0",
-            "author": "Example Developer",
-            "pluginClassName": "com.example.animecatalog.AnimePlugin",
-            "apiVersion": 1,
-            "capabilities": ["CATALOG_BROWSE", "VIDEO_SOURCE"],
-            "minAppVersion": "1.0.0"
-        }"""
+        return try {
+            val packageManager = context.packageManager
+            val packageInfo = packageManager.getPackageArchiveInfo(
+                path,
+                PackageManager.GET_ACTIVITIES or PackageManager.GET_META_DATA
+            )
+            
+            if (packageInfo == null) {
+                return null
+            }
+            
+            val appInfo = packageInfo.applicationInfo ?: return null
+            val packageName = packageInfo.packageName ?: return null
+            val versionCode = packageInfo.longVersionCode
+            val versionName = packageInfo.versionName ?: "1.0.0"
+            val appName = appInfo.loadLabel(packageManager)?.toString() ?: packageName
+            
+            val metaData = appInfo.metaData ?: android.os.Bundle()
+            val pluginClassName = metaData.getString("pluginClassName") ?: ""
+            val apiVersion = metaData.getInt("apiVersion", 1)
+            val minAppVersion = metaData.getString("minAppVersion") ?: "1.0.0"
+            
+            val capabilities = mutableListOf<String>()
+            if (metaData.containsKey("capabilities")) {
+                val caps = metaData.getString("capabilities") ?: ""
+                capabilities.addAll(caps.split(",").map { it.trim() }.filter { it.isNotEmpty() })
+            }
+            if (capabilities.isEmpty()) {
+                capabilities.addAll(listOf("CATALOG_BROWSE", "VIDEO_SOURCE"))
+            }
+            
+            buildString {
+                appendLine("{")
+                appendLine("    \"id\": \"${escapeJson(packageName)}\",")
+                appendLine("    \"name\": \"${escapeJson(appName)}\",")
+                appendLine("    \"version\": $versionCode,")
+                appendLine("    \"versionName\": \"${escapeJson(versionName)}\",")
+                appendLine("    \"author\": \"${escapeJson(appName)}\",")
+                appendLine("    \"pluginClassName\": \"${escapeJson(pluginClassName)}\",")
+                appendLine("    \"apiVersion\": $apiVersion,")
+                appendLine("    \"capabilities\": [${capabilities.joinToString { "\"${escapeJson(it)}\"" }}],")
+                appendLine("    \"minAppVersion\": \"${escapeJson(minAppVersion)}\"")
+                appendLine("}")
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    private fun escapeJson(value: String): String {
+        return value.replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
     }
     
     private fun createExtensionApi(info: ExtensionInfo): ExtensionApi {

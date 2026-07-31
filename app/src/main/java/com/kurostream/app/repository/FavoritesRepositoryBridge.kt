@@ -1,28 +1,79 @@
 package com.kurostream.app.repository
 
 import com.kurostream.app.model.MediaItem
+import com.kurostream.domain.entity.MediaItem as DomainMediaItem
+import com.kurostream.domain.model.Favorite
+import com.kurostream.domain.repository.MediaRepository
+import com.kurostream.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FavoritesRepositoryBridge @Inject constructor() : TvRepositories.FavoritesRepository {
+class FavoritesRepositoryBridge @Inject constructor(
+    private val mediaRepository: MediaRepository,
+    private val profileRepository: ProfileRepository
+) : TvRepositories.FavoritesRepository {
 
-    private val favorites = mutableListOf<MediaItem>()
+    private fun DomainMediaItem.toAppModel(): MediaItem = MediaItem(
+        id = id,
+        title = title,
+        description = synopsis ?: "",
+        posterUrl = coverImageUrl ?: posterUrl ?: "",
+        backdropUrl = bannerImageUrl ?: backdropUrl ?: "",
+        genre = genres,
+        rating = score?.toFloat() ?: 0f,
+        year = seasonYear ?: 0,
+        duration = durationMinutes ?: 0,
+        episodes = emptyList(),
+        source = sourceExtensionId,
+        isFavorite = isFavorite,
+        watchProgress = 0L,
+    )
 
     override fun getFavorites(): Flow<List<MediaItem>> {
-        return flow { emit(favorites.toList()) }
+        return profileRepository.observeActiveProfile().flatMapLatest { profile ->
+            if (profile == null) {
+                flowOf(emptyList())
+            } else {
+                mediaRepository.observeFavorites(profile.id).flatMapLatest { favorites ->
+                    kotlinx.coroutines.flow.flow {
+                        val items = favorites.mapNotNull { fav ->
+                            mediaRepository.getMediaById(fav.mediaItemId)?.toAppModel()
+                        }
+                        emit(items)
+                    }
+                }
+            }
+        }
     }
 
     override suspend fun addFavorite(item: MediaItem) {
-        if (favorites.none { it.id == item.id }) {
-            favorites.add(item)
+        try {
+            val profile = profileRepository.getActiveProfile()
+            val profileId = profile?.id ?: "default"
+            val favorite = Favorite(
+                id = "${profileId}_${item.id}",
+                mediaItemId = item.id,
+                profileId = profileId,
+                category = "general"
+            )
+            mediaRepository.addFavorite(favorite)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to add favorite ${item.id}")
         }
     }
 
     override suspend fun removeFavorite(itemId: String) {
-        favorites.removeAll { it.id == itemId }
+        try {
+            val profile = profileRepository.getActiveProfile()
+            val profileId = profile?.id ?: "default"
+            mediaRepository.removeFavorite(itemId, profileId)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to remove favorite $itemId")
+        }
     }
 }

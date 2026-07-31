@@ -89,8 +89,8 @@ dependencies {
     implementation(project(":plugin-sdk"))
     implementation(project(":cache"))
     implementation(project(":ui"))
-    implementation(project(":launcher"))
     implementation(project(":marketplace"))
+    implementation(project(":playback"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

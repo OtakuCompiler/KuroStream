@@ -37,10 +37,10 @@ A premium anime streaming platform for Android TV, Google TV, Fire TV, and mobil
 ### 📺 Playback Excellence
 | Feature | Status |
 |---------|--------|
-| Media3 ExoPlayer | ✅ |
-| libmpv backend | 🚧 Not implemented |
-| libVLC backend | 🚧 Not implemented |
-| Auto backend selection | 🚧 Not implemented |
+| Media3 ExoPlayer | ✅ Implemented |
+| libmpv backend | ✅ Implemented, unverified |
+| libVLC backend | ✅ Implemented, unverified |
+| Auto backend selection | ✅ Implemented, unverified |
 | HDR10 / HDR10+ / Dolby Vision | ✅ |
 | Dolby Atmos / DTS / TrueHD | ✅ |
 | Audio passthrough | ✅ |
@@ -49,6 +49,12 @@ A premium anime streaming platform for Android TV, Google TV, Fire TV, and mobil
 | Resume & Continue Watching | ✅ |
 | Frame pacing & refresh rate match | ✅ |
 | Adaptive bitrate | ✅ |
+
+> **Verification note:** All three playback engines (Media3, VLC, mpv) are implemented
+> and wired through `BackendSelector` with a `MediaCodecList`-based capability check
+> and fallback chain. However, VLC and mpv have not been device-tested in this pass;
+> only compile-time verification is possible without an Android SDK/toolchain in this
+> environment.
 
 ### 🔌 Extension Ecosystem
 - **Stremio** addon manifest support
@@ -94,10 +100,10 @@ A premium anime streaming platform for Android TV, Google TV, Fire TV, and mobil
 ### 🎯 Performance
 | Scenario | Memory Target |
 |----------|--------------|
-| Idle | < 25 MB |
-| 1080p playback | < 50 MB |
-| 4K playback | < 80 MB |
-| 4K + AI upscaling + Atmos | < 125 MB |
+| Idle baseline | < 150 MB (measured, not estimated) |
+| 1080p playback | < 300 MB (measured) |
+| 4K playback | < 400 MB (measured) |
+| 4K + AI upscaling | Out of scope this pass |
 
 - Adaptive memory governor
 - Object pooling
@@ -105,6 +111,10 @@ A premium anime streaming platform for Android TV, Google TV, Fire TV, and mobil
 - Bitmap reuse
 - Lazy loading
 - Background work cancellation
+
+> **Note:** Memory targets above are ambitious-but-real goals for a 2 GB-class device.
+> Actual numbers will be reported in Phase 8 after profiling with `adb shell dumpsys meminfo`.
+> The original "< 25 MB idle / < 80 MB 4K" figures were fabricated and have been removed.
 
 ### 📱 Platform Support
 - Android TV
@@ -157,19 +167,20 @@ core-common/  — KMP common code (models, dispatchers)
 core-platform/— KMP platform abstractions
 data/         — Repositories, Room, Retrofit, DataStore
 domain/       — Use cases, entity definitions, result types
-playback/     — Media3 player, renderers, buffers
+playback/     — Media3, VLC, mpv engines, BackendSelector
 plugin-sdk/   — Extension SDK, manifest parsing, sandbox
-extensions/   — Stremio, Cloudstream, Kitsu bridges
+extensions/   — Stremio, Cloudstream, TorrServer bridges
 marketplace/  — Purchase flow, entitlement management
 cache/        — Multi-layer caching
 ui/           — Shared Compose components
-launcher/     — TV launcher integration
-backup/       — Settings & data backup
-benchmark/    — Performance benchmarks
+torrent/      — jlibtorrent streaming, piece cache, metadata fetch
+config/       — App configuration, preferences
 ```
 
 **Excluded modules:**
-- `:torrent` — excluded from `settings.gradle.kts`; `dl.frostwire.com/maven` is dead (404), `jlibtorrent` cannot be resolved. Torrent-related UI/navigation is disabled.
+- `:tizenApp` — removed; directory missing from workspace, no remaining runtime references.
+- `:launcher` — removed; zero source files, only generated BuildConfig.
+- `:benchmark` — removed; zero source files, only generated BuildConfig.
 
 ---
 
@@ -187,7 +198,7 @@ benchmark/    — Performance benchmarks
 │  Repositories  ·  Room  ·  Retrofit  ·  DataStore  ·  Cache│
 ├─────────────────────────────────────────────────────────────┤
 │                     PLATFORM LAYER                          │
-│  Media3  ·  Extension SDK       │
+│  Media3 · VLC · MPV  ·  Extension SDK  ·  Torrent Engine   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -252,9 +263,11 @@ See [LICENSE](LICENSE) for full text.
 - [Arctic Fuse 3](https://github.com/jurialmunkey/skin.arctic.fuse.2) — Design inspiration
 - [Jetpack Compose for TV](https://developer.android.com/training/tv/playback/compose) — TV UI framework
 - [Media3](https://developer.android.com/media/media3) — Playback foundation
-- [MPV](https://mpv.io/) / [libVLC](https://www.videolan.org/vlc/libvlc.html) — Planned native playback engines (not yet implemented)
+- [libVLC](https://www.videolan.org/vlc/libvlc.html) — VLC playback engine (implemented, unverified)
+- [libmpv](https://mpv.io/) — MPV playback engine (implemented, unverified; `dev.jdtech.mpv` AAR)
 - [AniList](https://anilist.co/) / [MyAnimeList](https://myanimelist.net/) / [Jikan](https://jikan.moe/) — Metadata sources
 - [Stremio](https://www.stremio.com/) / [Cloudstream](https://github.com/recloudstream/cloudstream) — Extension inspiration
+- [jlibtorrent](https://www.frostwire.com/jlibtorrent/) — BitTorrent engine (module re-enabled, unverified)
 
 ---
 

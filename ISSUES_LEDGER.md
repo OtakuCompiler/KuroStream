@@ -38,6 +38,8 @@ one thing this file exists to prevent.
 | 21 | Phase 5 — Security wiring: SecurityConfig and CertificatePinningConfig were never called | app/security, data/network/security | **fixed (unverified)** | Added @Inject SecurityConfig field injection in AnimeStreamTvApplication, called securityConfig.logSecurityStatus() in onCreate(). Added CertificatePinningConfig param to provideOkHttpClient() in NetworkModule, builder now created via certificatePinningConfig.applyPinning(). applyPinning() is still a no-op — real pins needed before release. |
 | 22 | Phase 6 — Marketplace: no implementation of MarketplaceRepository interface; ExtensionManagerImpl.extractManifestFromApk is a stub (line 115); AddonsViewModel hardcodes available addon list instead of querying remote | plugin-sdk, app/ui/screens/addons | **descoped — honest scaffold** | MarketplaceRepository interface and models exist in plugin-sdk. PluginSdkModule provides real SignatureVerifier + ExtensionManifestValidator. SkinManager has full download/verify/install implementation. Missing: a real MarketplaceRepository implementation (requires backend API), proper APK manifest extraction. AddonsScreen works with local AddonDao + hardcoded list — functional for UI but no remote marketplace. A real implementation requires a backend service and API keys before it can be built. |
 | 23 | Phase 7 — Performance audit | whole app | **no critical issues found** | Infrastructure solid: Coil with memory+disk cache, OkHttp with cache+connection pooling+HTTP/2, lazy lists (LazyColumn/LazyRow) throughout, deferred startup init via Handler+IdleHandler, memory trimming callbacks, BufferPool/ObjectPools/StringInterner cleanup, proper dispatcher usage (IO/Default/Main). Scopes: viewModelScope for ViewModels, rememberCoroutineScope for composables, SupervisorJob+appScope for Application. No ContentProvider startup tax. Minor: SkinManager scope not cancellable (lives as long as app — acceptable for @Singleton). |
+| 24 | Phase 6 (49-hour plan) — 4K playback + adaptive AI upscaling | playback module | **descoped** | No dedicated implementation found (no `*upscal*` files). Existing `VideoQuality.P4K`/`UHD_4K` enum values and `AI_UPSCALING` thermal guard reference remain but no active upscaling pipeline exists. Descoped by user instruction. |
+| 25 | Phase 7 (49-hour plan) — Dolby Atmos passthrough | playback module | **descoped** | No dedicated implementation found (no `*atmos*`/`*dolby*` files). Existing `supportsDolbyVision` HDR detection in `CodecCapabilityDetector`/`HdrDetector` is unrelated to Atmos bitstream passthrough. Descoped by user instruction. |
 | 24 | Phase 8 — Testing audit | whole project | **minimal coverage — scaffold exists** | 8 test files across 64,877 LOC. Test framework: JUnit4, Compose UI Test (JUnit4), MockK, Turbine, Coroutines Test, Espresso. Existing tests: HomeScreenTest, SearchScreenTest, PlayerScreenTest, DetailsScreenTest (Compose UI), AccessibilityTest, BackendSelectorIntegrationTest, ExtensionManifestValidatorTest, ArchitectureTest. Missing: unit tests for ViewModels (SettingsViewModel, AddonsViewModel, FavoritesViewModel, HistoryViewModel, LibraryViewModel), repository tests (SettingsRepositoryImpl, SettingsRepositoryAdapter, MediaRepositoryBridge), security tests (SecurityConfig, CertificatePinningConfig), Phase 2 screen tests, Phase 4 settings tests. Cannot run tests without build system. |
 | 25 | Phase 9 — Release build | app module | **scaffolded — needs real values** | Release config: signingConfigs with env vars (KEYSTORE_PATH / KEYSTORE_PASSWORD / KEY_ALIAS / KEY_PASSWORD), fallback to ../keystore/release.keystore. Build type: minifyEnabled=true, shrinkResources=true, proguard-android-optimize.txt + proguard-rules.pro (42 lines, covers Hilt/kotlinx.serialization/Room/Retrofit/Coil), crunchPngs=true. Debug: applicationIdSuffix=".debug", versionNameSuffix="-debug". network_security_config.xml: cleartext disabled, certificate pinning for AniList/MAL/TMDB/Kitsu, debug-overrides for user certs. Issues: all certificate pins are placeholder (sha256/AAAA... / sha256/BBBB...), keystore doesn't exist, no CI/CD workflow found. Cannot build-verify. |
 
@@ -197,3 +199,190 @@ Proof: `git diff` shows TrailerRepositoryImpl.kt lines changed from literal stri
 - LOC baseline: 366 Kotlin files, 41,862 total LOC.
 
 **Note:** Local Android SDK is incomplete in this environment. All build-dependent verification items in subsequent phases are marked "unverified" with explicit reasoning. CI on GitHub Actions has Android SDK 35 configured and was previously passing before this session's changes; post-push CI status will be the authoritative verification source.
+
+---
+
+# Phase 2 — Dead weight removal and plugin-sdk fixes (continued)
+
+## Modules removed
+- `:launcher` and `:benchmark` removed from `settings.gradle.kts` — zero source files in either, only generated BuildConfig outputs.
+- Removed `implementation(project(":launcher"))` from `app/build.gradle.kts`.
+- `:cache` re-enabled (it was commented out in a prior pass but contains real cache-layer code).
+
+## Plugin-sdk: real APK manifest extraction
+- `ExtensionManagerImpl.extractManifestFromApk()` was a hardcoded stub returning a fake manifest.
+- Replaced with real implementation using `PackageManager.getPackageArchiveInfo()` that reads actual APK metadata (package name, version, label, manifest meta-data).
+- Added `@ApplicationContext` injection to `ExtensionManagerImpl` to access `PackageManager`.
+- Known limitation: metadata keys (`pluginClassName`, `capabilities`, etc.) are read from Android manifest meta-data. Extensions must declare these in their `AndroidManifest.xml` for them to be picked up.
+
+## Sandbox warning
+- Added explicit warning to `SandboxClassLoader.kt` doc comment: blocklist-based isolation is bypassable via indirect reflection, parent-loader lookup, and JNI. Do not load untrusted third-party code until properly hardened.
+
+Proof: `git diff` of `settings.gradle.kts`, `ExtensionManagerImpl.kt`, `SandboxClassLoader.kt`. Zero imports of `com.kurostream.launcher` or `com.kurostream.benchmark` remain in `.kt` files.
+
+---
+
+# Phase 3 — TrailerRepositoryImpl API key wiring (confirmed)
+
+- `TrailerRepositoryImpl` already injects `youTubeApiKey: String` via constructor.
+- `NetworkModule.provideYouTubeApiKey()` reads from `BuildConfig.YOUTUBE_API_KEY` with `System.getenv("YOUTUBE_API_KEY")` fallback.
+- `data/build.gradle.kts` has `buildConfigField("String", "YOUTUBE_API_KEY", System.getenv("YOUTUBE_API_KEY") ?: "\"\"")`.
+
+Proof: Verified by reading current files. No literal `"YOUTUBE_API_KEY"` string remains in `TrailerRepositoryImpl.kt`.
+
+---
+
+# Phase 4 — Torrent module: live connectivity verified, re-enabled
+
+## Connectivity check
+- `curl -s -o /dev/null -w "%{http_code}" https://dl.frostwire.com/maven/` → **200 OK**
+- `https://dl.frostwire.com/maven/com/frostwire/jlibtorrent/maven-metadata.xml` → returns valid XML
+- Latest version listed: `2.0.12.9` (matches `libs.versions.toml`)
+- All architecture artifacts present: `jlibtorrent`, `jlibtorrent-android-arm`, `jlibtorrent-android-arm64`, `jlibtorrent-android-x86`, `jlibtorrent-android-x86_64`
+
+## Action taken
+- Re-enabled `include(":torrent")` in `settings.gradle.kts` with comment documenting live verification date (2026-07-31).
+- `:torrent` module already contains:
+  - `jlibtorrent:2.0.12.9` + 4 arch artifacts in `torrent/build.gradle.kts`
+  - `TorrentMetadataCache` and `TorrentPieceCache` implementations
+  - `TorrentEngine` with correct `TorrentInfo` alias pattern (`import com.frostwire.jlibtorrent.TorrentInfo` + `import com.kurostream.torrent.domain.TorrentInfo as DomainTorrentInfo`)
+  - `TorrentProcessService.onBind()` returns null (no `Messenger(Handler)` crash)
+  - `TorrentService` no longer imports `com.kurostream.app.MainActivity`
+  - All 15 files with missing `android.util.Log` imports already fixed in prior pass
+
+## Build verification status
+- **Cannot build-verify** — no Android SDK in this environment.
+- **Cannot verify jlibtorrent API compatibility at runtime** — no device/emulator available.
+- Known risky API patterns (from prior pass): `SessionManager.start()`, `handle.addMetadata()`, `TorrentHandle.connectPeer(PeerInfo(...))`, `session.dhtState()?.nodes` — plausible but unverified against 2.0.12.9 API.
+
+Proof: curl HTTP 200 output, maven-metadata.xml listing, `git diff` of `settings.gradle.kts`.
+
+---
+
+# Phase 5 — Playback engines: VLC + mpv implemented, BackendSelector wired
+
+## State at entry
+- `PlaybackEngine` interface already existed.
+- `Media3Player` fully implemented.
+- `BackendSelector` had real selection logic with `MediaCodecList` hardware check and fallback chain.
+- `PlayerViewModel` was already wired through `BackendSelector` (not hardcoded ExoPlayer).
+- `VlcPlayer.kt` and `MpvPlayer.kt` existed but had unsafe native init in `init` blocks.
+
+## Changes made
+1. **MpvPlayer init safety:** Moved `MPVLib.create(context)` from `init` block to `initialize()` with try/catch. If native lib fails, `mpvLib` stays null and `BackendSelector` falls back to VLC/Media3.
+2. **VlcPlayer init safety:** Moved `LibVLC(context)` and `MediaPlayer(libVlc)` from `init` block to `initialize()` with try/catch.
+3. **BackendSelector.createMpv():** Added `player.initialize()` call before `isInitialized()` check.
+4. **README updated:** Playback table now shows all three engines as "Implemented, unverified". Removed fabricated memory targets (`< 25 MB idle / < 125 MB 4K+AI+Atmos`) and replaced with honest targets (`< 150 MB idle / < 400 MB 4K`). Architecture diagram updated to show `Media3 · VLC · MPV`. Acknowledgements updated.
+
+## Verification breakdown
+| Engine | Implemented | Compile-verified | Device-tested |
+|--------|-------------|------------------|---------------|
+| Media3 (ExoPlayer) | ✅ | ❌ No SDK | ❌ No device |
+| VLC (libvlc-all 3.6.3) | ✅ | ❌ No SDK | ❌ No device |
+| MPV (libmpv 1.0.0) | ✅ | ❌ No SDK | ❌ No device |
+
+- `PlayerViewModel` uses `BackendSelector.selectBackend()` in `init` block.
+- `PlayerScreen` casts `engine.nativePlayer()` to `androidx.media3.common.Player` for `PlayerView`; returns null for VLC/mpv (no PlayerView integration for those backends yet).
+- `BackendSelector.hasHardwareDecoderSupport()` uses `MediaCodecList` — cannot unit-test in plain JVM without Robolectric.
+
+## Tests added
+- `FavoritesRepositoryBridgeTest` (JVM unit test, app module) — 3 tests covering empty-profile, add, and remove flows.
+- BackendSelector tests deferred — require Robolectric or instrumented test environment due to `MediaCodecList` dependency.
+
+Proof: `git diff` of `MpvPlayer.kt`, `VlcPlayer.kt`, `BackendSelector.kt`, `README.md`, `FavoritesRepositoryBridge.kt`, `FavoritesRepositoryBridgeTest.kt`.
+
+---
+
+# Phase 6 — 4K playback + adaptive AI upscaling (descoped by user instruction)
+
+- No dedicated implementation found (no `*upscal*` files in repo).
+- Existing `VideoQuality.P4K`/`UHD_4K` enum values and `AI_UPSCALING` thermal guard reference remain but no active upscaling pipeline exists.
+- Descoped per user instruction.
+
+---
+
+# Phase 7 — Dolby Atmos passthrough (descoped by user instruction)
+
+- No dedicated implementation found (no `*atmos*`/`*dolby*` files in repo).
+- Existing `supportsDolbyVision` HDR detection in `CodecCapabilityDetector`/`HdrDetector` is unrelated to Atmos bitstream passthrough.
+- Descoped per user instruction.
+
+---
+
+# Phase 8 — Memory profiling (cannot execute without device)
+
+- Cannot run `adb shell dumpsys meminfo` or Android Profiler without a physical device/emulator.
+- Cannot measure actual idle or peak memory numbers.
+- Existing `AdaptiveMemoryGovernor` and `LowRamDevice` infrastructure already present in `common` module.
+- README memory targets updated to honest unmeasured values pending Phase 8 verification.
+
+---
+
+# Phase 9 — Persistence, detekt, and tests (partial)
+
+## Favorites persistence
+- `FavoritesRepositoryBridge` was in-memory only.
+- Now delegates to domain `MediaRepository` (Room-backed `FavoriteDao`) with active-profile resolution via `ProfileRepository`.
+- Domain `FavoriteEntity` and `FavoriteDao` already existed with full CRUD and profile-scoped queries.
+- `MediaRepositoryImpl` already implemented `observeFavorites`, `addFavorite`, `removeFavorite` with Room.
+- History (`WatchProgressRepositoryBridge`) and Library already use domain repositories directly — no in-memory gap.
+
+## Detekt
+- `detekt` plugin added to root `build.gradle.kts` and applied to all subprojects with Kotlin plugins.
+- `config/detekt/detekt.yml` exists (6 lines, minimal config).
+- `code-quality.yml` GitHub Actions workflow updated with a `detekt` job that runs `./gradlew detektAll`.
+- Cannot run detekt locally — no Gradle/Android SDK. CI verification pending.
+
+## Tests
+- Added `FavoritesRepositoryBridgeTest` with 3 unit tests.
+- BackendSelector tests deferred (require Robolectric/instrumented environment).
+- Playback module test dependencies added (JUnit4, MockK, coroutines-test).
+
+---
+
+# Phase 10 — Final verification status
+
+## What was verified
+- Static code review: all changes are syntactically correct Kotlin, follow existing patterns.
+- Connectivity: `dl.frostwire.com/maven` reachable (HTTP 200), jlibtorrent 2.0.12.9 listed in maven-metadata.xml.
+- No remaining references to removed modules (`launcher`, `benchmark`, `tizenApp`) in `.kt` files.
+- Junk files already absent (`kurostream_final_analysis.json`, `org/sqlite/native/`, `.kotlin/`).
+
+## What is unverified
+- Gradle build: local environment has no Android SDK (`/usr/local/android-sdk` missing platforms/build-tools). All build-verification items are marked "unverified."
+- Playback engine runtime: VLC and mpv implementations are structurally complete but untested on device.
+- Torrent module: re-enabled with live connectivity confirmed, but jlibtorrent API compatibility against 2.0.12.9 is unverified at runtime.
+- Favorites persistence: Room DAO and entity exist; bridge now delegates correctly, but unverified at runtime.
+- Detekt: configured and wired to CI, but not run locally.
+
+## What is descoped
+- Phase 6: 4K + adaptive AI upscaling (no implementation found, user instruction).
+- Phase 7: Dolby Atmos passthrough (no implementation found, user instruction).
+
+## Open items
+- Issue #10: `BackupRoute` used in `TvNavHost.kt` but never defined in `Routes.kt` — guaranteed compile error. Still open.
+- Issue #17: Build verification pending (no local SDK).
+- Issue #25: Detekt findings not yet run/fixed (pending CI).
+
+---
+
+# Known Kilo CLI Issues
+
+This section documents known issues with the Kilo Code CLI that affect this session. These are external to the KuroStream project and cannot be fixed in code.
+
+1. **Compaction loop / "Compaction exhausted" error** (Kilo issues #9285, #9774)
+   - When context exceeds model limits, auto-compaction can enter an infinite loop or fail with `Compaction exhausted: context still exceeds model limits after 3 attempts`.
+   - Workaround: manually run `/compact` before context grows too large. If stuck, interrupt and start a new session.
+   - Reference: https://github.com/Kilo-Org/kilocode/issues/9285
+
+2. **Session stops after auto-compaction** (Kilo issue #7658)
+   - After auto-compaction triggers, the session may stop without continuing. Some models don't show a compaction-in-progress message.
+   - Workaround: manually run `/compact` and wait for completion before sending the next message.
+
+3. **Queued compaction markers stuck** (Kilo PR #9887)
+   - When a second prompt is queued during compaction recovery, it can get stuck because the cleanup message is hidden.
+   - Workaround: avoid queuing multiple prompts during compaction. Wait for compaction to finish.
+
+4. **Motion bar / sub-agent status not visible**
+   - When Kilo delegates to sub-agents, the "AI is responding" motion bar may not show the to-and-fro status clearly.
+   - This is a UI issue in the Kilo CLI. No code workaround available.

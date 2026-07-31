@@ -26,4 +26,13 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.javax.inject)
     implementation(libs.hilt.android)
+
+    // Playback engines
+    implementation(libs.libvlc)
+    implementation(libs.libmpv)
+
+    // Tests
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.coroutines)
 }

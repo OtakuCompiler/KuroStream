@@ -15,25 +15,19 @@
 
 package com.kurostream.app.player
 
-import android.content.Context
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem as ExoMediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
+import com.kurostream.players.selector.BackendSelector
+import com.kurostream.players.selector.PlaybackEngine
 import com.kurostream.app.model.PlaybackUrl
 import com.kurostream.domain.repository.SettingsRepository
 import com.kurostream.app.repository.TvRepositories.MediaRepository
 import com.kurostream.app.repository.TvRepositories.WatchProgressRepository
 import com.kurostream.domain.result.Result as DomainResult
-import com.kurostream.common.memory.LowRamDevice
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,23 +56,25 @@ data class PlayerUiState(
     val subtitleEnabled: Boolean = true,
 )
 
-@UnstableApi
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext private val context: android.content.Context,
     private val settingsRepository: SettingsRepository,
     private val mediaRepository: MediaRepository,
-    private val watchProgressRepository: WatchProgressRepository
-) : ViewModel() {
+    private val watchProgressRepository: WatchProgressRepository,
+    private val backendSelector: BackendSelector,
+) : androidx.lifecycle.ViewModel() {
 
-    private var player: ExoPlayer? = null
+    private var engine: PlaybackEngine? = null
     private var playerReady = false
 
-    /** Exposes the current player instance for UI-only read access. */
-    val currentPlayer: ExoPlayer? get() = player
+    /** Exposes the current engine instance for UI-only read access. */
+    val currentEngine: PlaybackEngine? get() = engine
 
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
+
+    private var mediaJob: Job? = null
 
     private var mediaId: String? = null
     private var episodeId: String? = null
@@ -115,37 +111,44 @@ class PlayerViewModel @Inject constructor(
             }
         }
 
-        val isLowRam = LowRamDevice.isLowRamDevice()
-        player = PlayerConfig.create(context, lowRam = isLowRam).apply {
-            addListener(object : Player.Listener {
-                override fun onPlaybackStateChanged(state: Int) {
-                    _uiState.update {
-                        it.copy(
-                            isBuffering = state == Player.STATE_BUFFERING,
-                            duration = if (state == Player.STATE_READY) it.duration.coerceAtLeast(0L) else it.duration
-                        )
+        scope.launch(Dispatchers.Main) {
+            try {
+                engine = backendSelector.selectBackend()
+                engine?.addListener(object : PlaybackEngine.Listener {
+                    override fun onPlaybackStateChanged(state: PlaybackEngine.PlaybackState) {
+                        _uiState.update {
+                            it.copy(
+                                isBuffering = state == PlaybackEngine.PlaybackState.BUFFERING,
+                                duration = if (state == PlaybackEngine.PlaybackState.READY) it.duration.coerceAtLeast(0L) else it.duration
+                            )
+                        }
                     }
-                }
 
-                override fun onIsPlayingChanged(playing: Boolean) {
-                    _uiState.update { it.copy(isPlaying = playing) }
-                }
+                    override fun onIsPlayingChanged(playing: Boolean) {
+                        _uiState.update { it.copy(isPlaying = playing) }
+                    }
 
-                override fun onPlayerError(error: PlaybackException) {
-                    _uiState.update { it.copy(error = error.message, isBuffering = false) }
-                }
-            })
+                    override fun onError(message: String?) {
+                        _uiState.update { it.copy(error = message, isBuffering = false) }
+                    }
+                })
+                playerReady = true
+            } catch (e: Exception) {
+                Timber.e(e, "BackendSelector failed")
+                _uiState.update { it.copy(error = e.message, isBuffering = false) }
+            }
         }
-        playerReady = true
 
         scope.launch {
             try {
                 while (isActive) {
-                    if (playerReady && player?.isPlaying == true) {
+                    if (playerReady && engine != null) {
                         _uiState.update {
                             it.copy(
-                                currentPosition = player?.currentPosition ?: 0L,
-                                bufferedPosition = player?.bufferedPosition ?: 0L
+                                currentPosition = engine?.currentPosition?.value ?: 0L,
+                                duration = engine?.duration?.value ?: 0L,
+                                bufferedPosition = engine?.bufferedPosition?.value ?: 0L,
+                                isPlaying = engine?.isPlaying?.value ?: false,
                             )
                         }
                     }
@@ -160,7 +163,8 @@ class PlayerViewModel @Inject constructor(
     fun preparePlayback(mediaId: String, episodeId: String?, startPositionMs: Long) {
         this.mediaId = mediaId
         this.episodeId = episodeId
-        scope.launch {
+        mediaJob?.cancel()
+        mediaJob = scope.launch {
             try {
                 _uiState.update { it.copy(isBuffering = true) }
 
@@ -170,10 +174,8 @@ class PlayerViewModel @Inject constructor(
                         val playbackUrl = result.data as? PlaybackUrl
                             ?: throw IllegalStateException("Playback URL resolution returned invalid data")
                         _uiState.update { it.copy(title = playbackUrl.title) }
-                        val mediaItem = ExoMediaItem.fromUri(playbackUrl.url)
-                        player?.setMediaItem(mediaItem, startPositionMs)
-                        player?.prepare()
-                        player?.play()
+                        engine?.setMedia(playbackUrl.url, playbackUrl.title, startPositionMs)
+                        engine?.play()
                     }
                     is DomainResult.Error -> {
                         _uiState.update { it.copy(error = result.exception.message, isBuffering = false) }
@@ -189,35 +191,41 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun togglePlayPause() {
-        if (player?.isPlaying == true) player?.pause() else player?.play()
+        val playing = engine?.isPlaying?.value ?: false
+        if (playing) {
+            engine?.pause()
+        } else {
+            engine?.play()
+        }
     }
 
     fun seekTo(positionMs: Long) {
-        player?.seekTo(positionMs.coerceIn(0, player?.duration?.coerceAtLeast(0) ?: 0L))
+        val duration = engine?.duration?.value?.coerceAtLeast(0L) ?: 0L
+        engine?.seekTo(positionMs.coerceIn(0, duration))
     }
 
     fun seekForward() {
-        player?.seekForward()
+        engine?.seekForward()
     }
 
     fun seekBackward() {
-        player?.seekBack()
+        engine?.seekBack()
     }
 
     fun skipIntro() {
-        val targetPosition = ((player?.currentPosition ?: 0L) + _uiState.value.skipIntroDurationMs)
-            .coerceAtMost(player?.duration ?: 0L)
-        player?.seekTo(targetPosition)
+        val targetPosition = ((engine?.currentPosition?.value ?: 0L) + _uiState.value.skipIntroDurationMs)
+            .coerceAtMost(engine?.duration?.value ?: 0L)
+        engine?.seekTo(targetPosition)
     }
 
     fun skipOutro() {
-        val targetPosition = ((player?.currentPosition ?: 0L) + _uiState.value.skipOutroDurationMs)
-            .coerceAtMost(player?.duration ?: 0L)
-        player?.seekTo(targetPosition)
+        val targetPosition = ((engine?.currentPosition?.value ?: 0L) + _uiState.value.skipOutroDurationMs)
+            .coerceAtMost(engine?.duration?.value ?: 0L)
+        engine?.seekTo(targetPosition)
     }
 
     fun setPlaybackSpeed(speed: Float) {
-        player?.setPlaybackSpeed(speed)
+        engine?.setPlaybackSpeed(speed)
         _uiState.update { it.copy(playbackSpeed = speed) }
     }
 
@@ -266,8 +274,8 @@ class PlayerViewModel @Inject constructor(
     fun saveProgress() {
         val currentMedia = mediaId ?: return
         val currentEpisode = episodeId
-        val position = player?.currentPosition ?: 0L
-        val total = player?.duration ?: 0L
+        val position = engine?.currentPosition?.value ?: 0L
+        val total = engine?.duration?.value ?: 0L
 
         scope.launch {
             try {
@@ -285,8 +293,11 @@ class PlayerViewModel @Inject constructor(
 
     fun releasePlayer() {
         saveProgress()
-        player?.release()
-        player = null
+        engine?.release()
+        mediaJob?.cancel()
+        mediaJob = null
+        engine = null
+        playerReady = false
     }
 
     override fun onCleared() {

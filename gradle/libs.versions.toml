@@ -29,6 +29,9 @@ javaxInject = "1"
 detekt = "1.23.7"
 spotless = "6.25.0"
 moshi = "1.15.1"
+jlibtorrent = "2.0.12.9"
+vlc = "3.6.3"
+libmpv = "1.0.0"
 
 [libraries]
 okhttp-brotli = { group = "com.squareup.okhttp3", name = "okhttp-brotli", version.ref = "okhttp" }
@@ -138,6 +141,17 @@ detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin",
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 moshi-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
+
+# Torrent
+jlibtorrent = { group = "com.frostwire", name = "jlibtorrent", version.ref = "jlibtorrent" }
+jlibtorrent-android-arm = { group = "com.frostwire", name = "jlibtorrent-android-arm", version.ref = "jlibtorrent" }
+jlibtorrent-android-arm64 = { group = "com.frostwire", name = "jlibtorrent-android-arm64", version.ref = "jlibtorrent" }
+jlibtorrent-android-x86 = { group = "com.frostwire", name = "jlibtorrent-android-x86", version.ref = "jlibtorrent" }
+jlibtorrent-android-x86_64 = { group = "com.frostwire", name = "jlibtorrent-android-x86_64", version.ref = "jlibtorrent" }
+
+# Playback engines
+libvlc = { group = "org.videolan.android", name = "libvlc-all", version.ref = "vlc" }
+libmpv = { group = "dev.jdtech.mpv", name = "libmpv", version.ref = "libmpv" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

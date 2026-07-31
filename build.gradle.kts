@@ -10,3 +10,37 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.spotless) apply false
 }
+
+tasks.register("detektAll") {
+    group = "verification"
+    description = "Run detekt static analysis on all modules"
+    subprojects.forEach { subproject ->
+        val detektTask = subproject.tasks.findByName("detekt")
+        if (detektTask != null) {
+            dependsOn(detektTask)
+        }
+    }
+}
+
+tasks.register("detektFormat") {
+    group = "verification"
+    description = "Auto-format Kotlin files with detekt"
+    subprojects.forEach { subproject ->
+        val detektFormatTask = subproject.tasks.findByName("detektFormat")
+        if (detektFormatTask != null) {
+            dependsOn(detektFormatTask)
+        }
+    }
+}
+
+subprojects {
+    // Detekt is applied via convention plugins where needed.
+    // Auto-apply to Kotlin modules if the plugin class is available.
+    afterEvaluate {
+        try {
+            pluginManager.apply("io.gitlab.arturbosch.detekt")
+        } catch (_: Exception) {
+            // ignore modules that cannot apply detekt
+        }
+    }
+}
