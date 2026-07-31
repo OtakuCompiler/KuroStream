@@ -157,12 +157,6 @@
             android:exported="false"
             android:theme="@style/Theme.AnimeStreamTV.NoActionBar" />
 
-        <!-- Benchmark Activity (developer only) -->
-        <activity
-            android:name="com.kurostream.app.benchmark.BenchmarkActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AnimeStreamTV.NoActionBar" />
-
         <!-- External Player Intent Handler -->
         <activity
             android:name="com.kurostream.app.ExternalPlayerActivity"
