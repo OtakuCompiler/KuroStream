@@ -1,0 +1,18 @@
+#!/system/bin/sh
+# KuroStream Gradle wrapper — no daemon, no journal locks, low memory
+GRADLE_USER_HOME=/mnt/sdcard/kurostream/.gradle
+export GRADLE_USER_HOME
+
+# Kill any leftover daemons to prevent journal lock conflicts
+pkill -f "gradle-daemon" 2>/dev/null || true
+rm -f "$GRADLE_USER_HOME/caches/journal-1/journal-1.lock" 2>/dev/null || true
+rm -rf "$GRADLE_USER_HOME/caches/journal-1" 2>/dev/null || true
+
+cd /mnt/sdcard/kurostream
+exec bash gradlew \
+  --no-daemon \
+  --console=plain \
+  --max-workers=1 \
+  -Dorg.gradle.daemon=false \
+  -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=96m -XX:+UseG1GC -Dfile.encoding=UTF-8" \
+  "$@"
