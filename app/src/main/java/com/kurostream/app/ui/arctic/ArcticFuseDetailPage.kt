@@ -121,14 +121,14 @@ private fun DetailContent(
             if (item.backdropUrl.isNotBlank()) {
                 AsyncImage(
                     model = item.backdropUrl,
-                    contentDescription = null,
+                    contentDescription = item.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
             } else if (item.posterUrl.isNotBlank()) {
                 AsyncImage(
                     model = item.posterUrl,
-                    contentDescription = null,
+                    contentDescription = item.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )

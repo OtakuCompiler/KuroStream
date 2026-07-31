@@ -68,6 +68,9 @@ import coil.compose.AsyncImage
 import com.kurostream.app.model.MediaItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 private const val SLIDE_INTERVAL_MS = 8_000L
 
@@ -101,14 +104,14 @@ fun ArcticFuseHeroSpotlight(
         if (item.backdropUrl.isNotBlank()) {
             AsyncImage(
                 model = item.backdropUrl,
-                contentDescription = null,
+                contentDescription = item.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
         } else if (item.posterUrl.isNotBlank()) {
             AsyncImage(
                 model = item.posterUrl,
-                contentDescription = null,
+                contentDescription = item.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -284,12 +287,12 @@ enum class HeroCTAStyle { PrimaryWhite, TranslucentWhite, OutlineTransparent }
 
 @Composable
 private fun HeroTopBar(modifier: Modifier = Modifier) {
-    val dateFmt = remember { java.text.SimpleDateFormat("EEEE, d MMMM yyyy", java.util.Locale.getDefault()) }
-    val timeFmt = remember { java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault()) }
-    var now by remember { mutableStateOf(java.util.Date()) }
+    val dateFmt = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG) }
+    val timeFmt = remember { DateTimeFormatter.ofPattern("h:mm a") }
+    var now by remember { mutableStateOf(LocalDateTime.now()) }
     LaunchedEffect(Unit) {
         while (isActive) {
-            now = java.util.Date()
+            now = LocalDateTime.now()
             delay(60_000L)
         }
     }
@@ -304,12 +307,12 @@ private fun HeroTopBar(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = dateFmt.format(now),
+            text = now.format(dateFmt),
             color = AFTextSec,
             style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
         )
         Text(
-            text = timeFmt.format(now),
+            text = now.format(timeFmt),
             color = AFTextSec,
             style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
         )

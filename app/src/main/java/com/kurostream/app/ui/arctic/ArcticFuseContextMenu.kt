@@ -44,6 +44,10 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -72,7 +76,12 @@ fun ArcticFuseContextMenu(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable(onClick = onClose),
+                        .clickable(onClick = onClose)
+                        .semantics {
+                            contentDescription = "Close context menu"
+                            onClick(label = "Close context menu", action = null)
+                            role = Role.Button
+                        },
                 )
                 Column(
                     modifier = Modifier
@@ -99,11 +108,9 @@ private fun ContextRow(
     label: String,
     icon: @Composable () -> Unit,
     onClick: (ArcticContextAction) -> Unit,
-    visible: Boolean = true,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val fr = remember { FocusRequester() }
-    LaunchedEffect(visible) { /* keep focus requester alive */ }
 
     Row(
         modifier = Modifier
@@ -120,7 +127,12 @@ private fun ContextRow(
                     false
                 }
             }
-            .clickable { onClick(action) }
+            .clickable(onClick = { onClick(action) })
+            .semantics {
+                contentDescription = label
+                onClick(label = label, action = null)
+                role = Role.Button
+            }
             .background(if (isFocused) AFSurface else Color.Transparent)
             .padding(horizontal = AFSpacing.px4, vertical = AFSpacing.px3),
         verticalAlignment = Alignment.CenterVertically,
