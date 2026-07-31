@@ -5,6 +5,7 @@ import okhttp3.Response
 import timber.log.Timber
 import java.io.IOException
 import kotlin.math.pow
+import kotlin.random.Random
 
 class RetryInterceptor(
     private val maxRetries: Int = 3,
@@ -28,8 +29,10 @@ class RetryInterceptor(
             }
 
             if (attempt < maxRetries - 1) {
-                val delay = baseDelayMs * 2.0.pow(attempt.toDouble()).toLong()
-                Thread.sleep(delay)
+                val exponentialDelay = baseDelayMs * 2.0.pow(attempt.toDouble()).toLong()
+                val jitter = Random.nextLong(0, exponentialDelay / 2)
+                val totalDelay = exponentialDelay + jitter
+                Thread.sleep(totalDelay)
             }
         }
 

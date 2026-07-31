@@ -32,22 +32,24 @@ class CertificatePinningConfig @Inject constructor() {
          *     | openssl pkey -pubin -outform der \
          *     | openssl dgst -sha256 -binary \
          *     | openssl enc -base64
+         *
+         * Placeholder pins mean pinning is effectively disabled until real pins are injected.
+         * Do NOT ship to production without replacing these with actual SHA-256 pins.
          */
         val ANILIST_PINS = listOf(
-            "sha256/PLACEHOLDER_REPLACE_BEFORE_RELEASE_1=",
-            "sha256/PLACEHOLDER_REPLACE_BEFORE_RELEASE_2=",
+            "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
         )
 
         val MAL_PINS = listOf(
-            "sha256/PLACEHOLDER_REPLACE_BEFORE_RELEASE_1=",
+            "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
         )
 
         val TMDB_PINS = listOf(
-            "sha256/PLACEHOLDER_REPLACE_BEFORE_RELEASE_1=",
+            "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
         )
 
         val KITSU_PINS = listOf(
-            "sha256/PLACEHOLDER_REPLACE_BEFORE_RELEASE_1=",
+            "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
         )
     }
 }
