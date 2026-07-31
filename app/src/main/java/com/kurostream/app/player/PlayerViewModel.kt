@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -67,6 +66,7 @@ class PlayerViewModel @Inject constructor(
 
     private var engine: PlaybackEngine? = null
     private var playerReady = false
+    private val lockedSources = mutableSetOf<String>()
 
     /** Exposes the current engine instance for UI-only read access. */
     val currentEngine: PlaybackEngine? get() = engine
@@ -83,10 +83,9 @@ class PlayerViewModel @Inject constructor(
         Timber.e(throwable, "PlayerViewModel coroutine failed")
         _uiState.update { it.copy(error = throwable.message ?: "Unexpected error") }
     }
-    private val scope = viewModelScope + exceptionHandler
 
     init {
-        scope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             val settings = settingsRepository.getPlayerSubtitleSettings()
             _uiState.update {
                 it.copy(
@@ -98,7 +97,7 @@ class PlayerViewModel @Inject constructor(
             }
         }
 
-        scope.launch {
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             settingsRepository.observePlayerSubtitleSettings().collect { s ->
                 _uiState.update {
                     it.copy(
@@ -111,7 +110,7 @@ class PlayerViewModel @Inject constructor(
             }
         }
 
-        scope.launch(Dispatchers.Main) {
+        viewModelScope.launch(Dispatchers.Main + exceptionHandler) {
             try {
                 engine = backendSelector.selectBackend()
                 engine?.addListener(object : PlaybackEngine.Listener {
@@ -139,7 +138,7 @@ class PlayerViewModel @Inject constructor(
             }
         }
 
-        scope.launch {
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             try {
                 while (isActive) {
                     if (playerReady && engine != null) {
@@ -161,10 +160,14 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun preparePlayback(mediaId: String, episodeId: String?, startPositionMs: Long) {
+        if (lockedSources.contains(mediaId)) {
+            _uiState.update { it.copy(error = "This source is locked") }
+            return
+        }
         this.mediaId = mediaId
         this.episodeId = episodeId
         mediaJob?.cancel()
-        mediaJob = scope.launch {
+        mediaJob = viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             try {
                 _uiState.update { it.copy(isBuffering = true) }
 
@@ -239,27 +242,27 @@ class PlayerViewModel @Inject constructor(
 
     fun setSubtitleFontSize(size: Float) {
         _uiState.update { it.copy(subtitleFontSize = size) }
-        scope.launch { settingsRepository.setSubtitleFontSize(size) }
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) { settingsRepository.setSubtitleFontSize(size) }
     }
 
     fun setSubtitleFontColor(hex: String) {
         _uiState.update { it.copy(subtitleFontColorHex = hex) }
-        scope.launch { settingsRepository.setSubtitleFontColor(hex) }
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) { settingsRepository.setSubtitleFontColor(hex) }
     }
 
     fun setSubtitleBgColor(hex: String) {
         _uiState.update { it.copy(subtitleBgColorHex = hex) }
-        scope.launch { settingsRepository.setSubtitleBgColor(hex) }
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) { settingsRepository.setSubtitleBgColor(hex) }
     }
 
     fun setSubtitleEnabled(enabled: Boolean) {
         _uiState.update { it.copy(subtitleEnabled = enabled) }
-        scope.launch { settingsRepository.setSubtitleEnabled(enabled) }
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) { settingsRepository.setSubtitleEnabled(enabled) }
     }
 
     fun playNextEpisode() {
         val currentMedia = mediaId ?: return
-        scope.launch {
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             try {
                 mediaRepository.getNextEpisode(currentMedia, episodeId)
                     .onSuccess { nextEpisode ->

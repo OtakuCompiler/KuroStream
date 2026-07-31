@@ -73,20 +73,20 @@ class SyncWorker @AssistedInject constructor(
         }
     }
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        try {
+    override suspend fun doWork(): Result {
+        return try {
             if (!settingsDataStore.syncEnabled.first()) {
-                return@withContext Result.success(workDataOf(KEY_SYNC_RESULT to "sync_disabled"))
+                return Result.success(workDataOf(KEY_SYNC_RESULT to "sync_disabled"))
             }
 
             val lastSync = settingsDataStore.lastSyncTimestamp.first()
 
             val pushResult = syncProvider.pushLocalState()
-            if (pushResult.isError) return@withContext Result.retry()
+            if (pushResult.isError) return Result.retry()
             val pushTimestamp = pushResult.getOrNull()?.timestamp ?: System.currentTimeMillis()
 
             val pullResult = syncProvider.pull(lastSync)
-            if (pullResult.isError) return@withContext Result.retry()
+            if (pullResult.isError) return Result.retry()
 
             pullResult.getOrNull()?.let { remote ->
                 val local = syncProvider.buildPayloadFromLocal()

@@ -71,6 +71,8 @@ class HomeViewModel @Inject constructor(
         loadHomeData()
     }
 
+    private val _shuffledCache = MutableStateFlow<List<MediaItem>>(emptyList())
+
     private fun loadHomeData() {
         loadJob?.cancel()
         combine(
@@ -105,7 +107,7 @@ class HomeViewModel @Inject constructor(
             }
             return@combine Pair(itemsWithProgress, progressMap)
         }
-            .debounce(100)
+            .debounce(300)
             .map { (allItems, progressMap) ->
                 // ── Empty / loading detection ──
                 if (allItems.isEmpty()) {
@@ -133,7 +135,10 @@ class HomeViewModel @Inject constructor(
                 }
 
                 // Shuffle once and cache results through the snapshot
-                val shuffled = allItems.shuffled()
+                if (_shuffledCache.value.isEmpty() || allItems.size != _shuffledCache.value.size) {
+                    _shuffledCache.value = allItems.shuffled()
+                }
+                val shuffled = _shuffledCache.value
                 val sortedByRating = allItems.sortedByDescending { it.rating }
 
                 HomeUiState(

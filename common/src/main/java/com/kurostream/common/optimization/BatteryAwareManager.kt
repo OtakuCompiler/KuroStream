@@ -5,43 +5,47 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class BatteryAwareManager private constructor(context: Context) {
-    private val appContext = context.applicationContext
+@Singleton
+class BatteryAwareManager @Inject constructor(
+    @ApplicationContext private val appContext: Context
+) {
+    private val _batteryState = MutableStateFlow(readBatteryState())
+    val batteryState: StateFlow<BatteryState> = _batteryState.asStateFlow()
 
-    companion object {
-        @Volatile
-        private var instance: BatteryAwareManager? = null
+    data class BatteryState(
+        val isCharging: Boolean = false,
+        val levelPercent: Int = -1,
+        val isPowerSaveMode: Boolean = false
+    )
 
-        fun create(context: Context): BatteryAwareManager {
-            return instance ?: synchronized(this) {
-                instance ?: BatteryAwareManager(context).also { instance = it }
-            }
-        }
-    }
-
-    fun isCharging(): Boolean {
+    private fun readBatteryState(): BatteryState {
         val intent = appContext.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-        return status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
-    }
-
-    fun getBatteryLevel(): Int {
-        val intent = appContext.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
         val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
-        return if (level >= 0 && scale > 0) (level * 100 / scale) else -1
-    }
+        val pct = if (level >= 0 && scale > 0) (level * 100 / scale) else -1
 
-    fun isLowPowerMode(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val powerManager = appContext.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-            powerManager.isPowerSaveMode
+        val powerSave = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            (appContext.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager)?.isPowerSaveMode == true
         } else false
+
+        return BatteryState(
+            isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL,
+            levelPercent = pct,
+            isPowerSaveMode = powerSave
+        )
     }
 
     fun shouldReduceImageQuality(): Boolean {
-        return isLowPowerMode() || getBatteryLevel() < 20
+        val state = _batteryState.value
+        return state.isPowerSaveMode || state.levelPercent in 0..19
     }
 }

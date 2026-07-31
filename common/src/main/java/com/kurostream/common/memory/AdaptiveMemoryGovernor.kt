@@ -110,11 +110,13 @@ class AdaptiveMemoryGovernor @Inject constructor(
 
     private fun evaluatePressureLevel() {
         val state = unifiedMemoryManager.memoryState.value
-        val pressure = state.memoryPressure
+        val pressure = if (state.totalPssMb > 0) {
+            state.totalPssMb / 125f
+        } else 0f
 
         _memoryPressureLevel.value = when {
             state.isCritical || pressure > 0.95f -> MemoryPressureLevel.CRITICAL
-            state.isLowMemory || pressure > 0.85f -> MemoryPressureLevel.HIGH
+            pressure > 0.85f -> MemoryPressureLevel.HIGH
             pressure > 0.7f -> MemoryPressureLevel.ELEVATED
             pressure > 0.5f -> MemoryPressureLevel.MODERATE
             else -> MemoryPressureLevel.NOMINAL
@@ -267,17 +269,15 @@ class AdaptiveMemoryGovernor @Inject constructor(
      * Updates memory pressure from external source (e.g., NativeMemoryTracker).
      * Combines with internal pressure for more accurate assessment.
      */
-    fun updateExternalPressure(externalPressure: Float) {
-        val currentPressure = _memoryPressureLevel.value
-        val combinedPressure = (currentPressure.ordinal / 4.0f * 0.7f + externalPressure * 0.3f).coerceIn(0f, 1f)
-        
+    fun updateExternalPressure(pressure: Float) {
         _memoryPressureLevel.value = when {
-            combinedPressure > 0.95f -> MemoryPressureLevel.CRITICAL
-            combinedPressure > 0.85f -> MemoryPressureLevel.HIGH
-            combinedPressure > 0.7f -> MemoryPressureLevel.ELEVATED
-            combinedPressure > 0.5f -> MemoryPressureLevel.MODERATE
+            pressure > 0.95f -> MemoryPressureLevel.CRITICAL
+            pressure > 0.85f -> MemoryPressureLevel.HIGH
+            pressure > 0.7f -> MemoryPressureLevel.ELEVATED
+            pressure > 0.5f -> MemoryPressureLevel.MODERATE
             else -> MemoryPressureLevel.NOMINAL
         }
+        updatePolicies()
     }
 
     fun shutdown() {

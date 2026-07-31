@@ -16,9 +16,10 @@ class AdaptiveImageInterceptor(
 
         val adaptedRequest = request.newBuilder()
             .memoryCachePolicy(
-                if (shouldReduceQuality) CachePolicy.DISABLED
+                if (shouldReduceQuality) CachePolicy.WRITE_ONLY
                 else CachePolicy.ENABLED
             )
+            .diskCachePolicy(CachePolicy.ENABLED)
             .bitmapConfig(
                 if (shouldReduceQuality) Bitmap.Config.RGB_565
                 else Bitmap.Config.ARGB_8888

@@ -44,24 +44,19 @@ class BackendSelector @Inject constructor(
     }
 
     private suspend fun autoSelect(): PlaybackEngine {
-        // Prefer Media3 on Android TV/Fire TV where hardware decoders are present.
-        if (hasHardwareDecoderSupport()) {
-            try {
-                return createMedia3()
-            } catch (e: Exception) {
-                Log.w(TAG, "Media3 init failed, trying VLC", e)
-            }
-        }
-
-        // Try VLC next — it bundles its own codecs.
         try {
-            return createVlc()
+            return createMedia3()
         } catch (e: Exception) {
-            Log.w(TAG, "VLC init failed, trying MPV", e)
+            Log.w(TAG, "Media3 init failed", e)
         }
 
-        // MPV as last resort before failing.
-        return createMpv()
+        try {
+            return createMpv()
+        } catch (e: Exception) {
+            Log.w(TAG, "MPV init failed", e)
+        }
+
+        return createVlc()
     }
 
     private suspend fun createMedia3(): PlaybackEngine {
@@ -90,26 +85,32 @@ class BackendSelector @Inject constructor(
 
     private fun hasHardwareDecoderSupport(): Boolean {
         return try {
-            val count = MediaCodecList.getCodecCount()
-            var hasDecoder = false
-            for (i in 0 until count) {
-                val info = MediaCodecList.getCodecInfoAt(i)
-                if (!info.isHardwareAccelerated) continue
-                for (type in info.supportedTypes.orEmpty()) {
-                    if (type.equals(CODEC_MIME_AVC, ignoreCase = true) ||
-                        type.equals(CODEC_MIME_HEVC, ignoreCase = true) ||
-                        type.equals(CODEC_MIME_AV1, ignoreCase = true)
-                    ) {
-                        hasDecoder = true
-                        break
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val codecList = MediaCodecList(MediaCodecList.ALL_CODECS)
+                codecList.codecInfos.any { codec ->
+                    !codec.isEncoder && codec.isHardwareAccelerated &&
+                    codec.supportedTypes.any { type ->
+                        type.equals(CODEC_MIME_HEVC, true) ||
+                        type.equals(CODEC_MIME_AVC, true)
                     }
                 }
-                if (hasDecoder) break
+            } else {
+                val codecList = MediaCodecList(MediaCodecList.ALL_CODECS)
+                codecList.codecInfos.any { codec ->
+                    if (codec.isEncoder) return@any false
+                    val name = codec.name.lowercase()
+                    val isHardware = name.contains("omx.") && 
+                        (name.contains("qcom") || name.contains("nvidia") || 
+                         name.contains("amlogic") || name.contains("mtk") ||
+                         name.contains("exynos") || name.contains("hisi"))
+                    isHardware && codec.supportedTypes.any { 
+                        it.equals(CODEC_MIME_HEVC, true) || it.equals(CODEC_MIME_AVC, true)
+                    }
+                }
             }
-            hasDecoder
         } catch (e: Exception) {
-            Log.w(TAG, "MediaCodecList query failed, assuming no HW decoder", e)
-            false
+            Log.w(TAG, "Codec query failed, assuming HW present", e)
+            true
         }
     }
 

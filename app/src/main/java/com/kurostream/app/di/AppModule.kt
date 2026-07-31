@@ -18,9 +18,5 @@ object AppModule {
     @Singleton
     fun provideContext(@ApplicationContext context: Context): Context = context
 
-    @Provides
-    @Singleton
-    fun provideFavoritesRepository(
-        impl: FavoritesRepositoryBridge
-    ): TvRepositories.FavoritesRepository = impl
+    // FavoritesRepository bound in TvRepositoryModule
 }

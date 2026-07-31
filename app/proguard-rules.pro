@@ -53,6 +53,29 @@
 -dontwarn java.beans.**
 -dontnote java.beans.ConstructorProperties
 
+# Keep TV Leanback
+-keep class androidx.leanback.** { *; }
+-dontwarn androidx.leanback.**
+
+# Keep Kotlin Coroutines
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+
+# Keep TV Material3
+-keep class androidx.tv.material3.** { *; }
+
+# Keep Media3 PlayerView
+-keep class androidx.media3.ui.PlayerView { *; }
+-keepclassmembers class androidx.media3.ui.PlayerView { *; }
+
+# Keep ExoPlayer tunneling APIs
+-keepclassmembers class androidx.media3.exoplayer.ExoPlayer {
+    public void setTunnelingEnabled(boolean);
+}
+
 # General
 -keep public class com.kurostream.app.AnimeStreamTvApplication { *; }
 -keep public class * extends android.app.Activity

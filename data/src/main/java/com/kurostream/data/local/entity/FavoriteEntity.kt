@@ -27,13 +27,13 @@ import androidx.room.PrimaryKey
             entity = MediaItemEntity::class,
             parentColumns = ["id"],
             childColumns = ["mediaItemId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = ProfileEntity::class,
             parentColumns = ["id"],
             childColumns = ["profileId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
@@ -43,8 +43,8 @@ import androidx.room.PrimaryKey
 )
 data class FavoriteEntity(
     @PrimaryKey val id: String,
-    val mediaItemId: String,
-    val profileId: String,
+    val mediaItemId: String?,
+    val profileId: String?,
     val addedAt: Long = System.currentTimeMillis(),
     val category: String = "general"
 )

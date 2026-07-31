@@ -20,8 +20,6 @@ import androidx.tv.material3.lightColorScheme
 @Composable
 fun PremiumThemeProvider(
     themeMode: ThemeMode,
-    glassEnabled: Boolean = true,
-    blueGlowIntensity: BlueGlowIntensity = BlueGlowIntensity.MEDIUM,
     reduceMotion: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -31,9 +29,7 @@ fun PremiumThemeProvider(
         ThemeMode.AMOLED_BLACK -> PremiumThemeTokens.amoledBlackScheme
         ThemeMode.OLED_CINEMA -> PremiumThemeTokens.oledCinemaScheme
     }
-    val dynamic = animateColorAsState(scheme.primary, tween(300), "primary").value
-    val finalScheme = scheme.copy(primary = dynamic)
-    androidx.tv.material3.MaterialTheme(colorScheme = finalScheme, content = content)
+    androidx.tv.material3.MaterialTheme(colorScheme = scheme, content = content)
 }
 
 enum class BlueGlowIntensity { LOW, MEDIUM, HIGH }

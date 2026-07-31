@@ -109,33 +109,33 @@ class MediaRepositoryBridge @Inject constructor(
         }
     }
 
-    override suspend fun getPlaybackUrl(mediaId: String, episodeId: String?): Result<PlaybackUrl> {
+    override suspend fun getPlaybackUrl(mediaId: String, episodeId: String?): kotlin.Result<PlaybackUrl> {
         return try {
             val result = domainRepo.getPlaybackUrl(mediaId, episodeId)
             when (result) {
                 is DomainResult.Success<*> -> {
                     val r = result.data as com.kurostream.domain.model.PlaybackUrl
-                    Result.success(PlaybackUrl(url = r.url, headers = r.headers, quality = r.quality))
+                    kotlin.Result.success(PlaybackUrl(url = r.url, headers = r.headers, quality = r.quality))
                 }
-                else -> Result.failure(Exception("Playback URL not found"))
+                else -> kotlin.Result.failure(Exception("Playback URL not found"))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            kotlin.Result.failure(e)
         }
     }
 
-    override suspend fun getNextEpisode(mediaId: String, episodeId: String?): Result<Episode> {
+    override suspend fun getNextEpisode(mediaId: String, episodeId: String?): kotlin.Result<Episode> {
         return try {
             val result = domainRepo.getNextEpisode(mediaId, episodeId)
             when (result) {
                 is DomainResult.Success<*> -> {
                     val e = result.data as com.kurostream.domain.model.Episode
-                    Result.success(Episode(id = e.id, number = e.episodeNumber, title = e.title))
+                    kotlin.Result.success(Episode(id = e.id, number = e.episodeNumber, title = e.title))
                 }
-                else -> Result.failure(Exception("Next episode not found"))
+                else -> kotlin.Result.failure(Exception("Next episode not found"))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            kotlin.Result.failure(e)
         }
     }
 }

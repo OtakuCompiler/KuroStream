@@ -15,7 +15,12 @@ class CacheManagerImpl @Inject constructor() : CacheManager, CacheRepository {
     override val searchResults: CacheNamespace = ThreadSafeCacheNamespace()
     override val metadata: CacheNamespace = ThreadSafeCacheNamespace()
 
-    private val fetchCache = ConcurrentHashMap<String, Any?>()
+    private val fetchCache = object : LinkedHashMap<String, Any?>(100, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Any?>): Boolean {
+            return size > 100
+        }
+    }
+    private val fetchCacheTtl = ConcurrentHashMap<String, Long>()
     private val mutex = Mutex()
 
     private class ThreadSafeCacheNamespace : CacheNamespace {
@@ -52,17 +57,23 @@ class CacheManagerImpl @Inject constructor() : CacheManager, CacheRepository {
     override suspend fun <T> getOrFetch(key: String, ttlMs: Long, fetch: suspend () -> T): T {
         @Suppress("UNCHECKED_CAST")
         val cached = fetchCache[key] as? T
-        if (cached != null) return cached
+        val ttl = fetchCacheTtl[key]
+        if (cached != null && ttl != null && System.currentTimeMillis() < ttl) return cached
 
         return mutex.withLock {
             @Suppress("UNCHECKED_CAST")
             val existing = fetchCache[key] as? T
-            existing ?: run {
-                val result = fetch()
-                fetchCache[key] = result
-                searchResults.put(key, result, ttlMs)
-                result
+            val existingTtl = fetchCacheTtl[key]
+            if (existing != null && existingTtl != null && System.currentTimeMillis() < existingTtl) {
+                return@withLock existing
             }
+            val result = fetch()
+            synchronized(fetchCache) {
+                fetchCache[key] = result
+                fetchCacheTtl[key] = System.currentTimeMillis() + ttlMs
+            }
+            searchResults.put(key, result, ttlMs)
+            result
         }
     }
 

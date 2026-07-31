@@ -104,7 +104,9 @@ fun SkinBackground(
             modifier,
         )
         Skin.CHERRY_BLOSSOM -> {
-            if (!reduceMotionEnabled && !isLowRamDevice) {
+            if (reduceMotionEnabled || isLowRamDevice) {
+                Box(modifier = modifier.background(skin.backgroundColor()))
+            } else {
                 ParticleBackground(type = skin, count = 30, modifier = modifier)
             }
         }

@@ -87,6 +87,6 @@ object PagingConfig {
     const val PREFETCH_DISTANCE = 10
     const val INITIAL_LOAD_SIZE = 30
     const val MAX_SIZE = 200
-    const val ENABLE_contentS = false
+    const val ENABLE_PLACEHOLDERS = false
 }
 

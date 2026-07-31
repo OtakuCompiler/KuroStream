@@ -14,6 +14,7 @@ import okhttp3.Dns
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import timber.log.Timber
+import com.kurostream.common.memory.LowRamDevice
 import java.net.InetAddress
 import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
@@ -46,8 +47,8 @@ class UltraNetworkManager @Inject constructor(
         return OkHttpClient.Builder()
             // Connection pooling optimized for mobile
             .connectionPool(ConnectionPool(
-                maxIdleConnections = if (state.isHighSpeed) 20 else 10,
-                keepAliveDuration = if (state.isHighSpeed) 5 else 3,
+                maxIdleConnections = if (LowRamDevice.isLowRamDevice()) 2 else 5,
+                keepAliveDuration = 2,
                 timeUnit = TimeUnit.MINUTES
             ))
             

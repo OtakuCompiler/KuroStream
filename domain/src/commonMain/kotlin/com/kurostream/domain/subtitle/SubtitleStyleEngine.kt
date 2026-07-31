@@ -15,16 +15,24 @@ class SubtitleStyleEngine @Inject constructor(
     private val preferences: SubtitlePreferences,
 ) {
     data class Style(
-        val fontSize: Int = preferences.fontSize,
-        val primaryColor: Int = 0xFFFFFFFF,
+        val fontSize: Int = 0,
+        val primaryColor: Int = 0xFFFFFFFF.toInt(),
         val outlineColor: Int = 0xFF000000.toInt(),
         val backgroundColor: Int = 0x00000000,
-        val outlineThickness: Int = if (preferences.outlineEnabled) 2 else 0,
-        val shadowDepth: Int = if (preferences.shadowEnabled) 2 else 0,
-        val marginV: Int = if (preferences.positionBottom) 20 else 10,
+        val outlineThickness: Int = 0,
+        val shadowDepth: Int = 0,
+        val marginV: Int = 0,
     )
 
-    fun getStyle(): Style = Style()
+    fun getStyle(): Style = Style(
+        fontSize = preferences.fontSize,
+        primaryColor = 0xFFFFFFFF.toInt(),
+        outlineColor = 0xFF000000.toInt(),
+        backgroundColor = 0x00000000,
+        outlineThickness = if (preferences.outlineEnabled) 2 else 0,
+        shadowDepth = if (preferences.shadowEnabled) 2 else 0,
+        marginV = if (preferences.positionBottom) 20 else 10,
+    )
 
     fun applyAssOverride(assContent: String): String {
         val style = getStyle()

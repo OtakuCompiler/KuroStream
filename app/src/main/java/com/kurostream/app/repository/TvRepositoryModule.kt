@@ -18,4 +18,9 @@ abstract class TvRepositoryModule {
     abstract fun bindWatchProgressRepository(
         impl: WatchProgressRepositoryBridge
     ): TvRepositories.WatchProgressRepository
+
+    @Binds
+    abstract fun bindFavoritesRepository(
+        impl: FavoritesRepositoryBridge
+    ): TvRepositories.FavoritesRepository
 }

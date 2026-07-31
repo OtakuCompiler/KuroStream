@@ -5,72 +5,47 @@ import android.content.Context
 import android.os.Build
 
 object LowRamDevice {
+    private var _context: Context? = null
 
-    private var isLowRam: Boolean = false
-    private var totalRamMb: Long = 0
-    private var initialized = false
-
-    private const val LOW_RAM_THRESHOLD_MB = 1536L
-
-    fun initialize(context: Context) {
-        if (initialized) return
-        initialized = true
-
-        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
-        if (am != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            val memInfo = ActivityManager.MemoryInfo()
-            am.getMemoryInfo(memInfo)
-            totalRamMb = memInfo.totalMem / (1024 * 1024)
-        } else {
-            totalRamMb = Runtime.getRuntime().maxMemory() / (1024 * 1024)
-        }
-
-        isLowRam = totalRamMb <= LOW_RAM_THRESHOLD_MB
+    fun init(context: Context) {
+        _context = context.applicationContext
     }
 
-    fun isLowRamDevice(): Boolean = isLowRam
+    val isLowRamDevice: Boolean by lazy {
+        val ctx = _context ?: return@lazy true
+        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        am.isLowRamDevice || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && am.memoryClass <= 192)
+    }
 
-    fun totalRamMb(): Long = totalRamMb
+    val totalMemoryMb: Int by lazy {
+        val ctx = _context ?: return@lazy 1024
+        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val mi = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(mi)
+        (mi.totalMem / (1024 * 1024)).toInt()
+    }
+
+    val maxImageCacheBytes: Int
+        get() = if (isLowRamDevice) 2 * 1024 * 1024 else 8 * 1024 * 1024
 
     val coilMemoryCacheSize: Int
-        get() = 2 * 1024 * 1024 // Fixed 2MB — small enough for TV UI
+        get() = if (isLowRamDevice) 2 * 1024 * 1024 else 8 * 1024 * 1024
 
     val coilDiskCacheSize: Long
-        get() = 25L * 1024 * 1024 // Fixed 25MB disk cache
+        get() = if (isLowRamDevice) 25L * 1024 * 1024 else 50L * 1024 * 1024
 
-    val bufferPoolMaxPerClass: Int
-        get() = if (isLowRam) 4 else 8
-
-    val heroBannerOffscreenPages: Int
-        get() = if (isLowRam) 0 else 1
-
-    val contentRowOffscreenPages: Int
-        get() = if (isLowRam) 0 else 1
-
-    val memoryPollIntervalMs: Long
-        get() = if (isLowRam) 15_000L else 10_000L
-
-    val bufferPoolPreallocate: Boolean
-        get() = false
-
-    val memoryCautionThresholdMb: Int
-        get() = if (isLowRam) 80 else 120
-
-    val memoryWarningThresholdMb: Int
-        get() = if (isLowRam) 50 else 80
-
-    val memoryCriticalThresholdMb: Int
-        get() = if (isLowRam) 30 else 50
+    val maxSimultaneousImages: Int
+        get() = if (isLowRamDevice) 3 else 6
 
     val maxDecoderFrameBuffers: Int
-        get() = if (isLowRam) 2 else 3
+        get() = 1
 
     val maxGpuPoolTextures: Int
-        get() = if (isLowRam) 4 else 8
+        get() = if (isLowRamDevice) 2 else 4
 
     val upscaleRingBufferSeconds: Int
-        get() = if (isLowRam) 0 else 1 // Disable ring buffer on low RAM
+        get() = 0
 
-    val p2pMaxPeers: Int
-        get() = if (isLowRam) 2 else 4
+    val maxSubtitleCacheBytes: Int
+        get() = if (isLowRamDevice) 2 * 1024 * 1024 else 5 * 1024 * 1024
 }

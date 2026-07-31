@@ -38,33 +38,40 @@ class MetadataFusionEngine @Inject constructor(
 ) {
 
     suspend fun enrich(mediaId: String, sourceHint: String? = null): MediaItem? = withContext(Dispatchers.IO) {
-        val base = tmdbProvider.search(mediaId) ?: anilistProvider.search(mediaId)
-        if (base == null) {
-            val candidates = mutableListOf<MediaItem>()
-            if (sourceHint?.contains("anime", true) == true) {
-                malProvider.search(mediaId)?.let { candidates += it }
-                kitsuProvider.search(mediaId)?.let { candidates += it }
-            }
-            imdbProvider.search(mediaId)?.let { candidates += it }
-            tvdbProvider.search(mediaId)?.let { candidates += it }
-            return@withContext candidates.firstOrNull()
+        coroutineScope {
+            val deferreds = listOf(
+                async { tmdbProvider.search(mediaId) },
+                async { anilistProvider.search(mediaId) },
+                async { malProvider.search(mediaId) },
+                async { kitsuProvider.search(mediaId) },
+            )
+            val results = deferreds.awaitAll().filterNotNull()
+
+            if (results.isEmpty()) return@coroutineScope null
+
+            val base = results.first()
+            base.copy(
+                score = results.mapNotNull { it.score }.maxOrNull() ?: base.score,
+                genres = results.flatMap { it.genres }.distinct(),
+            )
         }
-        val enriched = base.copy(
-            rating = bestRating(base, imdbProvider.search(mediaId)),
-            trailer = bestTrailer(base, trailerRepository.getTrailer(mediaId)),
-        )
-        enriched
     }
 
     suspend fun enrichAnime(mediaId: String): MediaItem? = withContext(Dispatchers.IO) {
-        val anilist = anilistProvider.search(mediaId)
-        val mal = malProvider.search(mediaId)
-        val kitsu = kitsuProvider.search(mediaId)
-        val base = anilist ?: mal ?: kitsu ?: return@withContext null
-        base.copy(
-            rating = bestRating(base, listOfNotNull(mal, kitsu)),
-            description = base.description ?: mal?.description ?: kitsu?.description,
-        )
+        coroutineScope {
+            val deferreds = listOf(
+                async { anilistProvider.search(mediaId) },
+                async { malProvider.search(mediaId) },
+                async { kitsuProvider.search(mediaId) },
+            )
+            val results = deferreds.awaitAll().filterNotNull()
+            val base = results.firstOrNull() ?: return@coroutineScope null
+
+            base.copy(
+                score = results.mapNotNull { it.score }.maxOrNull() ?: base.score,
+                description = results.mapNotNull { it.description }.firstOrNull() ?: base.description,
+            )
+        }
     }
 
     private fun bestRating(base: MediaItem, others: List<MediaItem?>): Float {

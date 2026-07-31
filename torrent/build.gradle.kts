@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":core-common"))
+
     implementation(project(":common"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)
@@ -47,5 +47,4 @@ dependencies {
     implementation(libs.jlibtorrent.android.arm)
     implementation(libs.jlibtorrent.android.arm64)
     implementation(libs.jlibtorrent.android.x86)
-    implementation(libs.jlibtorrent.android.x86_64)
 }

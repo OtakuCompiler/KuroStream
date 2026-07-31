@@ -15,6 +15,7 @@
 
 package com.kurostream.app
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -42,10 +43,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        intent?.data?.let { uri ->
-            handleDeepLink(uri)
-        }
+        handleDeepLink(intent)
 
         setContent {
             var showSplash by remember { mutableStateOf(true) }
@@ -87,17 +85,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: android.content.Intent) {
+    override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intent?.data?.let { uri ->
-            handleDeepLink(uri)
-        }
+        handleDeepLink(intent)
     }
 
-    private fun handleDeepLink(uri: Uri) {
-        if (uri.scheme == "kurostream" && uri.host == "play") {
-            val mediaId = uri.getQueryParameter("id")
-            if (!mediaId.isNullOrBlank() && mediaId.matches(Regex("^[a-zA-Z0-9_-]+$"))) {
+    private fun handleDeepLink(intent: Intent?) {
+        val uri = intent?.data ?: return
+        when (uri.host) {
+            "play" -> {
+                val mediaId = uri.getQueryParameter("id") ?: return
+                deepLinkMediaId = mediaId
+                deepLinkEpisodeId = uri.getQueryParameter("episode")
+            }
+            "details" -> {
+                val mediaId = uri.getQueryParameter("id") ?: return
                 deepLinkMediaId = mediaId
                 deepLinkEpisodeId = uri.getQueryParameter("episode")
             }

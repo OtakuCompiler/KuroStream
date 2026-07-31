@@ -20,7 +20,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,7 +60,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -219,7 +217,7 @@ private fun ReorderableMediaRow(
                         if (event.type == KeyEventType.KeyDown) {
                             when (event.key) {
                                 Key.DirectionLeft -> {
-                                    if (index > 0 && isDragged) {
+                                    if (index > 0 && draggedIndex == index) {
                                         val temp = items[index]
                                         items[index] = items[index - 1]
                                         items[index - 1] = temp
@@ -228,7 +226,7 @@ private fun ReorderableMediaRow(
                                     } else false
                                 }
                                 Key.DirectionRight -> {
-                                    if (index < items.size - 1 && isDragged) {
+                                    if (index < items.size - 1 && draggedIndex == index) {
                                         val temp = items[index]
                                         items[index] = items[index + 1]
                                         items[index + 1] = temp
@@ -243,24 +241,6 @@ private fun ReorderableMediaRow(
                                 else -> false
                             }
                         } else false
-                    }
-                    .pointerInput(index) {
-                        detectDragGestures(
-                            onDragStart = { draggedIndex = index },
-                            onDragEnd = { 
-                                draggedIndex = -1
-                                offsetX = 0f
-                                onReorder(items.toList())
-                            },
-                            onDragCancel = { 
-                                draggedIndex = -1
-                                offsetX = 0f
-                            },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                offsetX += dragAmount.x
-                            }
-                        )
                     }
             ) {
                 MediaCard(

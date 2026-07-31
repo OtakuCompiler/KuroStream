@@ -22,14 +22,6 @@ class UnifiedMemoryManager @Inject constructor(
     private val context: Context
 ) {
     companion object {
-        @Volatile
-        private var instance: UnifiedMemoryManager? = null
-
-        fun getInstance(context: Context): UnifiedMemoryManager {
-            return instance ?: synchronized(this) {
-                instance ?: UnifiedMemoryManager(context.applicationContext).also { instance = it }
-            }
-        }
     }
     private val _memoryState = MutableStateFlow(MemoryState())
     val memoryState: StateFlow<MemoryState> = _memoryState.asStateFlow()
@@ -102,21 +94,7 @@ class UnifiedMemoryManager @Inject constructor(
     }
 
     private fun calculateTargetMemory(availMemMb: Int): Int {
-        val deviceCategory = when {
-            totalMemoryMb >= 8192 -> "high"
-            totalMemoryMb >= 4096 -> "medium"
-            else -> "low"
-        }
-
-        val baseTarget = when (deviceCategory) {
-            "high" -> (_memoryState.value.memoryClass * 0.5).toInt()
-            "medium" -> (_memoryState.value.memoryClass * 0.4).toInt()
-            "low" -> (_memoryState.value.memoryClass * 0.3).toInt()
-            else -> 100
-        }
-
-        val adaptiveTarget = (availMemMb * 0.3).toInt().coerceAtLeast(25)
-        return baseTarget.coerceAtMost(adaptiveTarget)
+        return 90
     }
 
     fun getAvailableBudgetMb(): Int {
@@ -137,22 +115,19 @@ class UnifiedMemoryManager @Inject constructor(
 
     fun trimMemory(level: Int) {
         trimCallbacks.forEach { it(level) }
-        
         when (level) {
             ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
-                // Avoid explicit GC, rely on system
+                coil.ImageLoader(context).memoryCache?.clear()
             }
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE -> {
-                // Avoid explicit GC, rely on system
+                _memoryState.value = _memoryState.value.copy(force565 = true)
             }
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> {
-                // Avoid explicit GC, rely on system
+                coil.ImageLoader(context).memoryCache?.clear()
             }
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> {
-                // Avoid explicit GC, rely on system
-            }
-            ComponentCallbacks2.TRIM_MEMORY_BACKGROUND -> {
-                // Avoid explicit GC, rely on system
+                clearAllCaches()
+                _memoryState.value = _memoryState.value.copy(isCritical = true)
             }
         }
     }
@@ -277,7 +252,7 @@ class UnifiedMemoryManager @Inject constructor(
     fun getOptimalBitmapConfig(): android.graphics.Bitmap.Config {
         return when {
             isLowMemoryDevice -> android.graphics.Bitmap.Config.RGB_565
-            totalMemoryMb < 4096 -> android.graphics.Bitmap.Config.RGB_565
+            _memoryState.value.isCritical -> android.graphics.Bitmap.Config.RGB_565
             else -> android.graphics.Bitmap.Config.ARGB_8888
         }
     }
@@ -305,6 +280,7 @@ data class MemoryState(
     val isLowMemoryDevice: Boolean = false,
     val totalMemoryMb: Int = 0,
     val timestamp: Long = System.currentTimeMillis(),
+    val force565: Boolean = false,
 ) {
     val memoryPressure: Float get() = totalPssMb.toFloat() / memoryClass
     val headroomMb: Int get() = (targetMemoryMb - totalPssMb).coerceAtLeast(0)

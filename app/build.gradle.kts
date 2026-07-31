@@ -14,8 +14,10 @@ android {
     defaultConfig {
         applicationId = "com.kurostream.app"
         minSdk = libs.versions.minSdk.get().toInt()
-        targetSdk = libs.versions.compileSdk.get().toInt()
-        versionCode = 100
+        targetSdk = 34
+        versionCode = providers.exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+        }.standardOutput.asText.get().trim().toInt()
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -23,6 +25,7 @@ android {
             abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
         }
         manifestPlaceholders["appAuthRedirectScheme"] = "kurostream"
+        resourceConfigurations += setOf("en")
     }
 
     signingConfigs {
@@ -61,6 +64,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -69,20 +73,18 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.15"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "**/*.md"
+            excludes += "**/ISSUES_LEDGER.md"
+            excludes += "**/PRODUCTION_IMPLEMENTATION_REPORT.md"
         }
     }
 }
 
 dependencies {
     implementation(project(":common"))
-    implementation(project(":core-common"))
-    implementation(project(":core-platform"))
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":extensions"))
@@ -129,9 +131,12 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
+    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.kotlinx.coroutines.android)
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

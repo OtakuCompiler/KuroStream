@@ -78,10 +78,10 @@ class PlaybackTracker(
 
     private fun startAutoSave() {
         if (saveJob?.isActive == true) return
-        saveJob = scope.launch(Dispatchers.Main) {
-            while (true) {
-                delay(5_000L) // save every 5 seconds during playback
-                if (_lastPositionMs > 0) {
+        saveJob = scope.launch(Dispatchers.IO) {
+            while (isActive) {
+                delay(5_000L)
+                if (_lastPositionMs > 0 && _lastPositionMs < _durationMs - 10_000) {
                     onSaveProgress(_lastPositionMs, _durationMs)
                 }
             }

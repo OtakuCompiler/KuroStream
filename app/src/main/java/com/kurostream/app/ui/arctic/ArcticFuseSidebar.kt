@@ -124,8 +124,9 @@ fun ArcticFuseSidebar(
 @Composable
 private fun SidebarClock(expanded: Boolean, onToggle: () -> Unit) {
     var now by remember { mutableStateOf(formatNow()) }
+    val dateFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
+    val dateFmt = remember { SimpleDateFormat("EEE MMM d", Locale.getDefault()) }
 
-    // Refresh every 30s while sidebar exists
     LaunchedEffect(Unit) {
         while (isActive) {
             delay(30_000L)

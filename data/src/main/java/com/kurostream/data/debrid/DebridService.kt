@@ -14,15 +14,15 @@ class DebridService @Inject constructor() {
     enum class DebridProvider(val displayName: String, val signupUrl: String) {
         REAL_DEBRID(
             "Real-Debrid",
-            "https://real-debrid.com/?id=KUROSTREAM_AFFILIATE_ID"
+            "https://real-debrid.com"
         ),
         ALL_DEBRID(
             "AllDebrid",
-            "https://alldebrid.com/register?aff=KUROSTREAM_AFF"
+            "https://alldebrid.com"
         ),
         PREMIUMIZE(
             "Premiumize",
-            "https://www.premiumize.me/affiliate/KUROSTREAM"
+            "https://www.premiumize.me"
         )
     }
 

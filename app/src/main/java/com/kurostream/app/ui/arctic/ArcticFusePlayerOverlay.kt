@@ -16,6 +16,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -91,7 +93,11 @@ fun ArcticFusePlayerOverlay(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.85f))
-                .clickable { showControls = !showControls },
+                .clickable(
+                    onClick = { showControls = !showControls },
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                ),
         ) {
             // Top bar gradient
             Box(

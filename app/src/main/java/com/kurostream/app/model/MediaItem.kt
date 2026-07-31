@@ -1,5 +1,11 @@
 package com.kurostream.app.model
 
+import android.os.Parcelable
+import androidx.compose.runtime.Immutable
+import kotlinx.parcelize.Parcelize
+
+@Immutable
+@Parcelize
 data class MediaItem(
     val id: String,
     val title: String,
@@ -14,4 +20,16 @@ data class MediaItem(
     val source: String = "",
     val isFavorite: Boolean = false,
     val watchProgress: Long = 0L
-)
+) : Parcelable
+
+@Immutable
+@Parcelize
+data class Episode(
+    val id: String,
+    val title: String,
+    val number: Int,
+    val thumbnailUrl: String = "",
+    val videoUrl: String = "",
+    val duration: Long = 0L,
+    val watchedDuration: Long = 0L
+) : Parcelable

@@ -43,9 +43,14 @@ class FavoritesViewModel @Inject constructor(
 
     private fun loadFavorites() {
         viewModelScope.launch {
-            favoritesRepository.getFavorites().collect { items ->
-                _uiState.value = RowState.Success(items)
-            }
+            favoritesRepository.getFavorites()
+                .catch { e ->
+                    Timber.e(e, "Failed to load favorites")
+                    _uiState.value = RowState.Error(e.message ?: "Failed to load favorites")
+                }
+                .collect { items ->
+                    _uiState.value = RowState.Success(items)
+                }
         }
     }
 }

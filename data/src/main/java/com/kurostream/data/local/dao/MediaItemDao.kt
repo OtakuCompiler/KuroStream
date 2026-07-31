@@ -34,7 +34,7 @@ interface MediaItemDao {
     @Query("SELECT * FROM media_items ORDER BY lastUpdated DESC")
     fun observeAll(): Flow<List<MediaItemEntity>>
 
-    @Query("SELECT * FROM media_items WHERE id IN (SELECT docid FROM media_items_fts WHERE media_items_fts MATCH :query || '*') ORDER BY title ASC")
+    @Query("SELECT * FROM media_items WHERE id IN (SELECT docid FROM media_items_fts WHERE media_items_fts MATCH :query) ORDER BY title ASC")
     suspend fun search(query: String): List<MediaItemEntity>
 
     @Query("SELECT * FROM media_items WHERE title LIKE '%' || :query || '%' ORDER BY title ASC")

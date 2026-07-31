@@ -133,9 +133,13 @@ class NetworkDashboardViewModel @Inject constructor(
         if (stats.latencyMs > 200) issues.add("High latency: ${stats.latencyMs}ms")
         if (stats.packetLossPercent > 1) issues.add("Packet loss: ${stats.packetLossPercent}%")
         if (stats.downloadSpeedMbps < 5) issues.add("Low download speed: ${stats.downloadSpeedMbps} Mbps")
-        val wifiSignal = stats.wifiSignalStrengthDbm
+        val wifiSignal = try {
+            stats.wifiSignalStrengthDbm
+        } catch (_: SecurityException) {
+            null
+        }
         if (wifiSignal != null && wifiSignal < -70) {
-            issues.add("Weak Wi-Fi signal: ${wifiSignal} dBm")
+            issues.add("Weak Wi-Fi signal: ${wifiSignal}dBm")
         }
 
         _connectionQuality.value = ConnectionQuality(

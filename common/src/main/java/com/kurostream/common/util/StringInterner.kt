@@ -1,44 +1,33 @@
 package com.kurostream.common.util
 
+import java.util.concurrent.ConcurrentHashMap
+
 object StringInterner {
+    private const val MAX_CACHE_SIZE = 1000
+    private val cache = ConcurrentHashMap<String, String>()
+
     fun intern(str: String?): String? {
-        return str?.intern()
+        if (str == null) return null
+        if (cache.size >= MAX_CACHE_SIZE) {
+            val toRemove = cache.keys.take(cache.size / 10)
+            toRemove.forEach { cache.remove(it) }
+        }
+        return cache.computeIfAbsent(str) { it }
     }
 
     fun internAll(strings: Iterable<String>): List<String> {
-        return strings.map { it.intern() }
+        return strings.map { intern(it) ?: it }
     }
 
     fun internTitle(providerId: String, title: String): String {
-        return "$providerId:$title".intern()
+        return "$providerId:$title"
     }
 
     fun internMetadata(name: String): String {
-        return name.intern()
+        return intern(name) ?: name
     }
 
-    fun getStats(): InternerStats = InternerStats(0, 0, 0, 0, 0.0)
-
-    fun clear() = Unit
-    fun shrink() = Unit
-
-    fun preloadCommonStrings() {
-        listOf(
-            "kitsu", "anilist", "mal", "tmdb", "tvdb", "imdb",
-            "Action", "Adventure", "Comedy", "Drama",
-            "TV", "Movie", "OVA", "ONA", "Special", "Music"
-        ).forEach { it.intern() }
-    }
-
-    data class InternerStats(
-        val totalEntries: Int,
-        val hits: Long,
-        val misses: Long,
-        val evicted: Long,
-        val hitRate: Double
-    ) {
-        override fun toString(): String = "InternerStats(entries=$totalEntries)"
+    fun clearCache() {
+        cache.clear()
     }
 }
-
-fun String?.interned(): String? = StringInterner.intern(this)

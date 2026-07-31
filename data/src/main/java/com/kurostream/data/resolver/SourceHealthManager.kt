@@ -27,24 +27,22 @@ class SourceHealthManager @Inject constructor() {
         val rec = records.getOrPut(sourceId) { HealthRecord() }
         rec.successCount++
         rec.lastLatencyMs = latencyMs
-        rec.health = when {
-            rec.successCount >= 10 && rec.failCount == 0 -> SourceHealth.EXCELLENT
-            rec.successCount >= 5 -> SourceHealth.GOOD
-            else -> SourceHealth.DEGRADED
-        }
-        emit()
+        rec.lastCheck = System.currentTimeMillis()
+        _stats.value = records.toMap()
     }
 
     fun recordFailure(sourceId: String) {
         val rec = records.getOrPut(sourceId) { HealthRecord() }
         rec.failCount++
         rec.consecutiveFailures++
+        rec.lastError = null
         rec.health = when {
             rec.consecutiveFailures >= 5 -> SourceHealth.POOR
             rec.failCount >= 3 -> SourceHealth.DEGRADED
             else -> SourceHealth.UNKNOWN
         }
-        emit()
+        rec.lastCheck = System.currentTimeMillis()
+        _stats.value = records.toMap()
     }
 
     fun getHealth(sourceId: String): SourceHealth =
@@ -64,6 +62,8 @@ class SourceHealthManager @Inject constructor() {
         var failCount: Int = 0,
         var consecutiveFailures: Int = 0,
         var lastLatencyMs: Long = 0,
+        var lastError: String? = null,
+        var lastCheck: Long = 0L,
         var health: SourceHealth = SourceHealth.UNKNOWN,
     )
 }

@@ -143,7 +143,18 @@ fun ArcticFuseSearchHub(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .focusRequester(inputFr)
-                                .onFocusChanged { /* keep focus */ },
+                                .onFocusChanged { state ->
+                                    if (!state.isFocused && query.isNotBlank()) {
+                                    }
+                                }
+                                .onKeyEvent { event ->
+                                    if (event.key == Key.Back && event.type == KeyEventType.KeyUp && query.isEmpty()) {
+                                        onClose()
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                },
                         )
                     }
                     if (query.isNotEmpty()) {

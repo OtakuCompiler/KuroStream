@@ -40,17 +40,5 @@ object WorkManagerOptimizer {
         )
     }
 
-    fun scheduleLowPriorityTask(context: Context) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresBatteryNotLow(true)
-            .build()
-
-        val request = OneTimeWorkRequestBuilder<LowPriorityWorker>()
-            .setConstraints(constraints)
-            .addTag("low_priority")
-            .build()
-
-        WorkManager.getInstance(context).enqueue(request)
-    }
+    // LowPriorityWorker not implemented — feature disabled for v1
 }

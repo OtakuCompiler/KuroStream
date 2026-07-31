@@ -72,7 +72,7 @@ class LifecycleAwareScope(
     override val coroutineContext = SupervisorJob() + kotlinx.coroutines.Dispatchers.Main
 
     private val lifecycleObserver = LifecycleEventObserver { _, event ->
-        if (event == Lifecycle.Event.ON_DESTROY) {
+        if (event == Lifecycle.Event.ON_STOP) {
             coroutineContext.cancel()
         }
     }

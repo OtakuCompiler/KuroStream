@@ -42,12 +42,18 @@ class KuroSubtitleEngine @Inject constructor(
         episodeInfo: EpisodeInfo? = null,
     ): List<SubtitleCandidate> = withContext(Dispatchers.IO) {
         val all = mutableListOf<SubtitleCandidate>()
+        var lastError: Exception? = null
         for (provider in providers) {
             if (!provider.isEnabled()) continue
             try {
                 all += provider.search(query, languages, episodeInfo)
             } catch (e: Exception) {
+                lastError = e
+                Timber.w(e, "Subtitle provider ${provider::class.simpleName} failed")
             }
+        }
+        if (all.isEmpty() && lastError != null) {
+            return@withContext emptyList()
         }
         rankingEngine.rank(all, languages)
     }
@@ -76,7 +82,7 @@ class KuroSubtitleEngine @Inject constructor(
         val candidates = mutableListOf<SubtitleCandidate>()
         try {
             val url = java.net.URL(m3u8Url)
-            val request = okhttp3.Request.Builder().url(url).build()
+            val request = Request.Builder().url(url).build()
             client.newCall(request).execute().use { resp ->
                 if (!resp.isSuccessful) return@withContext candidates
                 val body = resp.body?.string() ?: return@withContext candidates
@@ -115,7 +121,7 @@ class KuroSubtitleEngine @Inject constructor(
         providerId: String,
     ): File? = withContext(Dispatchers.IO) {
         try {
-            val request = okhttp3.Request.Builder().url(url).build()
+            val request = Request.Builder().url(url).build()
             client.newCall(request).execute().use { resp ->
                 if (!resp.isSuccessful) return@withContext null
                 val bytes = resp.body?.bytes() ?: return@withContext null

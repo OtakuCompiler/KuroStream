@@ -102,7 +102,8 @@ fun rememberDynamicTheme(
     var palette by remember { mutableStateOf<DynamicColorPalette?>(null) }
     if (imageUrl != null) {
         val ctx = LocalContext.current
-        val loader = imageLoader ?: remember { ImageLoader.Builder(ctx).build() }
+        val loader = imageLoader ?: (ctx.applicationContext as? coil.ImageLoaderFactory)?.newImageLoader()
+            ?: return defaultPalette
         LaunchedEffect(imageUrl) {
             val r = loader.execute(ImageRequest.Builder(ctx).data(imageUrl).allowHardware(false).build())
             if (r is SuccessResult) {

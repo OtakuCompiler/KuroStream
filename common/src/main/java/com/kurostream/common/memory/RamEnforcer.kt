@@ -2,19 +2,24 @@ package com.kurostream.common.memory
 
 import android.app.ActivityManager
 import android.content.Context
+import android.os.Debug
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import coil.ImageLoader
 import timber.log.Timber
 
 class RamEnforcer(
     context: Context,
-    private val targetMaxMb: Int = 110,
-    private val criticalMaxMb: Int = 125,
+    private val targetMaxMb: Int = 90,
+    private val criticalMaxMb: Int = 110,
+    private val absoluteMaxMb: Int = 125,
 ) {
     private val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    private val context: Context = context
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val trimListeners = mutableListOf<suspend () -> Unit>()
     private val _pressureLevel = MutableStateFlow(PressureLevel.NOMINAL)
     val pressureLevel: StateFlow<PressureLevel> = _pressureLevel.asStateFlow()
 
@@ -23,30 +28,50 @@ class RamEnforcer(
     fun startMonitoring() {
         scope.launch {
             while (isActive) {
-                val memInfo = ActivityManager.MemoryInfo()
-                am.getMemoryInfo(memInfo)
-                val totalMb = memInfo.totalMem / (1024 * 1024)
+                val memInfo = Debug.MemoryInfo()
+                Debug.getMemoryInfo(memInfo)
+                val pssMb = memInfo.totalPss / 1024
 
                 _pressureLevel.value = when {
-                    totalMb > criticalMaxMb -> PressureLevel.EMERGENCY
-                    totalMb > targetMaxMb -> PressureLevel.CRITICAL
-                    totalMb > targetMaxMb * 0.85 -> PressureLevel.ELEVATED
+                    pssMb > absoluteMaxMb -> PressureLevel.EMERGENCY
+                    pssMb > criticalMaxMb -> PressureLevel.CRITICAL
+                    pssMb > targetMaxMb -> PressureLevel.ELEVATED
                     else -> PressureLevel.NOMINAL
                 }
 
-                if (totalMb > criticalMaxMb) {
-                    Timber.w("RAM EMERGENCY: ${totalMb}MB > ${criticalMaxMb}MB")
-                    emergencyCleanup()
+                when {
+                    pssMb > absoluteMaxMb -> {
+                        Timber.e("RAM DEATHLINE: ${pssMb}MB > ${absoluteMaxMb}MB — releasing all")
+                        emergencyCleanup()
+                    }
+                    pssMb > criticalMaxMb -> {
+                        Timber.w("RAM CRITICAL: ${pssMb}MB > ${criticalMaxMb}MB")
+                        trimAllCaches()
+                    }
                 }
 
-                delay(2000)
+                delay(3000)
             }
         }
     }
 
+    fun registerTrimListener(listener: suspend () -> Unit) {
+        trimListeners.add(listener)
+    }
+
+    private fun trimAllCaches() {
+        scope.launch {
+            trimListeners.forEach {
+                try { it() } catch (e: Exception) { Timber.w(e, "Trim listener failed") }
+            }
+            coil.ImageLoader(context).memoryCache?.clear()
+        }
+    }
+
     private fun emergencyCleanup() {
-        System.gc()
-        System.runFinalization()
+        scope.launch {
+            trimAllCaches()
+        }
     }
 
     fun stop() {

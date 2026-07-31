@@ -35,9 +35,7 @@ class KuroStreamInitializer : Initializer<Unit> {
         }, 5000)
     }
 
-    override fun dependencies(): List<Class<out Initializer<*>>> = listOf(
-        SyncInitializer::class.java,
-    )
+    override fun dependencies(): List<Class<out Initializer<*>>> = emptyList()
 
     private suspend fun initPluginSdk(context: Context) {
         try {

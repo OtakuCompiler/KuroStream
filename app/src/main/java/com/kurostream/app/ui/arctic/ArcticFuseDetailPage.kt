@@ -109,8 +109,7 @@ private fun DetailContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AFBgDeep)
-            .verticalScroll(scrollState),
+            .background(AFBgDeep),
     ) {
         // Backdrop header
         Box(

@@ -13,10 +13,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.app.ui.arctic
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -89,24 +88,13 @@ fun ArcticFuseMediaCard(
 
     val borderWidth by animateDpAsState(
         targetValue = if (isFocused) 2.dp else 0.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
+        animationSpec = tween(durationMillis = 150),
         label = "afCardBorder",
     )
     val scale by animateFloatAsState(
-        targetValue = if (isFocused) 1.08f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
+        targetValue = if (isFocused) 1.05f else 1f,
+        animationSpec = tween(durationMillis = 150),
         label = "afCardScale",
-    )
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (isFocused) 0.3f else 0f,
-        animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        label = "afCardGlow",
     )
 
     Box(
@@ -138,6 +126,10 @@ fun ArcticFuseMediaCard(
                 if (it.isFocused) onFocus?.invoke()
             }
             .focusable()
+            .semantics {
+                contentDescription = "${item.title}, ${item.genre.joinToString()}, rated ${item.rating}"
+                role = androidx.compose.ui.semantics.Role.Button
+            }
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyUp &&
                     (event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.DirectionCenter)
@@ -260,7 +252,7 @@ private fun CardImage(url: String, modifier: Modifier = Modifier) {
     } else {
         AsyncImage(
             model = url,
-            contentDescription = null,
+            contentDescription = "${item.title} poster",
             contentScale = ContentScale.Crop,
             modifier = modifier,
         )

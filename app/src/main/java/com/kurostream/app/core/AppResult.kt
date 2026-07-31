@@ -24,7 +24,10 @@ sealed class AppResult<out T> {
         return (this as? Success<T?>)?.data
     }
 
-    fun getOrThrow(): T = (this as Success).data
+    fun getOrThrow(): T = when (this) {
+        is Success -> data
+        is Error -> throw IllegalStateException("AppResult is Error: ${this.message}", this.throwable)
+    }
 
     fun <R> map(transform: (T) -> R): AppResult<R> = when (this) {
         is Success -> Success(transform(data))

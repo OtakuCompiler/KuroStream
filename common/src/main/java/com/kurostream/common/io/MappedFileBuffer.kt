@@ -37,18 +37,18 @@ object MappedFileBuffer {
         activeBuffers.remove(key)?.let { buffer ->
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    val invokeCleaner = MappedByteBuffer::class.java.getMethod("invokeCleaner")
-                    invokeCleaner.invoke(null, buffer)
+                    val unsafeClass = Class.forName("sun.misc.Unsafe")
+                    val theUnsafe = unsafeClass.getDeclaredField("theUnsafe").apply { isAccessible = true }.get(null)
+                    unsafeClass.getMethod("invokeCleaner", java.nio.ByteBuffer::class.java)
+                        .invoke(theUnsafe, buffer)
                 } else {
-                    val cleanerMethod = MappedByteBuffer::class.java.getDeclaredMethod("cleaner")
-                    cleanerMethod.isAccessible = true
+                    val cleanerMethod = Class.forName("sun.nio.ch.DirectBuffer").getMethod("cleaner")
                     val cleaner = cleanerMethod.invoke(buffer) ?: return@let
-                    val cleanMethod = cleaner.javaClass.getDeclaredMethod("clean")
-                    cleanMethod.isAccessible = true
-                    cleanMethod.invoke(cleaner)
+                    cleaner.javaClass.getMethod("clean").invoke(cleaner)
                 }
             } catch (e: Exception) {
-                Timber.tag(TAG).w("Failed to clean MappedByteBuffer", e)
+                Timber.tag(TAG).w("Failed to clean MappedByteBuffer, forcing GC hint", e)
+                buffer.clear()
             }
         }
     }

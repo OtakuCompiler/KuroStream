@@ -46,17 +46,19 @@ object LeakDetector {
     }
     
     fun checkForLeaks(): Int {
+        val keysToRemove = mutableListOf<String>()
         var leakedCount = 0
-        
+
         trackedObjects.forEach { (name, ref) ->
             if (ref.get() != null) {
-                // Object still reachable
+                leakedCount++
             } else {
-                // Object has been GC'd, remove from tracking
-                trackedObjects.remove(name)
+                keysToRemove.add(name)
             }
         }
-        
+
+        keysToRemove.forEach { trackedObjects.remove(it) }
+
         return leakedCount
     }
     

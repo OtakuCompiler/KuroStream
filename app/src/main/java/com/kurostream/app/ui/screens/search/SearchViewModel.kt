@@ -61,6 +61,7 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             _query
                 .debounce(300)
+                .distinctUntilChanged()
                 .collect { q ->
                     if (q.isNotBlank()) {
                         executeSearch(q.trim())

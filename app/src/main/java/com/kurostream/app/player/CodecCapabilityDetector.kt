@@ -72,7 +72,7 @@ object CodecCapabilityDetector {
                     if (isHardware) hasHardwareDecoder = true
                     if (hasHdr10) supportsHdr = true
                     if (hasDolbyVision) supportsDolbyVision = true
-                    if (mimeTypes.any { it == "video/av01" || it == "video/avc1" }) supportsAv1 = true
+                    if (mimeTypes.any { it == "video/av01" }) supportsAv1 = true
                     if (mimeTypes.any { it == "video/hevc" || it == "video/hevc1" }) supportsHevc = true
                 }
             }
@@ -83,25 +83,32 @@ object CodecCapabilityDetector {
         }
     }
 
-    /** Prefer software codecs for known hardware prefixes to actively avoid them. */
+    /** Returns true if this is a HARDWARE decoder (preferred for 4K) */
     private fun isHardwareCodec(name: String): Boolean {
         val lower = name.lowercase()
-        return lower.contains("omx.") && (
-            lower.contains("qcom") ||
-            lower.contains("nvidia") ||
-            lower.contains("exynos") ||
-            lower.contains("ti") ||
-            lower.contains("intel") ||
-            lower.contains("hisi") ||
-            lower.contains("mediatek") ||
-            lower.contains("samsung") ||
-            lower.contains("amlogic") ||
-            lower.contains("rockchip")
+        val isSoftware = lower.contains(".sw.") ||
+                        lower.contains("google") ||
+                        lower.contains(".arc.")
+        val hasHwPrefix = lower.contains("omx.") && (
+            lower.contains("qcom") || lower.contains("nvidia") ||
+            lower.contains("exynos") || lower.contains("amlogic") ||
+            lower.contains("mediatek") || lower.contains("mtk") ||
+            lower.contains("hisi") || lower.contains("rockchip") ||
+            lower.contains("broadcom")
         )
+        return hasHwPrefix && !isSoftware
     }
 
     fun preferHardwareDecoderFor(mimeType: String): Boolean {
         if (!hasHardwareDecoder) return false
         return codecs.any { it.isHardware && it.mimeType == mimeType }
+    }
+
+    fun supportsDolbyVisionPassthrough(): Boolean {
+        return codecs.any { codec ->
+            codec.mimeType.contains("dolby") || 
+            codec.mimeType.contains("video/dolby-vision") ||
+            (codec.mimeType.contains("hevc") && codec.name.contains("dv", ignoreCase = true))
+        }
     }
 }

@@ -100,6 +100,7 @@ import kotlinx.coroutines.delay
 fun PlayerScreen(
     viewModel: PlayerViewModel,
     onBackPressed: () -> Unit,
+    hdrMode: HdrMode = HdrMode.SDR,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -189,14 +190,29 @@ fun PlayerScreen(
             }
             .focusable()
     ) {
-        AndroidView(
-            factory = {
-                PlayerView(context).apply {
-                    (engine?.nativePlayer() as? androidx.media3.common.Player)?.let { player = it }
-                    useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    playerViewRef = this
+    AndroidView(
+        factory = { ctx ->
+            PlayerView(ctx).apply {
+                useController = false
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                playerViewRef = this
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hdrMode != HdrMode.SDR) {
+                    setSecure(true)
                 }
+            }
+        },
+        update = { view ->
+            (engine?.nativePlayer() as? androidx.media3.common.Player)?.let { player ->
+                view.player = player
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    val surfaceView = view.videoSurfaceView as? android.view.SurfaceView
+                    surfaceView?.setSecure(true)
+                }
+            }
+        },
+            onRelease = { view ->
+                view.player = null
+                playerViewRef = null
             },
             modifier = Modifier.fillMaxSize()
         )
@@ -756,10 +772,12 @@ private fun PlayerSettingsPanel(
                                                     fontSize = 10.sp,
                                                     textAlign = TextAlign.Center,
                                                 )
-                                            }
-                                        }
-                                    }
-                                }
+            }
+        }
+    }
+}
+
+enum class HdrMode { SDR, HDR10, HDR10_PLUS, DOLBY_VISION }
 
                                 Spacer(modifier = Modifier.height(12.dp))
 

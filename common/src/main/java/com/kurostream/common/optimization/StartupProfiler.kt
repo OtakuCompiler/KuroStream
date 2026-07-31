@@ -1,27 +1,25 @@
 package com.kurostream.common.optimization
 
+import android.os.Build
+import android.os.SystemClock
 import timber.log.Timber
 
 class StartupProfiler {
-    private val startTime = System.currentTimeMillis()
-    private var processStart: Long = 0
+    private val processStart: Long = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        android.os.Process.getStartUptimeMillis()
+    } else {
+        System.currentTimeMillis()
+    }
     private var firstDraw: Long = 0
     private var fullyDrawn: Long = 0
 
-    fun markProcessStart() {
-        processStart = System.currentTimeMillis()
-        Timber.d("Startup: process start marked")
-    }
-
     fun markFirstDraw() {
-        firstDraw = System.currentTimeMillis()
-        val elapsed = firstDraw - processStart
-        Timber.d("Startup: first draw in ${elapsed}ms")
+        firstDraw = SystemClock.uptimeMillis()
+        Timber.d("Startup: first draw in ${firstDraw - processStart}ms")
     }
 
     fun markFullyDrawn() {
-        fullyDrawn = System.currentTimeMillis()
-        val elapsed = fullyDrawn - processStart
-        Timber.d("Startup: fully drawn in ${elapsed}ms")
+        fullyDrawn = SystemClock.uptimeMillis()
+        Timber.d("Startup: fully drawn in ${fullyDrawn - processStart}ms")
     }
 }

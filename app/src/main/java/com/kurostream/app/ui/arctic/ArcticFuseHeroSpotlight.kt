@@ -43,7 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,9 +68,9 @@ import coil.compose.AsyncImage
 import com.kurostream.app.model.MediaItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private const val SLIDE_INTERVAL_MS = 8_000L
 
@@ -88,12 +88,16 @@ fun ArcticFuseHeroSpotlight(
     }
 
     var active by remember { mutableIntStateOf(0) }
+    var lastInteraction by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     LaunchedEffect(items.size) {
         if (items.size > 1) {
             while (isActive) {
                 delay(SLIDE_INTERVAL_MS)
-                active = (active + 1) % items.size
+                val idleTime = System.currentTimeMillis() - lastInteraction
+                if (idleTime > 30_000) {
+                    active = (active + 1) % items.size
+                }
             }
         }
     }
@@ -287,12 +291,12 @@ enum class HeroCTAStyle { PrimaryWhite, TranslucentWhite, OutlineTransparent }
 
 @Composable
 private fun HeroTopBar(modifier: Modifier = Modifier) {
-    val dateFmt = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG) }
-    val timeFmt = remember { DateTimeFormatter.ofPattern("h:mm a") }
-    var now by remember { mutableStateOf(LocalDateTime.now()) }
+    val dateFmt = remember { SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault()) }
+    val timeFmt = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (isActive) {
-            now = LocalDateTime.now()
+            now = System.currentTimeMillis()
             delay(60_000L)
         }
     }
@@ -307,12 +311,12 @@ private fun HeroTopBar(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = now.format(dateFmt),
+            text = dateFmt.format(Date(now)),
             color = AFTextSec,
             style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
         )
         Text(
-            text = now.format(timeFmt),
+            text = timeFmt.format(Date(now)),
             color = AFTextSec,
             style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
         )

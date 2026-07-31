@@ -29,10 +29,10 @@ data class FailoverConfig(
 )
 
 data class P2PConfig(
-    val enabled: Boolean = true,
-    val maxPeers: Int = 4,
-    val uploadBandwidthKbps: Int = 500,
-    val downloadBandwidthKbps: Int = 2000,
+    val enabled: Boolean = false,
+    val maxPeers: Int = 0,
+    val uploadBandwidthKbps: Int = 0,
+    val downloadBandwidthKbps: Int = 0,
 )
 
 class StreamingOptimizer {

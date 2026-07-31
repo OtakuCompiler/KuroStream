@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import com.kurostream.app.BuildConfig
 import com.kurostream.app.security.SecurityConfig
+import com.kurostream.common.memory.RamEnforcer
 import android.os.StrictMode
 import javax.inject.Inject
 
@@ -70,8 +71,14 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
         securityConfig.logSecurityStatus()
 
-        // Pre-create ImageLoader eagerly (needed for first screen)
-        appImageLoader = newImageLoader()
+        val ramEnforcer = RamEnforcer(this)
+        ramEnforcer.registerTrimListener {
+            imageLoaderInstance?.memoryCache?.clear()
+            imageLoaderInstance?.diskCache?.clear()
+        }
+        ramEnforcer.startMonitoring()
+
+        // Coil will lazy-load ImageLoader via the factory interface
 
         // Defer non-critical init to idle moments after first frame
         val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -239,26 +246,33 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         appScope.cancel()
     }
 
+    @Volatile
+    private var imageLoaderInstance: ImageLoader? = null
+
     override fun newImageLoader(): ImageLoader {
-        com.kurostream.common.memory.LowRamDevice.initialize(this)
-        val adapter = com.kurostream.common.optimization.CoilCacheConfig
-        
+        return imageLoaderInstance ?: synchronized(this) {
+            imageLoaderInstance ?: createImageLoader().also { imageLoaderInstance = it }
+        }
+    }
+
+    private fun createImageLoader(): ImageLoader {
         return ImageLoader.Builder(this)
             .components {
                 add(VideoFrameDecoder.Factory())
             }
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizeBytes(adapter.memoryCacheSize(this).toInt())
+                    .maxSizeBytes(com.kurostream.common.memory.LowRamDevice.coilMemoryCacheSize)
                     .build()
             }
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(adapter.diskCacheSize(this))
+                    .maxSizeBytes(com.kurostream.common.memory.LowRamDevice.coilDiskCacheSize)
                     .build()
             }
             .respectCacheHeaders(false)
+            .crossfade(false)
             .build()
     }
 }

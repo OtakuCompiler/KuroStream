@@ -3,6 +3,7 @@ package com.kurostream.app.player
 import android.content.Context
 import android.os.Build
 import android.view.Display
+import androidx.media3.common.Player
 import timber.log.Timber
 
 /**
@@ -20,8 +21,10 @@ object HdrDetector {
     )
 
     private var _cachedInfo: HdrInfo? = null
+    private var context: Context? = null
 
     fun detect(context: Context): HdrInfo {
+        this.context = context
         _cachedInfo?.let { return it }
 
         val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -53,4 +56,16 @@ object HdrDetector {
         Timber.d("HdrDetector: $info")
         return info
     }
+
+    fun configurePlayerForHdr(player: androidx.media3.common.Player) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val info = detect(context)
+            if (info.supportsDolbyVision || info.supportsHdr10) {
+            }
+        }
+    }
+
+    fun supportsDolbyVision(): Boolean = context?.let { detect(it).supportsDolbyVision } ?: false
+    fun supportsHdr10(): Boolean = context?.let { detect(it).supportsHdr10 } ?: false
+    fun supportsHdr10Plus(): Boolean = context?.let { detect(it).supportsHdr10Plus } ?: false
 }

@@ -86,22 +86,4 @@ object DataModule {
     @Singleton
     fun provideOfflineTranslator(impl: OfflineTranslatorImpl): OfflineTranslator = impl
 
-    // Providers are auto-discovered by Hilt via @Inject constructors on each implementation.
-    // MetadataProvider implementations are injected directly where needed.
-
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-object DispatcherModule {
-
-    @Provides
-    @Singleton
-    @Named("IO")
-    fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
-
-    @Provides
-    @Singleton
-    @Named("Default")
-    fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
 }

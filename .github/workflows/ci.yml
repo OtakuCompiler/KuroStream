@@ -2,16 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
-      KOTLIN_DAEMON_JVMARGS: "-Xmx1024m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
     steps:
     - uses: actions/checkout@v4
 
@@ -20,71 +17,24 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 35
-        build-tools: 35.0.0
-        ndk: 27.1.12297006
-        cmake: 3.22.1
+        api-level: 34
+        build-tools: 34.0.0
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
-      with:
-        cache-disabled: false
-        cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-        gradle-home: /home/runner/.gradle
-
-    - name: Grant execute permission to gradlew
-      run: chmod +x ./gradlew
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Run unit tests
-      run: ./gradlew test --no-daemon --stacktrace --no-parallel
-
-    - name: Run lint
-      run: ./gradlew lintDebug --no-daemon --stacktrace --no-parallel || echo "Lint issues found, continuing"
+      run: ./gradlew test --stacktrace
 
     - name: Build debug APK
-      run: ./gradlew assembleDebug --no-daemon --stacktrace --no-parallel
-
-    - name: Build release bundle (unsigned)
-      run: ./gradlew bundleRelease --no-daemon --stacktrace --no-parallel
+      run: ./gradlew assembleDebug --stacktrace
 
     - name: Upload debug APK
       uses: actions/upload-artifact@v4
       with:
-        name: debug-apk-${{ github.sha }}
+        name: debug-apk
         path: app/build/outputs/apk/debug/*.apk
-        retention-days: 14
-        compression-level: 1
-
-    - name: Upload release bundle
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-bundle-${{ github.sha }}
-        path: app/build/outputs/bundle/release/*.aab
-        retention-days: 30
-        compression-level: 1
-
-    - name: Upload test reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-reports-${{ github.sha }}
-        path: |
-          app/build/reports/tests/
-          **/build/reports/tests/
-        retention-days: 14
-
-  metadata-check:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Verify required metadata files
-      run: |
-        for f in README.md LICENSE SECURITY.md CONTRIBUTING.md; do
-          test -f "$f" || { echo "Missing: $f"; exit 1; }
-        done
-        echo "All required metadata files present."

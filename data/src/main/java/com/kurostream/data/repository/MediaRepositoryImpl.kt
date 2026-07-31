@@ -112,15 +112,14 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun getRemoteDetails(mediaId: String, source: String): MediaItem? {
         val cacheKey = "details_${source}_${mediaId}"
         cacheManager.metadata.get<MediaItem>(cacheKey)?.let { return it }
-        val mediaItem = when (source) {
-            "anilist" -> getAniListDetails(mediaId.toIntOrNull() ?: throw IllegalStateException("MediaRepository: data not available"))
-            "mal" -> getMalDetails(mediaId.toIntOrNull() ?: throw IllegalStateException("MediaRepository: data not available"))
-            else -> throw IllegalStateException("MediaRepository: data not available")
-        }
-        if (mediaItem != null) {
-            cacheManager.metadata.put(cacheKey, mediaItem, METADATA_CACHE_TTL)
-        }
-        return mediaItem
+        return when (source) {
+            "anilist" -> getAniListDetails(mediaId.toIntOrNull() ?: return null)
+            "mal" -> getMalDetails(mediaId.toIntOrNull() ?: return null)
+            else -> {
+                Timber.w("Unknown source: $source, returning null")
+                null
+            }
+        }?.also { cacheManager.metadata.put(cacheKey, it, METADATA_CACHE_TTL) }
     }
 
     private suspend fun getAniListDetails(id: Int): MediaItem? = withContext(Dispatchers.IO) {

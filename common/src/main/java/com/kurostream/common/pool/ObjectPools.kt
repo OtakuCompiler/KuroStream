@@ -39,8 +39,7 @@ class ObjectPool<T>(
             created++
             return@synchronized factory()
         }
-        // Pool exhausted, create anyway (unbounded overflow)
-        return@synchronized factory()
+        throw IllegalStateException("ObjectPool exhausted: $maxSize items in use")
     }
     
     /**
@@ -137,7 +136,7 @@ object NetworkChunkPool {
     private val pool = ObjectPool<NetworkChunk>(
         factory = { NetworkChunk() },
         reset = { it.reset() },
-        maxSize = 200
+        maxSize = if (LowRamDevice.isLowRamDevice()) 20 else 50
     )
     
     fun acquire(): NetworkChunk = pool.acquire()

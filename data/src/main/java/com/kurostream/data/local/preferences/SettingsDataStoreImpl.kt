@@ -17,12 +17,12 @@ package com.kurostream.data.local.preferences
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,12 +34,19 @@ class SettingsDataStoreImpl @Inject constructor(
 ) : SettingsDataStore {
 
     private val dataStore: DataStore<Preferences> = context.dataStore
+    private val keyCache = ConcurrentHashMap<String, Preferences.Key<*>>()
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> keyFor(name: String, factory: (String) -> Preferences.Key<T>): Preferences.Key<T> {
+        return keyCache.getOrPut(name) { factory(name) } as Preferences.Key<T>
+    }
 
     override val data: Flow<Preferences> = dataStore.data
 
     override suspend fun getString(key: String, default: String): String {
-        val prefs = dataStore.data.first()
-        return prefs[stringPreferencesKey(key)] ?: default
+        return dataStore.data.map { prefs ->
+            prefs[keyFor(key, ::stringPreferencesKey)] ?: default
+        }.first()
     }
 
     override suspend fun setString(key: String, value: String) {
@@ -47,8 +54,9 @@ class SettingsDataStoreImpl @Inject constructor(
     }
 
     override suspend fun getBoolean(key: String, default: Boolean): Boolean {
-        val prefs = dataStore.data.first()
-        return prefs[booleanPreferencesKey(key)] ?: default
+        return dataStore.data.map { prefs ->
+            prefs[keyFor(key, ::booleanPreferencesKey)] ?: default
+        }.first()
     }
 
     override suspend fun setBoolean(key: String, value: Boolean) {
@@ -56,8 +64,9 @@ class SettingsDataStoreImpl @Inject constructor(
     }
 
     override suspend fun getInt(key: String, default: Int): Int {
-        val prefs = dataStore.data.first()
-        return prefs[intPreferencesKey(key)] ?: default
+        return dataStore.data.map { prefs ->
+            prefs[keyFor(key, ::intPreferencesKey)] ?: default
+        }.first()
     }
 
     override suspend fun setInt(key: String, value: Int) {
@@ -65,8 +74,9 @@ class SettingsDataStoreImpl @Inject constructor(
     }
 
     override suspend fun getLong(key: String, default: Long): Long {
-        val prefs = dataStore.data.first()
-        return prefs[longPreferencesKey(key)] ?: default
+        return dataStore.data.map { prefs ->
+            prefs[keyFor(key, ::longPreferencesKey)] ?: default
+        }.first()
     }
 
     override suspend fun setLong(key: String, value: Long) {
@@ -74,8 +84,9 @@ class SettingsDataStoreImpl @Inject constructor(
     }
 
     override suspend fun getFloat(key: String, default: Float): Float {
-        val prefs = dataStore.data.first()
-        return prefs[floatPreferencesKey(key)] ?: default
+        return dataStore.data.map { prefs ->
+            prefs[keyFor(key, ::floatPreferencesKey)] ?: default
+        }.first()
     }
 
     override suspend fun setFloat(key: String, value: Float) {

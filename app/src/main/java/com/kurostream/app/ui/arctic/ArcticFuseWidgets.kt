@@ -106,7 +106,11 @@ fun ArcticFuseWidgetRow(
             contentPadding = PaddingValues(horizontal = AFSpacing.safeZoneH),
             horizontalArrangement = Arrangement.spacedBy(AFSpacing.px4),
         ) {
-            items(items = visibleItems, key = { it.id }) { item ->
+            items(
+                items = visibleItems,
+                key = { it.id },
+                contentType = { "media_card" },
+            ) { item ->
                 ArcticFuseMediaCard(
                     item = item,
                     view = view,

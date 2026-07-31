@@ -24,6 +24,7 @@ class NativeMemoryTracker(
     private val reportingIntervalMs: Long = 30_000
 ) {
     private var trackingJob: Job? = null
+    private var lastReportTime = System.currentTimeMillis()
     private var maxNativeHeap = 0L
     private var lastNativeHeap = 0L
     private var lastJavaHeap = 0L

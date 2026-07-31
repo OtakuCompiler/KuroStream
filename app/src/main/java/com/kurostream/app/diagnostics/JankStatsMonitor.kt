@@ -110,9 +110,10 @@ class JankStatsMonitor(
                     isSevereJank = isSevereJank,
                 )
 
-                // Keep last 300 frames (5 seconds at 60fps)
-                val trimmedFrames = if (newFrames.size > 300) {
-                    newFrames.drop(newFrames.size - 300)
+                // Keep last 60 frames (1 second at 60fps)
+                // NOTE: JankStats API should be wired in onResume/onPause instead of lifecycle observer
+                val trimmedFrames = if (newFrames.size > 60) {
+                    newFrames.drop(newFrames.size - 60)
                 } else {
                     newFrames
                 }

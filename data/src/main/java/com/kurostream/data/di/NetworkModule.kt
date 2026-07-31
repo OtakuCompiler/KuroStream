@@ -97,25 +97,34 @@ object NetworkModule {
             }
         }
 
-        return certificatePinningConfig.applyPinning(OkHttpClient.Builder())
+        return OkHttpClient.Builder()
+            .certificatePinner(certificatePinningConfig.createCertificatePinner())
             .cache(cache)
             .connectionPool(connectionPool)
             .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
             .addInterceptor(loggingInterceptor)
-            .addInterceptor(BrotliInterceptor) // Brotli compression
             .addNetworkInterceptor { chain ->
-                // Add cache headers for immutable resources
                 val request = chain.request()
                 val response = chain.proceed(request)
-                response.newBuilder()
-                    .header("Cache-Control", "public, max-age=300")
-                    .build()
+                if (request.method == "GET" && request.header("Authorization").isNullOrBlank()) {
+                    response.newBuilder()
+                        .header("Cache-Control", "public, max-age=300")
+                        .build()
+                } else {
+                    response
+                }
             }
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
-            .pingInterval(30, TimeUnit.SECONDS) // HTTP/2 keepalive
+            .apply {
+                try {
+                    addInterceptor(okhttp3.brotli.BrotliInterceptor)
+                } catch (e: NoClassDefFoundError) {
+                    Timber.w("BrotliInterceptor not available")
+                }
+            }
             .build()
     }
 

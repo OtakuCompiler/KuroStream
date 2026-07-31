@@ -19,7 +19,7 @@ data class SubtitleStyle(
     val fontColor: Int = Color.WHITE,
     val backgroundColor: Int = Color.BLACK,
     val windowColor: Int = Color.TRANSPARENT,
-    val edgeType: Int = 1, // Cue.EDGE_TYPE_OUTLINE removed in newer API
+    val edgeType: Int = 2,
     val edgeColor: Int = Color.BLACK
 )
 

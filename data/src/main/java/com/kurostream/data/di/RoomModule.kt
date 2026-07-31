@@ -1,8 +1,10 @@
 package com.kurostream.data.di
 
 import android.content.Context
+import androidx.room.RoomDatabase
 import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.database.KuroStreamDatabase
+import com.kurostream.data.local.database.Migration_2_3
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.data.local.preferences.SettingsDataStoreImpl
 import dagger.hilt.InstallIn
@@ -24,12 +26,8 @@ object RoomModule {
             KuroStreamDatabase::class.java,
             "kurostream.db"
         )
-            // Room 2.7.2 handles journal_mode, foreign_keys, and other PRAGMAs
-            // internally via SQLiteConnection. Manual execSQL PRAGMA calls in
-            // callbacks conflict with Room's connection management and cause:
-            // "Queries can be performed using SQLiteDatabase query or rawQuery methods only"
-            .setJournalMode(androidx.room.RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-            .fallbackToDestructiveMigration()
+            .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
+            .addMigrations(Migration_2_3)
             .build()
     }
 

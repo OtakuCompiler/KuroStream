@@ -125,6 +125,29 @@ fun GlassmorphicCard(
     tintColor: Color = Color.White.copy(alpha = 0.1f),
     content: @Composable () -> Unit,
 ) {
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        GlassmorphicCardApi31(
+            modifier = modifier,
+            blurRadius = blurRadius,
+            tintColor = tintColor,
+            content = content,
+        )
+    } else {
+        GlassmorphicCardFallback(
+            modifier = modifier,
+            tintColor = tintColor,
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun GlassmorphicCardApi31(
+    modifier: Modifier = Modifier,
+    blurRadius: Dp = 10.dp,
+    tintColor: Color = Color.White.copy(alpha = 0.1f),
+    content: @Composable () -> Unit,
+) {
     Box(
         modifier = modifier
             .drawWithContent {
@@ -136,15 +159,34 @@ fun GlassmorphicCard(
             }
             .graphicsLayer {
                 alpha = 0.85f
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    renderEffect = android.graphics.RenderEffect
-                        .createBlurEffect(
-                            blurRadius.toPx(),
-                            blurRadius.toPx(),
-                            android.graphics.Shader.TileMode.CLAMP,
-                        ).asComposeRenderEffect()
-                }
+                renderEffect = android.graphics.RenderEffect
+                    .createBlurEffect(
+                        blurRadius.toPx(),
+                        blurRadius.toPx(),
+                        android.graphics.Shader.TileMode.CLAMP,
+                    ).asComposeRenderEffect()
             }
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun GlassmorphicCardFallback(
+    modifier: Modifier = Modifier,
+    tintColor: Color = Color.White.copy(alpha = 0.1f),
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .drawWithContent {
+                drawContent()
+                drawRoundRect(
+                    brush = SolidColor(tintColor),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
+                )
+            }
+            .background(tintColor.copy(alpha = 0.85f))
     ) {
         content()
     }

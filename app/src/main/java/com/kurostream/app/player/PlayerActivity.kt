@@ -18,7 +18,13 @@ package com.kurostream.app.player
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Build
 import android.os.PowerManager
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.util.Rational
+import android.hardware.display.DisplayManager
+import android.view.Display
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -37,6 +43,7 @@ class PlayerActivity : ComponentActivity() {
 
     private val viewModel: PlayerViewModel by viewModels()
     private var wakeLock: PowerManager.WakeLock? = null
+    private val hdrDetector = HdrDetector
 
     companion object {
         private const val EXTRA_MEDIA_ID = "media_id"
@@ -58,7 +65,7 @@ class PlayerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE or android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         val mediaId = intent.getStringExtra(EXTRA_MEDIA_ID).orEmpty()
         if (mediaId.isBlank()) {
@@ -68,15 +75,17 @@ class PlayerActivity : ComponentActivity() {
         val episodeId = intent.getStringExtra(EXTRA_EPISODE_ID)
         val startPosition = intent.getLongExtra(EXTRA_START_POSITION, 0L)
 
-        val powerManager = getSystemService(Context.POWER_SERVICE)
-        if (powerManager !is PowerManager) {
-            finish()
-            return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val hdmiFilter = android.content.IntentFilter("android.intent.action.HDMI_PLUGGED")
+            registerReceiver(object : android.content.BroadcastReceiver() {
+                override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+                    val plugged = intent?.getBooleanExtra("state", false) ?: true
+                    if (!plugged) {
+                        viewModel.setAudioPassthrough(false)
+                    }
+                }
+            }, hdmiFilter)
         }
-        wakeLock = powerManager.newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ON_AFTER_RELEASE,
-            "KuroStream::PlayerWakeLock"
-        ).apply { acquire(10 * 60 * 1000L) }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).apply {
@@ -84,13 +93,43 @@ class PlayerActivity : ComponentActivity() {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
 
+        val audioFocusRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN)
+                .setOnAudioFocusChangeListener { focusChange ->
+                    when (focusChange) {
+                        android.media.AudioManager.AUDIOFOCUS_LOSS -> viewModel.pause()
+                        android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> viewModel.pause()
+                        android.media.AudioManager.AUDIOFOCUS_GAIN -> viewModel.play()
+                    }
+                }
+                .build()
+        } else null
+
         viewModel.preparePlayback(mediaId, episodeId, startPosition)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val displayManager = getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager
+            val display = displayManager.getDisplay(android.view.Display.DEFAULT_DISPLAY)
+            display?.mode?.let { mode ->
+                Timber.d("Display mode: ${mode.physicalWidth}x${mode.physicalHeight}@${mode.refreshRate}")
+            }
+        }
+
+        hdrDetector.detect(this)
 
         setContent {
             AnimeStreamTVTheme {
                 PlayerScreen(
                     viewModel = viewModel,
                     onBackPressed = { finish() },
+                    hdrMode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        when {
+                            hdrDetector.supportsDolbyVision() -> HdrMode.DOLBY_VISION
+                            hdrDetector.supportsHdr10() -> HdrMode.HDR10
+                            hdrDetector.supportsHdr10Plus() -> HdrMode.HDR10_PLUS
+                            else -> HdrMode.SDR
+                        }
+                    } else HdrMode.SDR,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -115,5 +154,23 @@ class PlayerActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         viewModel.releasePlayer()
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && viewModel.isPlaying.value) {
+            enterPictureInPictureMode(
+                PictureInPictureParams.Builder()
+                    .setAspectRatio(android.util.Rational(16, 9))
+                    .build()
+            )
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: android.content.res.Configuration?
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
     }
 }

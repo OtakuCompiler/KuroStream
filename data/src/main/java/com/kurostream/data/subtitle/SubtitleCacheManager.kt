@@ -1,16 +1,14 @@
 // This file is part of KuroStream.
 //
-// SubtitleCacheManager — subtitle caching using the existing KuroCacheManager.
+// SubtitleCacheManager — subtitle caching with disk backing.
 // Stores downloaded subtitles, metadata, and language info.
 // Reuses CacheNamespaceManager to avoid duplicate cache systems.
-// Target: <20MB memory.
+// Target: <20MB memory + 10MB disk cache.
 //
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.data.subtitle
 
 import com.kurostream.cache.CacheNamespaceManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,37 +16,57 @@ import javax.inject.Singleton
 @Singleton
 class SubtitleCacheManager @Inject constructor(
     private val cache: CacheNamespaceManager,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
 ) {
 
-    suspend fun cacheSubtitle(
+    private val cacheDir = File(context.cacheDir, "subtitles").apply { mkdirs() }
+    private val maxCacheBytes = 10L * 1024 * 1024
+
+    fun cacheSubtitle(
         mediaId: String,
         languageCode: String,
         providerId: String,
         content: ByteArray,
-    ): String = withContext(Dispatchers.IO) {
+    ): String {
         val key = "subtitle/$mediaId/$languageCode/$providerId"
-        cache.put(key, content)
-        key
+        cache.metadata.put(key, content, 0)
+
+        val file = File(cacheDir, key.replace('/', '_'))
+        file.parentFile?.mkdirs()
+        file.writeBytes(content)
+        enforceLimit()
+        return key
     }
 
-    suspend fun getCachedSubtitle(
+    fun getCachedSubtitle(
         mediaId: String,
         languageCode: String,
         providerId: String,
-    ): ByteArray? = withContext(Dispatchers.IO) {
+    ): ByteArray? {
         val key = "subtitle/$mediaId/$languageCode/$providerId"
-        cache.get(key)
+        val file = File(cacheDir, key.replace('/', '_'))
+        if (file.exists()) return file.readBytes()
+        return cache.metadata.get(key)
     }
 
-    suspend fun clearCache(mediaId: String? = null) = withContext(Dispatchers.IO) {
+    fun clearCache(mediaId: String? = null) {
         if (mediaId == null) {
-            cache.invalidateNamespace("subtitle")
-        } else {
-            cache.invalidateNamespace("subtitle/$mediaId")
+            cache.metadata.clear()
+            cacheDir.listFiles()?.forEach { it.delete() }
         }
     }
 
-    suspend fun cacheSizeBytes(): Long = withContext(Dispatchers.IO) {
-        cache.namespaceSizeBytes("subtitle")
+    fun cacheSizeBytes(): Long {
+        return cacheDir.listFiles()?.sumOf { it.length() } ?: 0L
+    }
+
+    private fun enforceLimit() {
+        val files = cacheDir.listFiles()?.sortedBy { it.lastModified() } ?: return
+        var total = files.sumOf { it.length() }
+        for (file in files) {
+            if (total <= maxCacheBytes) break
+            total -= file.length()
+            file.delete()
+        }
     }
 }

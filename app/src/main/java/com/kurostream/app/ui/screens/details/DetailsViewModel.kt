@@ -73,21 +73,28 @@ class DetailsViewModel @Inject constructor(
         }
     }
 
+    private var toggleJob: kotlinx.coroutines.Job? = null
+
     fun toggleFavorite(mediaId: String) {
-        viewModelScope.launch {
+        toggleJob?.cancel()
+        toggleJob = viewModelScope.launch {
             try {
                 val current = _uiState.value
-                if (current is DetailsUiState.Success) {
-                    val newFav = !current.isFavorite
-                    if (newFav) {
-                        favoritesRepository.addFavorite(current.media)
-                    } else {
-                        favoritesRepository.removeFavorite(mediaId)
-                    }
-                    _uiState.value = current.copy(isFavorite = newFav)
+                if (current !is DetailsUiState.Success) return@launch
+
+                val newFav = !current.isFavorite
+                _uiState.value = current.copy(isFavorite = newFav)
+
+                if (newFav) {
+                    favoritesRepository.addFavorite(current.media)
+                } else {
+                    favoritesRepository.removeFavorite(mediaId)
                 }
-            } catch (_: Exception) {
-                /* ignore toggle error */
+            } catch (e: Exception) {
+                val current = _uiState.value
+                if (current is DetailsUiState.Success) {
+                    _uiState.value = current.copy(isFavorite = !current.isFavorite)
+                }
             }
         }
     }

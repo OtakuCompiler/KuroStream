@@ -17,13 +17,10 @@ package com.kurostream.common.thermal
 
 import android.content.Context
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import timber.log.Timber
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,22 +33,15 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
-import java.lang.ref.WeakReference
 
 /**
  * Real-time thermal monitoring for Fire TV Stick HD and other Android TV devices.
  * Reads temperature from thermal zones and exposes reactive state for throttling decisions.
- *
- * Target: Keep device ≤ 35°C. Throttling stages:
- * - ≥ 33°C: Reduce decoder threads, disable AI upscaling, cap downloads, lower UI fps
- * - ≥ 35°C: Show warning, further throttle, disable frame interpolation
  */
-class ThermalGuard private constructor(context: Context) : LifecycleObserver {
+class ThermalGuard private constructor(context: Context) : DefaultLifecycleObserver {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val handler = Handler(Looper.getMainLooper())
 
-    // Thermal zones paths (common on Fire TV / Amlogic devices)
     private val thermalZonePaths = listOf(
         "/sys/class/thermal/thermal_zone0/temp",
         "/sys/class/thermal/thermal_zone1/temp",
@@ -60,7 +50,6 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
         "/sys/class/thermal/thermal_zone4/temp",
     )
 
-    // HardwarePropertiesManager fallback (API 24+)
     private val hwPropertiesManager: Any? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         try {
             context.getSystemService(Context.HARDWARE_PROPERTIES_SERVICE)
@@ -69,7 +58,6 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
         }
     } else null
 
-    // Reactive state
     private val _currentTempCelsius = MutableStateFlow(0.0)
     val currentTempCelsius: StateFlow<Double> = _currentTempCelsius.asStateFlow()
 
@@ -79,10 +67,9 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
     private val _isMonitoring = MutableStateFlow(false)
     val isMonitoring: StateFlow<Boolean> = _isMonitoring.asStateFlow()
 
-    // Configuration
-    private val warningThreshold = 33.0 // °C - start gradual throttling
-    private val criticalThreshold = 35.0 // °C - aggressive throttling + warning
-    private val pollingIntervalMs = 2000L // 2 seconds
+    private val warningThreshold = 33.0
+    private val criticalThreshold = 35.0
+    private val pollingIntervalMs = 2000L
 
     private var monitoringJob: Job? = null
     private var lastWarningShown = 0L
@@ -104,11 +91,17 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
     }
 
     init {
-        // Auto-start when app reaches STARTED, stop at STOPPED
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    override fun onStart(owner: LifecycleOwner) {
+        startMonitoring()
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        stopMonitoring()
+    }
+
     fun startMonitoring() {
         if (_isMonitoring.value) return
         _isMonitoring.value = true
@@ -125,7 +118,6 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun stopMonitoring() {
         _isMonitoring.value = false
         monitoringJob?.cancel()
@@ -134,21 +126,17 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
 
     fun shutdown() {
         stopMonitoring()
-        handler.removeCallbacksAndMessages(null)
         scope.coroutineContext.cancel()
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
     }
 
-    /** Read max temperature across all thermal zones (millidegrees Celsius → Celsius) */
     private fun readMaxTemperature(): Double {
         var maxTemp = 0.0
 
-        // Primary: read from sysfs thermal zones
         for (path in thermalZonePaths) {
             maxTemp = readSysfsTemperature(path, maxTemp)
         }
 
-        // Fallback: HardwarePropertiesManager (API 24+)
         if (maxTemp == 0.0 && hwPropertiesManager != null) {
             maxTemp = readHardwarePropertiesTemperature()
         }
@@ -158,7 +146,9 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
 
     private fun readSysfsTemperature(path: String, currentMax: Double): Double {
         return try {
-            File(path).bufferedReader().use { reader ->
+            val file = File(path)
+            if (!file.exists()) return currentMax
+            file.bufferedReader().use { reader ->
                 val line = reader.readLine() ?: return@use currentMax
                 val milliCelsius = line.toLongOrNull() ?: 0L
                 val celsius = milliCelsius / 1000.0
@@ -171,7 +161,6 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
 
     @RequiresApi(Build.VERSION_CODES.N)
     private fun readHardwarePropertiesTemperature(): Double {
-        // Use reflection to avoid compile-time dependency on HardwarePropertiesManager
         val manager = hwPropertiesManager as android.os.HardwarePropertiesManager
         return try {
             val temps = manager.getDeviceTemperatures(0, 1)
@@ -187,7 +176,6 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
         }
     }
 
-    /** Evaluate throttle stage based on current temperature */
     private fun evaluateThrottleStage(tempCelsius: Double) {
         val newStage = when {
             tempCelsius >= criticalThreshold -> ThrottleStage.CRITICAL
@@ -201,31 +189,27 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
         }
     }
 
-    /** Called on main thread when throttle stage changes */
     private fun onThrottleStageChanged(stage: ThrottleStage) {
-        handler.post {
-            when (stage) {
-                ThrottleStage.WARNING -> {
-                    Timber.tag("ThermalGuard").w("⚠️ Temperature ${_currentTempCelsius.value}°C ≥ $warningThreshold°C — Starting throttling")
-                    ThermalThrottleCallback.onWarningStage()
+        when (stage) {
+            ThrottleStage.WARNING -> {
+                Timber.tag("ThermalGuard").w("Temperature ${_currentTempCelsius.value}°C >= $warningThreshold°C — Starting throttling")
+                ThermalThrottleCallback.onWarningStage()
+            }
+            ThrottleStage.CRITICAL -> {
+                val now = System.currentTimeMillis()
+                if (now - lastWarningShown > 30000) {
+                    lastWarningShown = now
+                    Timber.tag("ThermalGuard").e("CRITICAL: Temperature ${_currentTempCelsius.value}°C >= $criticalThreshold°C — Aggressive throttling active")
+                    ThermalThrottleCallback.onCriticalStage()
                 }
-                ThrottleStage.CRITICAL -> {
-                    val now = System.currentTimeMillis()
-                    if (now - lastWarningShown > 30000) { // Show toast max once per 30s
-                        lastWarningShown = now
-                        Timber.tag("ThermalGuard").e("🔥 CRITICAL: Temperature ${_currentTempCelsius.value}°C ≥ $criticalThreshold°C — Aggressive throttling active")
-                        ThermalThrottleCallback.onCriticalStage()
-                    }
-                }
-                ThrottleStage.NONE -> {
-                    Timber.tag("ThermalGuard").i("✅ Temperature normalized: ${_currentTempCelsius.value}°C")
-                    ThermalThrottleCallback.onNormalized()
-                }
+            }
+            ThrottleStage.NONE -> {
+                Timber.tag("ThermalGuard").i("Temperature normalized: ${_currentTempCelsius.value}°C")
+                ThermalThrottleCallback.onNormalized()
             }
         }
     }
 
-    /** Get current throttle configuration for a specific component */
     fun getThrottleConfig(component: ThrottleComponent): ThrottleConfig {
         return when (_throttleStage.value) {
             ThrottleStage.NONE -> ThrottleConfig.NONE
@@ -235,27 +219,16 @@ class ThermalGuard private constructor(context: Context) : LifecycleObserver {
     }
 }
 
-/** Throttle severity stages */
 enum class ThrottleStage {
-    NONE,      // < 33°C - Full performance
-    WARNING,   // 33-35°C - Gradual throttling
-    CRITICAL   // ≥ 35°C - Aggressive throttling + user warning
+    NONE, WARNING, CRITICAL
 }
 
-/** Components that can be throttled */
 enum class ThrottleComponent {
-    DECODER_THREADS,      // FFmpeg/MPV decoder thread count
-    AI_UPSCALING,         // ESRGAN/RealESRGAN upscaling
-    FRAME_INTERPOLATION,  // RIFE frame interpolation
-    DOWNLOAD_CONNECTIONS, // Parallel download connections
-    UI_ANIMATION_FPS,     // Compose animation frame rate
-    AUDIO_DSP_QUALITY,    // Sonic DSP quality level
-    SUBTITLE_RENDERING,   // libass glyph cache / quality
+    DECODER_THREADS, AI_UPSCALING, FRAME_INTERPOLATION, DOWNLOAD_CONNECTIONS, UI_ANIMATION_FPS, AUDIO_DSP_QUALITY, SUBTITLE_RENDERING
 }
 
-/** Throttle configuration per component per stage */
 data class ThrottleConfig(
-    val decoderThreadCount: Int = -1,           // -1 = auto/unlimited
+    val decoderThreadCount: Int = -1,
     val aiUpscalingEnabled: Boolean = true,
     val frameInterpolationEnabled: Boolean = true,
     val maxDownloadConnections: Int = -1,
@@ -311,27 +284,8 @@ data class ThrottleConfig(
 enum class AudioDspQuality { HIGH, MEDIUM, LOW }
 enum class SubtitleRenderQuality { HIGH, MEDIUM, LOW }
 
-/** Callback interface for components to react to thermal changes */
 interface ThermalThrottleCallback {
-    companion object {
-        private var listener: ThermalThrottleCallback? = null
-
-        fun register(callback: ThermalThrottleCallback) {
-            listener = callback
-        }
-
-        fun unregister() {
-            listener = null
-        }
-
-        fun onWarningStage() = listener?.onWarningStage()
-        fun onCriticalStage() = listener?.onCriticalStage()
-        fun onNormalized() = listener?.onNormalized()
-    }
-
     fun onWarningStage()
     fun onCriticalStage()
     fun onNormalized()
 }
-
-// Compose helper moved to app module to avoid ui dependency in common

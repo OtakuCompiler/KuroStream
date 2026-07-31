@@ -104,7 +104,7 @@ fun ArcticFuseHomeScreen(
     // Local toast helper — captures toasts var via closure
     val addToast: (ArcticToastType, String) -> Unit = { type, message ->
         val id = (System.currentTimeMillis() % 100000).toString()
-        toasts = toasts + ArcticToast(id = id, type = type, message = message)
+        toasts = (toasts + ArcticToast(id = id, type = type, message = message)).takeLast(5)
     }
 
     Row(modifier = modifier.fillMaxSize()) {

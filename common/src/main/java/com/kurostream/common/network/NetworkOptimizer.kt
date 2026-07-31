@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,8 +36,13 @@ class AdaptiveBitrateController(private val context: Context) {
 
         val isWifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
         val isMetered = !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+
         val bandwidth = when {
-            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 50.0
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
+                val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+                val linkSpeedMbps = wifiManager?.connectionInfo?.linkSpeed?.toDouble() ?: -1.0
+                if (linkSpeedMbps > 0) linkSpeedMbps else 10.0
+            }
             caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 100.0
             else -> 10.0
         }

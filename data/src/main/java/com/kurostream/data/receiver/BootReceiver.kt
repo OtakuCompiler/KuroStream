@@ -18,10 +18,8 @@ package com.kurostream.data.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
-@AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -29,6 +27,7 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
                 Timber.i("Boot/replaced received")
+                com.kurostream.common.optimization.WorkManagerOptimizer.scheduleCoalescedSync(context)
             }
         }
     }

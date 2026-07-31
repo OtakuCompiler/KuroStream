@@ -41,7 +41,7 @@ fun ModernHomeScreen(
     onAddonsClick: () -> Unit,
     onTorrentsClick: () -> Unit,
     onBackupClick: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: HomeViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
