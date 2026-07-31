@@ -31,6 +31,7 @@ import com.kurostream.domain.result.Result as DomainResult
 import com.kurostream.common.memory.LowRamDevice
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
+import timber.log.Timber
 import javax.inject.Inject
 
 data class PlayerUiState(
@@ -75,9 +78,15 @@ class PlayerViewModel @Inject constructor(
     private var mediaId: String? = null
     private var episodeId: String? = null
 
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Timber.e(throwable, "PlayerViewModel coroutine failed")
+        _uiState.update { it.copy(error = throwable.message ?: "Unexpected error") }
+    }
+    private val scope = viewModelScope + exceptionHandler
+
     init {
         // Load subtitle settings from repository (async to avoid main-thread I/O)
-        viewModelScope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             val settings = settingsRepository.getPlayerSubtitleSettings()
             _uiState.update {
                 it.copy(
@@ -90,7 +99,7 @@ class PlayerViewModel @Inject constructor(
         }
 
         // Observe subtitle setting changes from outside (e.g. SettingsScreen)
-        viewModelScope.launch {
+        scope.launch {
             settingsRepository.observePlayerSubtitleSettings().collect { s ->
                 _uiState.update {
                     it.copy(
@@ -126,7 +135,7 @@ class PlayerViewModel @Inject constructor(
         }
         playerReady = true
 
-  viewModelScope.launch {
+  scope.launch {
     try {
       while (isActive) {
         if (playerReady && player.isPlaying) {
@@ -148,20 +157,21 @@ class PlayerViewModel @Inject constructor(
     fun preparePlayback(mediaId: String, episodeId: String?, startPositionMs: Long) {
         this.mediaId = mediaId
         this.episodeId = episodeId
-  viewModelScope.launch {
+  scope.launch {
     try {
       _uiState.update { it.copy(isBuffering = true) }
 
       val result = mediaRepository.getPlaybackUrl(mediaId, episodeId)
-    when (result) {
-        is DomainResult.Success<*> -> {
-            val playbackUrl = result.data as PlaybackUrl
-            _uiState.update { it.copy(title = playbackUrl.title) }
-            val mediaItem = ExoMediaItem.fromUri(playbackUrl.url)
-            player.setMediaItem(mediaItem, startPositionMs)
-            player.prepare()
-            player.play()
-        }
+     when (result) {
+         is DomainResult.Success -> {
+             val playbackUrl = result.data as? PlaybackUrl
+                 ?: throw IllegalStateException("Playback URL resolution returned invalid data")
+             _uiState.update { it.copy(title = playbackUrl.title) }
+             val mediaItem = ExoMediaItem.fromUri(playbackUrl.url)
+             player.setMediaItem(mediaItem, startPositionMs)
+             player.prepare()
+             player.play()
+         }
         is DomainResult.Error -> {
             _uiState.update { it.copy(error = result.exception.message, isBuffering = false) }
         }
@@ -218,27 +228,27 @@ class PlayerViewModel @Inject constructor(
 
     fun setSubtitleFontSize(size: Float) {
         _uiState.update { it.copy(subtitleFontSize = size) }
-        viewModelScope.launch { settingsRepository.setSubtitleFontSize(size) }
+        scope.launch { settingsRepository.setSubtitleFontSize(size) }
     }
 
     fun setSubtitleFontColor(hex: String) {
         _uiState.update { it.copy(subtitleFontColorHex = hex) }
-        viewModelScope.launch { settingsRepository.setSubtitleFontColor(hex) }
+        scope.launch { settingsRepository.setSubtitleFontColor(hex) }
     }
 
     fun setSubtitleBgColor(hex: String) {
         _uiState.update { it.copy(subtitleBgColorHex = hex) }
-        viewModelScope.launch { settingsRepository.setSubtitleBgColor(hex) }
+        scope.launch { settingsRepository.setSubtitleBgColor(hex) }
     }
 
     fun setSubtitleEnabled(enabled: Boolean) {
         _uiState.update { it.copy(subtitleEnabled = enabled) }
-        viewModelScope.launch { settingsRepository.setSubtitleEnabled(enabled) }
+        scope.launch { settingsRepository.setSubtitleEnabled(enabled) }
     }
 
   fun playNextEpisode() {
     val currentMedia = mediaId ?: return
-    viewModelScope.launch {
+    scope.launch {
       try {
         mediaRepository.getNextEpisode(currentMedia, episodeId)
         .onSuccess { nextEpisode ->
@@ -256,7 +266,7 @@ class PlayerViewModel @Inject constructor(
     val position = player.currentPosition
     val total = player.duration
 
-    viewModelScope.launch {
+    scope.launch {
       try {
         watchProgressRepository.saveProgress(
           mediaId = currentMedia,
