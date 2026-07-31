@@ -114,3 +114,86 @@ Action taken: removed `:tizenApp` from `settings.gradle.kts` with a comment.
 ## LOC baseline
 - Kotlin source files: 366
 - Total LOC: 41,862
+
+---
+
+# Phase 1 — Room/KSP sqlite-jdbc crash fix
+
+Problem statement from issue: Room 2.6.1's KSP compiler pulls an old `org.xerial:sqlite-jdbc` with no linux-aarch64 native binary, causing `NoClassDefFoundError: org/sqlite/SQLiteJDBCLoader`.
+
+Fix applied:
+- Added `sqliteJdbc = "3.49.1.0"` to `gradle/libs.versions.toml` (latest stable as of 2026-07-31, confirmed on Maven Central).
+- Added `sqlite-jdbc` library alias in version catalog.
+- Added `ksp(libs.sqlite.jdbc)` to both `app/build.gradle.kts` and `data/build.gradle.kts`.
+
+Proof status: **fixed (unverified)** — local Gradle build is blocked by missing Android SDK (`/usr/local/android-sdk` has no platforms/build-tools). Cannot run KSP task or dependency-tree check locally. CI verification pending on push to GitHub Actions.
+
+---
+
+# Phase 2 — Playback engine decision
+
+Decision: **Option B — Formally descope to Media3-only.**
+
+Rationale:
+- `MpvPlayer.kt` and `VlcPlayer.kt` are deleted from the repo.
+- `BackendSelector.kt` is a 3-line enum (`MPV, VLC, MEDIA3, AUTO, TORRENT`) with zero routing/health-monitor logic.
+- `PlayerViewModel` directly instantiates `ExoPlayer`; `BackendSelector`/`PlayerBackend` are referenced nowhere in production code.
+- Restoring three engines would require substantial JNI/LibVLC/libmpv wrappers, separate process sandboxing, and scoring logic — out of scope for this pass.
+
+Changes made:
+- Updated `BackendSelector.kt` with a doc comment stating that only `MEDIA3` is implemented and the other values are aspirational.
+- Updated `README.md`:
+  - Changed libmpv/libVLC/Auto backend selection from ✅ to 🚧 Not implemented.
+  - Removed "NDK (for MPV/VLC native libraries)" from prerequisites.
+  - Updated architecture diagram to show only `Media3 · Extension SDK` in platform layer.
+  - Updated module list to show `playback/ — Media3 player, renderers, buffers` (removed MPV/VLC).
+  - Updated credits section to mark MPV/libVLC as "Planned native playback engines (not yet implemented)".
+- Grep for `PlayerBackend` and `BackendSelector` usage in `.kt` files returns zero hits outside the enum file itself.
+
+Proof: `grep -rn "import com.kurostream.players.selector.BackendSelector\|import com.kurostream.players.selector.PlayerBackend\|BackendSelector\.\|PlayerBackend\." app/src/main/java/ — returned no matches. Diff shows README and BackendSelector.kt comment changes only.
+
+---
+
+# Phase 3 — Torrent module decision
+
+Decision: **Option B — Formally descope and leave excluded.**
+
+Rationale:
+- `:torrent` is already commented out in `settings.gradle.kts` with a note that `dl.frostwire.com/maven` returns 404.
+- No resolvable Maven coordinate for `com.frostwire:jlibtorrent` was found on a live listing that matches the project's current repository configuration.
+- Re-enabling the module without a confirmed resolvable dependency would create a build that "merely looks fixed."
+
+Changes made:
+- Confirmed `:torrent` remains excluded in `settings.gradle.kts`.
+- Updated `README.md` with an "Excluded modules" section explicitly stating:
+  - `:torrent` — excluded from `settings.gradle.kts`; `dl.frostwire.com/maven` is dead (404), `jlibtorrent` cannot be resolved. Torrent-related UI/navigation is disabled.
+- Confirmed torrent UI screens (`TorrentsScreen.kt`) are disabled in `TvNavHost.kt` with `onTorrentsClick = {}`.
+
+Proof: `settings.gradle.kts` still has `// include(":torrent")` with explanatory comment. README diff shows added excluded-modules section. No build.run attempt needed because module is already excluded.
+
+---
+
+# Phase 4 — Repo hygiene cleanup
+
+Completed items:
+1. **kurostream_final_analysis.json**: Already deleted in prior cleanup (confirmed `ls` returns "GONE").
+2. **`.gitignore`**: Verified to cover `.gradle/`, `build/`, `*.apk`, `*.aab`, `*.keystore`, `*.jks`, `.kilo/`, `.kotlin/`. `local.properties` is also ignored.
+3. **TrailerRepositoryImpl.kt**: Fixed hardcoded `"YOUTUBE_API_KEY"` strings at 2 call sites.
+   - Replaced with constructor-injected `youTubeApiKey: String`.
+   - Added `ksp(libs.sqlite.jdbc)` to both module build files (Phase 1).
+   - Added `provideYouTubeApiKey()` provider in `NetworkModule.kt` that reads from `BuildConfig.YOUTUBE_API_KEY` with `System.getenv("YOUTUBE_API_KEY")` fallback.
+   - Added `buildConfigField("String", "YOUTUBE_API_KEY", System.getenv("YOUTUBE_API_KEY") ?: "\"\"")` to `data/build.gradle.kts`.
+
+Proof: `git diff` shows TrailerRepositoryImpl.kt lines changed from literal string to `youTubeApiKey` parameter. `git diff` shows NetworkModule.kt added `provideYouTubeApiKey()`. `.gitignore` contents confirmed by read.
+
+---
+
+# Phase 0 — Baseline (recap)
+
+- Compile command: `bash gradlew :data:compileDebugKotlin :app:compileDebugKotlin --no-daemon --stacktrace --console=plain`
+- First failure: `:tizenApp` directory missing → removed from `settings.gradle.kts`.
+- Second failure: `SDK location not found` → `/usr/local/android-sdk` exists but has no platforms/build-tools.
+- Module/folder check: 14 of 15 settings entries have matching dirs/build.gradle.kts; `:tizenApp` was the missing one.
+- LOC baseline: 366 Kotlin files, 41,862 total LOC.
+
+**Note:** Local Android SDK is incomplete in this environment. All build-dependent verification items in subsequent phases are marked "unverified" with explicit reasoning. CI on GitHub Actions has Android SDK 35 configured and was previously passing before this session's changes; post-push CI status will be the authoritative verification source.
