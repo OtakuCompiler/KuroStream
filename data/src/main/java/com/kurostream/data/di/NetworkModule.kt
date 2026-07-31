@@ -23,8 +23,7 @@ import com.kurostream.data.remote.api.MalApi
 import com.kurostream.data.remote.api.OpenSubtitlesApi
 import com.kurostream.data.remote.api.TmdbApi
 import com.kurostream.data.remote.api.YouTubeApi
-import com.kurostream.data.network.security.CertificatePinningConfig
-import dagger.Module
+import com.kurostream.data.network.security.CertificatePinningConfigimport dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -84,7 +83,6 @@ object NetworkModule {
     fun provideOkHttpClient(
         cache: Cache,
         connectionPool: ConnectionPool,
-        certificatePinningConfig: CertificatePinningConfig,
         context: android.content.Context
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor { message ->
@@ -98,7 +96,6 @@ object NetworkModule {
         }
 
         return OkHttpClient.Builder()
-            .certificatePinner(certificatePinningConfig.createCertificatePinner())
             .cache(cache)
             .connectionPool(connectionPool)
             .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))

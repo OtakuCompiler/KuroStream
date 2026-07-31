@@ -16,7 +16,6 @@
 package com.kurostream.torrent.repository
 
 import android.content.Context
-import com.kurostream.core.common.dispatcher.DispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.kurostream.domain.result.Result
 import com.kurostream.torrent.domain.*
@@ -32,7 +31,6 @@ import javax.inject.Singleton
 @Singleton
 class TorrentRepositoryImpl @Inject constructor(
     private val engine: TorrentEngine,
-    private val dispatcherProvider: DispatcherProvider,
     @ApplicationContext private val context: Context,
 ) : TorrentRepository {
 

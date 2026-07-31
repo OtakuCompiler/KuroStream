@@ -16,7 +16,6 @@
 package com.kurostream.torrent.di
 
 import android.app.Application
-import com.kurostream.core.common.dispatcher.DispatcherProvider
 import com.kurostream.torrent.cache.TorrentMetadataCache
 import com.kurostream.torrent.cache.TorrentPieceCache
 import com.kurostream.torrent.engine.AdaptiveLimitsCalculator
@@ -133,7 +132,6 @@ object TorrentModule {
     @Singleton
     fun provideTorrentEngine(
         @ApplicationContext context: Application,
-        dispatcherProvider: DispatcherProvider,
         trackerListProvider: TrackerListProvider,
         metadataFetchManager: MetadataFetchManager,
         seederHuntManager: SeederHuntManager,
@@ -149,7 +147,7 @@ object TorrentModule {
         torrentPieceCache: TorrentPieceCache,
     ): TorrentEngine {
         return TorrentEngine(
-            context, dispatcherProvider,
+            context,
             trackerListProvider, metadataFetchManager, seederHuntManager,
             streamingPiecePrioritizer, peerWarmupManager, portMappingMonitor,
             quicTorrentProxy, bandwidthAwareSelector, predictivePrefetchManager,
@@ -161,9 +159,8 @@ object TorrentModule {
     @Singleton
     fun provideTorrentRepository(
         engine: TorrentEngine,
-        dispatcherProvider: DispatcherProvider,
         @ApplicationContext context: Application,
     ): TorrentRepository {
-        return TorrentRepositoryImpl(engine, dispatcherProvider, context)
+        return TorrentRepositoryImpl(engine, context)
     }
 }

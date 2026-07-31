@@ -30,7 +30,6 @@ import com.frostwire.jlibtorrent.TorrentInfo
 import com.kurostream.torrent.domain.TorrentInfo as DomainTorrentInfo
 import com.frostwire.jlibtorrent.swig.add_torrent_params_flags_t
 import com.frostwire.jlibtorrent.swig.alert_category_t
-import com.kurostream.core.common.dispatcher.DispatcherProvider
 import com.kurostream.domain.result.Result
 import com.kurostream.torrent.cache.TorrentMetadataCache
 import com.kurostream.torrent.cache.TorrentPieceCache
@@ -68,7 +67,6 @@ import javax.inject.Singleton
 @Singleton
 class TorrentEngine @Inject constructor(
     private val context: Application,
-    private val dispatcherProvider: DispatcherProvider,
     private val trackerListProvider: TrackerListProvider,
     private val metadataFetchManager: MetadataFetchManager,
     private val seederHuntManager: SeederHuntManager,
