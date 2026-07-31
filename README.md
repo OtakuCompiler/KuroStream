@@ -38,9 +38,9 @@ A premium anime streaming platform for Android TV, Google TV, Fire TV, and mobil
 | Feature | Status |
 |---------|--------|
 | Media3 ExoPlayer | ✅ |
-| libmpv backend | ✅ |
-| libVLC backend | ✅ |
-| Auto backend selection | ✅ |
+| libmpv backend | 🚧 Not implemented |
+| libVLC backend | 🚧 Not implemented |
+| Auto backend selection | 🚧 Not implemented |
 | HDR10 / HDR10+ / Dolby Vision | ✅ |
 | Dolby Atmos / DTS / TrueHD | ✅ |
 | Audio passthrough | ✅ |
@@ -148,23 +148,6 @@ adb install kurostream-mobile-release.apk
 - Android Studio Hedgehog (2023.1.1) or newer
 - JDK 17
 - Android SDK 35
-- NDK (for MPV/VLC native libraries)
-
-### Clone & Build
-```bash
-git clone https://github.com/OtakuCompiler/KuroStream-Stabilized.git
-cd KuroStream-Stabilized
-
-# Add API keys (optional, for full metadata)
-echo "anilist.client_id=YOUR_ANILIST_ID" >> local.properties
-echo "mal.client_id=YOUR_MAL_ID" >> local.properties
-
-# Build debug
-./gradlew assembleDebug
-
-# Build release (requires signing config)
-./gradlew assembleRelease
-```
 
 ### Modules
 ```
@@ -174,17 +157,19 @@ core-common/  — KMP common code (models, dispatchers)
 core-platform/— KMP platform abstractions
 data/         — Repositories, Room, Retrofit, DataStore
 domain/       — Use cases, entity definitions, result types
-playback/     — Media3, MPV, VLC players, renderers, buffers
+playback/     — Media3 player, renderers, buffers
 plugin-sdk/   — Extension SDK, manifest parsing, sandbox
 extensions/   — Stremio, Cloudstream, Kitsu bridges
 marketplace/  — Purchase flow, entitlement management
-torrent/      — P2P streaming engine
 cache/        — Multi-layer caching
 ui/           — Shared Compose components
 launcher/     — TV launcher integration
 backup/       — Settings & data backup
 benchmark/    — Performance benchmarks
 ```
+
+**Excluded modules:**
+- `:torrent` — excluded from `settings.gradle.kts`; `dl.frostwire.com/maven` is dead (404), `jlibtorrent` cannot be resolved. Torrent-related UI/navigation is disabled.
 
 ---
 
@@ -202,7 +187,7 @@ benchmark/    — Performance benchmarks
 │  Repositories  ·  Room  ·  Retrofit  ·  DataStore  ·  Cache│
 ├─────────────────────────────────────────────────────────────┤
 │                     PLATFORM LAYER                          │
-│  Media3  ·  MPV  ·  VLC  ·  Torrent  ·  Extension SDK       │
+│  Media3  ·  Extension SDK       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -267,7 +252,7 @@ See [LICENSE](LICENSE) for full text.
 - [Arctic Fuse 3](https://github.com/jurialmunkey/skin.arctic.fuse.2) — Design inspiration
 - [Jetpack Compose for TV](https://developer.android.com/training/tv/playback/compose) — TV UI framework
 - [Media3](https://developer.android.com/media/media3) — Playback foundation
-- [MPV](https://mpv.io/) / [libVLC](https://www.videolan.org/vlc/libvlc.html) — Native playback engines
+- [MPV](https://mpv.io/) / [libVLC](https://www.videolan.org/vlc/libvlc.html) — Planned native playback engines (not yet implemented)
 - [AniList](https://anilist.co/) / [MyAnimeList](https://myanimelist.net/) / [Jikan](https://jikan.moe/) — Metadata sources
 - [Stremio](https://www.stremio.com/) / [Cloudstream](https://github.com/recloudstream/cloudstream) — Extension inspiration
 

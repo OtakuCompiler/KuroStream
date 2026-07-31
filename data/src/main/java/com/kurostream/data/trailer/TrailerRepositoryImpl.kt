@@ -32,6 +32,7 @@ import javax.inject.Singleton
 @Singleton
 class TrailerRepositoryImpl @Inject constructor(
     private val youTubeApi: YouTubeApi,
+    private val youTubeApiKey: String
 ) : TrailerRepository {
 
     override suspend fun getTrailerForAnime(animeId: String): Result<Trailer> = withContext(Dispatchers.IO) {
@@ -40,7 +41,7 @@ class TrailerRepositoryImpl @Inject constructor(
             val youtubeResult: Response<SearchResponse> = youTubeApi.searchVideos(
                 query = searchQuery,
                 maxResults = 5,
-                apiKey = "YOUTUBE_API_KEY" // Should be provided via DI
+                apiKey = youTubeApiKey
             )
             youtubeResult.body()?.items?.firstOrNull { it.id?.videoId != null }?.let { item ->
                 val url = "https://www.youtube.com/watch?v=${item.id.videoId}"
@@ -64,7 +65,7 @@ class TrailerRepositoryImpl @Inject constructor(
             val youtubeResult: Response<SearchResponse> = youTubeApi.searchVideos(
                 query = query,
                 maxResults = 10,
-                apiKey = "YOUTUBE_API_KEY"
+                apiKey = youTubeApiKey
             )
             val trailers = youtubeResult.body()?.items?.mapNotNull { item ->
                 item.id?.videoId?.let { videoId ->

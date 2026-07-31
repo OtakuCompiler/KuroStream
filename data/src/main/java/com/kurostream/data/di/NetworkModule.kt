@@ -74,6 +74,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideYouTubeApiKey(): String {
+        return com.kurostream.data.BuildConfig.YOUTUBE_API_KEY
+            .ifBlank { System.getenv("YOUTUBE_API_KEY").orEmpty() }
+    }
+
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
         cache: Cache,
         connectionPool: ConnectionPool,

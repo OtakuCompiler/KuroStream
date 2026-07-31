@@ -14,6 +14,7 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+        buildConfigField("String", "YOUTUBE_API_KEY", System.getenv("YOUTUBE_API_KEY") ?: "\"\"")
     }
     buildTypes {
         release {
@@ -26,6 +27,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {
