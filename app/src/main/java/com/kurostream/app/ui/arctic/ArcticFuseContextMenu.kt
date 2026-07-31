@@ -44,7 +44,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
@@ -77,11 +76,10 @@ fun ArcticFuseContextMenu(
                     modifier = Modifier
                         .fillMaxSize()
                         .clickable(onClick = onClose)
-                        .semantics {
-                            contentDescription = "Close context menu"
-                            onClick(label = "Close context menu", action = null)
-                            role = Role.Button
-                        },
+            .semantics {
+                contentDescription = "Close context menu"
+                onClick(label = "Close context menu", action = null)
+            },
                 )
                 Column(
                     modifier = Modifier
@@ -131,7 +129,6 @@ private fun ContextRow(
             .semantics {
                 contentDescription = label
                 onClick(label = label, action = null)
-                role = Role.Button
             }
             .background(if (isFocused) AFSurface else Color.Transparent)
             .padding(horizontal = AFSpacing.px4, vertical = AFSpacing.px3),
