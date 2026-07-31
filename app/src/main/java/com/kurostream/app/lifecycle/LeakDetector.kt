@@ -5,13 +5,23 @@ import android.os.Build
 import android.os.Debug
 import timber.log.Timber
 import java.lang.ref.WeakReference
-import java.util.concurrent.ConcurrentHashMap
+import java.util.LinkedHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 object LeakDetector {
     private var isEnabled = false
-    private val trackedObjects = ConcurrentHashMap<String, WeakReference<Any>>()
+    /** Bounded tracked-object registry with simple size cap. */
+    private val trackedObjects = object : LinkedHashMap<String, WeakReference<Any>>(0, 0.75f, false) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, WeakReference<Any>>): Boolean {
+            val shouldRemove = size > MAX_TRACKED_OBJECTS
+            if (shouldRemove) {
+                Timber.tag("LeakDetector").d("Evicting tracked object: %s", eldest.key)
+            }
+            return shouldRemove
+        }
+    }
+    private const val MAX_TRACKED_OBJECTS = 1000
     private val cleanupExecutor = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "LeakDetector-Cleanup").apply { isDaemon = true }
     }
@@ -85,9 +95,27 @@ object LeakDetector {
 class LeakWatcher(
     private val application: Application,
 ) {
-    private val activityRefs = ConcurrentHashMap<String, WeakReference<android.app.Activity>>()
-    private val fragmentRefs = ConcurrentHashMap<String, WeakReference<androidx.fragment.app.Fragment>>()
-    private val viewModelRefs = ConcurrentHashMap<String, WeakReference<androidx.lifecycle.ViewModel>>()
+    /** Bounded activity reference registry. */
+    private val activityRefs = object : LinkedHashMap<String, WeakReference<android.app.Activity>>(0, 0.75f, false) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, WeakReference<android.app.Activity>>): Boolean {
+            return size > MAX_REF_TRACKING
+        }
+    }
+    /** Bounded fragment reference registry. */
+    private val fragmentRefs = object : LinkedHashMap<String, WeakReference<androidx.fragment.app.Fragment>>(0, 0.75f, false) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, WeakReference<androidx.fragment.app.Fragment>>): Boolean {
+            return size > MAX_REF_TRACKING
+        }
+    }
+    /** Bounded ViewModel reference registry. */
+    private val viewModelRefs = object : LinkedHashMap<String, WeakReference<androidx.lifecycle.ViewModel>>(0, 0.75f, false) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, WeakReference<androidx.lifecycle.ViewModel>>): Boolean {
+            return size > MAX_REF_TRACKING
+        }
+    }
+    private companion object {
+        const val MAX_REF_TRACKING = 200
+    }
     
     fun watchActivity(activity: android.app.Activity) {
         val name = "${activity.javaClass.simpleName}@${System.identityHashCode(activity)}"

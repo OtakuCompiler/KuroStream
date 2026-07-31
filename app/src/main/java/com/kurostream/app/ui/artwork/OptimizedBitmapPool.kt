@@ -4,23 +4,37 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import timber.log.Timber
 import java.util.LinkedHashMap
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Optimized bitmap pool with inBitmap reuse for artwork/thumbnails.
  * Size-bucketed pools with LRU eviction using LinkedHashMap.
  * Target: 2-5 MB savings for artwork caching.
+ *
+ * Replaces unbounded ConcurrentHashMap with access-ordered LinkedHashMap
+ * for predictable memory footprint and LRU pool eviction.
  */
 class OptimizedBitmapPool(
-    private val maxSizeBytes: Long = 20 * 1024 * 1024 // 20MB default
+    private val maxSizeBytes: Long = 20 * 1024 * 1024, // 20MB default
+    private val maxPools: Int = 50,
+    private val poolTtlMs: Long = 5 * 60 * 1000L // 5 minutes
 ) {
-    private val pools = ConcurrentHashMap<PoolKey, LruPool>()
+    /** Access-ordered LRU map for pool registry. Eldest unused pools are evicted first. */
+    private val pools = object : LinkedHashMap<PoolKey, LruPool>(0, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<PoolKey, LruPool>): Boolean {
+            val shouldRemove = size > maxPools
+            if (shouldRemove) {
+                Timber.d("Evicting bitmap pool for %s", eldest.key)
+            }
+            return shouldRemove
+        }
+    }
     private val totalSize = AtomicLong(0)
     private val hits = AtomicLong(0)
     private val misses = AtomicLong(0)
     private val puts = AtomicLong(0)
     private val evictions = AtomicLong(0)
+    private val poolTimestamps = LinkedHashMap<PoolKey, Long>(0, 0.75f, true)
 
     /**
      * Simple LRU pool backed by LinkedHashMap.
@@ -105,8 +119,19 @@ class OptimizedBitmapPool(
         return (bitmap.byteCount).toLong()
     }
 
+    private fun pruneExpiredPools() {
+        val now = System.currentTimeMillis()
+        val expiredKeys = poolTimestamps.filter { (_, ts) -> now - ts > poolTtlMs }.keys
+        expiredKeys.forEach { key ->
+            pools.remove(key)
+            poolTimestamps.remove(key)
+        }
+    }
+
     private fun getOrCreatePool(key: PoolKey): LruPool {
+        pruneExpiredPools()
         return pools.getOrPut(key) {
+            poolTimestamps[key] = System.currentTimeMillis()
             LruPool(maxSizeBytes / 4) // Each pool gets 1/4 of total budget
         }
     }
@@ -143,6 +168,7 @@ class OptimizedBitmapPool(
             pool.evictAll()
         }
         pools.clear()
+        poolTimestamps.clear()
         totalSize.set(0)
     }
 
