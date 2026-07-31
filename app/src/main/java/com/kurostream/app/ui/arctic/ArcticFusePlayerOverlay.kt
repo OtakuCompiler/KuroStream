@@ -91,7 +91,11 @@ fun ArcticFusePlayerOverlay(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.85f))
-                .clickable { showControls = !showControls },
+                .clickable { showControls = !showControls }
+                .semantics {
+                    contentDescription = if (visible) "Player controls" else "Player controls hidden"
+                    role = androidx.compose.ui.semantics.Role.Button
+                },
         ) {
             // Top bar gradient
             Box(
@@ -123,6 +127,7 @@ fun ArcticFusePlayerOverlay(
                 PlayerIconButton(
                     icon = { IconClose(tint = AFTextDim) },
                     onClick = onClose,
+                    contentDescription = "Close player",
                 )
             }
 
@@ -136,17 +141,20 @@ fun ArcticFusePlayerOverlay(
                     icon = { IconSkipBack(tint = AFText) },
                     onClick = onSkipBack,
                     size = 40.dp,
+                    contentDescription = "Skip back 10 seconds",
                 )
                 PlayerIconButton(
                     icon = { if (isPlaying) IconPause(tint = AFBgDeep) else IconPlay(tint = AFBgDeep) },
                     onClick = onPlayPause,
                     size = 64.dp,
                     primary = true,
+                    contentDescription = if (isPlaying) "Pause" else "Play",
                 )
                 PlayerIconButton(
                     icon = { IconSkipFwd(tint = AFText) },
                     onClick = onSkipForward,
                     size = 40.dp,
+                    contentDescription = "Skip forward 10 seconds",
                 )
             }
 
@@ -237,6 +245,7 @@ private fun PlayerIconButton(
     onClick: () -> Unit,
     size: androidx.compose.ui.unit.Dp = 48.dp,
     primary: Boolean = false,
+    contentDescription: String = "",
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val fr = remember { FocusRequester() }
@@ -253,6 +262,11 @@ private fun PlayerIconButton(
                 ) { onClick(); true } else false
             }
             .clickable(onClick = onClick)
+            .semantics {
+                if (contentDescription.isNotBlank()) {
+                    this.contentDescription = contentDescription
+                }
+            }
             .border(width = if (isFocused) 2.dp else 0.dp, color = AFCyan, shape = CircleShape)
             .padding(if (primary) 12.dp else 8.dp),
         contentAlignment = Alignment.Center,
@@ -272,7 +286,10 @@ private fun ProgressBar(progress: Float, onSeek: (Float) -> Unit, modifier: Modi
             .focusRequester(fr)
             .onFocusChanged { isFocused = it.isFocused }
             .focusable()
-            .clickable { /* seek on click */ }
+            .clickable { /* seek on click handled by parent */ }
+            .semantics {
+                contentDescription = "Seek bar, ${(progress * 100).toInt()}% complete"
+            }
             .border(width = if (isFocused) 1.dp else 0.dp, color = AFCyan, shape = RoundedCornerShape(2.dp)),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -288,12 +305,18 @@ private fun ProgressBar(progress: Float, onSeek: (Float) -> Unit, modifier: Modi
 @Composable
 private fun VolumeSlider(value: Float, onValueChange: (Float) -> Unit, modifier: Modifier = Modifier) {
     var isFocused by remember { mutableStateOf(false) }
+    val fr = remember { FocusRequester() }
     Box(
         modifier = modifier
             .height(4.dp)
             .background(AFSurface, RoundedCornerShape(2.dp))
-            .focusable()
+            .focusRequester(fr)
             .onFocusChanged { isFocused = it.isFocused }
+            .focusable()
+            .clickable { /* volume handled by parent */ }
+            .semantics {
+                contentDescription = "Volume, ${value.toInt()}%"
+            }
             .border(width = if (isFocused) 1.dp else 0.dp, color = AFCyan, shape = RoundedCornerShape(2.dp)),
         contentAlignment = Alignment.CenterStart,
     ) {
