@@ -103,7 +103,7 @@ fun PlayerScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val player = viewModel.player
+    val player = viewModel.currentPlayer
     var controlsVisible by remember { mutableStateOf(true) }
     var showSettings by remember { mutableStateOf(false) }
     var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }

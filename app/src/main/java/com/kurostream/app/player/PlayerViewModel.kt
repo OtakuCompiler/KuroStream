@@ -74,6 +74,9 @@ class PlayerViewModel @Inject constructor(
     private var player: ExoPlayer? = null
     private var playerReady = false
 
+    /** Exposes the current player instance for UI-only read access. */
+    val currentPlayer: ExoPlayer? get() = player
+
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
