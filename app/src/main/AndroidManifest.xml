@@ -148,7 +148,6 @@
     android:exported="false"
     android:launchMode="singleTop"
     android:noHistory="true"
-    android:screenCaptureDisabled="true"
     android:screenOrientation="landscape"
     android:theme="@style/Theme.AnimeStreamTV.Fullscreen" />
 
