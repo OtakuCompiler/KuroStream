@@ -15,8 +15,8 @@
 
 package com.kurostream.app.player
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.content.Context
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem as ExoMediaItem
 import androidx.media3.common.PlaybackException
@@ -30,6 +30,7 @@ import com.kurostream.app.repository.TvRepositories.WatchProgressRepository
 import com.kurostream.domain.result.Result as DomainResult
 import com.kurostream.common.memory.LowRamDevice
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -64,13 +65,13 @@ data class PlayerUiState(
 @UnstableApi
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    application: Application,
+    @ApplicationContext private val context: Context,
     private val settingsRepository: SettingsRepository,
     private val mediaRepository: MediaRepository,
     private val watchProgressRepository: WatchProgressRepository
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
-    lateinit var player: ExoPlayer
+    private var player: ExoPlayer? = null
     private var playerReady = false
 
     private val _uiState = MutableStateFlow(PlayerUiState())
@@ -86,7 +87,6 @@ class PlayerViewModel @Inject constructor(
     private val scope = viewModelScope + exceptionHandler
 
     init {
-        // Load subtitle settings from repository (async to avoid main-thread I/O)
         scope.launch(Dispatchers.IO) {
             val settings = settingsRepository.getPlayerSubtitleSettings()
             _uiState.update {
@@ -99,7 +99,6 @@ class PlayerViewModel @Inject constructor(
             }
         }
 
-        // Observe subtitle setting changes from outside (e.g. SettingsScreen)
         scope.launch {
             settingsRepository.observePlayerSubtitleSettings().collect { s ->
                 _uiState.update {
@@ -114,7 +113,7 @@ class PlayerViewModel @Inject constructor(
         }
 
         val isLowRam = LowRamDevice.isLowRamDevice()
-        player = PlayerConfig.create(application, lowRam = isLowRam).apply {
+        player = PlayerConfig.create(context, lowRam = isLowRam).apply {
             addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(state: Int) {
                     _uiState.update {
@@ -136,86 +135,86 @@ class PlayerViewModel @Inject constructor(
         }
         playerReady = true
 
-  scope.launch {
-    try {
-      while (isActive) {
-        if (playerReady && player.isPlaying) {
-          _uiState.update {
-            it.copy(
-              currentPosition = player.currentPosition.coerceAtLeast(0),
-              bufferedPosition = player.bufferedPosition.coerceAtLeast(0)
-            )
-          }
+        scope.launch {
+            try {
+                while (isActive) {
+                    if (playerReady && player?.isPlaying == true) {
+                        _uiState.update {
+                            it.copy(
+                                currentPosition = player?.currentPosition ?: 0L,
+                                bufferedPosition = player?.bufferedPosition ?: 0L
+                            )
+                        }
+                    }
+                    delay(500)
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
-        delay(500)
-      }
-    } catch (e: Exception) {
-      _uiState.update { it.copy(error = e.message) }
-    }
-  }
     }
 
     fun preparePlayback(mediaId: String, episodeId: String?, startPositionMs: Long) {
         this.mediaId = mediaId
         this.episodeId = episodeId
-  scope.launch {
-    try {
-      _uiState.update { it.copy(isBuffering = true) }
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isBuffering = true) }
 
-      val result = mediaRepository.getPlaybackUrl(mediaId, episodeId)
-      when (result) {
-          is DomainResult.Success<*> -> {
-              val playbackUrl = result.data as? PlaybackUrl
-                  ?: throw IllegalStateException("Playback URL resolution returned invalid data")
-             _uiState.update { it.copy(title = playbackUrl.title) }
-             val mediaItem = ExoMediaItem.fromUri(playbackUrl.url)
-             player.setMediaItem(mediaItem, startPositionMs)
-             player.prepare()
-             player.play()
-         }
-        is DomainResult.Error -> {
-            _uiState.update { it.copy(error = result.exception.message, isBuffering = false) }
+                val result = mediaRepository.getPlaybackUrl(mediaId, episodeId)
+                when (result) {
+                    is DomainResult.Success<*> -> {
+                        val playbackUrl = result.data as? PlaybackUrl
+                            ?: throw IllegalStateException("Playback URL resolution returned invalid data")
+                        _uiState.update { it.copy(title = playbackUrl.title) }
+                        val mediaItem = ExoMediaItem.fromUri(playbackUrl.url)
+                        player?.setMediaItem(mediaItem, startPositionMs)
+                        player?.prepare()
+                        player?.play()
+                    }
+                    is DomainResult.Error -> {
+                        _uiState.update { it.copy(error = result.exception.message, isBuffering = false) }
+                    }
+                    is DomainResult.Loading -> {
+                        _uiState.update { it.copy(isBuffering = true) }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message, isBuffering = false) }
+            }
         }
-        is DomainResult.Loading -> {
-            _uiState.update { it.copy(isBuffering = true) }
-        }
-    }
-    } catch (e: Exception) {
-      _uiState.update { it.copy(error = e.message, isBuffering = false) }
-    }
-  }
     }
 
     fun togglePlayPause() {
-        if (player.isPlaying) player.pause() else player.play()
+        if (player?.isPlaying == true) player?.pause() else player?.play()
     }
 
     fun seekTo(positionMs: Long) {
-        player.seekTo(positionMs.coerceIn(0, player.duration.coerceAtLeast(0)))
+        player?.seekTo(positionMs.coerceIn(0, player?.duration?.coerceAtLeast(0) ?: 0L))
     }
 
     fun seekForward() {
-        player.seekForward()
+        player?.seekForward()
     }
 
     fun seekBackward() {
-        player.seekBack()
+        player?.seekBack()
     }
 
     fun skipIntro() {
-        val targetPosition = (player.currentPosition + _uiState.value.skipIntroDurationMs)
-            .coerceAtMost(player.duration)
-        player.seekTo(targetPosition)
+        val targetPosition = ((player?.currentPosition ?: 0L) + _uiState.value.skipIntroDurationMs)
+            .coerceAtMost(player?.duration ?: 0L)
+        player?.seekTo(targetPosition)
     }
 
     fun skipOutro() {
-        val targetPosition = (player.currentPosition + _uiState.value.skipOutroDurationMs)
-            .coerceAtMost(player.duration)
-        player.seekTo(targetPosition)
+        val targetPosition = ((player?.currentPosition ?: 0L) + _uiState.value.skipOutroDurationMs)
+            .coerceAtMost(player?.duration ?: 0L)
+        player?.seekTo(targetPosition)
     }
 
     fun setPlaybackSpeed(speed: Float) {
-        player.setPlaybackSpeed(speed)
+        player?.setPlaybackSpeed(speed)
         _uiState.update { it.copy(playbackSpeed = speed) }
     }
 
@@ -247,43 +246,44 @@ class PlayerViewModel @Inject constructor(
         scope.launch { settingsRepository.setSubtitleEnabled(enabled) }
     }
 
-  fun playNextEpisode() {
-    val currentMedia = mediaId ?: return
-    scope.launch {
-      try {
-        mediaRepository.getNextEpisode(currentMedia, episodeId)
-        .onSuccess { nextEpisode ->
-          preparePlayback(currentMedia, nextEpisode.id, 0L)
+    fun playNextEpisode() {
+        val currentMedia = mediaId ?: return
+        scope.launch {
+            try {
+                mediaRepository.getNextEpisode(currentMedia, episodeId)
+                    .onSuccess { nextEpisode ->
+                        preparePlayback(currentMedia, nextEpisode.id, 0L)
+                    }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
-      } catch (e: Exception) {
-        _uiState.update { it.copy(error = e.message) }
-      }
     }
-  }
 
-  fun saveProgress() {
-    val currentMedia = mediaId ?: return
-    val currentEpisode = episodeId
-    val position = player.currentPosition
-    val total = player.duration
+    fun saveProgress() {
+        val currentMedia = mediaId ?: return
+        val currentEpisode = episodeId
+        val position = player?.currentPosition ?: 0L
+        val total = player?.duration ?: 0L
 
-    scope.launch {
-      try {
-        watchProgressRepository.saveProgress(
-          mediaId = currentMedia,
-          episodeId = currentEpisode,
-          positionMs = position,
-          durationMs = total
-        )
-      } catch (e: Exception) {
-        /* ignore save errors */
-      }
+        scope.launch {
+            try {
+                watchProgressRepository.saveProgress(
+                    mediaId = currentMedia,
+                    episodeId = currentEpisode,
+                    positionMs = position,
+                    durationMs = total
+                )
+            } catch (e: Exception) {
+                /* ignore save errors */
+            }
+        }
     }
-  }
 
     fun releasePlayer() {
         saveProgress()
-        player.release()
+        player?.release()
+        player = null
     }
 
     override fun onCleared() {
