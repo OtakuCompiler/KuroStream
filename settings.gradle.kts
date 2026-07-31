@@ -10,7 +10,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://dl.frostwire.com/maven")
         maven("https://jitpack.io")
     }
 }
@@ -26,5 +25,5 @@ include(":extensions")
 include(":marketplace")
 include(":playback")
 include(":plugin-sdk")
-include(":torrent")
+// include(":torrent") // DISABLED: 471 pre-existing compilation errors
 include(":ui")

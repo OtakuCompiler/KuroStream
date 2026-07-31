@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -12,7 +14,6 @@ android {
 }
 
 dependencies {
-
     implementation(project(":common"))
     implementation(project(":domain"))
     implementation(libs.kotlinx.coroutines.core)
@@ -26,12 +27,11 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.javax.inject)
     implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
-    // Playback engines
     implementation(libs.libvlc)
     implementation(libs.libmpv)
 
-    // Tests
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.coroutines)
