@@ -15,6 +15,7 @@
 
 package com.kurostream.app.player
 
+import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -36,6 +37,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
 import com.kurostream.app.ui.theme.AnimeStreamTVTheme
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @UnstableApi
 @AndroidEntryPoint

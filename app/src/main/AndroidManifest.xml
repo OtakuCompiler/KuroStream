@@ -176,12 +176,7 @@
         </service>
         -->
 
-<!-- Sync Worker -->
-    <service
-        android:name="com.kurostream.data.worker.SyncWorker"
-        android:exported="false"
-        android:permission="android.permission.BIND_JOB_SERVICE"
-        tools:ignore="Instantiatable" />
+        <!-- SyncWorker removed — WorkManager workers do not need manifest declarations -->
 
         <!-- Torrent Service — excluded module, unavailable until torrent is re-enabled
         <service

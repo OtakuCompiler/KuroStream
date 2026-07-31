@@ -15,7 +15,7 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-        buildConfigField("String", "YOUTUBE_API_KEY", System.getenv("YOUTUBE_API_KEY") ?: "\"\"")
+        buildConfigField("String", "YOUTUBE_API_KEY", System.getenv("YOUTUBE_API_KEY") ?: throw GradleException("YOUTUBE_API_KEY environment variable is required for build. Set it before building."))
     }
     buildTypes {
         release {

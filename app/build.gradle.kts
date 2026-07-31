@@ -15,9 +15,7 @@ android {
         applicationId = "com.kurostream.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 34
-        versionCode = providers.exec {
-            commandLine("git", "rev-list", "--count", "HEAD")
-        }.standardOutput.asText.get().trim().toInt()
+        versionCode = 1
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -49,8 +47,7 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.findByName("release")?.takeIf { it.storeFile?.exists() == true }
-                ?: signingConfigs.findByName("debug")
-                ?: signingConfigs.getByName("release")
+                ?: signingConfigs.getByName("debug")
             isCrunchPngs = true
         }
         debug {
