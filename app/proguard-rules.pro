@@ -37,6 +37,10 @@
 # Keep Timber
 -assumenosideeffects class timber.log.Timber { *; }
 
+# Jackson / java.beans desugaring (java.beans not fully present on Android)
+-dontwarn java.beans.**
+-dontnote java.beans.ConstructorProperties
+
 # General
 -keep public class com.kurostream.app.AnimeStreamTvApplication { *; }
 -keep public class * extends android.app.Activity
