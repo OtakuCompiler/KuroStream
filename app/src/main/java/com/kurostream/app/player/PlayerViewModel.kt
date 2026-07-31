@@ -30,6 +30,7 @@ import com.kurostream.app.repository.TvRepositories.WatchProgressRepository
 import com.kurostream.domain.result.Result as DomainResult
 import com.kurostream.common.memory.LowRamDevice
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -162,10 +163,10 @@ class PlayerViewModel @Inject constructor(
       _uiState.update { it.copy(isBuffering = true) }
 
       val result = mediaRepository.getPlaybackUrl(mediaId, episodeId)
-     when (result) {
-         is DomainResult.Success -> {
-             val playbackUrl = result.data as? PlaybackUrl
-                 ?: throw IllegalStateException("Playback URL resolution returned invalid data")
+      when (result) {
+          is DomainResult.Success<*> -> {
+              val playbackUrl = result.data as? PlaybackUrl
+                  ?: throw IllegalStateException("Playback URL resolution returned invalid data")
              _uiState.update { it.copy(title = playbackUrl.title) }
              val mediaItem = ExoMediaItem.fromUri(playbackUrl.url)
              player.setMediaItem(mediaItem, startPositionMs)
