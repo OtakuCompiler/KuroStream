@@ -51,10 +51,6 @@ object NetworkModule {
     private const val OPENSUBTITLES_BASE_URL = "https://api.opensubtitles.com/"
     private const val YOUTUBE_BASE_URL = "https://www.googleapis.com/youtube/v3/"
 
-    private val MAL_CLIENT_ID: String = ""
-    private val TMDB_API_KEY: String = ""
-    private val OPENSUBTITLES_API_KEY: String = ""
-    private val OPENSUBTITLES_AUTH_TOKEN: String = ""
 
     @Provides
     @Singleton
