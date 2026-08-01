@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.protobuf)
+    alias(libs.plugins.apollo)
 }
 
 android {
@@ -68,6 +69,7 @@ dependencies {
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.media3.exoplayer)
     implementation(libs.coil)
     implementation(libs.coil.gif)
     implementation(libs.coil.svg)
@@ -83,6 +85,18 @@ dependencies {
     
     // Networking
     implementation(libs.jsoup)
+    implementation(libs.sqlcipher)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.tensorflow.lite)
+
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.coroutines)
+    testImplementation(libs.test.turbine)
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("com.google.truth:truth:1.1.5")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
 }
 
 protobuf {
@@ -100,5 +114,10 @@ protobuf {
                 }
             }
         }
+    }
+}
+apollo {
+    service("anilist") {
+        packageName.set("com.kurostream.data.anilist")
     }
 }

@@ -12,6 +12,7 @@ plugins {
 android {
     namespace = "com.kurostream.app"
     compileSdk = libs.versions.compileSdk.get().toInt()
+    buildToolsVersion = "35.0.0"
     ndkVersion = "28.0.13004108"
 
     defaultConfig {
@@ -27,16 +28,13 @@ android {
         }
         manifestPlaceholders["appAuthRedirectScheme"] = "kurostream"
         resourceConfigurations += setOf("en")
+
+        // KuroCloud API configuration (publishable - safe in APK)
+        buildConfigField("String", "KURO_API_BASE", "\"https://kuro-stream-tv.lovable.app\"")
+        buildConfigField("String", "KURO_AUTH_URL", "\"https://kklyohtsedcdgmnmameh.supabase.co\"")
+        buildConfigField("String", "KURO_ANON_KEY", "\"sb_publishable_x_ZB45-mADfu4479vmZdaw_SGpIE6Kx\"")
     }
 
-    externalNativeBuild {
-        cmake {
-            arguments += listOf(
-                "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384",
-                "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,max-page-size=16384",
-            )
-        }
-    }
 
     signingConfigs {
         create("release") {
@@ -95,7 +93,7 @@ android {
             excludes += "**/DebugProbesKt.bin"
         }
         jniLibs {
-            useLegacyPackaging = true
+            useLegacyPackaging = false
             pickFirsts += listOf("lib/arm64-v8a/libc++_shared.so")
         }
     }
@@ -126,7 +124,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":extensions"))
     implementation(project(":plugin-sdk"))
-    implementation(project(":cache"))
+    // implementation(project(":cache"))
     implementation(project(":ui"))
     implementation(project(":marketplace"))
     implementation(project(":playback"))
@@ -180,24 +178,29 @@ dependencies {
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    implementation("net.zetetic:android-database-sqlcipher:4.6.1")
+    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
 
     // Cast
     implementation("com.google.android.gms:play-services-cast-framework:21.5.0")
-    implementation("com.google.android.gms:play-services-cast-tv:21.5.0")
+    implementation("com.google.android.gms:play-services-cast-tv:21.0.0")
 
-    // WebRTC
-    implementation("org.webrtc:google-webrtc:1.0.32006")
+    // WebRTC - temporarily disabled, requires custom repo
+    // implementation("org.webrtc:google-webrtc:1.0.32006")
 
     coreLibraryDesugaring(libs.android.desugarJdkLibs)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    testImplementation(libs.test.junit)
+testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.coroutines)
     testImplementation(libs.test.turbine)
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("com.google.truth:truth:1.1.5")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

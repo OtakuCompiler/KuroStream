@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.RoomDatabase
 import com.kurostream.data.local.dao.*
 import com.kurostream.data.local.database.KuroStreamDatabase
+import com.kurostream.data.local.database.MIGRATION_4_5
 import com.kurostream.data.local.database.Migration_2_3
 import com.kurostream.data.local.preferences.SettingsDataStore
 import com.kurostream.data.local.preferences.SettingsDataStoreImpl
@@ -27,7 +28,7 @@ object RoomModule {
             "kurostream.db"
         )
             .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-            .addMigrations(Migration_2_3)
+            .addMigrations(Migration_2_3, MIGRATION_4_5)
             .build()
     }
 

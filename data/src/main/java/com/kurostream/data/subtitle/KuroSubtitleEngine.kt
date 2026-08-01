@@ -17,10 +17,12 @@ import com.kurostream.domain.entity.SubtitleFormat
 import com.kurostream.domain.model.EpisodeInfo
 import com.kurostream.domain.subtitle.SubtitlePreferences
 import com.kurostream.domain.subtitle.SubtitleSyncEngine
+import com.kurostream.data.subtitle.provider.SubtitleProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -84,8 +86,8 @@ class KuroSubtitleEngine @Inject constructor(
             val url = java.net.URL(m3u8Url)
             val request = Request.Builder().url(url).build()
             client.newCall(request).execute().use { resp ->
-                if (!resp.isSuccessful) return@withContext candidates
-                val body = resp.body?.string() ?: return@withContext candidates
+                if (!resp.isSuccessful) return@use candidates
+                val body = resp.body?.string() ?: return@use candidates
                 val lines = body.lines()
                 for (i in lines.indices step 2) {
                     val tag = lines.getOrNull(i) ?: continue

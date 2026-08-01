@@ -2,7 +2,14 @@ package com.kurostream.extensions.debrid
 
 import com.kurostream.data.debrid.RealDebridApi
 import com.kurostream.data.debrid.RealDebridApiClient
-import com.kurostream.domain.debrid.*
+import com.kurostream.data.debrid.RdAvailabilityRequest
+import com.kurostream.data.debrid.RdMagnetRequest
+import com.kurostream.data.debrid.RdTorrentFileRequest
+import com.kurostream.data.debrid.RdUnrestrictRequest
+import com.kurostream.domain.debrid.DebridManager
+import com.kurostream.domain.debrid.DebridResult
+import com.kurostream.domain.debrid.RdTorrentInfo
+import com.kurostream.domain.debrid.RdUser
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber

@@ -7,6 +7,7 @@ import com.kurostream.data.local.entity.toEntity
 import com.kurostream.domain.extension.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject

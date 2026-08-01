@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -132,7 +133,7 @@ class UnifiedMarketplace @Inject constructor(
                     supportedTypes = setOf(ContentType.MOVIE, ContentType.TV, ContentType.ANIME),
                     supportedLanguages = listOf(plugin.language ?: "en"),
                     sourceFormat = ExtensionSourceFormat.CLOUDSTREAM_REPO,
-                    rawManifest = json.encodeToString(plugin),
+                    rawManifest = json.encodeToString<CloudStreamMegaPlugin>(plugin),
                 )
                 MarketplaceItem(
                     extension = ext,

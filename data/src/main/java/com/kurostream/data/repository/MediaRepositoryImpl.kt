@@ -25,8 +25,6 @@ import com.kurostream.data.remote.dto.mal.*
 import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.metadata.MediaType
 import com.kurostream.domain.metadata.AiringStatus
-import com.kurostream.domain.entity.ContentRating
-import com.kurostream.domain.metadata.Season
 import com.kurostream.domain.model.*
 import com.kurostream.domain.repository.MediaRepository
 import kotlinx.coroutines.Dispatchers
@@ -139,32 +137,14 @@ class MediaRepositoryImpl @Inject constructor(
                 MediaItem(
                     id = "mal_${anime.id}",
                     title = anime.title,
-                    originalTitle = anime.alternativeTitles?.en,
-                    synopsis = anime.synopsis,
-                    coverImageUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium,
-                    bannerImageUrl = null,
-                    type = MediaType.TV,
-                    status = safeParseAiringStatus(anime.status),
-                    episodeNumber = null,
-                    totalEpisodes = anime.numEpisodes,
-                    durationMinutes = anime.averageEpisodeDuration?.let { it / 60 },
-                    seasonYear = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() },
-                    seasonQuarter = anime.startSeason?.let { season ->
-                        when (season.season?.lowercase()) {
-                            "winter" -> Season.WINTER
-                            "spring" -> Season.SPRING
-                            "summer" -> Season.SUMMER
-                            "fall" -> Season.FALL
-                            else -> null
-                        }
-                    },
-                    genres = anime.genres?.map { it.name } ?: emptyList(),
-                    studios = anime.studios?.map { it.name } ?: emptyList(),
-                    rating = com.kurostream.domain.entity.ContentRating.UNRATED,
-                    score = anime.mean,
-                    sourceExtensionId = "mal_${anime.id}",
-                    deepLink = null,
-                    lastUpdated = System.currentTimeMillis()
+                    description = anime.synopsis ?: "",
+                    posterUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium ?: "",
+                    backdropUrl = "",
+                    genre = anime.genres?.map { it.name } ?: emptyList(),
+                    rating = (anime.mean ?: 0.0).toFloat(),
+                    year = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() } ?: 0,
+                    duration = anime.averageEpisodeDuration?.let { it / 60 } ?: 0,
+                    source = "mal",
                 )
             } else null
         } catch (e: Exception) { null }
@@ -204,29 +184,18 @@ class MediaRepositoryImpl @Inject constructor(
                     val anime = rankingNode.node
                     val titleStr = anime.title
                     val coverUrl = anime.mainPicture?.large ?: anime.mainPicture?.medium
-                    val airStatus = safeParseAiringStatus(anime.status)
                     val seasonYearVal = anime.startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() }
                     MediaItem(
                         id = "mal_${anime.id}",
                         title = titleStr,
-                        originalTitle = anime.alternativeTitles?.en,
-                        synopsis = anime.synopsis,
-                        coverImageUrl = coverUrl,
-                        bannerImageUrl = null,
-                        type = MediaType.TV,
-                        status = airStatus,
-                        episodeNumber = null,
-                        totalEpisodes = anime.numEpisodes,
-                        durationMinutes = null,
-                        seasonYear = seasonYearVal,
-                        seasonQuarter = null,
-                        genres = emptyList(),
-                        studios = emptyList(),
-                        rating = com.kurostream.domain.entity.ContentRating.UNRATED,
-                        score = anime.mean,
-                        sourceExtensionId = "mal_${anime.id}",
-                        deepLink = null,
-                        lastUpdated = System.currentTimeMillis()
+                        description = anime.synopsis ?: "",
+                        posterUrl = coverUrl ?: "",
+                        backdropUrl = "",
+                        genre = emptyList(),
+                        rating = (anime.mean ?: 0.0).toFloat(),
+                        year = seasonYearVal ?: 0,
+                        duration = 0,
+                        source = "mal",
                     )
                 } ?: emptyList()
             } else {
@@ -299,24 +268,14 @@ class MediaRepositoryImpl @Inject constructor(
         return MediaItem(
             id = id,
             title = title,
-            originalTitle = null,
-            synopsis = description,
-            coverImageUrl = posterUrl,
-            bannerImageUrl = bannerUrl,
-            type = MediaType.valueOf(category),
-            status = AiringStatus.UNKNOWN, // MediaCategory doesn't map to AiringStatus
-            episodeNumber = null,
-            totalEpisodes = null,
-            durationMinutes = duration?.let { (it / 60000).toInt() },
-            seasonYear = releaseDate?.let { (it / 10000).toInt() },
-            seasonQuarter = null,
-            genres = emptyList(),
-            studios = emptyList(),
-            rating = ContentRating.UNRATED,
-            score = rating,
-            sourceExtensionId = "local_$id",
-            deepLink = null,
-            lastUpdated = lastUpdated
+            description = description ?: "",
+            posterUrl = posterUrl ?: "",
+            backdropUrl = bannerUrl ?: "",
+            genre = emptyList(),
+            rating = rating?.toFloat() ?: 0f,
+            year = releaseDate?.let { (it / 10000).toInt() } ?: 0,
+            duration = duration?.let { (it / 60000).toInt() } ?: 0,
+            source = sourceType
         )
     }
 
@@ -324,85 +283,58 @@ class MediaRepositoryImpl @Inject constructor(
         return MediaItemEntity(
             id = id,
             sourceId = id,
-            sourceType = "local",
+            sourceType = source,
             title = title,
-            description = synopsis,
-            posterUrl = coverImageUrl,
-            bannerUrl = bannerImageUrl,
-            category = type.name,
-            releaseDate = seasonYear?.let { (it * 10000L) },
-            rating = score,
-            duration = durationMinutes?.let { it.toLong() * 60000 },
+            description = description,
+            posterUrl = posterUrl,
+            bannerUrl = backdropUrl,
+            category = MediaType.TV.name,
+            releaseDate = year.takeIf { it > 0 }?.let { it * 10000L },
+            rating = rating.toDouble(),
+            duration = duration.takeIf { it > 0 }?.let { it.toLong() * 60000 },
             streamUrl = null,
-            metadataJson = deepLink,
-            lastUpdated = lastUpdated
+            metadataJson = null,
+            lastUpdated = System.currentTimeMillis()
         )
     }
 
     private fun AniListMedia.toDomain(): MediaItem {
         val titleStr = title?.english ?: title?.romaji ?: title?.native ?: "Unknown"
         val coverUrl = coverImage?.large ?: coverImage?.medium
-        val airStatus = safeParseAiringStatus(status)
-        val seasonQtr = season?.let { Season.valueOf(it.uppercase()) }
         val scoreVal = averageScore?.let { it / 10.0 }
-        val seasonYearVal = seasonYear
-        val seasonQuarterVal = seasonQtr
         val durationMin = duration?.let { it / 60 }
-        val genreList = genres ?: emptyList()
-        val studioList = emptyList<String>()
 
         return MediaItem(
             id = "anilist_$id",
             title = titleStr,
-            originalTitle = title?.native,
-            synopsis = description,
-            coverImageUrl = coverUrl,
-            bannerImageUrl = bannerImage,
-            type = MediaType.TV,
-            status = airStatus,
-            episodeNumber = null,
-            totalEpisodes = episodes,
-            durationMinutes = durationMin,
-            seasonYear = seasonYearVal,
-            seasonQuarter = seasonQuarterVal,
-            genres = genreList,
-            studios = studioList,
-            rating = ContentRating.UNRATED,
-            score = scoreVal,
-            sourceExtensionId = "anilist_$id",
-            deepLink = null,
-            lastUpdated = System.currentTimeMillis()
+            description = description ?: "",
+            posterUrl = coverUrl ?: "",
+            backdropUrl = bannerImage ?: "",
+            genre = genres ?: emptyList(),
+            rating = scoreVal?.toFloat() ?: 0f,
+            year = seasonYear ?: 0,
+            duration = durationMin ?: 0,
+            source = "anilist"
         )
     }
 
     private fun SearchNode.toDomain(): MediaItem {
         val titleStr = title
         val coverUrl = mainPicture?.large ?: mainPicture?.medium
-        val airStatus = safeParseAiringStatus(status)
         val scoreVal = mean
         val seasonYearVal = startDate?.let { it.split("-").firstOrNull()?.toIntOrNull() }
 
         return MediaItem(
             id = "mal_$id",
             title = titleStr,
-            originalTitle = alternativeTitles?.en,
-            synopsis = synopsis,
-            coverImageUrl = coverUrl,
-            bannerImageUrl = null,
-            type = MediaType.TV,
-            status = airStatus,
-            episodeNumber = null,
-            totalEpisodes = numEpisodes,
-            durationMinutes = null, // SearchNode doesn't provide averageEpisodeDuration
-            seasonYear = seasonYearVal,
-            seasonQuarter = null, // SearchNode doesn't provide startSeason
-            genres = emptyList(), // SearchNode doesn't provide genres
-            studios = emptyList(),
-            rating = com.kurostream.domain.entity.ContentRating.UNRATED,
-            score = scoreVal,
-            sourceExtensionId = "mal_$id",
-            deepLink = null,
-            lastUpdated = System.currentTimeMillis()
+            description = synopsis ?: "",
+            posterUrl = coverUrl ?: "",
+            backdropUrl = "",
+            genre = emptyList(),
+            rating = scoreVal?.toFloat() ?: 0f,
+            year = seasonYearVal ?: 0,
+            duration = 0,
+            source = "mal"
         )
     }
 
@@ -423,7 +355,7 @@ class MediaRepositoryImpl @Inject constructor(
 
     private fun WatchHistoryEntity.toDomain() = WatchHistory(id, mediaItemId, profileId, position, duration, watchedAt, completionPercent, episodeNumber, seasonNumber)
     private fun WatchHistory.toEntity() = WatchHistoryEntity(id, mediaItemId, profileId, position, duration, watchedAt, completionPercent, episodeNumber, seasonNumber)
-    private fun FavoriteEntity.toDomain() = Favorite(id, mediaItemId, profileId, addedAt, category)
+    private fun FavoriteEntity.toDomain() = Favorite(id, mediaItemId ?: "", profileId ?: "", addedAt, category)
     private fun Favorite.toEntity() = FavoriteEntity(id, mediaItemId, profileId, addedAt, category)
 
     override suspend fun getMediaItems(): List<String> = mediaItemDao.search("").map { it.id }

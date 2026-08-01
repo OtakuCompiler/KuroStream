@@ -15,6 +15,7 @@
 
 package com.kurostream.app.ui.screens.settings
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kurostream.domain.repository.SettingsRepository
@@ -300,8 +301,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 }
-
-import androidx.compose.runtime.Immutable
 
 @Immutable
 data class SettingsUiState(

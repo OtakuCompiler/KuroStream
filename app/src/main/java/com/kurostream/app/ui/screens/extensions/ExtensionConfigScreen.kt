@@ -154,8 +154,6 @@ fun ExtensionConfigScreen(
     }
 }
 
-import androidx.compose.runtime.Immutable
-
 @Immutable
 data class ExtensionConfigUiState(
     val extensionName: String = "",

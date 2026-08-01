@@ -1,237 +1,109 @@
+// This file is part of KuroStream.
+//
+// KuroStream is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KuroStream is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
+
 package com.kurostream.extensions.stremio
 
-import com.kurostream.domain.extension.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import timber.log.Timber
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlinx.serialization.Serializable
 
-@Singleton
-class StremioAdapter @Inject constructor(
-    private val client: OkHttpClient,
-) {
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
-
-    suspend fun fetchManifest(manifestUrl: String): Result<StremioManifest> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val request = Request.Builder().url(manifestUrl).build()
-                val response = client.newCall(request).execute()
-                if (!response.isSuccessful) {
-                    return@withContext Result.failure(Exception("HTTP ${response.code}"))
-                }
-                val body = response.body?.string() ?: return@withContext Result.failure(Exception("Empty body"))
-                val manifest = json.decodeFromString<StremioManifest>(body)
-                Result.success(manifest)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch Stremio manifest: $manifestUrl")
-                Result.failure(e)
-            }
-        }
-    }
-
-    fun toUnifiedExtension(manifest: StremioManifest, manifestUrl: String): UnifiedExtension {
-        val capabilities = mutableSetOf<ExtensionCapability>()
-        val supportedTypes = mutableSetOf<ContentType>()
-        manifest.resources.forEach { resource ->
-            when (resource.name) {
-                "stream" -> {
-                    capabilities.add(ExtensionCapability.STREAM_RESOLUTION)
-                    capabilities.add(ExtensionCapability.SEARCH)
-                    manifest.catalog?.forEach { catalog ->
-                        supportedTypes.addAll(catalog.type.split(",").mapNotNull { parseContentType(it.trim()) })
-                    }
-                }
-                "catalog" -> {
-                    capabilities.add(ExtensionCapability.CATALOG)
-                    supportedTypes.addAll(manifest.catalog?.flatMap { it.type.split(",").mapNotNull { type -> parseContentType(type.trim()) } } ?: emptyList())
-                }
-                "subtitles" -> capabilities.add(ExtensionCapability.SUBTITLE)
-            }
-        }
-        return UnifiedExtension(
-            id = "stremio_${manifest.id}",
-            name = manifest.name,
-            description = manifest.description ?: "",
-            version = manifest.version ?: "1.0",
-            type = if (capabilities.contains(ExtensionCapability.STREAM_RESOLUTION)) ExtensionType.SOURCE else ExtensionType.METADATA,
-            originUrl = manifestUrl,
-            iconUrl = manifest.logo ?: "",
-            author = manifest.name,
-            capabilities = capabilities,
-            supportedTypes = supportedTypes.ifEmpty { setOf(ContentType.MOVIE, ContentType.TV) },
-            supportedLanguages = manifest.languages ?: emptyList(),
-            sourceFormat = ExtensionSourceFormat.STREMIO_ADDON,
-            rawManifest = json.encodeToString(manifest),
-            isOfficial = manifest.name.contains("official", ignoreCase = true) || manifest.id.contains("stremio"),
-        )
-    }
-
-    suspend fun getCatalog(manifest: StremioManifest, type: String, extra: Map<String, String> = emptyMap()): Result<List<MediaSearchResult>> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val catalog = manifest.catalog?.firstOrNull { it.type.equals(type, ignoreCase = true) }
-                    ?: return@withContext Result.success(emptyList())
-                val url = "${catalog.id}?${extra.entries.joinToString("&") { "${it.key}=${it.value}" }}"
-                val request = Request.Builder().url(url).build()
-                val response = client.newCall(request).execute()
-                if (!response.isSuccessful) return@withContext Result.success(emptyList())
-                val body = response.body?.string() ?: return@withContext Result.success(emptyList())
-                val meta = json.decodeFromString<StremioCatalogResponse>(body)
-                val results = meta.metas.map { preview ->
-                    MediaSearchResult(
-                        media = com.kurostream.domain.entity.MediaItem(
-                            id = preview.id,
-                            title = preview.name,
-                            description = preview.description ?: "",
-                            posterUrl = preview.poster ?: "",
-                            year = preview.year ?: 0,
-                            rating = preview.rating?.toFloat() ?: 0f,
-                        ),
-                        sourceExtensionId = "stremio_${manifest.id}",
-                        confidence = 0.9f,
-                    )
-                }
-                Result.success(results)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to get Stremio catalog")
-                Result.failure(e)
-            }
-        }
-    }
-
-    suspend fun getStreams(manifest: StremioManifest, id: String, type: String): Result<List<StreamAggregateResult>> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val url = "${manifest.id}/stream/${type}/${id}.json"
-                val request = Request.Builder().url(url).build()
-                val response = client.newCall(request).execute()
-                if (!response.isSuccessful) return@withContext Result.success(emptyList())
-                val body = response.body?.string() ?: return@withContext Result.success(emptyList())
-                val streamResponse = json.decodeFromString<StremioStreamResponse>(body)
-                val results = streamResponse.streams.map { stream ->
-                    StreamAggregateResult(
-                        source = UnifiedExtension(
-                            id = "stremio_${manifest.id}",
-                            name = manifest.name,
-                            description = manifest.description ?: "",
-                            version = manifest.version ?: "1.0",
-                            type = ExtensionType.SOURCE,
-                            originUrl = manifest.id,
-                            iconUrl = manifest.logo ?: "",
-                            author = manifest.name,
-                            capabilities = setOf(ExtensionCapability.STREAM_RESOLUTION, ExtensionCapability.SEARCH),
-                            supportedTypes = setOf(parseContentType(type)),
-                            supportedLanguages = manifest.languages ?: emptyList(),
-                            sourceFormat = ExtensionSourceFormat.STREMIO_ADDON,
-                            rawManifest = json.encodeToString(manifest),
-                        ),
-                        stream = com.kurostream.domain.entity.VideoSource(
-                            url = stream.url,
-                            quality = stream.quality ?: "Unknown",
-                            headers = stream.headers ?: emptyMap(),
-                        ),
-                        qualityScore = parseQualityScore(stream.quality),
-                    )
-                }
-                Result.success(results)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to get Stremio streams")
-                Result.failure(e)
-            }
-        }
-    }
-
-    private fun parseContentType(type: String): ContentType = when (type.lowercase()) {
-        "movie" -> ContentType.MOVIE
-        "series", "tv" -> ContentType.TV
-        "anime" -> ContentType.ANIME
-        "live", "iptv" -> ContentType.LIVE_TV
-        else -> ContentType.MOVIE
-    }
-
-    private fun parseQualityScore(quality: String?): Float = when (quality?.lowercase()) {
-        "4k", "uhd" -> 1.0f
-        "1080p", "fhd" -> 0.9f
-        "720p", "hd" -> 0.7f
-        "480p", "sd" -> 0.5f
-        else -> 0.3f
-    }
-}
-
-@kotlinx.serialization.Serializable
+@Serializable
 data class StremioManifest(
     val id: String,
-    val version: String? = null,
     val name: String,
     val description: String? = null,
+    val version: String? = null,
     val logo: String? = null,
     val background: String? = null,
-    val types: List<String> = emptyList(),
     val resources: List<StremioResource> = emptyList(),
     val catalogs: List<StremioCatalog>? = null,
+    val types: List<String>? = null,
     val languages: List<String>? = null,
     val behaviorHints: StremioBehaviorHints? = null,
 )
 
-@kotlinx.serialization.Serializable
-data class StremioResource(
-    val name: String,
-    val types: List<String> = emptyList(),
-    val idPrefixes: List<String> = emptyList(),
-)
-
-@kotlinx.serialization.Serializable
-data class StremioCatalog(
-    val id: String,
-    val name: String,
-    val type: String,
-    val extra: List<StremioCatalogExtra> = emptyList(),
-)
-
-@kotlinx.serialization.Serializable
-data class StremioCatalogExtra(
-    val name: String,
-    val isRequired: Boolean = false,
-)
-
-@kotlinx.serialization.Serializable
+@Serializable
 data class StremioBehaviorHints(
     val rating: Float? = null,
-    val adult: Boolean = false,
-    val p2p: Boolean = true,
+    val defaultVideo: Boolean? = null,
+    val hasSubtitles: Boolean? = null,
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
+data class StremioResource(
+    val name: String,
+    val types: List<String>? = null,
+    val idPrefixes: List<String>? = null,
+    val idRequired: Boolean? = null,
+)
+
+@Serializable
+data class StremioCatalog(
+    val type: String,
+    val id: String,
+    val name: String? = null,
+    val extra: List<Map<String, String>>? = null,
+    val genres: List<String>? = null,
+)
+
+@Serializable
 data class StremioCatalogResponse(
     val metas: List<StremioMetaPreview> = emptyList(),
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class StremioMetaPreview(
     val id: String,
-    val type: String,
     val name: String,
-    val poster: String? = null,
     val description: String? = null,
+    val poster: String? = null,
+    val background: String? = null,
     val year: Int? = null,
-    val rating: Float? = null,
+    val rating: Double? = null,
+    val type: String? = null,
+    val genres: List<String>? = null,
+    val releaseInfo: String? = null,
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
+data class StremioMetaResponse(
+    val meta: StremioMetaPreview? = null,
+)
+
+@Serializable
+data class StremioStream(
+    val url: String,
+    val quality: String? = null,
+    val headers: Map<String, String>? = null,
+    val title: String? = null,
+    val name: String? = null,
+)
+
+@Serializable
 data class StremioStreamResponse(
     val streams: List<StremioStream> = emptyList(),
 )
 
-@kotlinx.serialization.Serializable
-data class StremioStream(
-    val name: String? = null,
-    val title: String? = null,
+@Serializable
+data class StremioSubtitle(
+    val id: String,
     val url: String,
-    val quality: String? = null,
-    val headers: Map<String, String>? = null,
+    val lang: String? = null,
+    val name: String? = null,
+    val format: String? = null,
+)
+
+@Serializable
+data class StremioSubtitlesResponse(
+    val subtitles: List<StremioSubtitle> = emptyList(),
 )

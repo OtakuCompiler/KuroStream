@@ -96,4 +96,7 @@ object DataModule {
     @Named("mainDispatcher")
     fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
 
+    @Provides
+    @Singleton
+    fun provideKuroSyncRepository(impl: com.kurostream.data.kurocloud.sync.KuroSyncRepository): com.kurostream.domain.sync.KuroSyncRepository = impl
 }

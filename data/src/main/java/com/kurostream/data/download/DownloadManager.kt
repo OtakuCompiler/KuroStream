@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadManager
 import androidx.media3.exoplayer.offline.DownloadRequest
-import androidx.media3.exoplayer.scheduler.Requirements
+import java.io.File
 import java.util.concurrent.Executors
 
 class KuroDownloadManager(context: Context) {

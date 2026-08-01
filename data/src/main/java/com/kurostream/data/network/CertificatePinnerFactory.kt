@@ -6,7 +6,7 @@ import timber.log.Timber
 object CertificatePinnerFactory {
     fun create(): CertificatePinner {
         return CertificatePinner.Builder()
-            .add("api.strem.io", "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
+            .add("api.strem.io", "sha256/CHANGE_ME_CERT_PIN_1")
             .add("api.strem.io", "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=")
             .add("api.real-debrid.com", "sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=")
             .add("api.themoviedb.org", "sha256/DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD=")

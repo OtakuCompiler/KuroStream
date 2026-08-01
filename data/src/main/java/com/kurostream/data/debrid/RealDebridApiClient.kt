@@ -1,6 +1,5 @@
 package com.kurostream.data.debrid
 
-import com.kurostream.data.local.Constants
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

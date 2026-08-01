@@ -91,8 +91,6 @@ class MarketplaceViewModel @Inject constructor(
     }
 }
 
-import androidx.compose.runtime.Immutable
-
 @Immutable
 data class MarketplaceUiState(
     val items: List<MarketplaceItem> = emptyList(),

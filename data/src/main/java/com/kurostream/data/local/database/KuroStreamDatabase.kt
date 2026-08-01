@@ -19,25 +19,31 @@ import com.kurostream.data.local.entity.ExtensionEntity
 import com.kurostream.data.local.entity.FavoriteEntity
 import com.kurostream.data.local.entity.HomeRowEntity
 import com.kurostream.data.local.entity.MediaItemEntity
+import com.kurostream.data.local.entity.MediaItemFts
 import com.kurostream.data.local.entity.ProfileEntity
 import com.kurostream.data.local.entity.PurchaseEntity
 import com.kurostream.data.local.entity.SourceLockEntity
+import com.kurostream.data.local.entity.SourceLockFallbackEntity
+import com.kurostream.data.local.entity.SourceLockSettingsEntity
 import com.kurostream.data.local.entity.WatchHistoryEntity
 
 @Database(
     entities = [
         MediaItemEntity::class,
+        MediaItemFts::class,
         FavoriteEntity::class,
         WatchHistoryEntity::class,
         ProfileEntity::class,
         SourceLockEntity::class,
+        SourceLockSettingsEntity::class,
+        SourceLockFallbackEntity::class,
         HomeRowEntity::class,
         BookmarkEntity::class,
         PurchaseEntity::class,
         AddonConfigEntity::class,
         ExtensionEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 @TypeConverters(ExtensionConverters::class, Converters::class)

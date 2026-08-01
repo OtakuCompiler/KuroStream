@@ -23,8 +23,8 @@ import androidx.media3.common.util.UnstableApi
 import com.kurostream.app.sync.TraktSyncManager
 import com.kurostream.data.subtitle.SubtitleDownloadManager
 import com.kurostream.domain.entity.Episode
-import com.kurostream.domain.entity.PlaybackUrl
-import com.kurostream.domain.result.DomainResult
+import com.kurostream.domain.model.PlaybackUrl
+import com.kurostream.domain.result.Result
 import com.kurostream.domain.usecase.GetPlaybackUrlUseCase
 import com.kurostream.players.selector.PlaybackEngine
 import com.kurostream.players.selector.PlaybackEngine.PlaybackState
@@ -166,7 +166,7 @@ class PlayerViewModel @Inject constructor(
                 val result = getPlaybackUrl(mediaId, episodeId)
 
                 when (result) {
-                    is DomainResult.Success<PlaybackUrl> -> {
+                    is Result.Success<PlaybackUrl> -> {
                         val playbackUrl = result.data
                         withContext(Dispatchers.Main) {
                             engine?.setMedia(playbackUrl.url, playbackUrl.title, startPositionMs)
@@ -175,11 +175,11 @@ class PlayerViewModel @Inject constructor(
                         // Auto-download subtitles
                         downloadSubtitles(playbackUrl.title)
                     }
-                    is DomainResult.Error -> {
+                    is Result.Error -> {
                         _errorMessage.emit(result.exception?.message ?: "Playback error")
                         _playbackState.value = PlaybackState.ERROR
                     }
-                    is DomainResult.Loading -> {
+                    is Result.Loading -> {
                         _playbackState.value = PlaybackState.BUFFERING
                     }
                 }
@@ -307,5 +307,4 @@ class PlayerViewModel @Inject constructor(
     private fun onPlaybackCompleted() {
         // Mark episode as watched on Trakt
     }
-}
 }

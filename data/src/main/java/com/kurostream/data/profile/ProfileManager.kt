@@ -52,7 +52,9 @@ class ProfileManager @Inject constructor(
         val result = repository.createProfile(cleanName, avatarUrl, pin)
         if (result.isSuccess) {
             val prefs = ProfilePreferences()
-            repository.updatePreferences(result.data.id, json.encodeToString(ProfilePreferences.serializer(), prefs))
+            result.getOrNull()?.let { profile ->
+                repository.updatePreferences(profile.id, json.encodeToString(ProfilePreferences.serializer(), prefs))
+            }
         }
         return result
     }

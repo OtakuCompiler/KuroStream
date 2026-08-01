@@ -3,6 +3,7 @@ package com.kurostream.extensions.stremio
 import com.kurostream.domain.extension.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -66,7 +67,7 @@ class StremioAdapter @Inject constructor(
             supportedTypes = supportedTypes.ifEmpty { setOf(ContentType.MOVIE, ContentType.TV) },
             supportedLanguages = manifest.languages ?: emptyList(),
             sourceFormat = ExtensionSourceFormat.STREMIO_ADDON,
-            rawManifest = json.encodeToString(manifest),
+            rawManifest = json.encodeToString<StremioManifest>(manifest),
             isOfficial = manifest.name.contains("official", ignoreCase = true) || manifest.id.contains("stremio"),
         )
     }
@@ -91,6 +92,7 @@ class StremioAdapter @Inject constructor(
                             posterUrl = preview.poster ?: "",
                             year = preview.year ?: 0,
                             rating = preview.rating?.toFloat() ?: 0f,
+                            source = "stremio",
                         ),
                         sourceExtensionId = "stremio_${manifest.id}",
                         confidence = 0.9f,
@@ -128,7 +130,7 @@ class StremioAdapter @Inject constructor(
                             supportedTypes = setOf(parseContentType(type)),
                             supportedLanguages = manifest.languages ?: emptyList(),
                             sourceFormat = ExtensionSourceFormat.STREMIO_ADDON,
-                            rawManifest = json.encodeToString(manifest),
+                            rawManifest = json.encodeToString<StremioManifest>(manifest),
                         ),
                         stream = com.kurostream.domain.entity.VideoSource(
                             url = stream.url,

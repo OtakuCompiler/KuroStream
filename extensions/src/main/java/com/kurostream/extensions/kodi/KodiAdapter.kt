@@ -3,6 +3,7 @@ package com.kurostream.extensions.kodi
 import com.kurostream.domain.extension.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -40,7 +41,7 @@ class KodiAdapter @Inject constructor(
                         supportedTypes = setOf(ContentType.MOVIE, ContentType.TV, ContentType.LIVE_TV),
                         supportedLanguages = listOf("en"),
                         sourceFormat = ExtensionSourceFormat.KODI_REPOSITORY,
-                        rawManifest = json.encodeToString(addon),
+                        rawManifest = json.encodeToString<KodiAddon>(addon),
                     )
                 }
                 Result.success(extensions)

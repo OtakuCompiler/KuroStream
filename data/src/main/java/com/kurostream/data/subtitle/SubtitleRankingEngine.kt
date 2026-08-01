@@ -66,7 +66,7 @@ class SubtitleRankingEngine @Inject constructor(
     }
 
     private fun formatScore(a: SubtitleCandidate, b: SubtitleCandidate): Int {
-        val order = listOf(SubtitleFormat.ASS, SubtitleFormat.SSA, SubtitleFormat.SRT, SubtitleFormat.VTT, SubtitleFormat.TTML, SubtitleFormat.PGS, SubtitleFormat.UNKNOWN)
+        val order = listOf(SubtitleFormat.ASS, SubtitleFormat.SRT, SubtitleFormat.VTT, SubtitleFormat.TTML, SubtitleFormat.PGS, SubtitleFormat.UNKNOWN)
         val ia = order.indexOf(a.format).let { if (it == -1) Int.MAX_VALUE else it }
         val ib = order.indexOf(b.format).let { if (it == -1) Int.MAX_VALUE else it }
         return ia.compareTo(ib)

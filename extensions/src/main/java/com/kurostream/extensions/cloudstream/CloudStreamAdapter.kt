@@ -3,6 +3,7 @@ package com.kurostream.extensions.cloudstream
 import com.kurostream.domain.extension.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -49,7 +50,7 @@ class CloudStreamAdapter @Inject constructor(
                 supportedTypes = setOf(ContentType.MOVIE, ContentType.TV, ContentType.ANIME),
                 supportedLanguages = listOf(plugin.language ?: "en"),
                 sourceFormat = ExtensionSourceFormat.CLOUDSTREAM_REPO,
-                rawManifest = json.encodeToString(plugin),
+                rawManifest = json.encodeToString<CloudStreamPlugin>(plugin),
             )
         }
     }

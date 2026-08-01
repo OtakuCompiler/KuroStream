@@ -42,13 +42,6 @@ data class Episode(
 )
 
 @Serializable
-data class VideoSource(
-    val id: String, val quality: VideoQuality, val url: String,
-    val headers: Map<String, String> = emptyMap(),
-    val isHls: Boolean = false, val isDash: Boolean = false
-)
-
-@Serializable
 data class Character(val id: String, val name: String, val role: String, val imageUrl: String? = null, val voiceActor: String? = null)
 
 @Serializable

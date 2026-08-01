@@ -16,8 +16,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.data.metadata
 
-import com.kurostream.domain.model.MediaItem
-import com.kurostream.domain.model.Trailer
+import com.kurostream.domain.entity.MediaItem
+import com.kurostream.domain.metadata.AnimeMetadata
+import com.kurostream.domain.metadata.MetadataResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -32,20 +33,18 @@ class MetadataFusionEngine @Inject constructor(
     private val anilistProvider: com.kurostream.data.metadata.AniListMetadataProvider,
     private val malProvider: com.kurostream.data.metadata.MalMetadataProvider,
     private val kitsuProvider: com.kurostream.data.metadata.KitsuMetadataProvider,
-    private val imdbProvider: com.kurostream.data.metadata.ImdbMetadataProvider,
-    private val tvdbProvider: com.kurostream.data.metadata.TvdbMetadataProvider,
     private val trailerRepository: com.kurostream.domain.metadata.TrailerRepository,
 ) {
 
     suspend fun enrich(mediaId: String, sourceHint: String? = null): MediaItem? = withContext(Dispatchers.IO) {
         coroutineScope {
             val deferreds = listOf(
-                async { tmdbProvider.search(mediaId) },
-                async { anilistProvider.search(mediaId) },
-                async { malProvider.search(mediaId) },
-                async { kitsuProvider.search(mediaId) },
+                async { tmdbProvider.searchAnime(mediaId, 1, 10) },
+                async { anilistProvider.searchAnime(mediaId, 1, 10) },
+                async { malProvider.searchAnime(mediaId, 1, 10) },
+                async { kitsuProvider.searchAnime(mediaId, 1, 10) },
             )
-            val results = deferreds.awaitAll().filterNotNull()
+            val results = deferreds.awaitAll().flatMap { it.successfulData() }
 
             if (results.isEmpty()) return@coroutineScope null
 
@@ -53,38 +52,47 @@ class MetadataFusionEngine @Inject constructor(
             base.copy(
                 score = results.mapNotNull { it.score }.maxOrNull() ?: base.score,
                 genres = results.flatMap { it.genres }.distinct(),
-            )
+            ).toMediaItem()
         }
     }
 
     suspend fun enrichAnime(mediaId: String): MediaItem? = withContext(Dispatchers.IO) {
         coroutineScope {
             val deferreds = listOf(
-                async { anilistProvider.search(mediaId) },
-                async { malProvider.search(mediaId) },
-                async { kitsuProvider.search(mediaId) },
+                async { anilistProvider.searchAnime(mediaId, 1, 10) },
+                async { malProvider.searchAnime(mediaId, 1, 10) },
+                async { kitsuProvider.searchAnime(mediaId, 1, 10) },
             )
-            val results = deferreds.awaitAll().filterNotNull()
+            val results = deferreds.awaitAll().flatMap { it.successfulData() }
             val base = results.firstOrNull() ?: return@coroutineScope null
 
             base.copy(
                 score = results.mapNotNull { it.score }.maxOrNull() ?: base.score,
                 description = results.mapNotNull { it.description }.firstOrNull() ?: base.description,
-            )
+            ).toMediaItem()
         }
     }
 
-    private fun bestRating(base: MediaItem, others: List<MediaItem?>): Float {
-        val candidates = others.mapNotNull { it?.rating }.filter { it > 0f }
-        return if (candidates.isNotEmpty() && base.rating > 0f) {
-            (base.rating + candidates.max()) / 2
-        } else base.rating
+    suspend fun getTrailers(mediaId: String): List<com.kurostream.domain.model.Trailer> = withContext(Dispatchers.IO) {
+        trailerRepository.getTrailerForAnime(mediaId).getOrNull()?.let { listOf(it) } ?: emptyList()
     }
 
-    private fun bestTrailer(base: MediaItem, trailer: Trailer?): String? =
-        trailer?.url ?: base.trailer
-
-    suspend fun getTrailers(mediaId: String): List<Trailer> = withContext(Dispatchers.IO) {
-        listOfNotNull(trailerRepository.getTrailer(mediaId))
+    private fun MetadataResult<List<AnimeMetadata>>.successfulData(): List<AnimeMetadata> = when (this) {
+        is MetadataResult.Success -> data
+        is MetadataResult.Partial -> data
+        else -> emptyList()
     }
+
+    private fun AnimeMetadata.toMediaItem(): MediaItem = MediaItem(
+        id = id,
+        title = title,
+        description = description ?: "",
+        posterUrl = coverImageUrl ?: "",
+        backdropUrl = bannerImageUrl ?: "",
+        genre = genres,
+        rating = (score ?: 0.0).toFloat(),
+        year = seasonYear ?: 0,
+        duration = durationMinutes ?: 0,
+        source = providerId,
+    )
 }

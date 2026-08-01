@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class VideoSource(
+    val id: String? = null,
     val url: String,
     val quality: String = "Unknown",
     val headers: Map<String, String> = emptyMap(),
@@ -12,4 +13,6 @@ data class VideoSource(
     val torrentFileIndex: Int? = null,
     val subtitleUrls: List<String> = emptyList(),
     val sizeBytes: Long? = null,
+    val isHls: Boolean = false,
+    val isDash: Boolean = false,
 )
