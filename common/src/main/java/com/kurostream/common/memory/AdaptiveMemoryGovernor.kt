@@ -62,14 +62,14 @@ class AdaptiveMemoryGovernor @Inject constructor(
     val memoryPressureLevel: StateFlow<MemoryPressureLevel> = _memoryPressureLevel.asStateFlow()
 
     // Polling interval: 15s on low-RAM, 10s on normal
-    private val pollingIntervalMs = if (LowRamDevice.isLowRamDevice()) 15_000L else 10_000L
+    private val pollingIntervalMs = if (LowRamDevice.isLowRamDevice) 15_000L else 10_000L
 
     private var monitoringJob: kotlinx.coroutines.Job? = null
 
     init {
         detectDeviceProfile()
         startMonitoring()
-        Timber.d("AdaptiveMemoryGovernor initialized: profile=${_deviceProfile.value}, lowRam=${LowRamDevice.isLowRamDevice()}")
+        Timber.d("AdaptiveMemoryGovernor initialized: profile=${_deviceProfile.value}, lowRam=${LowRamDevice.isLowRamDevice}")
     }
 
     /** Detect device profile from hardware characteristics */

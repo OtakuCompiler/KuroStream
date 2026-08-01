@@ -13,13 +13,15 @@ object LowRamDevice {
 
     val isLowRamDevice: Boolean by lazy {
         val ctx = _context ?: return@lazy true
-        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+            ?: return@lazy true
         am.isLowRamDevice || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && am.memoryClass <= 192)
     }
 
     val totalMemoryMb: Int by lazy {
         val ctx = _context ?: return@lazy 1024
-        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+            ?: return@lazy 1024
         val mi = ActivityManager.MemoryInfo()
         am.getMemoryInfo(mi)
         (mi.totalMem / (1024 * 1024)).toInt()

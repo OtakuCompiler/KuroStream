@@ -10,12 +10,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://maven.mozilla.org/maven2") }
     }
 }
 rootProject.name = "KuroStream"
 include(":app")
-// include(":benchmark")  // removed — zero source files, only generated BuildConfig
+include(":baseline-profile")
+include(":benchmark")
 include(":cache")
 include(":common")
 include(":config")
@@ -25,5 +27,5 @@ include(":extensions")
 include(":marketplace")
 include(":playback")
 include(":plugin-sdk")
-// include(":torrent") // DISABLED: 471 pre-existing compilation errors
+include(":torrent")
 include(":ui")

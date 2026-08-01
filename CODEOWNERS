@@ -1,0 +1,23 @@
+# Global fallback
+* @OtakuCompiler
+
+# Core architecture
+/app/src/main/java/com/kurostream/app/di/ @OtakuCompiler
+/app/src/main/java/com/kurostream/app/navigation/ @OtakuCompiler
+
+# Player
+/app/src/main/java/com/kurostream/app/player/ @OtakuCompiler
+/playback/ @OtakuCompiler
+
+# UI/UX
+/app/src/main/java/com/kurostream/app/ui/ @OtakuCompiler
+
+# Data/Domain
+/data/ @OtakuCompiler
+/domain/ @OtakuCompiler
+
+# Security
+/app/src/main/java/com/kurostream/app/security/ @OtakuCompiler
+
+# CI/CD
+/.github/ @OtakuCompiler

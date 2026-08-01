@@ -86,4 +86,14 @@ object DataModule {
     @Singleton
     fun provideOfflineTranslator(impl: OfflineTranslatorImpl): OfflineTranslator = impl
 
+    @Provides
+    @Singleton
+    @Named("ioDispatcher")
+    fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+
+    @Provides
+    @Singleton
+    @Named("mainDispatcher")
+    fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
+
 }

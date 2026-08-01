@@ -43,11 +43,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.tv.material3.Icon
 import androidx.tv.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -104,7 +104,7 @@ fun AddonsScreen(
     onBackClick: () -> Unit,
     viewModel: AddonsViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Filter add-ons based on selected tab
     val filteredAddons = remember(uiState, uiState.selectedCategory) {

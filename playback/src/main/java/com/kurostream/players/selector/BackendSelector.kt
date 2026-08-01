@@ -1,10 +1,7 @@
 package com.kurostream.players.selector
 
 import android.content.Context
-import android.media.MediaCodecList
-import android.os.Build
 import android.util.Log
-import androidx.media3.exoplayer.ExoPlayer
 import com.kurostream.players.media3.Media3Player
 import com.kurostream.players.mpv.MpvPlayer
 import com.kurostream.players.vlc.VlcPlayer
@@ -75,53 +72,11 @@ class BackendSelector @Inject constructor(
         return withContext(Dispatchers.Main) {
             val player = MpvPlayer(context)
             player.initialize()
-            if (player.isInitialized()) {
+            if (player.isLibLoaded()) {
                 player
             } else {
                 throw IllegalStateException("MPV native library not available")
             }
-        }
-    }
-
-    private fun hasHardwareDecoderSupport(): Boolean {
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val codecList = MediaCodecList(MediaCodecList.ALL_CODECS)
-                codecList.codecInfos.any { codec ->
-                    !codec.isEncoder && codec.isHardwareAccelerated &&
-                    codec.supportedTypes.any { type ->
-                        type.equals(CODEC_MIME_HEVC, true) ||
-                        type.equals(CODEC_MIME_AVC, true)
-                    }
-                }
-            } else {
-                val codecList = MediaCodecList(MediaCodecList.ALL_CODECS)
-                codecList.codecInfos.any { codec ->
-                    if (codec.isEncoder) return@any false
-                    val name = codec.name.lowercase()
-                    val isHardware = name.contains("omx.") && 
-                        (name.contains("qcom") || name.contains("nvidia") || 
-                         name.contains("amlogic") || name.contains("mtk") ||
-                         name.contains("exynos") || name.contains("hisi"))
-                    isHardware && codec.supportedTypes.any { 
-                        it.equals(CODEC_MIME_HEVC, true) || it.equals(CODEC_MIME_AVC, true)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Codec query failed, assuming HW present", e)
-            true
-        }
-    }
-
-    private fun MpvPlayer.isInitialized(): Boolean {
-        // MPVLib.create() is called in init; mpvLib non-null means native load succeeded.
-        // This property access is reflection-free only because we expose it via package-private
-        // backing or similar; for now we attempt a cheap property get as a health check.
-        return try {
-            mpvLib != null
-        } catch (e: Exception) {
-            false
         }
     }
 

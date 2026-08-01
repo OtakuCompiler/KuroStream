@@ -15,263 +15,219 @@
 
 package com.kurostream.app.player
 
-import com.kurostream.players.selector.BackendSelector
+import android.os.Bundle
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.media3.common.util.UnstableApi
+import com.kurostream.app.sync.TraktSyncManager
+import com.kurostream.data.subtitle.SubtitleDownloadManager
+import com.kurostream.domain.entity.Episode
+import com.kurostream.domain.entity.PlaybackUrl
+import com.kurostream.domain.result.DomainResult
+import com.kurostream.domain.usecase.GetPlaybackUrlUseCase
 import com.kurostream.players.selector.PlaybackEngine
-import com.kurostream.app.model.PlaybackUrl
-import com.kurostream.domain.repository.SettingsRepository
-import com.kurostream.app.repository.TvRepositories.MediaRepository
-import com.kurostream.app.repository.TvRepositories.WatchProgressRepository
-import com.kurostream.domain.result.Result as DomainResult
+import com.kurostream.players.selector.PlaybackEngine.PlaybackState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
-data class PlayerUiState(
-    val title: String = "",
-    val isPlaying: Boolean = false,
-    val isBuffering: Boolean = true,
-    val currentPosition: Long = 0L,
-    val duration: Long = 0L,
-    val bufferedPosition: Long = 0L,
-    val error: String? = null,
-    val playbackSpeed: Float = 1f,
-    val skipIntroDurationMs: Long = 90_000L,
-    val skipOutroDurationMs: Long = 90_000L,
-    val subtitleFontSize: Float = 24f,
-    val subtitleFontColorHex: String = "#FFFFFF",
-    val subtitleBgColorHex: String = "#80000000",
-    val subtitleEnabled: Boolean = true,
-)
-
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    @ApplicationContext private val context: android.content.Context,
-    private val settingsRepository: SettingsRepository,
-    private val mediaRepository: MediaRepository,
-    private val watchProgressRepository: WatchProgressRepository,
-    private val backendSelector: BackendSelector,
-) : androidx.lifecycle.ViewModel() {
-
-    private var engine: PlaybackEngine? = null
-    private var playerReady = false
-    private val lockedSources = mutableSetOf<String>()
-
-    /** Exposes the current engine instance for UI-only read access. */
-    val currentEngine: PlaybackEngine? get() = engine
+    savedStateHandle: SavedStateHandle,
+    private val getPlaybackUrl: GetPlaybackUrlUseCase,
+    private val watchProgressRepository: com.kurostream.domain.repository.WatchProgressRepository,
+    private val mediaRepository: com.kurostream.domain.repository.MediaRepository,
+    private val settingsRepository: com.kurostream.domain.repository.SettingsRepository,
+    private val traktSyncManager: TraktSyncManager,
+    private val subtitleDownloadManager: SubtitleDownloadManager,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
-    private var mediaJob: Job? = null
+    private val _currentPosition = MutableStateFlow(0L)
+    val currentPosition: StateFlow<Long> = _currentPosition.asStateFlow()
 
+    private val _duration = MutableStateFlow(0L)
+    val duration: StateFlow<Long> = _duration.asStateFlow()
+
+    private val _bufferedPosition = MutableStateFlow(0L)
+    val bufferedPosition: StateFlow<Long> = _bufferedPosition.asStateFlow()
+
+    private val _isPlaying = MutableStateFlow(false)
+    val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
+
+    private val _playbackState = MutableStateFlow(PlaybackState.IDLE)
+    val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
+
+    private val _errorMessage = MutableSharedFlow<String?>()
+    val errorMessage: SharedFlow<String?> = _errorMessage.asSharedFlow()
+
+    private val _currentEngine = MutableStateFlow<PlaybackEngine?>(null)
+    val currentEngine: StateFlow<PlaybackEngine?> = _currentEngine.asStateFlow()
+
+    private val _subtitleFile = MutableStateFlow<java.io.File?>(null)
+    val subtitleFile: StateFlow<java.io.File?> = _subtitleFile.asStateFlow()
+
+    private var engine: PlaybackEngine? = null
     private var mediaId: String? = null
     private var episodeId: String? = null
+    private var progressUpdateJob: Job? = null
+    private var lastReportedProgress: Float = 0f
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        Timber.e(throwable, "PlayerViewModel coroutine failed")
-        _uiState.update { it.copy(error = throwable.message ?: "Unexpected error") }
+        Timber.e(throwable, "PlayerViewModel coroutine error")
+        _errorMessage.tryEmit(throwable.message)
     }
 
+    private val restoredPosition = savedStateHandle.get<Long>("player_position") ?: 0L
+    private val restoredMediaId = savedStateHandle.get<String>("media_id")
+
     init {
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
-            val settings = settingsRepository.getPlayerSubtitleSettings()
-            _uiState.update {
-                it.copy(
-                    subtitleFontSize = settings.fontSize,
-                    subtitleFontColorHex = settings.fontColorHex,
-                    subtitleBgColorHex = settings.bgColorHex,
-                    subtitleEnabled = settings.enabled,
-                )
-            }
+        savedStateHandle["player_position"] = 0L
+        if (restoredMediaId != null) {
+            viewModelScope.launch { preparePlayback(restoredMediaId, null, restoredPosition) }
         }
+    }
 
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
-            settingsRepository.observePlayerSubtitleSettings().collect { s ->
-                _uiState.update {
-                    it.copy(
-                        subtitleFontSize = s.fontSize,
-                        subtitleFontColorHex = s.fontColorHex,
-                        subtitleBgColorHex = s.bgColorHex,
-                        subtitleEnabled = s.enabled,
-                    )
-                }
-            }
-        }
-
+    fun initialize() {
         viewModelScope.launch(Dispatchers.Main + exceptionHandler) {
             try {
-                engine = backendSelector.selectBackend()
-                engine?.addListener(object : PlaybackEngine.Listener {
-                    override fun onPlaybackStateChanged(state: PlaybackEngine.PlaybackState) {
-                        _uiState.update {
-                            it.copy(
-                                isBuffering = state == PlaybackEngine.PlaybackState.BUFFERING,
-                                duration = if (state == PlaybackEngine.PlaybackState.READY) it.duration.coerceAtLeast(0L) else it.duration
-                            )
-                        }
-                    }
-
-                    override fun onIsPlayingChanged(playing: Boolean) {
-                        _uiState.update { it.copy(isPlaying = playing) }
-                    }
-
-                    override fun onError(message: String?) {
-                        _uiState.update { it.copy(error = message, isBuffering = false) }
-                    }
-                })
-                playerReady = true
+                val engineInstance = com.kurostream.players.selector.BackendSelector.selectEngine()
+                engineInstance.initialize()
+                engine = engineInstance
+                _currentEngine.value = engineInstance
+                setupEngineListeners(engineInstance)
+                _playbackState.value = PlaybackState.IDLE
             } catch (e: Exception) {
-                Timber.e(e, "BackendSelector failed")
-                _uiState.update { it.copy(error = e.message, isBuffering = false) }
+                Timber.e(e, "Player initialization failed")
+                _errorMessage.emit("Failed to initialize player: ${e.message}")
+                _playbackState.value = PlaybackState.ERROR
             }
         }
+    }
 
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
-            try {
-                while (isActive) {
-                    if (playerReady && engine != null) {
-                        _uiState.update {
-                            it.copy(
-                                currentPosition = engine?.currentPosition?.value ?: 0L,
-                                duration = engine?.duration?.value ?: 0L,
-                                bufferedPosition = engine?.bufferedPosition?.value ?: 0L,
-                                isPlaying = engine?.isPlaying?.value ?: false,
-                            )
-                        }
+    private fun setupEngineListeners(engineInstance: PlaybackEngine) {
+        engineInstance.addListener(object : PlaybackEngine.Listener {
+            override fun onPlaybackStateChanged(state: PlaybackState) {
+                _playbackState.value = state
+                when (state) {
+                    PlaybackState.READY -> _isPlaying.value = true
+                    PlaybackState.ENDED -> {
+                        _isPlaying.value = false
+                        onPlaybackCompleted()
                     }
-                    delay(500)
+                    PlaybackState.ERROR -> _isPlaying.value = false
+                    else -> Unit
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
             }
-        }
+
+            override fun onIsPlayingChanged(playing: Boolean) {
+                _isPlaying.value = playing
+                if (playing) {
+                    startProgressTracking()
+                    reportTraktScrobble("start")
+                } else {
+                    stopProgressTracking()
+                    reportTraktScrobble("pause")
+                }
+            }
+
+            override fun onError(message: String?) {
+                _errorMessage.tryEmit(message)
+                _playbackState.value = PlaybackState.ERROR
+            }
+        })
     }
 
     fun preparePlayback(mediaId: String, episodeId: String?, startPositionMs: Long) {
-        if (lockedSources.contains(mediaId)) {
-            _uiState.update { it.copy(error = "This source is locked") }
-            return
-        }
         this.mediaId = mediaId
         this.episodeId = episodeId
-        mediaJob?.cancel()
-        mediaJob = viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
-            try {
-                _uiState.update { it.copy(isBuffering = true) }
 
-                val result = mediaRepository.getPlaybackUrl(mediaId, episodeId)
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            try {
+                _playbackState.value = PlaybackState.BUFFERING
+                val result = getPlaybackUrl(mediaId, episodeId)
+
                 when (result) {
-                    is DomainResult.Success<*> -> {
-                        val playbackUrl = result.data as? PlaybackUrl
-                            ?: throw IllegalStateException("Playback URL resolution returned invalid data")
-                        _uiState.update { it.copy(title = playbackUrl.title) }
-                        engine?.setMedia(playbackUrl.url, playbackUrl.title, startPositionMs)
-                        engine?.play()
+                    is DomainResult.Success<PlaybackUrl> -> {
+                        val playbackUrl = result.data
+                        withContext(Dispatchers.Main) {
+                            engine?.setMedia(playbackUrl.url, playbackUrl.title, startPositionMs)
+                            _uiState.update { it.copy(currentTitle = playbackUrl.title) }
+                        }
+                        // Auto-download subtitles
+                        downloadSubtitles(playbackUrl.title)
                     }
                     is DomainResult.Error -> {
-                        _uiState.update { it.copy(error = result.exception.message, isBuffering = false) }
+                        _errorMessage.emit(result.exception?.message ?: "Playback error")
+                        _playbackState.value = PlaybackState.ERROR
                     }
                     is DomainResult.Loading -> {
-                        _uiState.update { it.copy(isBuffering = true) }
+                        _playbackState.value = PlaybackState.BUFFERING
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message, isBuffering = false) }
+                Timber.e(e, "Prepare playback failed")
+                _errorMessage.emit(e.message)
+                _playbackState.value = PlaybackState.ERROR
             }
         }
     }
 
-    fun togglePlayPause() {
-        val playing = engine?.isPlaying?.value ?: false
-        if (playing) {
-            engine?.pause()
-        } else {
-            engine?.play()
+    private fun downloadSubtitles(title: String) {
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            try {
+                val file = subtitleDownloadManager.searchAndDownloadBest(title)
+                if (file != null) {
+                    _subtitleFile.value = file
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Subtitle download failed")
+            }
         }
     }
 
+    fun play() {
+        engine?.play()
+        reportTraktScrobble("start")
+    }
+
+    fun pause() {
+        engine?.pause()
+        reportTraktScrobble("pause")
+    }
+
     fun seekTo(positionMs: Long) {
-        val duration = engine?.duration?.value?.coerceAtLeast(0L) ?: 0L
-        engine?.seekTo(positionMs.coerceIn(0, duration))
+        engine?.seekTo(positionMs)
     }
 
     fun seekForward() {
         engine?.seekForward()
     }
 
-    fun seekBackward() {
+    fun seekBack() {
         engine?.seekBack()
-    }
-
-    fun skipIntro() {
-        val targetPosition = ((engine?.currentPosition?.value ?: 0L) + _uiState.value.skipIntroDurationMs)
-            .coerceAtMost(engine?.duration?.value ?: 0L)
-        engine?.seekTo(targetPosition)
-    }
-
-    fun skipOutro() {
-        val targetPosition = ((engine?.currentPosition?.value ?: 0L) + _uiState.value.skipOutroDurationMs)
-            .coerceAtMost(engine?.duration?.value ?: 0L)
-        engine?.seekTo(targetPosition)
     }
 
     fun setPlaybackSpeed(speed: Float) {
         engine?.setPlaybackSpeed(speed)
-        _uiState.update { it.copy(playbackSpeed = speed) }
-    }
-
-    fun setSkipIntroDuration(durationMs: Long) {
-        _uiState.update { it.copy(skipIntroDurationMs = durationMs) }
-    }
-
-    fun setSkipOutroDuration(durationMs: Long) {
-        _uiState.update { it.copy(skipOutroDurationMs = durationMs) }
-    }
-
-    fun setSubtitleFontSize(size: Float) {
-        _uiState.update { it.copy(subtitleFontSize = size) }
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) { settingsRepository.setSubtitleFontSize(size) }
-    }
-
-    fun setSubtitleFontColor(hex: String) {
-        _uiState.update { it.copy(subtitleFontColorHex = hex) }
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) { settingsRepository.setSubtitleFontColor(hex) }
-    }
-
-    fun setSubtitleBgColor(hex: String) {
-        _uiState.update { it.copy(subtitleBgColorHex = hex) }
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) { settingsRepository.setSubtitleBgColor(hex) }
-    }
-
-    fun setSubtitleEnabled(enabled: Boolean) {
-        _uiState.update { it.copy(subtitleEnabled = enabled) }
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) { settingsRepository.setSubtitleEnabled(enabled) }
-    }
-
-    fun playNextEpisode() {
-        val currentMedia = mediaId ?: return
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
-            try {
-                mediaRepository.getNextEpisode(currentMedia, episodeId)
-                    .onSuccess { nextEpisode ->
-                        preparePlayback(currentMedia, nextEpisode.id, 0L)
-                    }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
-            }
-        }
     }
 
     fun saveProgress() {
@@ -280,31 +236,76 @@ class PlayerViewModel @Inject constructor(
         val position = engine?.currentPosition?.value ?: 0L
         val total = engine?.duration?.value ?: 0L
 
-        scope.launch {
+        runBlocking(Dispatchers.IO) {
             try {
-                watchProgressRepository.saveProgress(
-                    mediaId = currentMedia,
-                    episodeId = currentEpisode,
-                    positionMs = position,
-                    durationMs = total
-                )
+                watchProgressRepository.saveProgress(currentMedia, currentEpisode, position, total)
             } catch (e: Exception) {
-                /* ignore save errors */
+                Timber.e(e, "Save progress failed")
             }
         }
     }
 
+    fun saveState() {
+        val position = engine?.currentPosition?.value ?: 0L
+        // In a real app, save to SavedStateHandle or persistent storage
+    }
+
     fun releasePlayer() {
+        stopProgressTracking()
         saveProgress()
+        reportTraktScrobble("stop")
         engine?.release()
-        mediaJob?.cancel()
-        mediaJob = null
         engine = null
-        playerReady = false
+        _currentEngine.value = null
     }
 
     override fun onCleared() {
         super.onCleared()
-        releasePlayer()
+        saveProgress()
+        reportTraktScrobble("stop")
+        engine?.release()
+        progressUpdateJob?.cancel()
     }
+
+    private fun startProgressTracking() {
+        progressUpdateJob?.cancel()
+        progressUpdateJob = viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            while (isActive) {
+                delay(10000)
+                val position = engine?.currentPosition?.value ?: 0L
+                val total = engine?.duration?.value ?: 0L
+                if (total > 0) {
+                    val progress = (position.toFloat() / total * 100).roundToInt()
+                    if (progress != lastReportedProgress) {
+                        lastReportedProgress = progress.toFloat()
+                        reportTraktScrobbleProgress(progress)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun stopProgressTracking() {
+        progressUpdateJob?.cancel()
+        progressUpdateJob = null
+    }
+
+    private fun reportTraktScrobble(action: String) {
+        val mediaId = this.mediaId ?: return
+        val position = engine?.currentPosition?.value ?: 0L
+        val duration = engine?.duration?.value ?: 0L
+        val progress = if (duration > 0) (engine?.currentPosition?.value?.toFloat() ?: 0f) / duration * 100 else 0f
+        
+        // This would integrate with TraktSyncManager
+        // traktSyncManager.onPlaybackStarted/Stopped/Paused etc.
+    }
+
+    private fun reportTraktScrobbleProgress(progress: Int) {
+        // Report progress to Trakt every 10%
+    }
+
+    private fun onPlaybackCompleted() {
+        // Mark episode as watched on Trakt
+    }
+}
 }

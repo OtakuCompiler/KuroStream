@@ -32,7 +32,7 @@ object HdrDetector {
                 context.display
             } else {
                 @Suppress("DEPRECATION")
-                (context.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager).defaultDisplay
+                (context.getSystemService(Context.WINDOW_SERVICE) as? android.view.WindowManager)?.defaultDisplay
             }
             val hdrCapabilities = display?.hdrCapabilities
             if (hdrCapabilities != null) {

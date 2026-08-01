@@ -1,61 +1,55 @@
-// This file is part of KuroStream.
-//
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
 package com.kurostream.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.kurostream.data.local.dao.*
-import com.kurostream.data.local.entity.*
+import com.kurostream.data.local.dao.AddonDao
+import com.kurostream.data.local.dao.BookmarkDao
+import com.kurostream.data.local.dao.ExtensionDao
+import com.kurostream.data.local.dao.FavoriteDao
+import com.kurostream.data.local.dao.HomeRowDao
+import com.kurostream.data.local.dao.MediaItemDao
+import com.kurostream.data.local.dao.ProfileDao
+import com.kurostream.data.local.dao.PurchaseDao
+import com.kurostream.data.local.dao.SourceLockDao
+import com.kurostream.data.local.dao.WatchHistoryDao
+import com.kurostream.data.local.entity.AddonConfigEntity
+import com.kurostream.data.local.entity.BookmarkEntity
+import com.kurostream.data.local.entity.ExtensionEntity
+import com.kurostream.data.local.entity.FavoriteEntity
+import com.kurostream.data.local.entity.HomeRowEntity
+import com.kurostream.data.local.entity.MediaItemEntity
+import com.kurostream.data.local.entity.ProfileEntity
+import com.kurostream.data.local.entity.PurchaseEntity
+import com.kurostream.data.local.entity.SourceLockEntity
+import com.kurostream.data.local.entity.WatchHistoryEntity
 
-    @Database(
+@Database(
     entities = [
         MediaItemEntity::class,
-        MediaItemFts::class,
-        ProfileEntity::class,
-        WatchHistoryEntity::class,
         FavoriteEntity::class,
+        WatchHistoryEntity::class,
+        ProfileEntity::class,
         SourceLockEntity::class,
-        SourceLockSettingsEntity::class,
-        SourceLockFallbackEntity::class,
         HomeRowEntity::class,
         BookmarkEntity::class,
-        AddonConfigEntity::class,
         PurchaseEntity::class,
+        AddonConfigEntity::class,
+        ExtensionEntity::class,
     ],
-    version = 3,
-    exportSchema = true
+    version = 4,
+    exportSchema = false,
 )
-@TypeConverters(Converters::class)
+@TypeConverters(ExtensionConverters::class, Converters::class)
 abstract class KuroStreamDatabase : RoomDatabase() {
     abstract fun mediaItemDao(): MediaItemDao
-    abstract fun profileDao(): ProfileDao
-    abstract fun watchHistoryDao(): WatchHistoryDao
     abstract fun favoriteDao(): FavoriteDao
+    abstract fun watchHistoryDao(): WatchHistoryDao
+    abstract fun profileDao(): ProfileDao
     abstract fun sourceLockDao(): SourceLockDao
     abstract fun homeRowDao(): HomeRowDao
     abstract fun bookmarkDao(): BookmarkDao
-    abstract fun addonDao(): AddonDao
     abstract fun purchaseDao(): PurchaseDao
-
-    companion object {
-        /**
-         * WAL mode and PRAGMAs are configured via Room's setJournalMode in RoomModule.
-         * Do NOT use execSQL for PRAGMAs as it conflicts with Room's connection management
-         * and causes: "Queries can be performed using SQLiteDatabase query or rawQuery methods only"
-         */
-    }
+    abstract fun addonDao(): AddonDao
+    abstract fun extensionDao(): ExtensionDao
 }

@@ -1,119 +1,106 @@
+// KuroStream - Anime Streaming for Android TV
+// Copyright (C) 2026 KuroStream Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 package com.kurostream.cache
 
 import android.content.Context
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.cache.Cache
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
+import com.kurostream.common.memory.LowRamDevice
+import timber.log.Timber
 import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import timber.log.Timber
 
 @Singleton
 class KuroCacheManager @Inject constructor(
     private val context: Context,
-) : CacheNamespaceManager {
-
-    private val rootDir = File(context.cacheDir, "kurostream")
-    private val memoryCache = ConcurrentHashMap<String, ByteArray>()
-    private val maxMemoryBytes = 8 * 1024 * 1024
-    private var currentMemoryBytes = 0
-
-    private val ramDiskDir: File? by lazy {
-        val tmpfs = File("/data/local/tmp/kurostream_ramdisk")
-        if (tmpfs.exists() || tmpfs.mkdirs()) {
-            return@lazy tmpfs
-        }
-        context.cacheDir?.let { cache ->
-            File(cache, "ramdisk").apply { mkdirs() }
-        }
+) {
+    companion object {
+        private const val MAX_CACHE_SIZE_MB_DEFAULT = 500L
+        private const val MAX_CACHE_SIZE_MB_LOW_RAM = 200L
+        private const val RAM_DISK_SIZE_MB = 125L
     }
 
-    private val vodDiskDir: File by lazy {
-        File(context.cacheDir, "vod_500mb").apply { mkdirs() }
+    val videoCache: Cache by lazy {
+        createVideoCache()
     }
 
-    override suspend fun put(key: String, value: ByteArray) = withContext(Dispatchers.IO) {
-        val vodFile = File(vodDiskDir, key)
-        vodFile.parentFile?.mkdirs()
-        vodFile.writeBytes(value)
-        
-        if (value.size <= 64 * 1024 && currentMemoryBytes + value.size <= maxMemoryBytes) {
-            synchronized(memoryCache) {
-                currentMemoryBytes += value.size
-                memoryCache[key] = value
-            }
+    private fun createVideoCache(): Cache {
+        val isLowRam = LowRamDevice.isLowRamDevice(context)
+        val maxBytes = if (isLowRam) {
+            MAX_CACHE_SIZE_MB_LOW_RAM * 1024 * 1024
+        } else {
+            MAX_CACHE_SIZE_MB_DEFAULT * 1024 * 1024
         }
-        
-        ramDiskDir?.let { ram ->
-            val ramFile = File(ram, key)
-            ramFile.parentFile?.mkdirs()
-            kotlin.runCatching { ramFile.writeBytes(value) }
+
+        val cacheDir = File(context.cacheDir, "kurostream_vod_cache")
+        if (!cacheDir.exists()) {
+            cacheDir.mkdirs()
         }
+
+        val evictor = LeastRecentlyUsedCacheEvictor(maxBytes)
+        val databaseProvider = StandaloneDatabaseProvider(context)
+
+        Timber.d("Video cache initialized: ${maxBytes / (1024 * 1024)}MB at ${cacheDir.absolutePath}")
+        
+        return SimpleCache(cacheDir, evictor, databaseProvider)
     }
 
-    override suspend fun get(key: String): ByteArray? = withContext(Dispatchers.IO) {
-        memoryCache[key]?.let { return@withContext it }
-        
-        ramDiskDir?.let { ram ->
-            val ramFile = File(ram, key)
-            if (ramFile.exists()) {
-                return@withContext kotlin.runCatching { ramFile.readBytes() }.getOrNull()
-            }
+    fun getRamDiskCacheDir(): File {
+        val ramDiskDir = File(context.cacheDir, "ram_disk_cache")
+        if (!ramDiskDir.exists()) {
+            ramDiskDir.mkdirs()
         }
-        
-        kotlin.runCatching { File(vodDiskDir, key).readBytes() }.getOrNull()
+        return ramDiskDir
     }
 
-    suspend fun getMapped(key: String): java.nio.ByteBuffer? = withContext(Dispatchers.IO) {
-        val file = File(ramDiskDir ?: return@withContext null, key)
-        if (!file.exists()) return@withContext null
+    fun clearAllCaches() {
         try {
-            val channel = java.io.RandomAccessFile(file, "r").channel
-            channel.map(java.nio.channels.FileChannel.MapMode.READ_ONLY, 0, file.length())
+            videoCache.release()
+            val cacheDir = File(context.cacheDir, "kurostream_vod_cache")
+            cacheDir.deleteRecursively()
+            cacheDir.mkdirs()
+            Timber.d("All caches cleared")
         } catch (e: Exception) {
-            null
+            Timber.e(e, "Failed to clear caches")
         }
     }
 
-    override suspend fun invalidateNamespace(namespace: String) = withContext(Dispatchers.IO) {
-        File(vodDiskDir, namespace).deleteRecursively()
-        File(ramDiskDir, namespace).deleteRecursively()
-        synchronized(memoryCache) {
-            memoryCache.keys.removeAll { it.startsWith(namespace) }
-        }
+    fun getCacheStats(): CacheStats {
+        val cacheSpace = videoCache.cacheSpace
+        val keys = videoCache.keys.size
+        return CacheStats(
+            usedBytes = cacheSpace,
+            maxBytes = if (LowRamDevice.isLowRamDevice(context)) {
+                MAX_CACHE_SIZE_MB_LOW_RAM * 1024 * 1024
+            } else {
+                MAX_CACHE_SIZE_MB_DEFAULT * 1024 * 1024
+            },
+            fileCount = keys,
+        )
     }
 
-    override suspend fun namespaceSizeBytes(namespace: String): Long = withContext(Dispatchers.IO) {
-        File(vodDiskDir, namespace).walk().sumOf { it.length() }
-    }
-
-    override suspend fun clear() = withContext(Dispatchers.IO) {
-        vodDiskDir.deleteRecursively()
-        ramDiskDir?.deleteRecursively()
-        memoryCache.clear()
-        currentMemoryBytes = 0
-    }
-
-    suspend fun totalCacheSize(): Long = withContext(Dispatchers.IO) {
-        vodDiskDir.walk().sumOf { it.length() }
-    }
-
-    suspend fun enforceBudget(maxBytes: Long = 500L * 1024 * 1024) = withContext(Dispatchers.IO) {
-        val current = totalCacheSize()
-        if (current > maxBytes) {
-            val files = vodDiskDir.walk()
-                .filter { it.isFile }
-                .sortedBy { it.lastModified() }
-                .toList()
-            var freed = 0L
-            for (file in files) {
-                if (current - freed <= maxBytes * 0.85) break
-                val len = file.length()
-                file.delete()
-                freed += len
-            }
-            Timber.d("Cache trim: freed ${freed/1024/1024}MB")
-        }
-    }
+    data class CacheStats(
+        val usedBytes: Long,
+        val maxBytes: Long,
+        val fileCount: Int,
+    )
 }

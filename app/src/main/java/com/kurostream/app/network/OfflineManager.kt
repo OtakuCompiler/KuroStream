@@ -13,7 +13,8 @@ import javax.inject.Singleton
 class OfflineManager @Inject constructor(
     context: Context
 ) {
-    private val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        ?: throw IllegalStateException("ConnectivityManager not available")
     
     private val _isOnline = MutableStateFlow(checkOnline())
     val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()

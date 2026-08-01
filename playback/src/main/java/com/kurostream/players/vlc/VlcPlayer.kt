@@ -1,10 +1,9 @@
 package com.kurostream.players.vlc
 
 import android.content.Context
-import android.view.Surface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,8 +12,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.videolan.libvlc.IVLCVout
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
@@ -32,7 +31,7 @@ class VlcPlayer @Inject constructor(
     private var mediaPlayer: MediaPlayer? = null
     private var currentUri: String? = null
 
-    private val scope = CoroutineScope(Dispatchers.Main + Job())
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private val _currentPosition = MutableStateFlow(0L)
     private val _duration = MutableStateFlow(0L)
@@ -50,26 +49,23 @@ class VlcPlayer @Inject constructor(
     private val listeners = mutableSetOf<PlaybackEngine.Listener>()
 
     override suspend fun initialize() {
-        // Native lib load is guarded here so a missing/failed native lib does not
-        // crash the app during DI construction; BackendSelector will fall back
-        // to Media3 if this returns with libVlc still null.
         try {
             libVlc = LibVLC(context)
             mediaPlayer = MediaPlayer(libVlc).also { mp ->
                 mp.setEventListener(eventListener)
             }
+            startPositionPolling()
         } catch (e: Exception) {
             Timber.e(e, "VLC native initialization failed")
             libVlc = null
             mediaPlayer = null
         }
-        startPositionPolling()
     }
 
     private val eventListener = MediaPlayer.EventListener { event ->
         when (event.type) {
             MediaPlayer.Event.EncounteredError -> {
-                Timber.e("VLC error: %s", event)
+                Timber.e("VLC error")
                 _errorMessage.tryEmit("VLC encountered an error")
                 _playbackState.value = PlaybackEngine.PlaybackState.ERROR
                 listeners.forEach { it.onError("VLC encountered an error") }
@@ -96,19 +92,16 @@ class VlcPlayer @Inject constructor(
         }
     }
 
-    override suspend fun initialize() {
-        // Native init is performed in this method body above, guarded with try/catch.
-        // If libVlc is still null after this call, the backend is unavailable and
-        // BackendSelector will fall back to Media3.
-    }
-
     private fun startPositionPolling() {
         scope.launch {
             while (isActive) {
-                mediaPlayer()?.let { mp ->
-                    _currentPosition.value = mp.time.coerceAtLeast(0L)
-                    _duration.value = (mp.length).coerceAtLeast(0L)
-                    _bufferedPosition.value = _currentPosition.value
+                try {
+                    mediaPlayer?.let { mp ->
+                        _currentPosition.value = mp.time.coerceAtLeast(0L)
+                        _duration.value = mp.length.coerceAtLeast(0L)
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "VLC position poll failed")
                 }
                 delay(500)
             }
@@ -126,64 +119,48 @@ class VlcPlayer @Inject constructor(
     override fun setMedia(uri: String, title: String?, startPositionMs: Long) {
         currentUri = uri
         val media = Media(libVlc, android.net.Uri.parse(uri))
-        mediaPlayer()?.setMedia(media)
+        mediaPlayer?.media = media
         media.release()
-        mediaPlayer()?.let { mp ->
-            mp.play()
-            if (startPositionMs > 0) {
-                mp.setTime(startPositionMs)
-            }
+        if (startPositionMs > 0) {
+            mediaPlayer?.time = startPositionMs
         }
+        mediaPlayer?.play()
+        _playbackState.value = PlaybackEngine.PlaybackState.BUFFERING
+        listeners.forEach { it.onPlaybackStateChanged(PlaybackEngine.PlaybackState.BUFFERING) }
     }
 
     override fun play() {
-        mediaPlayer()?.play()
+        mediaPlayer?.play()
     }
 
     override fun pause() {
-        mediaPlayer()?.pause()
+        mediaPlayer?.pause()
     }
 
     override fun seekTo(positionMs: Long) {
-        mediaPlayer()?.setTime(positionMs)
+        mediaPlayer?.time = positionMs
     }
 
     override fun seekForward() {
-        mediaPlayer()?.let { mp ->
-            val next = (mp.time + 10_000L).coerceAtMost(_duration.value)
-            mp.setTime(next)
-        }
+        val current = _currentPosition.value
+        seekTo(current + 10_000L)
     }
 
     override fun seekBack() {
-        mediaPlayer()?.let { mp ->
-            val prev = (mp.time - 10_000L).coerceAtLeast(0L)
-            mp.setTime(prev)
-        }
+        val current = _currentPosition.value
+        seekTo((current - 10_000L).coerceAtLeast(0L))
     }
 
     override fun setPlaybackSpeed(speed: Float) {
-        mediaPlayer()?.rate = speed.toDouble()
+        mediaPlayer?.rate = speed
     }
-
-    fun setSurface(surface: Surface?) {
-        val vout: IVLCVout? = mediaPlayer()?.vlcVout
-        if (surface != null) {
-            vout?.setVideoSurface(surface, null)
-            vout?.attachViews()
-        } else {
-            vout?.detachViews()
-        }
-    }
-
-    fun mediaPlayer(): MediaPlayer? = mediaPlayer
 
     override fun release() {
         scope.cancel()
-        mediaPlayer()?.stop()
-        mediaPlayer()?.release()
-        libVlc?.release()
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
         mediaPlayer = null
+        libVlc?.release()
         libVlc = null
         _currentPosition.value = 0L
         _duration.value = 0L

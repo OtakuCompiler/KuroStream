@@ -12,11 +12,12 @@ import timber.log.Timber
 
 class RamEnforcer(
     context: Context,
-    private val targetMaxMb: Int = 90,
-    private val criticalMaxMb: Int = 110,
+    private val targetMaxMb: Int = 100,
+    private val criticalMaxMb: Int = 115,
     private val absoluteMaxMb: Int = 125,
 ) {
-    private val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    private val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+        ?: throw IllegalStateException("ActivityManager not available")
     private val context: Context = context
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val trimListeners = mutableListOf<suspend () -> Unit>()

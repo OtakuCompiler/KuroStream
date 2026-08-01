@@ -5,11 +5,14 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.baseline.profile)
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.kurostream.app"
     compileSdk = libs.versions.compileSdk.get().toInt()
+    ndkVersion = "28.0.13004108"
 
     defaultConfig {
         applicationId = "com.kurostream.app"
@@ -20,21 +23,27 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
         }
         manifestPlaceholders["appAuthRedirectScheme"] = "kurostream"
         resourceConfigurations += setOf("en")
     }
 
+    externalNativeBuild {
+        cmake {
+            arguments += listOf(
+                "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384",
+                "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,max-page-size=16384",
+            )
+        }
+    }
+
     signingConfigs {
         create("release") {
-            val keystorePath = System.getenv("KEYSTORE_PATH")
-            if (!keystorePath.isNullOrBlank()) {
-                storeFile = file(keystorePath)
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
-                keyAlias = System.getenv("KEY_ALIAS") ?: ""
-                keyPassword = System.getenv("KEY_PASSWORD") ?: ""
-            }
+            storeFile = file(System.getenv("UPLOAD_KEYSTORE_PATH") ?: "upload-keystore.jks")
+            storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("UPLOAD_KEY_ALIAS") ?: ""
+            keyPassword = System.getenv("UPLOAD_KEY_PASSWORD") ?: ""
         }
     }
 
@@ -46,9 +55,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.findByName("release")?.takeIf { it.storeFile?.exists() == true }
-                ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             isCrunchPngs = true
+            postprocessing {
+                isRemoveUnusedCode = true
+                isRemoveUnusedResources = true
+                isObfuscate = true
+                isOptimizeCode = true
+            }
         }
         debug {
             isMinifyEnabled = false
@@ -63,8 +77,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
     }
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
     buildFeatures {
         compose = true
@@ -76,7 +92,31 @@ android {
             excludes += "**/*.md"
             excludes += "**/ISSUES_LEDGER.md"
             excludes += "**/PRODUCTION_IMPLEMENTATION_REPORT.md"
+            excludes += "**/DebugProbesKt.bin"
         }
+        jniLibs {
+            useLegacyPackaging = true
+            pickFirsts += listOf("lib/arm64-v8a/libc++_shared.so")
+        }
+    }
+
+    bundle {
+        language { enableSplit = true }
+        density { enableSplit = true }
+        abi { enableSplit = true }
+    }
+
+    lint {
+        checkReleaseBuilds = true
+        abortOnError = false
+        disable += "ObsoleteLintCustomCheck"
+        disable += "LockedOrientationActivity"
+    }
+
+    baselineProfile {
+        baselineProfileOutputDir = "src/main/baseline-prof"
+        saveInSrc = true
+        mergeIntoMain = true
     }
 }
 
@@ -127,10 +167,27 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
-    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
+    implementation(libs.androidx.profileinstaller)
+    implementation(libs.androidx.benchmark.macro.junit4)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.kotlinx.coroutines.android)
+
+    // Play Integrity + App Check
+    implementation("com.google.android.play:integrity:1.4.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+
+    // Security
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("net.zetetic:android-database-sqlcipher:4.6.1")
+
+    // Cast
+    implementation("com.google.android.gms:play-services-cast-framework:21.5.0")
+    implementation("com.google.android.gms:play-services-cast-tv:21.5.0")
+
+    // WebRTC
+    implementation("org.webrtc:google-webrtc:1.0.32006")
 
     coreLibraryDesugaring(libs.android.desugarJdkLibs)
 

@@ -71,10 +71,15 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
         securityConfig.logSecurityStatus()
 
+        NotificationChannels.createAll(this)
+        WorkScheduler.scheduleAll(this)
+        CrashReporter.initialize(this)
+        AppShortcuts.createShortcuts(this)
+
         val ramEnforcer = RamEnforcer(this)
         ramEnforcer.registerTrimListener {
-            imageLoaderInstance?.memoryCache?.clear()
-            imageLoaderInstance?.diskCache?.clear()
+            appImageLoader?.memoryCache?.clear()
+            appImageLoader?.diskCache?.clear()
         }
         ramEnforcer.startMonitoring()
 
@@ -82,7 +87,7 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
         // Defer non-critical init to idle moments after first frame
         val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-        mainHandler.postAtFrontOfQueue {
+        mainHandler.post {
             // Memory monitor (non-blocking)
             memoryMonitor = com.kurostream.common.memory.UnifiedMemoryManager.getInstance(this@AnimeStreamTvApplication)
             
@@ -100,9 +105,8 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         }
 
         // Defer battery, thermal, startup monitoring to idle (no user-visible impact)
-        mainHandler.postAtFrontOfQueue {
+        mainHandler.post {
             batteryAwareManager = com.kurostream.common.optimization.BatteryAwareManager.create(this@AnimeStreamTvApplication)
-            monitorStartupPerformance()
             startupProfiler?.markFullyDrawn()
         }
 
@@ -232,18 +236,10 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         }
     }
 
-    private fun monitorStartupPerformance() {
-        if (BuildConfig.DEBUG) {
-            appScope.launch(Dispatchers.IO) {
-                System.currentTimeMillis()
-                // Track startup metrics
-            }
-        }
-    }
-
     override fun onTerminate() {
         super.onTerminate()
         appScope.cancel()
+        memoryMonitor?.shutdown()
     }
 
     @Volatile

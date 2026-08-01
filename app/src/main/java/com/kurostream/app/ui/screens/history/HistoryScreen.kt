@@ -198,3 +198,4 @@ private fun formatProgress(positionMs: Long, durationMin: Int): String {
     val totalMinutes = durationMin
     return "${minutes}:%02d / ${totalMinutes} min".format(seconds)
 }
+}

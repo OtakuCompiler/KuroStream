@@ -17,20 +17,16 @@ package com.kurostream.app.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
-
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import com.kurostream.app.player.PlayerScreen
-import com.kurostream.app.player.PlayerViewModel
+import com.kurostream.app.player.PlayerActivity
 import com.kurostream.app.ui.screens.addons.AddonsScreen
 import com.kurostream.app.ui.screens.details.DetailsScreen
 import com.kurostream.app.ui.screens.home.HomeScreen
@@ -40,7 +36,6 @@ import com.kurostream.app.ui.screens.library.LibraryScreen
 import com.kurostream.app.ui.screens.search.SearchScreen
 import com.kurostream.app.ui.screens.settings.SettingsScreen
 import com.kurostream.app.ui.screens.settings.SourceLockSettingsScreen
-// import com.kurostream.app.ui.screens.torrents.TorrentsScreen
 import com.kurostream.backup.ui.BackupSettingsScreen
 
 private const val NAV_ANIM_DURATION = 300
@@ -110,11 +105,14 @@ fun TvNavHost(
 
         composable<DetailsRoute> { backStackEntry ->
             val route = backStackEntry.toRoute<DetailsRoute>()
+            val context = androidx.compose.ui.platform.LocalContext.current
             DetailsScreen(
                 mediaId = route.mediaId,
                 onBack = { navController.popBackStack() },
                 onPlay = { mediaId ->
-                    navController.navigate(PlayerRoute(mediaId = mediaId, episodeId = null, startPositionMs = 0L))
+                    PlayerActivity.createIntent(context, mediaId, null, 0L).let {
+                        context.startActivity(it)
+                    }
                 },
             )
         }
@@ -137,18 +135,6 @@ fun TvNavHost(
         composable<AddonsRoute> {
             AddonsScreen(
                 onBackClick = { navController.popBackStack() }
-            )
-        }
-
-        composable<PlayerRoute> { backStackEntry ->
-            val route = backStackEntry.toRoute<PlayerRoute>()
-            val viewModel: com.kurostream.app.player.PlayerViewModel = hiltViewModel()
-            LaunchedEffect(route.mediaId) {
-                viewModel.preparePlayback(route.mediaId, route.episodeId, route.startPositionMs)
-            }
-            com.kurostream.app.player.PlayerScreen(
-                viewModel = viewModel,
-                onBackPressed = { navController.popBackStack() },
             )
         }
 

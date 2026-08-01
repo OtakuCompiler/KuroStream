@@ -1,12 +1,60 @@
-*.iml
+# Gradle
 .gradle/
 build/
-.idea/
-.DS_Store
+*/build/
+!**/src/main/**/build.gradle.kts
+
+# Local configuration
 local.properties
-*.apk
-*.aab
 *.keystore
 *.jks
-.kilo/
-.kotlin/
+*.properties
+google-services.json
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Generated files
+*/build/generated/
+*/build/tmp/
+*/build/intermediates/
+
+# Logs
+*.log
+
+# Firebase
+google-services.json
+firebase-*.json
+
+# Keystore
+*.jks
+*.keystore
+keystore.properties
+
+# Server
+server/node_modules/
+server/.env
+server/*.log
+
+# Temporary
+*.tmp
+*.temp
+temp/
+tmp/

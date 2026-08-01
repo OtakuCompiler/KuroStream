@@ -9,7 +9,8 @@ import android.os.Build
 import timber.log.Timber
 
 class AudioSessionManager(private val context: Context) {
-    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        ?: throw IllegalStateException("AudioManager not available")
     private var audioFocusRequest: AudioFocusRequest? = null
     private var currentFocus: AudioFocusState = AudioFocusState.NO_FOCUS
 

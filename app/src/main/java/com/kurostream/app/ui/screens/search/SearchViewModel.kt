@@ -28,10 +28,13 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class SearchResultItem(
     val id: String,
     val title: String,
-    val year: Int = 0,
+    val description: String = "",
     val type: String = "",
     val posterUrl: String = "",
     val score: Double = 0.0,
@@ -40,7 +43,9 @@ data class SearchResultItem(
 sealed interface SearchUiState {
     data object Idle : SearchUiState
     data object Loading : SearchUiState
+    @Immutable
     data class Success(val items: List<SearchResultItem>, val query: String) : SearchUiState
+    @Immutable
     data class Error(val message: String) : SearchUiState
 }
 

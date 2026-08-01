@@ -17,15 +17,22 @@ package com.kurostream.app
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.ExperimentalTvMaterial3Api
+import com.kurostream.app.player.PlayerActivity
 import com.kurostream.app.navigation.TvNavHost
 import com.kurostream.app.ui.screens.splash.SplashScreen
 import com.kurostream.app.ui.theme.AnimeStreamTVTheme
@@ -43,6 +50,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                android.widget.OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                onBackPressedDispatcher.onBackPressed()
+            }
+        }
         handleDeepLink(intent)
 
         setContent {
@@ -69,13 +85,15 @@ class MainActivity : ComponentActivity() {
 
                             LaunchedEffect(Unit) {
                                 deepLinkMediaId?.let { mediaId ->
-                                    val route = com.kurostream.app.navigation.PlayerRoute(
-                                        mediaId = mediaId,
-                                        episodeId = deepLinkEpisodeId,
-                                        startPositionMs = 0L
+                                    val intent = PlayerActivity.createIntent(
+                                        this@MainActivity,
+                                        mediaId,
+                                        deepLinkEpisodeId,
+                                        0L
                                     )
-                                    navController.navigate(route)
+                                    startActivity(intent)
                                     deepLinkMediaId = null
+                                    deepLinkEpisodeId = null
                                 }
                             }
                         }

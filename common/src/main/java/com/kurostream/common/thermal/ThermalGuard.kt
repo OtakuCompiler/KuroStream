@@ -284,8 +284,8 @@ data class ThrottleConfig(
 enum class AudioDspQuality { HIGH, MEDIUM, LOW }
 enum class SubtitleRenderQuality { HIGH, MEDIUM, LOW }
 
-interface ThermalThrottleCallback {
-    fun onWarningStage()
-    fun onCriticalStage()
-    fun onNormalized()
+object ThermalThrottleCallback {
+    fun onWarningStage() {}
+    fun onCriticalStage() {}
+    fun onNormalized() {}
 }

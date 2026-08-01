@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
@@ -190,32 +191,66 @@ fun PlayerScreen(
             }
             .focusable()
     ) {
-    AndroidView(
-        factory = { ctx ->
-            PlayerView(ctx).apply {
-                useController = false
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                playerViewRef = this
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hdrMode != HdrMode.SDR) {
-                    setSecure(true)
+    val isMedia3 = remember(engine) { engine?.nativePlayer() is ExoPlayer }
+
+    if (isMedia3) {
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    useController = false
+                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    playerViewRef = this
+                    (engine?.nativePlayer() as? ExoPlayer)?.let { exo ->
+                        this.player = exo
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hdrMode != HdrMode.SDR) {
+                        setSecure(true)
+                    }
                 }
-            }
-        },
-        update = { view ->
-            (engine?.nativePlayer() as? androidx.media3.common.Player)?.let { player ->
-                view.player = player
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    val surfaceView = view.videoSurfaceView as? android.view.SurfaceView
-                    surfaceView?.setSecure(true)
+            },
+            update = { view ->
+                (engine?.nativePlayer() as? ExoPlayer)?.let { player ->
+                    view.player = player
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        val surfaceView = view.videoSurfaceView as? android.view.SurfaceView
+                        surfaceView?.setSecure(true)
+                    }
                 }
-            }
-        },
+            },
+            onReset = { playerViewRef?.player = null },
             onRelease = { view ->
                 view.player = null
                 playerViewRef = null
             },
             modifier = Modifier.fillMaxSize()
         )
+    } else {
+        AndroidView(
+            factory = { ctx ->
+                android.view.SurfaceView(ctx).apply {
+                    holder.addCallback(object : android.view.SurfaceHolder.Callback {
+                        override fun surfaceCreated(holder: android.view.SurfaceHolder) {
+                            if (engine is com.kurostream.players.mpv.MpvPlayer) {
+                                engine.setSurface(holder.surface)
+                            }
+                        }
+                        override fun surfaceChanged(
+                            holder: android.view.SurfaceHolder,
+                            format: Int,
+                            width: Int,
+                            height: Int
+                        ) = Unit
+                        override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
+                            if (engine is com.kurostream.players.mpv.MpvPlayer) {
+                                engine.setSurface(null)
+                            }
+                        }
+                    })
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
 
         if (uiState.isBuffering) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

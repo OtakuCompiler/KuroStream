@@ -78,6 +78,20 @@ class Media3Player @Inject constructor(
                             _playbackState.value = PlaybackEngine.PlaybackState.ERROR
                             listeners.forEach { it.onError(error.message) }
                         }
+
+                        override fun onPositionDiscontinuity(
+                            oldPosition: Player.PositionInfo,
+                            newPosition: Player.PositionInfo,
+                            reason: Int
+                        ) {
+                            _currentPosition.value = newPosition.positionMs
+                        }
+
+                        override fun onEvents(player: Player, events: Player.Events) {
+                            _currentPosition.value = player.currentPosition
+                            _duration.value = player.duration.coerceAtLeast(0L)
+                            _bufferedPosition.value = player.bufferedPosition
+                        }
                     })
                 }
             }
@@ -89,7 +103,7 @@ class Media3Player @Inject constructor(
 
         val renderersFactory = DefaultRenderersFactory(context)
             .setEnableDecoderFallback(true)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             .setMediaCodecSelector(MediaCodecSelector.DEFAULT)
 
         val trackSelector = DefaultTrackSelector(context).apply {
@@ -97,37 +111,33 @@ class Media3Player @Inject constructor(
                 buildUponParameters()
                     .setPreferredAudioLanguage("jpn")
                     .setPreferredTextLanguage("eng")
+                    .setTunnelingEnabled(true)
             )
         }
 
-        val mediaSourceFactory = DefaultMediaSourceFactory(context)
-
-        val isLowRam = LowRamDevice.isLowRamDevice()
-        val MIN_BUFFER_MS = 15_000
-        val MAX_BUFFER_MS = if (isLowRam) MIN_BUFFER_MS else 50_000
-        val BUFFER_FOR_PLAYBACK_MS = 2_500
-        val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 5_000
+        val isLowRam = LowRamDevice.isLowRamDevice
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                15_000,
+                if (isLowRam) 30_000 else 50_000,
+                2_500,
+                5_000
+            )
+            .setTargetBufferBytes(if (isLowRam) 16 * 1024 * 1024 else 32 * 1024 * 1024)
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .build()
 
         return ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
-            .setMediaSourceFactory(mediaSourceFactory)
-            .setLoadControl(
-                DefaultLoadControl.Builder()
-                    .setBufferDurationsMs(
-                        MIN_BUFFER_MS,
-                        MAX_BUFFER_MS,
-                        BUFFER_FOR_PLAYBACK_MS,
-                        BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS,
-                    )
-                    .setTargetBufferBytes(if (isLowRam) 2 * 1024 * 1024 else 5 * 1024 * 1024)
-                    .setPriorizeTimeOverSizeThresholds(true)
-                    .build()
-            )
+            .setLoadControl(loadControl)
+            .setHandleAudioBecomingNoisy(true)
+            .setWakeMode(C.WAKE_MODE_LOCAL)
+            .setSeekParameters(androidx.media3.exoplayer.SeekParameters.EXACT)
             .build()
             .also { exo ->
                 exo.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT)
-                Timber.d("Media3Player: created player (lowRam=$isLowRam)")
+                Timber.d("Media3Player: created (lowRam=$isLowRam)")
             }
     }
 
@@ -140,13 +150,14 @@ class Media3Player @Inject constructor(
     }
 
     override fun setMedia(uri: String, title: String?, startPositionMs: Long) {
-        val exo = player ?: return
         val mediaItem = MediaItem.Builder()
             .setUri(uri)
-            .setMediaId(title ?: uri)
+            .setMediaId(uri)
             .build()
-        exo.setMediaItem(mediaItem, startPositionMs)
-        exo.prepare()
+        player?.setMediaItem(mediaItem, startPositionMs)
+        player?.prepare()
+        _playbackState.value = PlaybackEngine.PlaybackState.BUFFERING
+        listeners.forEach { it.onPlaybackStateChanged(PlaybackEngine.PlaybackState.BUFFERING) }
     }
 
     override fun play() {
@@ -158,7 +169,7 @@ class Media3Player @Inject constructor(
     }
 
     override fun seekTo(positionMs: Long) {
-        player?.seekTo(positionMs.coerceIn(0, _duration.value.coerceAtLeast(0L)))
+        player?.seekTo(positionMs)
     }
 
     override fun seekForward() {
@@ -173,16 +184,17 @@ class Media3Player @Inject constructor(
         player?.setPlaybackSpeed(speed)
     }
 
+    override fun nativePlayer(): Any? = player
+
     override fun release() {
+        player?.removeListener(object : Player.Listener {})
         player?.release()
         player = null
+        listeners.clear()
         _currentPosition.value = 0L
         _duration.value = 0L
         _bufferedPosition.value = 0L
         _isPlaying.value = false
         _playbackState.value = PlaybackEngine.PlaybackState.IDLE
-        listeners.clear()
     }
-
-    override fun nativePlayer(): Any? = player
 }

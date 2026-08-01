@@ -37,17 +37,6 @@ class SecurityConfig @Inject constructor(
         paths.any { File(it).exists() }
     }
 
-    suspend fun checkFridaAsync(): Boolean = withContext(Dispatchers.IO) {
-        try {
-            java.net.Socket().use { socket ->
-                socket.connect(java.net.InetSocketAddress("127.0.0.1", 27042), 500)
-                true
-            }
-        } catch (_: Exception) {
-            false
-        }
-    }
-
     fun logSecurityStatus() {
         if (isDebugBuild) Timber.w("Security: Debug build detected")
         if (isEmulator) Timber.w("Security: Emulator detected")

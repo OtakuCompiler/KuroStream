@@ -29,13 +29,17 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.compose.runtime.Immutable
+
 sealed interface DetailsUiState {
     data object Loading : DetailsUiState
+    @Immutable
     data class Success(
         val media: MediaItem,
         val episodes: List<Episode>,
         val isFavorite: Boolean
     ) : DetailsUiState
+    @Immutable
     data class Error(val message: String) : DetailsUiState
 }
 

@@ -1,83 +1,134 @@
-# ProGuard rules for KuroStream
--keepattributes *Annotation*
--keepattributes Signature
--keepattributes Exceptions
--keepattributes InnerClasses
--keepattributes EnclosingMethod
+# KuroStream ProGuard Rules - GPL-3.0
+# Keep Serializable classes for kotlinx.serialization
+-keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature, Exceptions
+-keepclassmembers class * {
+    @kotlinx.serialization.Serializable <fields>;
+}
+-keep @kotlinx.serialization.Serializable class * { *; }
+
+# Keep Room entities
+-keep class com.kurostream.data.local.entity.** { *; }
+-keepclassmembers class com.kurostream.data.local.entity.** { *; }
+
+# Keep Retrofit models
+-keep class com.kurostream.data.remote.dto.** { *; }
+-keepclassmembers class com.kurostream.data.remote.dto.** { <fields>; }
 
 # Keep Hilt
--keepclassmembers class * {
-    @dagger.hilt.android.lifecycle.HiltViewModel <init>(...);
-}
 -keep class dagger.hilt.** { *; }
--keep class javax.inject.** { *; }
+-keep class * extends dagger.hilt.internal.GeneratedComponent { *; }
+-keepclassmembers @dagger.hilt.android.HiltAndroidApp class * { *; }
 
-# Keep kotlinx.serialization
--keepattributes *Annotation*, InnerClasses
--dontnote kotlinx.serialization.AnnotationsKt
--keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
--keepclasseswithmembers class kotlinx.serialization.json.** { kotlinx.serialization.KSerializer serializer(...); }
+# Keep Navigation Routes
+-keep @kotlinx.serialization.Serializable class com.kurostream.app.navigation.** { *; }
 
-# Keep Room
--keep class * extends androidx.room.RoomDatabase
--dontwarn androidx.room.paging.**
+# Keep Domain models
+-keep class com.kurostream.domain.entity.** { *; }
+-keep class com.kurostream.domain.network.** { *; }
+-keep class com.kurostream.domain.metadata.** { *; }
 
-# Keep Retrofit
--keepattributes Signature
--keepattributes Exceptions
--keepclasseswithmembers class * { @retrofit2.http.* <methods>; }
+# Keep Timber
+-dontwarn timber.log.Timber
 
-# Keep Coil
--dontwarn coil.decode.VideoFrameDecoder
-
-# Keep Media3
+# Keep ExoPlayer/Media3
 -keep class androidx.media3.** { *; }
 -dontwarn androidx.media3.**
 
-# Keep VLC
+# Keep VLC/MPV JNI
 -keep class org.videolan.libvlc.** { *; }
--dontwarn org.videolan.libvlc.**
+-keep class is.xyz.mpv.** { *; }
 
-# Keep MPV
--keep class dev.jdtech.mpv.** { *; }
--dontwarn dev.jdtech.mpv.**
+# Keep AniList models
+-keep class com.kurostream.data.anilist.** { *; }
 
-# Keep jlibtorrent
--keep class com.frostwire.jlibtorrent.** { *; }
--dontwarn com.frostwire.jlibtorrent.**
+# Keep ML models
+-keep class org.tensorflow.** { *; }
+-keep class com.microsoft.onnxruntime.** { *; }
 
-# Keep Timber
--assumenosideeffects class timber.log.Timber { *; }
+# Keep Playback engines
+-keep class com.kurostream.playback.** { *; }
+-keep class com.kurostream.players.** { *; }
 
-# Jackson / java.beans desugaring (java.beans not fully present on Android)
--dontwarn java.beans.**
--dontnote java.beans.ConstructorProperties
+# Keep Arctic Fuse UI
+-keep class com.kurostream.app.ui.arctic.** { *; }
 
-# Keep TV Leanback
--keep class androidx.leanback.** { *; }
--dontwarn androidx.leanback.**
+# Keep common utilities
+-keep class com.kurostream.common.** { *; }
 
-# Keep Kotlin Coroutines
--keepclassmembernames class kotlinx.** {
-    volatile <fields>;
+# OkHttp
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**
+-keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase
+
+# Coil
+-keep class coil.** { *; }
+
+# Firebase (if used)
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+# JSoup
+-keep class org.jsoup.** { *; }
+
+# Keep Compose @Immutable / @Stable
+-keepattributes RuntimeVisibleAnnotations
+-keepclassmembers class * {
+    @androidx.compose.runtime.Immutable <fields>;
+    @androidx.compose.runtime.Stable <fields>;
 }
--keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
--keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 
-# Keep TV Material3
--keep class androidx.tv.material3.** { *; }
+# Keep BaselineProfile
+-keep class androidx.profileinstaller.** { *; }
 
-# Keep Media3 PlayerView
--keep class androidx.media3.ui.PlayerView { *; }
--keepclassmembers class androidx.media3.ui.PlayerView { *; }
+# Keep WorkManager
+-keep class * extends androidx.work.Worker
+-keep class * extends androidx.work.CoroutineWorker
 
-# Keep ExoPlayer tunneling APIs
--keepclassmembers class androidx.media3.exoplayer.ExoPlayer {
-    public void setTunnelingEnabled(boolean);
+# Keep Hilt Worker
+-keep class * extends androidx.hilt.work.HiltWorker
+
+# Keep Notification channels
+-keep class com.kurostream.app.notification.NotificationChannels { *; }
+
+# Keep Deep link routes
+-keep class com.kurostream.app.deeplink.DeepLinkHandler { *; }
+
+# Keep Crash reporter
+-keep class com.kurostream.app.analytics.CrashReporter { *; }
+
+# Play Integrity
+-keep class com.google.android.play.core.integrity.** { *; }
+-keep class com.google.android.gms.common.ConnectionResult { *; }
+
+# Firebase
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+
+# SQLCipher
+-keep class net.sqlcipher.** { *; }
+
+# EncryptedSharedPreferences
+-keep class androidx.security.crypto.** { *; }
+
+# Cast
+-keep class com.google.android.gms.cast.** { *; }
+
+# WebRTC
+-keep class org.webrtc.** { *; }
+
+# 16KB page size
+-keepclasseswithmembernames class * { native <methods>; }
+-keep class * { static { System.loadLibrary(*); } }
+
+# Remove all debug logging in release
+-assumenosideeffects class timber.log.Timber {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
 }
-
-# General
--keep public class com.kurostream.app.AnimeStreamTvApplication { *; }
--keep public class * extends android.app.Activity
--keep public class * extends android.app.Application
--keepclassmembers enum * { public static **[] values(); public static ** valueOf(java.lang.String); }
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}

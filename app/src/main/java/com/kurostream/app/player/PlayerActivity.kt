@@ -18,6 +18,7 @@ package com.kurostream.app.player
 import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.Intent
+import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.os.Build
 import android.os.PowerManager
@@ -45,6 +46,8 @@ class PlayerActivity : ComponentActivity() {
 
     private val viewModel: PlayerViewModel by viewModels()
     private var wakeLock: PowerManager.WakeLock? = null
+    private var hdmiReceiver: BroadcastReceiver? = null
+    private var audioFocusRequest: AudioFocusRequest? = null
     private val hdrDetector = HdrDetector
 
     companion object {
@@ -74,19 +77,29 @@ class PlayerActivity : ComponentActivity() {
             finish()
             return
         }
-        val episodeId = intent.getStringExtra(EXTRA_EPISODE_ID)
+        val episodeId = intent.getStringExtra(EXTRA_EPISODE_ID).orEmpty()
+        if (episodeId.isEmpty()) {
+            Timber.e("PlayerActivity: No episode ID provided")
+            finish()
+            return
+        }
         val startPosition = intent.getLongExtra(EXTRA_START_POSITION, 0L)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val hdmiFilter = android.content.IntentFilter("android.intent.action.HDMI_PLUGGED")
-            registerReceiver(object : android.content.BroadcastReceiver() {
-                override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
-                    val plugged = intent?.getBooleanExtra("state", false) ?: true
-                    if (!plugged) {
-                        viewModel.setAudioPassthrough(false)
+            try {
+                val hdmiFilter = android.content.IntentFilter("android.intent.action.HDMI_PLUGGED")
+                hdmiReceiver = object : android.content.BroadcastReceiver() {
+                    override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+                        val plugged = intent?.getBooleanExtra("state", false) ?: true
+                        if (!plugged) {
+                            viewModel.setAudioPassthrough(false)
+                        }
                     }
                 }
-            }, hdmiFilter)
+                registerReceiver(hdmiReceiver, hdmiFilter)
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to register HDMI audio receiver")
+            }
         }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -95,7 +108,7 @@ class PlayerActivity : ComponentActivity() {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
 
-        val audioFocusRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        audioFocusRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN)
                 .setOnAudioFocusChangeListener { focusChange ->
                     when (focusChange) {
@@ -110,7 +123,8 @@ class PlayerActivity : ComponentActivity() {
         viewModel.preparePlayback(mediaId, episodeId, startPosition)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val displayManager = getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager
+            val displayManager = getSystemService(Context.DISPLAY_SERVICE) as? android.hardware.display.DisplayManager
+                ?: throw IllegalStateException("DisplayManager not available")
             val display = displayManager.getDisplay(android.view.Display.DEFAULT_DISPLAY)
             display?.mode?.let { mode ->
                 Timber.d("Display mode: ${mode.physicalWidth}x${mode.physicalHeight}@${mode.refreshRate}")
@@ -118,6 +132,15 @@ class PlayerActivity : ComponentActivity() {
         }
 
         hdrDetector.detect(this)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && audioFocusRequest != null) {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            audioManager.requestAudioFocus(audioFocusRequest)
+        }
+
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ON_AFTER_RELEASE, "KuroStream:PlayerWakeLock")
+        wakeLock?.acquire(10 * 60 * 1000L)
 
         setContent {
             AnimeStreamTVTheme {
@@ -155,6 +178,14 @@ class PlayerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        hdmiReceiver?.let { unregisterReceiver(it) }
+        hdmiReceiver = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let { af ->
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.abandonAudioFocusRequest(af)
+            }
+        }
         viewModel.releasePlayer()
     }
 

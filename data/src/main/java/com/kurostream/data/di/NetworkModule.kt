@@ -16,14 +16,15 @@
 package com.kurostream.data.di
 
 import com.kurostream.data.BuildConfig
-import com.kurostream.data.network.GsonConverterFactory
+import retrofit2.converter.gson.GsonConverterFactory
 import com.kurostream.data.remote.api.AniListApi
 import com.kurostream.data.remote.api.KitsuApi
 import com.kurostream.data.remote.api.MalApi
 import com.kurostream.data.remote.api.OpenSubtitlesApi
 import com.kurostream.data.remote.api.TmdbApi
 import com.kurostream.data.remote.api.YouTubeApi
-import com.kurostream.data.network.security.CertificatePinningConfigimport dagger.Module
+import com.kurostream.data.network.security.CertificatePinningConfig
+import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent

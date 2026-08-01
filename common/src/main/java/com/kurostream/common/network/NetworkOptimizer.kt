@@ -30,7 +30,8 @@ class AdaptiveBitrateController(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun evaluateNetworkCondition(): NetworkCondition {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?: return NetworkCondition()
         val network = cm.activeNetwork ?: return NetworkCondition()
         val caps = cm.getNetworkCapabilities(network) ?: return NetworkCondition()
 

@@ -53,6 +53,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kurostream.app.model.MediaItem
 import kotlinx.coroutines.delay
@@ -326,4 +327,53 @@ private fun formatDuration(ms: Long): String {
     val m = (totalSec % 3600) / 60
     val s = totalSec % 60
     return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+}
+
+@Composable
+fun PlayerProcessInfoOverlay(
+    visible: Boolean,
+    videoCodec: String,
+    audioCodec: String,
+    resolution: String,
+    frameRate: Float,
+    bitrate: Long,
+    ramUsageMb: Float,
+    networkSpeedKbps: Long
+) {
+    AnimatedVisibility(visible = visible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(48.dp),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            Column(
+                modifier = Modifier
+                    .width(320.dp)
+                    .background(Color.Black.copy(alpha = 0.75f), RoundedCornerShape(12.dp))
+                    .padding(16.dp)
+            ) {
+                Text("Player Process Info", color = Color.White, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                InfoRow("Video", videoCodec)
+                InfoRow("Audio", audioCodec)
+                InfoRow("Resolution", resolution)
+                InfoRow("FPS", String.format("%.2f", frameRate))
+                InfoRow("Bitrate", "${bitrate / 1000} kbps")
+                InfoRow("RAM", "${String.format("%.1f", ramUsageMb)} MB")
+                InfoRow("Net", "${networkSpeedKbps} KB/s")
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+        Text(value, color = Color.White, style = MaterialTheme.typography.bodySmall)
+    }
 }

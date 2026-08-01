@@ -20,7 +20,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Debug
 import android.os.SystemClock
-import com.kurostream.common.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -50,7 +49,8 @@ class StartupMemoryOptimizer @Inject constructor(
     private val context: Context,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    private val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+        ?: throw IllegalStateException("ActivityManager not available")
     
     private val _memoryState = MutableStateFlow(MemoryOptimizationState())
     val memoryState: StateFlow<MemoryOptimizationState> = _memoryState.asStateFlow()
@@ -301,32 +301,6 @@ class StartupMemoryOptimizer @Inject constructor(
     }
     
     /**
-     * Enable strict memory tracking
-     */
-    fun enableStrictMode() {
-        if (BuildConfig.DEBUG) {
-            Debug.startAllocCounting()
-        }
-    }
-    
-    /**
-     * Get memory allocation summary
-     */
-    fun getAllocationSummary(): MemoryAllocationSummary {
-        val runtime = Runtime.getRuntime()
-        return MemoryAllocationSummary(
-            totalPrivateMemoryKb = ((runtime.totalMemory() - runtime.freeMemory()) / 1024).toInt(),
-            sharedDirtyMemoryKb = 0, // Not available without Debug.MemoryInfo
-            nativeHeapSizeKb = Debug.getNativeHeapSize() / 1024,
-            nativeHeapAllocatedKb = Debug.getNativeHeapAllocatedSize() / 1024,
-            nativeHeapFreeKb = Debug.getNativeHeapFreeSize() / 1024,
-            dalvikHeapSizeKb = runtime.totalMemory() / 1024,
-            dalvikHeapAllocatedKb = (runtime.totalMemory() - runtime.freeMemory()) / 1024,
-            dalvikHeapFreeKb = runtime.freeMemory() / 1024,
-        )
-    }
-    
-    /**
      * Force garbage collection - removed ineffective explicit GC calls
      * Android ignores explicit GC requests; rely on system GC
      */
@@ -426,14 +400,3 @@ enum class SuggestionType {
 enum class Priority {
     LOW, MEDIUM, HIGH, CRITICAL
 }
-
-data class MemoryAllocationSummary(
-    val totalPrivateMemoryKb: Int,
-    val sharedDirtyMemoryKb: Int,
-    val nativeHeapSizeKb: Long,
-    val nativeHeapAllocatedKb: Long,
-    val nativeHeapFreeKb: Long,
-    val dalvikHeapSizeKb: Long,
-    val dalvikHeapAllocatedKb: Long,
-    val dalvikHeapFreeKb: Long,
-)

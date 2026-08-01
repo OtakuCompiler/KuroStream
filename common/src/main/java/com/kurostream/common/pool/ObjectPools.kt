@@ -15,6 +15,8 @@
 
 package com.kurostream.common.pool
 
+import com.kurostream.common.memory.LowRamDevice
+
 /**
  * Generic object pool with factory and reset functions.
  * Thread-safe using Mutex.
@@ -136,7 +138,7 @@ object NetworkChunkPool {
     private val pool = ObjectPool<NetworkChunk>(
         factory = { NetworkChunk() },
         reset = { it.reset() },
-        maxSize = if (LowRamDevice.isLowRamDevice()) 20 else 50
+        maxSize = if (LowRamDevice.isLowRamDevice) 20 else 50
     )
     
     fun acquire(): NetworkChunk = pool.acquire()

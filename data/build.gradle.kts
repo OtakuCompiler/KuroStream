@@ -15,7 +15,10 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-        buildConfigField("String", "YOUTUBE_API_KEY", System.getenv("YOUTUBE_API_KEY") ?: throw GradleException("YOUTUBE_API_KEY environment variable is required for build. Set it before building."))
+        val youtubeApiKey = System.getenv("YOUTUBE_API_KEY")
+            ?: (findProperty("YOUTUBE_API_KEY") as? String)
+            ?: "YOUR_YOUTUBE_API_KEY"
+        buildConfigField("String", "YOUTUBE_API_KEY", "\"$youtubeApiKey\"")
     }
     buildTypes {
         release {
@@ -27,16 +30,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
     buildFeatures {
         buildConfig = true
-    }
-    sourceSets {
-        getByName("main") {
-            proto {
-                srcDir("src/main/proto")
-            }
-        }
     }
 }
 
@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.kotlinx.serialization)
+    implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.okhttp.brotli)
@@ -68,8 +69,20 @@ dependencies {
     ksp(libs.androidx.hilt.compiler)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.coil)
+    implementation(libs.coil.gif)
+    implementation(libs.coil.svg)
+    implementation(libs.coil.video)
+    
+    // AniList GraphQL
+    implementation(libs.anilist.graphql)
+    implementation(libs.anilist.cache)
+    
+    // Protobuf
     implementation(libs.protobuf.java)
     implementation(libs.protobuf.kotlin)
+    
+    // Networking
+    implementation(libs.jsoup)
 }
 
 protobuf {

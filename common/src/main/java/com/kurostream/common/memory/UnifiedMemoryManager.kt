@@ -34,13 +34,16 @@ class UnifiedMemoryManager @Inject constructor(
     private var cachedNativeHeap = 0L
     
     val isLowMemoryDevice: Boolean by lazy {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+            ?: return@lazy false
         activityManager.isLowRamDevice || totalMemoryMb <= 1536
     }
 
     val totalMemoryMb: Int by lazy {
         val memInfo = android.app.ActivityManager.MemoryInfo()
-        (context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager).getMemoryInfo(memInfo)
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+            ?: return@lazy 1024
+        am.getMemoryInfo(memInfo)
         (memInfo.totalMem / (1024 * 1024)).toInt()
     }
 
@@ -51,7 +54,8 @@ class UnifiedMemoryManager @Inject constructor(
 
     fun updateMemoryState() {
         val memInfo = android.app.ActivityManager.MemoryInfo()
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+            ?: return
         activityManager.getMemoryInfo(memInfo)
 
         val availMem = memInfo.availMem / (1024 * 1024)
@@ -94,7 +98,7 @@ class UnifiedMemoryManager @Inject constructor(
     }
 
     private fun calculateTargetMemory(availMemMb: Int): Int {
-        return 90
+        return 125
     }
 
     fun getAvailableBudgetMb(): Int {
@@ -259,7 +263,7 @@ class UnifiedMemoryManager @Inject constructor(
 
     fun getOptimalThreadPoolSize(): Int {
         val cores = Runtime.getRuntime().availableProcessors()
-        val isPowerSave = (context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager).isPowerSaveMode
+        val isPowerSave = (context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager)?.isPowerSaveMode ?: false
         return when {
             isPowerSave -> cores.coerceIn(2, 4)
             isLowMemoryDevice -> cores.coerceIn(2, 6)

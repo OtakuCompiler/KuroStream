@@ -1,0 +1,9 @@
+#!/bin/bash
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
+
+if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\(.+\))?: .+"; then
+    echo "Commit message must follow Conventional Commits format."
+    echo "Example: feat(player): add Dolby Atmos support"
+    exit 1
+fi

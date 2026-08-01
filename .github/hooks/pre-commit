@@ -1,0 +1,8 @@
+#!/bin/bash
+echo "Running pre-commit checks..."
+./gradlew ktlintCheck detekt
+if [ $? -ne 0 ]; then
+    echo "Pre-commit checks failed. Fix issues before committing."
+    exit 1
+fi
+echo "Pre-commit checks passed."

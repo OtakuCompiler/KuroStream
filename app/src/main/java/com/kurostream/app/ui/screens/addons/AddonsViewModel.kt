@@ -30,6 +30,9 @@ import javax.inject.Inject
 /**
  * UI State for the Addons screen.
  */
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class AddonsUiState(
     val installedAddons: List<AddonItem> = emptyList(),
     val availableAddons: List<AddonItem> = emptyList(),

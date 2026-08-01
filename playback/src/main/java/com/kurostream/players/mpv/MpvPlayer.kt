@@ -138,12 +138,6 @@ class MpvPlayer @Inject constructor(
         // no-op
     }
 
-    override suspend fun initialize() {
-        // Native init is performed in this method body above, guarded with try/catch.
-        // If mpvLib is still null after this call, the backend is unavailable and
-        // BackendSelector will fall back to VLC or Media3.
-    }
-
     private fun startPositionPolling() {
         scope.launch {
             while (isActive) {
@@ -236,4 +230,6 @@ class MpvPlayer @Inject constructor(
         _playbackState.value = PlaybackEngine.PlaybackState.IDLE
         listeners.clear()
     }
+
+    internal fun isLibLoaded(): Boolean = mpvLib != null
 }

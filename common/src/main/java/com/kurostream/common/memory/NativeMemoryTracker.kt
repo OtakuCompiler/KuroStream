@@ -147,10 +147,8 @@ class NativeMemoryTracker(
         }
     }
     
-    private var lastReportTime = System.currentTimeMillis()
-    
     /**
-     * Gets current native heap usage.
+     * Gets latest memory snapshot.
      */
     fun getCurrentNativeHeap(): Long = _nativeHeap.value
     

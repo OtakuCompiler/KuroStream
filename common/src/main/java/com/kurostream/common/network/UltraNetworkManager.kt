@@ -31,7 +31,8 @@ import javax.inject.Singleton
 class UltraNetworkManager @Inject constructor(
     private val context: Context
 ) {
-    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        ?: throw IllegalStateException("ConnectivityManager not available")
     
     private val _networkState = MutableStateFlow(NetworkState())
     val networkState: StateFlow<NetworkState> = _networkState.asStateFlow()
@@ -47,7 +48,7 @@ class UltraNetworkManager @Inject constructor(
         return OkHttpClient.Builder()
             // Connection pooling optimized for mobile
             .connectionPool(ConnectionPool(
-                maxIdleConnections = if (LowRamDevice.isLowRamDevice()) 2 else 5,
+                maxIdleConnections = if (LowRamDevice.isLowRamDevice) 2 else 5,
                 keepAliveDuration = 2,
                 timeUnit = TimeUnit.MINUTES
             ))
