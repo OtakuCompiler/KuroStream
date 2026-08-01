@@ -124,7 +124,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":extensions"))
     implementation(project(":plugin-sdk"))
-    // implementation(project(":cache"))
+    implementation(project(":cache"))
     implementation(project(":ui"))
     implementation(project(":marketplace"))
     implementation(project(":playback"))
