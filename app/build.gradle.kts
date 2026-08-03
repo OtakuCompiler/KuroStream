@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
@@ -139,6 +140,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.tv.material3)
     implementation(libs.androidx.tv.foundation)
+    implementation(libs.androidx.tvprovider)
+    implementation(libs.play.review)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -175,6 +178,8 @@ dependencies {
     implementation("com.google.android.play:integrity:1.4.0")
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-messaging")
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
@@ -200,6 +205,8 @@ testImplementation(libs.test.junit)
     testImplementation("com.google.truth:truth:1.1.5")
     testImplementation("org.mockito:mockito-core:5.11.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+    testImplementation("androidx.test:core:1.6.1")
+    testImplementation(libs.test.androidx.junit)
 
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.espresso.core)

@@ -20,12 +20,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.kurostream.app.ui.theme.BlueGlowTokens
 import com.kurostream.app.ui.theme.CinematicBlueGlow
+import com.kurostream.app.ui.theme.CinematicBluePrimary
 import com.kurostream.app.ui.theme.GlassTokens
 import com.kurostream.app.ui.theme.OledSurfaceElevated
 
@@ -51,10 +51,6 @@ fun GlassCard(
 
     Box(
         modifier = modifier
-            .graphicsLayer {
-                alpha = alpha
-                shadowElevation = if (isFocused) 12f else 4f
-            }
             .clip(RoundedCornerShape(16.dp))
             .background(
                 brush = Brush.verticalGradient(

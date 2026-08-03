@@ -5,8 +5,11 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import timber.log.Timber
+import javax.inject.Inject
 
-class EncryptedPreferences(context: Context) {
+class EncryptedPreferences @Inject constructor(
+    context: Context
+) {
 
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)

@@ -21,6 +21,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowInsets
 import android.view.WindowInsetsController
+import android.window.OnBackInvokedDispatcher
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -54,7 +55,7 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             onBackInvokedDispatcher.registerOnBackInvokedCallback(
-                android.widget.OnBackInvokedDispatcher.PRIORITY_DEFAULT
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT
             ) {
                 onBackPressedDispatcher.onBackPressed()
             }
@@ -103,8 +104,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
+    override fun onNewIntent(intent: Intent) {
         handleDeepLink(intent)
     }
 

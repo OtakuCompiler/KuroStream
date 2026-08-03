@@ -38,4 +38,6 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.timber)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation("androidx.media3:media3-datasource:1.4.1")
 }

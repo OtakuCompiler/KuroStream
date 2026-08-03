@@ -18,6 +18,7 @@
 
 package com.kurostream.data.anilist
 
+import com.apollographql.apollo3.api.Optional
 import com.kurostream.data.anilist.model.AniListMedia
 import com.kurostream.data.anilist.model.AniListSearchResult
 import kotlinx.coroutines.flow.Flow
@@ -33,7 +34,11 @@ class AniListRepository @Inject constructor(
     fun searchAnime(query: String, page: Int = 1, perPage: Int = 20): Flow<Result<AniListSearchResult>> = flow {
         try {
             val response = apolloClient.client.query(
-                SearchAnimeQuery(query = query, page = page, perPage = perPage)
+                SearchAnimeQuery(
+                    query = Optional.presentIfNotNull(query),
+                    page = Optional.presentIfNotNull(page),
+                    perPage = Optional.presentIfNotNull(perPage)
+                )
             ).execute()
             
             if (response.hasErrors()) {
@@ -48,9 +53,9 @@ class AniListRepository @Inject constructor(
             }
             
             val result = AniListSearchResult(
-                page = data.page?.pageInfo?.currentPage ?: 1,
-                hasNextPage = data.page?.pageInfo?.hasNextPage ?: false,
-                media = data.page?.media?.filterNotNull()?.map { media ->
+                page = data.Page?.pageInfo?.currentPage ?: 1,
+                hasNextPage = data.Page?.pageInfo?.hasNextPage ?: false,
+                media = data.Page?.media?.filterNotNull()?.map { media ->
                     AniListMedia(
                         id = media.id,
                         idMal = media.idMal,
@@ -88,7 +93,7 @@ class AniListRepository @Inject constructor(
     fun getAnimeDetails(id: Int): Flow<Result<AniListMedia>> = flow {
         try {
             val response = apolloClient.client.query(
-                AnimeDetailsQuery(id = id)
+                AnimeDetailsQuery(id = Optional.presentIfNotNull(id))
             ).execute()
             
             if (response.hasErrors()) {
@@ -96,7 +101,7 @@ class AniListRepository @Inject constructor(
                 return@flow
             }
             
-            val media = response.data?.media
+            val media = response.data?.Media
             if (media == null) {
                 emit(Result.failure(Exception("Media not found")))
                 return@flow

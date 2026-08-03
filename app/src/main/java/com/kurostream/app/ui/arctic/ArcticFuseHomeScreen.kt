@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.ui.screens.home.RowState
+import com.kurostream.app.ui.theme.ThemeMode
 import kotlinx.coroutines.delay
 
 /**
@@ -440,7 +441,7 @@ fun ArcticFuseHomeScreen(
         },
         onSelect = { key, value ->
             settingsState = when (key) {
-                "theme" -> settingsState.copy(theme = value)
+                "theme" -> settingsState.copy(theme = ThemeMode.valueOf(value))
                 "density" -> settingsState.copy(density = value)
                 "default" -> settingsState.copy(defaultHub = value)
                 "rows" -> settingsState.copy(maxRows = value)

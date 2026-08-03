@@ -1,0 +1,23 @@
+{
+  "functions": [
+    {
+      "source": "marketplace/functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "marketplace/firestore.rules",
+    "indexes": "marketplace/firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "marketplace/storage.rules"
+  }
+}

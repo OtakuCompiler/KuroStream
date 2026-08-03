@@ -12,13 +12,13 @@ package com.kurostream.playback.kurovision
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.ConfigurationInfo
 import android.opengl.GLES20
 import android.os.Build
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import com.kurostream.common.memory.CodecCapabilityDetector
 import com.kurostream.common.memory.LowRamDevice
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,7 +28,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AndroidDeviceInspector @Inject constructor(
-    @androidx.hilt.android.qualifiers.ApplicationContext private val context: Context,
+    @ApplicationContext private val context: Context,
 ) {
 
     /**
@@ -92,17 +92,18 @@ class AndroidDeviceInspector @Inject constructor(
         val supportsVulkan = checkVulkanSupport()
 
         // 6) OpenGL ES 3.0+
-        val glEsVersion = (context.packageManager.getDeviceConfigurationInfo() as? ConfigurationInfo)?.reqGlEsVersion ?: 0
+        val glEsVersion = (context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager)
+            ?.deviceConfigurationInfo?.reqGlEsVersion ?: 0
         val supportsOpenGlEs3 = glEsVersion >= 0x30000
 
         // 7) Decoder capabilities
         CodecCapabilityDetector.detect()
-        val decoder = CodecCapabilityDetector.getCapability() ?: DecoderCapability(
-            supportsHevc = true,
-            supportsAv1 = false,
+        val decoder = DecoderCapability(
+            supportsHevc = CodecCapabilityDetector.supportsHevc,
+            supportsAv1 = CodecCapabilityDetector.supportsAv1,
             supportsVp9 = true,
             maxSecureResolution = "4K",
-            isHardwareBacked = true,
+            isHardwareBacked = CodecCapabilityDetector.hasHardwareDecoder,
         )
 
         // 8) Device class heuristic

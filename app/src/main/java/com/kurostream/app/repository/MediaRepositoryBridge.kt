@@ -18,15 +18,15 @@ import javax.inject.Singleton
 private fun com.kurostream.domain.entity.MediaItem.toAppModel(): MediaItem = MediaItem(
     id = id,
     title = title,
-    description = synopsis ?: "",
-    posterUrl = coverImageUrl ?: posterUrl ?: "",
-    backdropUrl = bannerImageUrl ?: backdropUrl ?: "",
-    genre = genres,
-    rating = score?.toFloat() ?: 0f,
-    year = seasonYear ?: 0,
-    duration = durationMinutes ?: 0,
+    description = description ?: "",
+    posterUrl = posterUrl ?: "",
+    backdropUrl = backdropUrl ?: "",
+    genre = genre,
+    rating = rating ?: 0f,
+    year = year ?: 0,
+    duration = duration ?: 0,
     episodes = emptyList(),
-    source = sourceExtensionId,
+    source = source,
     isFavorite = isFavorite,
     watchProgress = 0L,
 )
@@ -106,7 +106,7 @@ class MediaRepositoryBridge @Inject constructor(
             when (result) {
                 is DomainResult.Success<*> -> {
                     val e = result.data as com.kurostream.domain.model.EpisodeInfo
-                    kotlin.Result.success(Episode(id = e.id, number = e.episodeNumber, title = e.title))
+                    kotlin.Result.success(Episode(id = episodeId ?: mediaId, number = e.episodeNumber ?: 0, title = e.episodeTitle ?: ""))
                 }
                 else -> kotlin.Result.failure(Exception("Next episode not found"))
             }

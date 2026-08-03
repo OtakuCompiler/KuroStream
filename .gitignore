@@ -51,10 +51,29 @@ keystore.properties
 # Server
 server/node_modules/
 server/.env
+server/.env.local
 server/*.log
+server/dist/
+server/coverage/
+
+# Kotlin
+.kotlin/
 
 # Temporary
 *.tmp
 *.temp
 temp/
 tmp/
+
+# Backup files
+*.bak
+
+# Clutter / generated docs (not source of truth)
+FINAL_PRODUCTION_AUDIT.md
+IMPLEMENTATION_SUMMARY.md
+ISSUES_LEDGER.md
+PRODUCTION_IMPLEMENTATION_REPORT.md
+
+# Deployment / infra clutter
+docker-compose.yml
+nginx/kurostream.zip

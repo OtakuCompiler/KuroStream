@@ -1,3 +1,4 @@
+
 // This file is part of KuroStream.
 //
 // KuroSubtitleEngine — main subtitle orchestrator.
@@ -10,6 +11,7 @@
 //   - Local files
 //
 // SPDX-License-Identifier: GPL-3.0-only
+
 package com.kurostream.data.subtitle
 
 import com.kurostream.domain.entity.SubtitleCandidate
@@ -28,14 +30,16 @@ import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
 @Singleton
+@JvmSuppressWildcards
 class KuroSubtitleEngine @Inject constructor(
     private val preferences: SubtitlePreferences,
     private val cache: SubtitleCacheManager,
     private val rankingEngine: SubtitleRankingEngine,
     private val syncEngine: SubtitleSyncEngine,
     private val client: OkHttpClient,
-    private val providers: List<SubtitleProvider>,
+    private val providers: Set<SubtitleProvider>,
 ) {
 
     suspend fun searchSubtitles(

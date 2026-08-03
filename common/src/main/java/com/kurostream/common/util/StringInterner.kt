@@ -27,7 +27,12 @@ object StringInterner {
         return intern(name) ?: name
     }
 
-    fun clearCache() {
+    fun preloadCommonStrings() {
+        val common = listOf("Loading", "Error", "Retry", "Cancel", "OK", "Back", "Settings")
+        common.forEach { intern(it) }
+    }
+
+    fun clear() {
         cache.clear()
     }
 }

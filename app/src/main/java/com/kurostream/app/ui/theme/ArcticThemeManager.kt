@@ -15,6 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -53,7 +54,7 @@ class ArcticThemeManager(private val context: Context) {
                 .distinctUntilChanged()
                 .collect { state ->
                     val newSkinId = when (state) {
-                        is com.kurostream.data.kurocloud.sync.KuroEntitlementsState.Loaded -> state.activeSkinId
+                        is com.kurostream.domain.sync.KuroEntitlementsState.Loaded -> state.activeSkinId
                         else -> null
                     }
 
@@ -68,12 +69,11 @@ class ArcticThemeManager(private val context: Context) {
     private fun applySkin(skinId: String?) {
         skinId?.let { skin ->
             Timber.i("Applying Arctic skin: $skin")
-            // Map KuroCloud skin IDs to local Skin enum
             val localSkin = mapToLocalSkin(skin)
-            ArcticTheme.setActiveSkin(localSkin)
+            ArcticTheme.activeSkin = localSkin
         } ?: run {
             Timber.d("Resetting to default Arctic theme")
-            ArcticTheme.setActiveSkin(null)
+            ArcticTheme.activeSkin = null
         }
     }
 
@@ -109,14 +109,6 @@ object ArcticTheme {
             // In a real implementation, this would update the MaterialTheme colors
             // via composition local or a custom theme wrapper
         }
-
-    fun getActiveSkin(): Skin? = _activeSkin
-
-    fun setActiveSkin(skin: Skin?) {
-        _activeSkin = skin
-        // In a real implementation, this would update the MaterialTheme colors
-        // via composition local or a custom theme wrapper
-    }
 
     // Predefined Arctic Fuse skins mapping to local Skin enum
     private val skins = mapOf(

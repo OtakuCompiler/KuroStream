@@ -114,7 +114,7 @@ fun ModernHeroSection(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
             modifier = Modifier.fillMaxSize(),
             pageSpacing = 0.dp,
-            beyondViewportPageCount = LowRamDevice.heroBannerOffscreenPages,
+            beyondViewportPageCount = if (LowRamDevice.isLowRamDevice) 1 else 2,
         ) { page ->
             val item = items[page]
             val pageOffset = (

@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,6 +39,7 @@ data class SearchResultItem(
     val type: String = "",
     val posterUrl: String = "",
     val score: Double = 0.0,
+    val year: Int = 0,
 )
 
 sealed interface SearchUiState {

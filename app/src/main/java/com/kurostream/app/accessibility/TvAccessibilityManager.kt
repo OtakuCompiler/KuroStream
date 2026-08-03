@@ -13,12 +13,12 @@ class TvAccessibilityManager(context: Context) {
     private val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
 
     val isTalkBackEnabled: Boolean
-        get() = am.enabled && am.getEnabledAccessibilityServiceList(
+        get() = am.isEnabled && am.getEnabledAccessibilityServiceList(
             AccessibilityServiceInfo.FEEDBACK_SPOKEN
         ).isNotEmpty()
 
     val isHighContrastEnabled: Boolean
-        get() = am.enabled && am.getEnabledAccessibilityServiceList(
+        get() = am.isEnabled && am.getEnabledAccessibilityServiceList(
             AccessibilityServiceInfo.CAPABILITY_CAN_REQUEST_TOUCH_EXPLORATION
         ).isNotEmpty()
 }

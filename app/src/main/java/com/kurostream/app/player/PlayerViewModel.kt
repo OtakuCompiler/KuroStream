@@ -44,6 +44,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -56,6 +57,7 @@ class PlayerViewModel @Inject constructor(
     private val settingsRepository: com.kurostream.domain.repository.SettingsRepository,
     private val traktSyncManager: TraktSyncManager,
     private val subtitleDownloadManager: SubtitleDownloadManager,
+    private val backendSelector: com.kurostream.players.selector.BackendSelector,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
@@ -109,7 +111,7 @@ class PlayerViewModel @Inject constructor(
     fun initialize() {
         viewModelScope.launch(Dispatchers.Main + exceptionHandler) {
             try {
-                val engineInstance = com.kurostream.players.selector.BackendSelector.selectEngine()
+                val engineInstance = backendSelector.selectBackend()
                 engineInstance.initialize()
                 engine = engineInstance
                 _currentEngine.value = engineInstance
@@ -170,7 +172,7 @@ class PlayerViewModel @Inject constructor(
                         val playbackUrl = result.data
                         withContext(Dispatchers.Main) {
                             engine?.setMedia(playbackUrl.url, playbackUrl.title, startPositionMs)
-                            _uiState.update { it.copy(currentTitle = playbackUrl.title) }
+                            _uiState.update { it.copy(title = playbackUrl.title) }
                         }
                         // Auto-download subtitles
                         downloadSubtitles(playbackUrl.title)
@@ -230,15 +232,33 @@ class PlayerViewModel @Inject constructor(
         engine?.setPlaybackSpeed(speed)
     }
 
+    fun togglePlayPause() {
+        if (_isPlaying.value) pause() else play()
+    }
+
+    fun seekBackward() {
+        seekBack()
+    }
+
+    fun skipIntro() {}
+    fun skipOutro() {}
+    fun playNextEpisode() {}
+    fun setSubtitleFontSize(size: Float) {}
+    fun setSubtitleFontColor(color: String) {}
+    fun setSubtitleBgColor(color: String) {}
+    fun setSubtitleEnabled(enabled: Boolean) {}
+
+    fun setAudioPassthrough(enabled: Boolean) {
+    }
+
     fun saveProgress() {
         val currentMedia = mediaId ?: return
-        val currentEpisode = episodeId
         val position = engine?.currentPosition?.value ?: 0L
         val total = engine?.duration?.value ?: 0L
 
         runBlocking(Dispatchers.IO) {
             try {
-                watchProgressRepository.saveProgress(currentMedia, currentEpisode, position, total)
+                watchProgressRepository.saveProgress(currentMedia, position, total)
             } catch (e: Exception) {
                 Timber.e(e, "Save progress failed")
             }
@@ -276,7 +296,7 @@ class PlayerViewModel @Inject constructor(
                 val total = engine?.duration?.value ?: 0L
                 if (total > 0) {
                     val progress = (position.toFloat() / total * 100).roundToInt()
-                    if (progress != lastReportedProgress) {
+                    if (progress.toFloat() != lastReportedProgress) {
                         lastReportedProgress = progress.toFloat()
                         reportTraktScrobbleProgress(progress)
                     }

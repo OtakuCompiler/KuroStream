@@ -28,11 +28,13 @@ import com.kurostream.data.sync.CrossDeviceSyncRepositoryImpl
 import com.kurostream.domain.network.NetworkMonitorRepository
 import com.kurostream.domain.repository.*
 import com.kurostream.domain.subtitle.OfflineTranslator
+import com.kurostream.domain.subtitle.SubtitlePreferences
 import com.kurostream.domain.sync.CrossDeviceSyncRepository
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.Module
 import dagger.Provides
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Named
@@ -41,6 +43,14 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Module
 object DataModule {
+
+    @Provides
+    @Singleton
+    fun provideJson(): Json = Json { ignoreUnknownKeys = true; isLenient = true }
+
+    @Provides
+    @Singleton
+    fun provideSubtitlePreferences(): SubtitlePreferences = SubtitlePreferences()
 
     @Provides
     @Singleton

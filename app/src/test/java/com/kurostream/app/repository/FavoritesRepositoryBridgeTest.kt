@@ -7,6 +7,7 @@ import com.kurostream.domain.model.Profile
 import com.kurostream.domain.repository.MediaRepository
 import com.kurostream.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -45,17 +46,17 @@ class FavoritesRepositoryBridgeTest {
         val domainMediaItem = DomainMediaItem(
             id = "media1",
             title = "Test Anime",
-            synopsis = "Desc",
-            coverImageUrl = "",
-            bannerImageUrl = "",
-            genres = emptyList(),
-            score = 0.0,
-            seasonYear = 2024,
-            durationMinutes = 24,
-            sourceExtensionId = "",
+            description = "Desc",
+            posterUrl = "",
+            backdropUrl = "",
+            genre = emptyList(),
+            rating = 0f,
+            year = 2024,
+            duration = 24,
+            source = "",
             isFavorite = true
         )
-        val profile = Profile(id = "profile1", name = "Test", avatarUrl = null, pinHash = null)
+        val profile = Profile(id = "profile1", displayName = "Test", avatarUrl = null)
         val mediaRepo = FakeMediaRepository(mediaById = mapOf("media1" to domainMediaItem))
         val profileRepo = FakeProfileRepository(activeProfile = profile)
         val bridge = FavoritesRepositoryBridge(mediaRepo, profileRepo)
@@ -71,17 +72,17 @@ class FavoritesRepositoryBridgeTest {
         val domainMediaItem = DomainMediaItem(
             id = "media1",
             title = "Test Anime",
-            synopsis = "Desc",
-            coverImageUrl = "",
-            bannerImageUrl = "",
-            genres = emptyList(),
-            score = 0.0,
-            seasonYear = 2024,
-            durationMinutes = 24,
-            sourceExtensionId = "",
+            description = "Desc",
+            posterUrl = "",
+            backdropUrl = "",
+            genre = emptyList(),
+            rating = 0f,
+            year = 2024,
+            duration = 24,
+            source = "",
             isFavorite = true
         )
-        val profile = Profile(id = "profile1", name = "Test", avatarUrl = null, pinHash = null)
+        val profile = Profile(id = "profile1", displayName = "Test", avatarUrl = null)
         val mediaRepo = FakeMediaRepository(mediaById = mapOf("media1" to domainMediaItem))
         val profileRepo = FakeProfileRepository(activeProfile = profile)
         val bridge = FavoritesRepositoryBridge(mediaRepo, profileRepo)
@@ -141,8 +142,8 @@ class FavoritesRepositoryBridgeTest {
         override suspend fun saveWatchHistory(history: com.kurostream.domain.model.WatchHistory) {}
         override suspend fun deleteWatchHistory(mediaItemId: String, profileId: String) {}
         override suspend fun searchSubtitles(query: String, languages: List<String>, episodeInfo: com.kurostream.domain.model.EpisodeInfo?): List<com.kurostream.domain.model.SubtitleResult> = emptyList()
-        override suspend fun getPlaybackUrl(mediaId: String, episodeId: String?): com.kurostream.domain.result.Result<com.kurostream.domain.model.PlaybackUrl> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
-        override suspend fun getNextEpisode(mediaId: String, episodeId: String?): com.kurostream.domain.result.Result<com.kurostream.domain.model.EpisodeInfo> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
+        override suspend fun getPlaybackUrl(mediaId: String, episodeId: String?): com.kurostream.domain.result.Result<com.kurostream.domain.model.PlaybackUrl> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
+        override suspend fun getNextEpisode(mediaId: String, episodeId: String?): com.kurostream.domain.result.Result<com.kurostream.domain.model.EpisodeInfo> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
     }
 
     private class FakeProfileRepository(
@@ -152,19 +153,19 @@ class FavoritesRepositoryBridgeTest {
         override fun observeActiveProfile(): Flow<Profile?> = flowOf(activeProfile)
         override suspend fun getActiveProfile(): Profile? = activeProfile
         override suspend fun getProfileById(id: String): Profile? = null
-        override suspend fun createProfile(name: String, avatarUrl: String?, pin: String?): com.kurostream.domain.result.Result<Profile> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
-        override suspend fun updateProfile(id: String, name: String?, avatarUrl: String?): com.kurostream.domain.result.Result<Profile> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
-        override suspend fun switchProfile(profileId: String): com.kurostream.domain.result.Result<Profile> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
-        override suspend fun deleteProfile(profileId: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
-        override suspend fun setPin(profileId: String, pin: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
-        override suspend fun removePin(profileId: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
+        override suspend fun createProfile(name: String, avatarUrl: String?, pin: String?): com.kurostream.domain.result.Result<Profile> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
+        override suspend fun updateProfile(id: String, name: String?, avatarUrl: String?): com.kurostream.domain.result.Result<Profile> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
+        override suspend fun switchProfile(profileId: String): com.kurostream.domain.result.Result<Profile> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
+        override suspend fun deleteProfile(id: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
+        override suspend fun setPin(profileId: String, pin: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
+        override suspend fun removePin(profileId: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
         override suspend fun verifyPin(profileId: String, pin: String): Boolean = false
         override suspend fun hasPin(profileId: String): Boolean = false
-        override suspend fun updatePreferences(profileId: String, preferencesJson: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
+        override suspend fun updatePreferences(profileId: String, preferencesJson: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
         override suspend fun getPreferences(profileId: String): String? = null
         override suspend fun getProfiles(): List<Profile> = emptyList()
         override suspend fun getProfile(profileId: String): Profile? = null
-        override suspend fun saveProfile(profile: Profile): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
-        override suspend fun setActiveProfile(profileId: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.failure(IllegalStateException("not implemented"))
+        override suspend fun saveProfile(profile: Profile): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
+        override suspend fun setActiveProfile(profileId: String): com.kurostream.domain.result.Result<Unit> = com.kurostream.domain.result.Result.error(IllegalStateException("not implemented"))
     }
 }

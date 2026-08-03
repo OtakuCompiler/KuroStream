@@ -4,6 +4,7 @@ import com.kurostream.data.local.dao.WatchHistoryDao
 import com.kurostream.domain.repository.WatchProgressRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,5 +38,9 @@ class WatchProgressRepositoryImpl @Inject constructor(
         return watchHistoryDao.observeByProfile(defaultProfileId).map { list ->
             list.associate { it.mediaItemId to it.position }
         }
+    }
+
+    override suspend fun syncPending() {
+        Timber.d("WatchProgressRepositoryImpl: syncPending (no-op)")
     }
 }

@@ -11,6 +11,7 @@ package com.kurostream.playback.kurovision
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,7 +47,7 @@ class KuroVisionPipeline @Inject constructor(
 
         _frameStats.value = FrameStats(
             fps = currentFps,
-            frameCount = frameCount,
+            frameCount = frameCount.toLong(),
             dropCount = dropCount,
             lastProcessTimeUs = elapsedUs,
             isFallback = result.isPassthrough,

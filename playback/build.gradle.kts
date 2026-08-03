@@ -39,21 +39,20 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer.dash)
     implementation(libs.androidx.media3.exoplayer.smoothstreaming)
     implementation(libs.androidx.media3.exoplayer.rtsp)
-    implementation(libs.androidx.media3.decoder.ffmpeg)
     implementation(libs.androidx.media3.cast)
     implementation(libs.androidx.media3.transformer)
     implementation(libs.androidx.media3.effect)
-    
+
+    // Alternative playback engines
+    implementation(libs.libmpv)
+    implementation(libs.libvlc)
+
     // Networking
     implementation(libs.okhttp)
     implementation(libs.timber)
     implementation(libs.javax.inject)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
-    
-    // Playback engines
-    implementation(libs.libvlc)
-    implementation(libs.libmpv)
     
     // ML for intro detection
     implementation(libs.tensorflow.lite)

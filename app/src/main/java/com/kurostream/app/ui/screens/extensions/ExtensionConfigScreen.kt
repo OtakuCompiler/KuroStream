@@ -128,9 +128,10 @@ fun ExtensionConfigScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
-            if (field.helpText != null) {
+            val helpText = field.helpText
+            if (helpText != null) {
                 Text(
-                    text = field.helpText,
+                    text = helpText,
                     color = Color.Gray,
                     fontSize = 12.sp,
                 )

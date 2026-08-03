@@ -14,7 +14,7 @@ if (!admin.apps.length) {
     });
 }
 
-const PROJECT_NUMBER = process.env.GOOGLE_CLOUD_PROJECT_NUMBER || 'YOUR_PROJECT_NUMBER';
+const PROJECT_NUMBER = process.env.GOOGLE_CLOUD_PROJECT_NUMBER || 'CHANGE_ME_PROJECT_NUMBER';
 
 /**
  * Verify Play Integrity token

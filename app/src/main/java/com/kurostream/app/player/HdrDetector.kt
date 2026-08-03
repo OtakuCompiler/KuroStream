@@ -59,7 +59,8 @@ object HdrDetector {
 
     fun configurePlayerForHdr(player: androidx.media3.common.Player) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val info = detect(context)
+            val ctx = context ?: return
+            val info = detect(ctx)
             if (info.supportsDolbyVision || info.supportsHdr10) {
             }
         }

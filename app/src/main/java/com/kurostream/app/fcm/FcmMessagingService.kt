@@ -46,11 +46,10 @@ class FcmMessagingService : FirebaseMessagingService() {
         )
 
         // Store for deep linking
-        val intent = Intent(this, MainActivity::class.java).apply {
-            action = Intent.ACTION_VIEW
-            data = android.net.Uri.parse("kurostream://details/$mediaId")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+        val intent = Intent(this, MainActivity::class.java)
+        intent.action = Intent.ACTION_VIEW
+        intent.data = android.net.Uri.parse("kurostream://details/$mediaId")
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         // The notification click will handle the deep link
     }
 

@@ -1,6 +1,7 @@
 package com.kurostream.players.subtitle
 
 import androidx.media3.common.C
+import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.exoplayer.ExoPlayer
 
 class SubtitleTrackSelector(private val player: ExoPlayer) {
@@ -26,7 +27,7 @@ class SubtitleTrackSelector(private val player: ExoPlayer) {
         val params = player.trackSelectionParameters
             .buildUpon()
             .setOverrideForType(
-                androidx.media3.common.TrackSelectionParameters.TrackOverride(
+                TrackSelectionOverride(
                     player.currentTracks.groups[groupIndex].mediaTrackGroup,
                     trackIndex
                 )

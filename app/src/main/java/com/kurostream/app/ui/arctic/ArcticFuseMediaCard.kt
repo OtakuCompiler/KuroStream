@@ -54,6 +54,9 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -67,12 +70,13 @@ fun ArcticFuseMediaCard(
     modifier: Modifier = Modifier,
     view: CardView = CardView.Poster,
     quality: String? = null,
-    progress: Float = (item.watchProgress ?: 0L).toFloat().coerceAtLeast(0f),
+    progress: Float = item.watchProgress.toFloat().coerceAtLeast(0f),
     onClick: () -> Unit = {},
     onFocus: (() -> Unit)? = null,
     onLongPress: (() -> Unit)? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
+    var glowAlpha by remember { mutableStateOf(0f) }
     val focusRequester = remember { FocusRequester() }
 
     val cardWidth: Dp = when (view) {
@@ -128,7 +132,6 @@ fun ArcticFuseMediaCard(
             .focusable()
             .semantics {
                 contentDescription = "${item.title}, ${item.genre.joinToString()}, rated ${item.rating}"
-                role = androidx.compose.ui.semantics.Role.Button
             }
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyUp &&
@@ -144,6 +147,7 @@ fun ArcticFuseMediaCard(
     ) {
         CardImage(
             url = item.posterUrl,
+            title = item.title,
             modifier = Modifier.fillMaxSize(),
         )
 
@@ -246,13 +250,13 @@ fun ArcticFuseMediaCard(
 }
 
 @Composable
-private fun CardImage(url: String, modifier: Modifier = Modifier) {
+private fun CardImage(url: String, title: String, modifier: Modifier = Modifier) {
     if (url.isBlank()) {
         Box(modifier = modifier.background(AFSurfaceVariant))
     } else {
         AsyncImage(
             model = url,
-            contentDescription = "${item.title} poster",
+            contentDescription = "$title poster",
             contentScale = ContentScale.Crop,
             modifier = modifier,
         )

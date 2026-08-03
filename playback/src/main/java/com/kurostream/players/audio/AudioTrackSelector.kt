@@ -5,6 +5,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.os.Build
 import androidx.media3.common.C
+import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import timber.log.Timber
@@ -17,7 +18,7 @@ class AudioTrackSelector(private val context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
         return audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any { device ->
             device.type == android.media.AudioDeviceInfo.TYPE_HDMI &&
-            device.encodings.contains(AudioFormat.ENCODING_DOLBY_ATMOS)
+            device.encodings.contains(AudioFormat.ENCODING_E_AC3_JOC)
         }
     }
 
@@ -65,7 +66,7 @@ class AudioTrackSelector(private val context: Context) {
         val trackSelector = player.trackSelectionParameters
             .buildUpon()
             .setOverrideForType(
-                androidx.media3.common.TrackSelectionParameters.TrackOverride(
+                TrackSelectionOverride(
                     player.currentTracks.groups[groupIndex].mediaTrackGroup,
                     trackIndex
                 )

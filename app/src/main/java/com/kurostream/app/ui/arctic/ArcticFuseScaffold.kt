@@ -16,21 +16,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun ArcticFuseScaffold(
-    currentHub: String,
-    onHubChange: (String) -> Unit,
-    hubs: List<String>,
+    currentHub: ArcticHubTab,
+    onHubChange: (ArcticHubTab) -> Unit,
+    hubs: List<ArcticHubTab> = ArcticHubTab.values().toList(),
     spotlightContent: @Composable () -> Unit,
     widgetRows: @Composable () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         DynamicFanartBackground()
@@ -53,9 +55,8 @@ fun ArcticFuseScaffold(
 
         Column(modifier = Modifier.fillMaxSize()) {
             ArcticFuseHubSwitcher(
-                hubs = hubs,
-                selectedHub = currentHub,
-                onHubSelected = onHubChange,
+                activeHub = currentHub,
+                onSelect = onHubChange,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 48.dp, vertical = 24.dp)

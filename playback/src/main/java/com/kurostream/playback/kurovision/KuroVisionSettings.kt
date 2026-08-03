@@ -8,12 +8,16 @@
 package com.kurostream.playback.kurovision
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val Context.kuroVisionDataStore by preferencesDataStore("kuro_vision")
 
@@ -21,7 +25,10 @@ private val Context.kuroVisionDataStore by preferencesDataStore("kuro_vision")
  * Strongly-typed access to KuroVision settings. Inject via Hilt or create
  * with the application context.
  */
-class KuroVisionSettings(context: Context) {
+@Singleton
+class KuroVisionSettings @Inject constructor(
+    @ApplicationContext context: Context,
+) {
 
     private val ds = context.kuroVisionDataStore
 

@@ -11,17 +11,11 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    targetProjectPath = ":app"
 }
 
 dependencies {
-    implementation(libs.androidx.junit)
-    implementation(libs.androidx.espresso.core)
+    implementation(libs.test.androidx.junit)
+    implementation(libs.test.espresso.core)
     implementation(libs.androidx.uiautomator)
     implementation(libs.androidx.benchmark.macro.junit4)
-}
-
-baselineProfile {
-    managedDevices += "pixel6Api31"
-    useConnectedDevices = false
 }

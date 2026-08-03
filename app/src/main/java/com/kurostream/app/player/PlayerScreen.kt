@@ -15,6 +15,7 @@
 
 package com.kurostream.app.player
 
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -82,6 +83,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
+import com.kurostream.app.player.HdrMode
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Switch
@@ -105,7 +107,7 @@ fun PlayerScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val engine = viewModel.currentEngine
+    val engine by viewModel.currentEngine.collectAsStateWithLifecycle()
     var controlsVisible by remember { mutableStateOf(true) }
     var showSettings by remember { mutableStateOf(false) }
     var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
@@ -204,7 +206,8 @@ fun PlayerScreen(
                         this.player = exo
                     }
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hdrMode != HdrMode.SDR) {
-                        setSecure(true)
+                        val surfaceView = videoSurfaceView as? android.view.SurfaceView
+                        surfaceView?.setSecure(true)
                     }
                 }
             },
@@ -230,8 +233,9 @@ fun PlayerScreen(
                 android.view.SurfaceView(ctx).apply {
                     holder.addCallback(object : android.view.SurfaceHolder.Callback {
                         override fun surfaceCreated(holder: android.view.SurfaceHolder) {
-                            if (engine is com.kurostream.players.mpv.MpvPlayer) {
-                                engine.setSurface(holder.surface)
+                            val currentEngine = engine
+                            if (currentEngine is com.kurostream.players.mpv.MpvPlayer) {
+                                currentEngine.setSurface(holder.surface)
                             }
                         }
                         override fun surfaceChanged(
@@ -241,8 +245,9 @@ fun PlayerScreen(
                             height: Int
                         ) = Unit
                         override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
-                            if (engine is com.kurostream.players.mpv.MpvPlayer) {
-                                engine.setSurface(null)
+                            val currentEngine = engine
+                            if (currentEngine is com.kurostream.players.mpv.MpvPlayer) {
+                                currentEngine.setSurface(null)
                             }
                         }
                     })
@@ -301,8 +306,8 @@ fun PlayerScreen(
                 onSubtitleEnabledChange = { viewModel.setSubtitleEnabled(it) },
                 onDismiss = { showSettings = false }
             )
-        }
     }
+}
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -464,13 +469,13 @@ private fun PlayerControlsOverlay(
                             contentDescription = "Settings",
                             tint = Color.White
                         )
-                    }
-                }
-            }
-        }
+    }
+    }
+    }
     }
 }
-
+}
+ 
 private fun formatDuration(ms: Long): String {
     val totalSeconds = ms / 1000
     val hours = totalSeconds / 3600
@@ -805,44 +810,16 @@ private fun PlayerSettingsPanel(
                                                     text = label,
                                                     color = Color.White,
                                                     fontSize = 10.sp,
-                                                    textAlign = TextAlign.Center,
+                                                     textAlign = TextAlign.Center,
                                                 )
-            }
-        }
-    }
-}
-
-enum class HdrMode { SDR, HDR10, HDR10_PLUS, DOLBY_VISION }
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                // Background Opacity
-                                val currentAlpha = try {
-                                    val c = android.graphics.Color.parseColor(subtitleBgColorHex)
-                                    android.graphics.Color.alpha(c) / 255f * 100f
-                                } catch (_: IllegalArgumentException) { 50f }
-                                Text(
-                                    text = "Background: ${currentAlpha.toInt()}%",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.White.copy(alpha = 0.8f),
-                                )
-                                Slider(
-                                    value = currentAlpha,
-                                    onValueChange = { alpha ->
-                                        val a = (alpha / 100f * 255).toInt().coerceIn(0, 255)
-                                        val hex = "#%02X000000".format(a)
-                                        onSubtitleBgColorChange(hex)
-                                    },
-                                    valueRange = 0f..100f,
-                                    steps = 19,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
-
-                item { HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f)) }
 
                 // Subtitle Delay
                 item {

@@ -5,7 +5,7 @@ const axios = require('axios');
 const app = express();
 app.use(express.json());
 
-const PROJECT_NUMBER = 'YOUR_PROJECT_NUMBER';
+const PROJECT_NUMBER = 'CHANGE_ME_PROJECT_NUMBER';
 const PROJECT_ID = 'YOUR_PROJECT_ID';
 
 app.post('/verify-integrity', async (req, res) => {

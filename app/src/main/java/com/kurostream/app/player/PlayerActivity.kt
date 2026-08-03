@@ -37,6 +37,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
 import com.kurostream.app.ui.theme.AnimeStreamTVTheme
+import com.kurostream.app.player.HdrMode
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -135,7 +136,9 @@ class PlayerActivity : ComponentActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && audioFocusRequest != null) {
             val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            audioManager.requestAudioFocus(audioFocusRequest)
+            audioFocusRequest?.let { af ->
+                audioManager.requestAudioFocus(af)
+            }
         }
 
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -202,7 +205,7 @@ class PlayerActivity : ComponentActivity() {
 
     override fun onPictureInPictureModeChanged(
         isInPictureInPictureMode: Boolean,
-        newConfig: android.content.res.Configuration?
+        newConfig: android.content.res.Configuration
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
     }

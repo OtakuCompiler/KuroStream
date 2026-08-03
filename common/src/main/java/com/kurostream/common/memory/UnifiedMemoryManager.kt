@@ -22,6 +22,14 @@ class UnifiedMemoryManager @Inject constructor(
     private val context: Context
 ) {
     companion object {
+        @Volatile
+        private var INSTANCE: UnifiedMemoryManager? = null
+
+        fun getInstance(context: Context): UnifiedMemoryManager {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: UnifiedMemoryManager(context.applicationContext).also { INSTANCE = it }
+            }
+        }
     }
     private val _memoryState = MutableStateFlow(MemoryState())
     val memoryState: StateFlow<MemoryState> = _memoryState.asStateFlow()
@@ -251,6 +259,11 @@ class UnifiedMemoryManager @Inject constructor(
         lastGCTime = 0
         trimCallbacks.clear()
         Timber.d("UnifiedMemoryManager reset")
+    }
+
+    fun shutdown() {
+        reset()
+        Timber.d("UnifiedMemoryManager shutdown")
     }
 
     fun getOptimalBitmapConfig(): android.graphics.Bitmap.Config {

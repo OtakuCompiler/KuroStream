@@ -35,7 +35,11 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import com.kurostream.app.BuildConfig
+import com.kurostream.app.notification.NotificationChannels
 import com.kurostream.app.security.SecurityConfig
+import com.kurostream.app.startup.AppShortcuts
+import com.kurostream.app.startup.CrashReporter
+import com.kurostream.app.startup.WorkScheduler
 import com.kurostream.common.memory.RamEnforcer
 import android.os.StrictMode
 import javax.inject.Inject
@@ -44,10 +48,13 @@ import javax.inject.Inject
 class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCallbacks2 {
 
     @Inject lateinit var securityConfig: SecurityConfig
+    @Inject lateinit var workScheduler: com.kurostream.app.startup.WorkScheduler
+    @Inject lateinit var crashReporter: com.kurostream.app.startup.CrashReporter
+    @Inject lateinit var appShortcuts: com.kurostream.app.startup.AppShortcuts
+    @Inject lateinit var batteryAwareManager: com.kurostream.common.optimization.BatteryAwareManager
 
     private var isInBackground = false
     private var memoryMonitor: com.kurostream.common.memory.UnifiedMemoryManager? = null
-    private var batteryAwareManager: com.kurostream.common.optimization.BatteryAwareManager? = null
     private var startupProfiler: com.kurostream.common.optimization.StartupProfiler? = null
     private var appImageLoader: ImageLoader? = null
     
@@ -72,9 +79,9 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
         securityConfig.logSecurityStatus()
 
         NotificationChannels.createAll(this)
-        WorkScheduler.scheduleAll(this)
-        CrashReporter.initialize(this)
-        AppShortcuts.createShortcuts(this)
+        workScheduler.scheduleAll(this)
+        crashReporter.initialize(this)
+        appShortcuts.createShortcuts(this)
 
         val ramEnforcer = RamEnforcer(this)
         ramEnforcer.registerTrimListener {
@@ -106,7 +113,6 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
 
         // Defer battery, thermal, startup monitoring to idle (no user-visible impact)
         mainHandler.post {
-            batteryAwareManager = com.kurostream.common.optimization.BatteryAwareManager.create(this@AnimeStreamTvApplication)
             startupProfiler?.markFullyDrawn()
         }
 

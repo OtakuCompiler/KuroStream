@@ -7,6 +7,7 @@ import android.database.MatrixCursor
 import androidx.tvprovider.media.tv.TvContractCompat
 import androidx.tvprovider.media.tv.PreviewProgram
 import com.kurostream.app.model.MediaItem
+import com.kurostream.domain.entity.MediaItem as DomainMediaItem
 import com.kurostream.domain.repository.MediaRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.runBlocking
@@ -19,7 +20,20 @@ class RecommendationService : IntentService("RecommendationService") {
 
     override fun onHandleIntent(intent: Intent?) {
         runBlocking {
-            val items = mediaRepository.getTrending()
+            val domainItems = mediaRepository.getTrending()
+            val items = domainItems.map { d ->
+                MediaItem(
+                    id = d.id,
+                    title = d.title,
+                    description = d.description,
+                    posterUrl = d.posterUrl,
+                    backdropUrl = d.backdropUrl,
+                    genre = d.genre,
+                    rating = d.rating,
+                    year = d.year,
+                    duration = d.duration,
+                )
+            }
             items.take(5).forEachIndexed { index, item ->
                 addRecommendation(item, index)
             }

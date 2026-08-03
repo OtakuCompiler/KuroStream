@@ -20,6 +20,7 @@ import timber.log.Timber
 object TvFocusManager {
     private val focusHistory = mutableMapOf<String, String>()
 
+    @Composable
     fun rememberFocus(screen: String, defaultId: String): FocusRequester {
         val fr = remember { FocusRequester() }
         val lastId = rememberSaveable { mutableStateOf(focusHistory[screen] ?: defaultId) }

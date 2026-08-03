@@ -44,5 +44,5 @@ dependencies {
     implementation(libs.jlibtorrent.android.arm)
     implementation(libs.jlibtorrent.android.arm64)
     implementation(libs.jlibtorrent.android.x86)
-    implementation(libs.jlibtorrent.android.x86_64)
+    implementation("com.frostwire:jlibtorrent-android-x86_64:1.2.19.0")
 }

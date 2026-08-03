@@ -2,6 +2,7 @@ package com.kurostream.players.mpv
 
 import android.content.Context
 import android.view.Surface
+import dev.jdtech.mpv.MPVLib
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,12 +14,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-import dev.jdtech.mpv.MPVLib
-import dev.jdtech.mpv.MPVLib.MpvEvent
 import com.kurostream.players.selector.PlaybackEngine
 
 @Singleton
@@ -26,7 +26,7 @@ class MpvPlayer @Inject constructor(
     private val context: Context,
 ) : PlaybackEngine {
 
-    private var mpvLib: MPVLib? = null
+    private var isInitialized = false
     private var currentUri: String? = null
 
     private val scope = CoroutineScope(Dispatchers.Main + Job())
@@ -49,24 +49,16 @@ class MpvPlayer @Inject constructor(
     override suspend fun initialize() {
         // Native lib load is guarded here so a missing/failed native lib does not
         // crash the app during DI construction; BackendSelector will fall back
-        // to VLC or Media3 if this returns with mpvLib still null.
+        // to VLC or Media3 if this returns with isInitialized still false.
         try {
-            mpvLib = MPVLib.create(context)
-            if (mpvLib == null) {
-                Timber.e("MPVLib.create() returned null — native lib likely missing or failed to initialize")
-                return
-            }
-            mpvLib.init()
-            mpvLib.addObserver(object : MPVLib.EventObserver {
+            MPVLib.create(context)
+            MPVLib.init()
+            MPVLib.addObserver(object : MPVLib.EventObserver {
                 override fun event(eventId: Int) {
                     when (eventId) {
-                        MpvEvent.END_FILE -> {
+                        MPVLib.MPV_EVENT_END_FILE -> {
                             _playbackState.value = PlaybackEngine.PlaybackState.ENDED
                             listeners.forEach { it.onPlaybackStateChanged(PlaybackEngine.PlaybackState.ENDED) }
-                        }
-                        MpvEvent.IDLE -> {
-                            _playbackState.value = PlaybackEngine.PlaybackState.IDLE
-                            listeners.forEach { it.onPlaybackStateChanged(PlaybackEngine.PlaybackState.IDLE) }
                         }
                         else -> Unit
                     }
@@ -93,13 +85,14 @@ class MpvPlayer @Inject constructor(
                 }
             })
             // Observe core properties
-            mpvLib?.observeProperty("time-pos", MPVLib.MpvFormat.DOUBLE)
-            mpvLib?.observeProperty("duration", MPVLib.MpvFormat.DOUBLE)
-            mpvLib?.observeProperty("pause", MPVLib.MpvFormat.BOOLEAN)
-            mpvLib?.observeProperty("eof-reached", MPVLib.MpvFormat.BOOLEAN)
+            MPVLib.observeProperty("time-pos", MPVLib.MPV_FORMAT_DOUBLE)
+            MPVLib.observeProperty("duration", MPVLib.MPV_FORMAT_DOUBLE)
+            MPVLib.observeProperty("pause", MPVLib.MPV_FORMAT_FLAG)
+            MPVLib.observeProperty("eof-reached", MPVLib.MPV_FORMAT_FLAG)
+            isInitialized = true
         } catch (e: Exception) {
             Timber.e(e, "MPV native initialization failed")
-            mpvLib = null
+            isInitialized = false
         }
         startPositionPolling()
     }
@@ -113,8 +106,8 @@ class MpvPlayer @Inject constructor(
 
     private fun handleEventPropertyDouble(property: String, value: Double) {
         when (property) {
-            "time-pos" -> _currentPosition.value = (value * 1000).coerceAtLeast(0L)
-            "duration" -> _duration.value = (value * 1000).coerceAtLeast(0L)
+            "time-pos" -> _currentPosition.value = (value * 1000).toLong().coerceAtLeast(0L)
+            "duration" -> _duration.value = (value * 1000).toLong().coerceAtLeast(0L)
         }
     }
 
@@ -142,13 +135,17 @@ class MpvPlayer @Inject constructor(
         scope.launch {
             while (isActive) {
                 try {
-                    mpvLib?.getPropertyDouble("time-pos")?.let { pos ->
-                        _currentPosition.value = (pos * 1000).coerceAtLeast(0L)
+                    if (!isInitialized) {
+                        delay(500)
+                        continue
                     }
-                    mpvLib?.getPropertyDouble("duration")?.let { dur ->
-                        _duration.value = (dur * 1000).coerceAtLeast(0L)
+                    MPVLib.getPropertyDouble("time-pos")?.let { pos ->
+                        _currentPosition.value = (pos * 1000).toLong().coerceAtLeast(0L)
                     }
-                    mpvLib?.getPropertyBoolean("pause")?.let { paused ->
+                    MPVLib.getPropertyDouble("duration")?.let { dur ->
+                        _duration.value = (dur * 1000).toLong().coerceAtLeast(0L)
+                    }
+                    MPVLib.getPropertyBoolean("pause")?.let { paused ->
                         _isPlaying.value = !paused
                     }
                 } catch (e: Exception) {
@@ -169,8 +166,8 @@ class MpvPlayer @Inject constructor(
 
     override fun setMedia(uri: String, title: String?, startPositionMs: Long) {
         currentUri = uri
-        val fileUrl = uri
-        mpvLib?.command(arrayOf("loadfile", fileUrl))
+        if (!isInitialized) return
+        MPVLib.command(arrayOf("loadfile", uri))
         if (startPositionMs > 0) {
             // Delay seek slightly to allow file load
             scope.launch {
@@ -183,18 +180,21 @@ class MpvPlayer @Inject constructor(
     }
 
     override fun play() {
-        mpvLib?.setPropertyBoolean("pause", false)
+        if (!isInitialized) return
+        MPVLib.setPropertyBoolean("pause", false)
         _playbackState.value = PlaybackEngine.PlaybackState.READY
         listeners.forEach { it.onPlaybackStateChanged(PlaybackEngine.PlaybackState.READY) }
     }
 
     override fun pause() {
-        mpvLib?.setPropertyBoolean("pause", true)
+        if (!isInitialized) return
+        MPVLib.setPropertyBoolean("pause", true)
     }
 
     override fun seekTo(positionMs: Long) {
+        if (!isInitialized) return
         val seconds = positionMs / 1000.0
-        mpvLib?.setPropertyDouble("time-pos", seconds)
+        MPVLib.setPropertyDouble("time-pos", seconds)
     }
 
     override fun seekForward() {
@@ -208,21 +208,26 @@ class MpvPlayer @Inject constructor(
     }
 
     override fun setPlaybackSpeed(speed: Float) {
-        mpvLib?.setPropertyDouble("speed", speed.toDouble())
+        if (!isInitialized) return
+        MPVLib.setPropertyDouble("speed", speed.toDouble())
     }
 
     fun setSurface(surface: Surface?) {
+        if (!isInitialized) return
         if (surface != null) {
-            mpvLib?.attachSurface(surface)
+            MPVLib.attachSurface(surface)
         } else {
-            mpvLib?.detachSurface()
+            MPVLib.detachSurface()
         }
     }
 
     override fun release() {
         scope.cancel()
-        mpvLib?.destroy()
-        mpvLib = null
+        if (isInitialized) {
+            runCatching { MPVLib.destroy() }
+            isInitialized = false
+        }
+        currentUri = null
         _currentPosition.value = 0L
         _duration.value = 0L
         _bufferedPosition.value = 0L
@@ -231,5 +236,5 @@ class MpvPlayer @Inject constructor(
         listeners.clear()
     }
 
-    internal fun isLibLoaded(): Boolean = mpvLib != null
+    internal fun isLibLoaded(): Boolean = isInitialized
 }

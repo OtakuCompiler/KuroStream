@@ -44,7 +44,7 @@ class KuroCacheManager @Inject constructor(
     }
 
     private fun createVideoCache(): Cache {
-        val isLowRam = LowRamDevice.isLowRamDevice(context)
+        val isLowRam = LowRamDevice.isLowRamDevice
         val maxBytes = if (isLowRam) {
             MAX_CACHE_SIZE_MB_LOW_RAM * 1024 * 1024
         } else {
@@ -84,12 +84,29 @@ class KuroCacheManager @Inject constructor(
         }
     }
 
+    fun enforceBudget(maxBytes: Long) {
+        val cacheDir = File(context.cacheDir, "kurostream_vod_cache")
+        if (!cacheDir.exists()) return
+        val files = cacheDir.walkTopDown()
+            .filter { it.isFile }
+            .sortedByDescending { it.lastModified() }
+            .toList()
+        var total = 0L
+        for (file in files) {
+            total += file.length()
+            if (total > maxBytes) {
+                file.delete()
+            }
+        }
+        Timber.d("Cache budget enforced: ${maxBytes / (1024 * 1024)}MB, remaining=${total / (1024 * 1024)}MB")
+    }
+
     fun getCacheStats(): CacheStats {
         val cacheSpace = videoCache.cacheSpace
         val keys = videoCache.keys.size
         return CacheStats(
             usedBytes = cacheSpace,
-            maxBytes = if (LowRamDevice.isLowRamDevice(context)) {
+            maxBytes = if (LowRamDevice.isLowRamDevice) {
                 MAX_CACHE_SIZE_MB_LOW_RAM * 1024 * 1024
             } else {
                 MAX_CACHE_SIZE_MB_DEFAULT * 1024 * 1024

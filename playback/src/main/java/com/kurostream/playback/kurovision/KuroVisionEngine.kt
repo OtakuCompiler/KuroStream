@@ -19,12 +19,16 @@ package com.kurostream.playback.kurovision
 
 import android.content.Context
 import android.opengl.EGL14
+import android.opengl.EGLContext
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.Keep
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -50,6 +54,9 @@ class KuroVisionEngine @Inject constructor(
 
     val currentMode: KuroVisionQualityMode
         get() = activeMode
+
+    val isInitialized: Boolean
+        get() = initialized
 
     suspend fun initialize() {
         if (initialized) return
@@ -84,7 +91,7 @@ class KuroVisionEngine @Inject constructor(
                 if (!enabled) {
                     activeMode = KuroVisionQualityMode.HARDWARE
                 } else {
-                    val pref = settings.qualityMode.value
+                    val pref = settings.qualityMode.first()
                     if (pref != activeMode) {
                         activeMode = KuroVisionQualityMode.chooseFor(currentProfile, pref)
                     }

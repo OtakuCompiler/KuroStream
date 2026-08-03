@@ -172,6 +172,10 @@ protobuf-kotlin = { group = "com.google.protobuf", name = "protobuf-kotlin", ver
 anilist-graphql = { group = "com.apollographql.apollo3", name = "apollo-runtime", version = "4.0.0-beta.7" }
 anilist-cache = { group = "com.apollographql.apollo3", name = "apollo-normalized-cache-sqlite", version = "4.0.0-beta.7" }
 
+# Play Integrity + Review
+androidx-tvprovider = { group = "androidx.tvprovider", name = "tvprovider", version = "1.0.0" }
+play-review = { group = "com.google.android.play", name = "review", version = "2.0.1" }
+
 # ML / ONNX for intro detection
 onnx-runtime = { group = "com.microsoft.onnxruntime", name = "onnxruntime-android", version = "1.18.0" }
 tensorflow-lite = { group = "org.tensorflow", name = "tensorflow-lite", version = "2.16.1" }
@@ -204,6 +208,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

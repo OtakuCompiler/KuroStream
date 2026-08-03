@@ -12,7 +12,7 @@ import java.security.MessageDigest
 import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.suspendCoroutine
 
 class PlayIntegrityChecker(private val context: Context) {
 
@@ -31,7 +31,7 @@ class PlayIntegrityChecker(private val context: Context) {
                 .setNonce(nonce)
                 .build()
 
-            val tokenResponse = suspendCancellableCoroutine<com.google.android.play.core.integrity.IntegrityTokenResponse> { continuation ->
+            val tokenResponse = suspendCoroutine<com.google.android.play.core.integrity.IntegrityTokenResponse> { continuation ->
                 val task = integrityManager.requestIntegrityToken(request)
                 task.addOnSuccessListener { continuation.resume(it) }
                 task.addOnFailureListener { continuation.resumeWithException(it) }

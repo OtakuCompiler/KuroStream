@@ -388,7 +388,7 @@ fun MemoryDiagnosticsScreen(
             item { StatCard("Available Memory", formatBytes(availableMemory), Icons.Default.Info) }
             item { StatCard("Used Memory", formatBytes(usedMemory), Icons.AutoMirrored.Filled.List) }
             item { StatCard("Total Memory", formatBytes(totalMemory), Icons.Default.Info) }
-            item { StatCard("Headroom", "${memoryState.headroomMb}MB", Icons.Default.Info) }
+            item { StatCard("Headroom", "${(memoryState.targetMemoryMb - memoryState.totalPssMb).coerceAtLeast(0)}MB", Icons.Default.Info) }
             
             val runtime = Runtime.getRuntime()
             val heapMax = runtime.maxMemory()

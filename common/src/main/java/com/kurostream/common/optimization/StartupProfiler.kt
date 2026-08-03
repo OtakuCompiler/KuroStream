@@ -22,4 +22,8 @@ class StartupProfiler {
         fullyDrawn = SystemClock.uptimeMillis()
         Timber.d("Startup: fully drawn in ${fullyDrawn - processStart}ms")
     }
+
+    fun markProcessStart() {
+        Timber.d("Startup: process start recorded")
+    }
 }

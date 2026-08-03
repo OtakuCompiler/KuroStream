@@ -12,6 +12,9 @@ import android.util.Log
 import com.kurostream.playback.kurovision.KuroVisionDeviceProfile
 import com.kurostream.playback.kurovision.KuroVisionQualityMode
 import com.kurostream.playback.kurovision.UpscaleAlgorithm
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.FloatBuffer
 
 class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
 
@@ -33,7 +36,7 @@ class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
 
     companion object {
         private const val TAG = "EnhancedUpscaleEngine"
-        private const val VERTEX_SHADER = """
+        private val VERTEX_SHADER = """
             attribute vec4 vPosition;
             attribute vec2 vTexCoord;
             varying vec2 texCoord;
