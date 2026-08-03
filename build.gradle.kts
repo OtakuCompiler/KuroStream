@@ -15,10 +15,16 @@ plugins {
 
 // Relocate ALL build outputs to internal storage (fast ext4) instead of FUSE
 // /sdcard - this is the single biggest build speed win on this device.
-val kurostreamBuildDir = System.getenv("KURO_BUILD_DIR")?.takeIf { it.isNotBlank() } ?: "/root/.kurostream-build"
-layout.buildDirectory.set(file("$kurostreamBuildDir/root"))
-subprojects {
-    layout.buildDirectory.set(file("$kurostreamBuildDir/${name}"))
+// Only apply when KURO_BUILD_DIR is explicitly set or when not running on CI.
+val isCI = System.getenv("CI") == "true"
+val kurostreamBuildDir = System.getenv("KURO_BUILD_DIR")?.takeIf { it.isNotBlank() }
+    ?: if (isCI) null else "/root/.kurostream-build"
+
+if (kurostreamBuildDir != null) {
+    layout.buildDirectory.set(file("$kurostreamBuildDir/root"))
+    subprojects {
+        layout.buildDirectory.set(file("$kurostreamBuildDir/${name}"))
+    }
 }
 
 tasks.register("detektAll") {
