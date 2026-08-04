@@ -514,6 +514,7 @@ class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
             gl_FragColor = clamp(color, 0.0, 1.0);
         }
     """.trimIndent()
+}
 
 /** Color grading profile applied after HDR/OLED. Ordinal maps to shader int. */
 enum class ColorProfile(val displayName: String) {
@@ -522,4 +523,5 @@ enum class ColorProfile(val displayName: String) {
     VIVID("Vivid"),
     COOL("Cool"),
     WARM("Warm"),
+}
 }
