@@ -524,4 +524,3 @@ enum class ColorProfile(val displayName: String) {
     COOL("Cool"),
     WARM("Warm"),
 }
-}

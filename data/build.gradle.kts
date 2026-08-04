@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.anilist.cache)
     
     // Protobuf
+    implementation(libs.protobuf.kotlin)
     
     // Networking
     implementation(libs.jsoup)

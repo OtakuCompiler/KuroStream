@@ -54,3 +54,16 @@ tasks.register("detektFormat") {
 // Detekt is NOT auto-applied to all subprojects: it added heavy per-module
 // configuration overhead on every build. Apply it explicitly in a module
 // when needed, or run the detektAll/detektFormat tasks above.
+
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            eachDependency { details ->
+                if (details.requested.group == "com.google.protobuf" && details.requested.name == "protobuf-javalite") {
+                    details.useTarget("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}")
+                    details.because "protobuf-javalite is deprecated; protobuf-java contains the same classes"
+                }
+            }
+        }
+    }
+}
