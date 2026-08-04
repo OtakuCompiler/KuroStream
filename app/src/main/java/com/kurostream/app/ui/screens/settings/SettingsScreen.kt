@@ -57,6 +57,7 @@ import com.kurostream.app.ui.theme.Skin
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit = {},
+    onMarketplaceClick: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -151,7 +152,18 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Kuro Store (premium skins marketplace)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onMarketplaceClick,
+            ) {
+                Text("Kuro Store — Skins & Premium")
+            }
+
             // Advanced link
+            Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = { /* Navigate to advanced settings */ },
             ) {

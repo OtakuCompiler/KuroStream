@@ -11,17 +11,22 @@ object CertificatePinningConfig {
      * rejects any certificate whose pin does not match exactly, which would
      * break every API call until real pins are generated.
      */
-    fun createCertificatePinner(): CertificatePinner {
-        return CertificatePinner.Builder()
-            .add("graphql.anilist.co",
-                "sha256/REPLACE_WITH_REAL_PIN_1",
-                "sha256/REPLACE_WITH_REAL_PIN_2")
-            .add("api.myanimelist.net",
-                "sha256/REPLACE_WITH_REAL_PIN_3",
-                "sha256/REPLACE_WITH_REAL_PIN_4")
-            .add("api.themoviedb.org",
-                "sha256/REPLACE_WITH_REAL_PIN_5",
-                "sha256/REPLACE_WITH_REAL_PIN_6")
-            .build()
+    /**
+     * Returns a certificate pinner suitable for the current build variant.
+     *
+     * @param isDebugBuild pass BuildConfig.DEBUG. Pinning is skipped in debug
+     *   builds because real pins are not yet provided, and OkHttp would reject
+     *   every request against a host that has a non-matching (or absent) pin.
+     *
+     * BEFORE RELEASE: replace the empty builder with real SHA-256 SPKI pins
+     * generated for each host. Include at least one backup/rotation pin per host.
+     * Use CertificatePinnerFactory.logPinInstructions() for the correct openssl command.
+     */
+    fun createCertificatePinner(isDebugBuild: Boolean = false): CertificatePinner {
+        if (isDebugBuild) {
+            return CertificatePinner.Builder().build()
+        }
+        // TODO(security): populate with real pins before Play Store release.
+        return CertificatePinner.Builder().build()
     }
 }

@@ -68,6 +68,10 @@ android {
             isDebuggable = true
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            ndk {
+                abiFilters.clear()
+                abiFilters.add("arm64-v8a")
+            }
         }
     }
 
@@ -128,6 +132,7 @@ dependencies {
     implementation(project(":cache"))
     implementation(project(":ui"))
     implementation(project(":marketplace"))
+    implementation(project(":torrent"))
     implementation(project(":playback"))
 
     implementation(platform(libs.androidx.compose.bom))

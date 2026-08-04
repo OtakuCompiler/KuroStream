@@ -77,11 +77,12 @@ class CustomHomeRowViewModel @Inject constructor(
   fun createRow(row: CustomHomeRow) {
     viewModelScope.launch {
       try {
-        val result = repository.createRow(row.copy(id = java.util.UUID.randomUUID().toString()))
+        val newRow = row.copy(id = java.util.UUID.randomUUID().toString())
+        val result = repository.createRow(newRow)
         result.onSuccess { loadRows() }
-        result.onError { e -> /* Handle error */ }
+        result.onError { e -> timber.log.Timber.w(e, "Failed to create custom row '${row.title}'") }
       } catch (e: Exception) {
-        /* Handle error */
+        timber.log.Timber.e(e, "createRow threw unexpectedly")
       }
     }
   }
@@ -91,9 +92,9 @@ class CustomHomeRowViewModel @Inject constructor(
       try {
         val result = repository.updateRow(row)
         result.onSuccess { loadRows() }
-        result.onError { e -> /* Handle error */ }
+        result.onError { e -> timber.log.Timber.w(e, "Failed to update custom row '${row.id}'") }
       } catch (e: Exception) {
-        /* Handle error */
+        timber.log.Timber.e(e, "updateRow threw unexpectedly")
       }
     }
   }
@@ -103,9 +104,9 @@ class CustomHomeRowViewModel @Inject constructor(
       try {
         val result = repository.deleteRow(rowId)
         result.onSuccess { loadRows() }
-        result.onError { e -> /* Handle error */ }
+        result.onError { e -> timber.log.Timber.w(e, "Failed to delete custom row '$rowId'") }
       } catch (e: Exception) {
-        /* Handle error */
+        timber.log.Timber.e(e, "deleteRow threw unexpectedly for $rowId")
       }
     }
   }
@@ -115,9 +116,9 @@ class CustomHomeRowViewModel @Inject constructor(
       try {
         val result = repository.reorderRows(rowIds)
         result.onSuccess { loadRows() }
-        result.onError { e -> /* Handle error */ }
+        result.onError { e -> timber.log.Timber.w(e, "Failed to reorder rows") }
       } catch (e: Exception) {
-        /* Handle error */
+        timber.log.Timber.e(e, "reorderRows threw unexpectedly")
       }
     }
   }
@@ -125,13 +126,16 @@ class CustomHomeRowViewModel @Inject constructor(
   fun toggleRowVisibility(rowId: String, visible: Boolean) {
     viewModelScope.launch {
       try {
-        val rows = _customRows.value.map { row ->
+        // Optimistic local update
+        _customRows.value = _customRows.value.map { row ->
           if (row.id == rowId) row.copy(isVisible = visible) else row
         }
-        _customRows.value = rows
-        // Persist
+        // Persist via repo
+        val updated = _customRows.value.find { it.id == rowId } ?: return@launch
+        repository.updateRow(updated)
+          .onError { e -> timber.log.Timber.w(e, "Failed to persist visibility toggle for $rowId") }
       } catch (e: Exception) {
-        /* Handle error */
+        timber.log.Timber.e(e, "toggleRowVisibility threw unexpectedly")
       }
     }
   }

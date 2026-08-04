@@ -53,3 +53,9 @@ object LibraryRoute
 
 @Serializable
 object BackupRoute
+
+@Serializable
+object TorrentsRoute
+
+@Serializable
+object MarketplaceRoute

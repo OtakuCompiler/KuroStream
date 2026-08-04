@@ -1,0 +1,37 @@
+{
+  "_comment": "TEMPLATE — replace with your real google-services.json from the Firebase Console.",
+  "_instructions": [
+    "1. Go to https://console.firebase.google.com/ and open (or create) your project.",
+    "2. Add an Android app with package name: com.kurostream.app",
+    "3. Download google-services.json and place it at: app/google-services.json",
+    "4. Do NOT commit the real file to version control (it is in .gitignore).",
+    "5. For CI/CD, store the file contents as a secret and write it to app/google-services.json at build time."
+  ],
+  "project_info": {
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "YOUR_PROJECT_ID",
+    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:YOUR_PROJECT_NUMBER:android:YOUR_APP_ID",
+        "android_client_info": {
+          "package_name": "com.kurostream.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "YOUR_FIREBASE_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

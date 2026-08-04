@@ -156,8 +156,8 @@ class AuthService {
       const refreshTokenHash = await hashPassword(refreshToken);
       await client.query(
         `INSERT INTO refresh_tokens (id, user_id, token_hash, device_session_id, expires_at)
-         VALUES ($1, $2, $3, $4, $6)`,
-        [uuidv4(), userId, refreshTokenHash, deviceSessionId, refreshToken, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
+         VALUES ($1, $2, $3, $4, $5)`,
+        [uuidv4(), userId, refreshTokenHash, deviceSessionId, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
       );
       
       // Cache user data
@@ -236,12 +236,12 @@ class AuthService {
       [input.email.toLowerCase()]
     );
     
-    if (result.rows.length === 0) {
+    if (userResult.rows.length === 0) {
       // Don't reveal if email exists
       throw new Error('INVALID_CREDENTIALS');
     }
     
-    const user = result.rows[0];
+    const user = userResult.rows[0];
     
     if (!user.is_active) {
       throw new Error('ACCOUNT_DISABLED');
@@ -333,7 +333,7 @@ class AuthService {
     await query(
       `INSERT INTO refresh_tokens (id, user_id, token_hash, device_session_id, expires_at)
        VALUES ($1, $2, $3, $4, $5)`,
-      [uuidv4(), user.id, refreshTokenHash, deviceSessionId, refreshToken, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
+      [uuidv4(), user.id, refreshTokenHash, deviceSessionId, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
     );
     
     // Update last login
@@ -396,11 +396,11 @@ class AuthService {
       [payload.sub, input.device_id]
     );
     
-    if (result.rows.length === 0) {
+    if (tokenResult.rows.length === 0) {
       throw new Error('INVALID_REFRESH_TOKEN');
     }
     
-    const tokenRecord = result.rows[0];
+    const tokenRecord = tokenResult.rows[0];
     
     if (tokenRecord.revoked_at) {
       throw new Error('TOKEN_REVOKED');
@@ -429,7 +429,7 @@ class AuthService {
       [payload.sub]
     );
     
-    const user = result.rows[0];
+    const user = userResult.rows[0];
     
     const profileResult = await query(
       `SELECT id, display_name, is_kids_mode, parental_controls, language, subtitle_language, active_skin_id
@@ -437,7 +437,7 @@ class AuthService {
       [user.id]
     );
     
-    const profile = result.rows[0] || { id: null, display_name: user.display_name };
+    const profile = profileResult.rows[0] || { id: null, display_name: user.display_name };
     
     // Generate new tokens
     const { token: accessToken, expiresAt: accessExpiresAt } = await generateAccessToken(
@@ -456,7 +456,7 @@ class AuthService {
     await query(
       `INSERT INTO refresh_tokens (id, user_id, token_hash, device_session_id, expires_at)
        VALUES ($1, $2, $3, $4, $5)`,
-      [uuidv4(), user.id, refreshTokenHash, tokenRecord.device_session_id, refreshToken, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
+      [uuidv4(), user.id, refreshTokenHash, tokenRecord.device_session_id, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
     );
     
     return {
@@ -548,11 +548,11 @@ class AuthService {
       [userId]
     );
     
-    if (result.rows.length === 0) {
+    if (userResult.rows.length === 0) {
       throw new Error('USER_NOT_FOUND');
     }
     
-    const valid = await verifyPassword(currentPassword, result.rows[0].password_hash);
+    const valid = await verifyPassword(currentPassword, userResult.rows[0].password_hash);
     if (!valid) {
       throw new Error('CURRENT_PASSWORD_INCORRECT');
     }

@@ -16,4 +16,12 @@ data class PlayerUiState(
     val subtitleFontColorHex: String = "#FFFFFF",
     val subtitleBgColorHex: String = "#80000000",
     val subtitleEnabled: Boolean = true,
+    // Skip-detection ranges (ms); 0 = not available
+    val introStartMs: Long = 0L,
+    val introEndMs: Long = 0L,
+    val outroStartMs: Long = 0L,
+    val outroEndMs: Long = 0L,
+    // Episode navigation
+    val nextEpisodeId: String? = null,
+    val prevEpisodeId: String? = null,
 )

@@ -34,6 +34,25 @@ class WatchProgressRepositoryImpl @Inject constructor(
         watchHistoryDao.insert(entity)
     }
 
+    override suspend fun markCompleted(mediaId: String) {
+        val existing = watchHistoryDao.getByMediaAndProfile(mediaId, defaultProfileId)
+        if (existing != null) {
+            watchHistoryDao.insert(existing.copy(completionPercent = 1f, watchedAt = System.currentTimeMillis()))
+        } else {
+            watchHistoryDao.insert(
+                com.kurostream.data.local.entity.WatchHistoryEntity(
+                    id = "${defaultProfileId}_${mediaId}",
+                    mediaItemId = mediaId,
+                    profileId = defaultProfileId,
+                    position = 0L,
+                    duration = 0L,
+                    completionPercent = 1f,
+                    watchedAt = System.currentTimeMillis(),
+                )
+            )
+        }
+    }
+
     override fun observeAllProgress(): Flow<Map<String, Long>> {
         return watchHistoryDao.observeByProfile(defaultProfileId).map { list ->
             list.associate { it.mediaItemId to it.position }

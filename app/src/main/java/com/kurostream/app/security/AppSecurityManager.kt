@@ -76,6 +76,25 @@ class AppSecurityManager(private val context: Context) {
     }
 
     private fun detectTampering(): Boolean {
+        // Check for common hooking/instrumentation frameworks by probing their known classes.
+        val hookingClasses = listOf(
+            "de.robv.android.xposed.XposedBridge",
+            "de.robv.android.xposed.XC_MethodHook",
+            "com.saurik.substrate.MS",
+            "me.weishu.exposed.entry.Main",
+        )
+        for (className in hookingClasses) {
+            try {
+                Class.forName(className)
+                return true
+            } catch (_: ClassNotFoundException) { /* expected */ }
+        }
+        // Check for frida server artifacts
+        val fridaPaths = listOf(
+            "/data/local/tmp/frida-server",
+            "/data/local/tmp/re.frida.server",
+        )
+        if (fridaPaths.any { java.io.File(it).exists() }) return true
         return false
     }
 

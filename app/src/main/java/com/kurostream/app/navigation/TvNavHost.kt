@@ -36,7 +36,9 @@ import com.kurostream.app.ui.screens.library.LibraryScreen
 import com.kurostream.app.ui.screens.search.SearchScreen
 import com.kurostream.app.ui.screens.settings.SettingsScreen
 import com.kurostream.app.ui.screens.settings.SourceLockSettingsScreen
+import com.kurostream.app.ui.screens.torrents.TorrentsScreen
 import com.kurostream.backup.ui.BackupSettingsScreen
+import com.kurostream.marketplace.ui.MarketplaceScreen as KuroStoreScreen
 
 private const val NAV_ANIM_DURATION = 300
 
@@ -92,8 +94,10 @@ fun TvNavHost(
                 onAddonsClick = {
                     navController.navigate(AddonsRoute)
                 },
-                // Torrents disabled — module excluded
-                onTorrentsClick = {},
+                // Torrents wired in via :torrent module
+                onTorrentsClick = {
+                    navController.navigate(TorrentsRoute)
+                },
                 onBackupClick = {
                     navController.navigate(BackupRoute)
                 },
@@ -129,6 +133,7 @@ fun TvNavHost(
         composable<SettingsRoute> {
             SettingsScreen(
                 onBackClick = { navController.popBackStack() },
+                onMarketplaceClick = { navController.navigate(MarketplaceRoute) },
             )
         }
 
@@ -144,12 +149,19 @@ fun TvNavHost(
             )
         }
 
-        // TorrentsScreen disabled — torrent module excluded (471 pre-existing errors)
-        // composable<TorrentsRoute> {
-        //     TorrentsScreen(
-        //         onBackClick = { navController.popBackStack() }
-        //     )
-        // }
+        // Torrents screen — :torrent module (OptimizedTorrentEngine)
+        composable<TorrentsRoute> {
+            TorrentsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Premium skins marketplace — :marketplace module (KuroCloud)
+        composable<MarketplaceRoute> {
+            KuroStoreScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
 
         composable<BackupRoute> {
             BackupSettingsScreen(

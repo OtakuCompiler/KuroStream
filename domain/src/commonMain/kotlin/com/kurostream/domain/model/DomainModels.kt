@@ -15,18 +15,22 @@
 
 package com.kurostream.domain.model
 
+import kotlinx.serialization.Serializable
+
 enum class MediaCategory { ANIME, MOVIE, TV_SHOW, DOCUMENTARY, KIDS, GENERAL }
 
+@Serializable
 data class WatchHistory(
     val id: String, val mediaItemId: String, val profileId: String,
     val position: Long = 0L, val duration: Long = 0L,
-    val watchedAt: Long = System.currentTimeMillis(), val completionPercent: Float = 0f,
+    val watchedAt: Long = 0L, val completionPercent: Float = 0f,
     val episodeNumber: Int? = null, val seasonNumber: Int? = null
 )
 
+@Serializable
 data class Favorite(
     val id: String, val mediaItemId: String, val profileId: String,
-    val addedAt: Long = System.currentTimeMillis(), val category: String = "general"
+    val addedAt: Long = 0L, val category: String = "general"
 )
 
 enum class DownloadStatus { PENDING, DOWNLOADING, PAUSED, COMPLETED, FAILED }

@@ -28,6 +28,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -61,7 +62,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.sqlite.jdbc)
+    ksp(libs.sqlite.jdbc)
     implementation(libs.gson)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
@@ -89,6 +90,7 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.tensorflow.lite)
 
+    coreLibraryDesugaring(libs.android.desugarJdkLibs)
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.coroutines)

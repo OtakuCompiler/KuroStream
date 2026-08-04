@@ -163,10 +163,15 @@ private fun ParticleBackground(type: Skin, count: Int, modifier: Modifier = Modi
         })
     }
 
+    // animFrameMs drives continuous redraws so the sway/twinkle effects animate
+    // on every vsync, even when particles are stationary (e.g. STARRY_NIGHT).
+    var animFrameMs by remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+
     LaunchedEffect(Unit) {
         var lastFrameMs = 0L
         while (true) {
             val frameMs = withInfiniteAnimationFrameMillis { it }
+            animFrameMs = frameMs                          // ← triggers Canvas redraw every frame
             val dt = ((frameMs - lastFrameMs).coerceAtMost(50)) / 1000f
             lastFrameMs = frameMs
             val rng = Random(type.ordinal)
@@ -184,9 +189,11 @@ private fun ParticleBackground(type: Skin, count: Int, modifier: Modifier = Modi
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val twinkle = ((sin(System.nanoTime() * 3e-9) + 1.0) / 2.0).toFloat()
+        // Use animFrameMs (snapshot state, read inside Canvas) for time-driven effects.
+        val timeF = animFrameMs / 1000f
+        val twinkle = ((sin(timeF * 3f) + 1.0) / 2.0).toFloat()
         particles.forEach { p ->
-            val sway = sin(p.swayPhase + frameTime * 0.002f) * p.swayAmplitude
+            val sway = sin(p.swayPhase + timeF * 0.002f * 1000f) * p.swayAmplitude
             val cx = p.x * w + sway
             val cy = p.y * h
             when (type) {
@@ -205,7 +212,7 @@ private fun ParticleBackground(type: Skin, count: Int, modifier: Modifier = Modi
     }
 }
 
-private val frameTime: Long get() = System.nanoTime()
+// frameTime removed — replaced by animFrameMs snapshot state inside ParticleBackground.
 
 private fun DrawScope.drawBlossom(cx: Float, cy: Float, size: Float, alpha: Float, rotation: Float) {
     val petalColor = Color(0xFFFFB7C5).copy(alpha = alpha)

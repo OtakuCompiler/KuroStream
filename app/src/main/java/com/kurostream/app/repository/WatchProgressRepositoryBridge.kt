@@ -34,4 +34,12 @@ class WatchProgressRepositoryBridge @Inject constructor(
             Timber.e(e, "Failed to save progress for $mediaId")
         }
     }
+
+    suspend fun markCompleted(mediaId: String) {
+        try {
+            domainRepo.markCompleted(mediaId)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to mark $mediaId as completed")
+        }
+    }
 }

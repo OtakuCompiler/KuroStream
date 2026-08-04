@@ -9,6 +9,7 @@ package com.kurostream.app.ui.theme
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
@@ -23,11 +24,14 @@ fun PremiumThemeProvider(
     reduceMotion: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val systemDark = isSystemInDarkTheme()
     val scheme = when (themeMode) {
-        ThemeMode.LIGHT -> PremiumThemeTokens.lightScheme
-        ThemeMode.DARK -> PremiumThemeTokens.darkScheme
+        ThemeMode.LIGHT       -> PremiumThemeTokens.lightScheme
+        ThemeMode.DARK        -> PremiumThemeTokens.darkScheme
+        ThemeMode.AUTO        -> if (systemDark) PremiumThemeTokens.darkScheme else PremiumThemeTokens.lightScheme
         ThemeMode.AMOLED_BLACK -> PremiumThemeTokens.amoledBlackScheme
         ThemeMode.OLED_CINEMA -> PremiumThemeTokens.oledCinemaScheme
+        ThemeMode.CUSTOM      -> PremiumThemeTokens.darkScheme // custom accent handled by CustomThemeEngine
     }
     androidx.tv.material3.MaterialTheme(colorScheme = scheme, content = content)
 }

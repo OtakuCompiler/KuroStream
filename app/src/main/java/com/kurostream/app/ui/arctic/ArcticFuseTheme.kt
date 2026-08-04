@@ -12,135 +12,148 @@ import androidx.compose.ui.unit.sp
 
 // ===== Arctic Fuse 3 Palette =====
 // Background tones (spec §3.1)
-val AFBgDeep = Color(0xFF0A0A0F)        // --bg-primary — deepest background
-val AFBg = Color(0xFF0A0A0F)            // --bg-primary
-val AFBgAlt = Color(0xFF12121A)         // --bg-secondary
-val AFBgSidebar = Color(0xFF0D0D14)     // --bg-sidebar
-val AFOverlay = Color(0xF20A0A0F)       // modal overlay scrim (~0.95 alpha of bg-primary)
+val AFBgDeep           = Color(0xFF07070E)  // --bg-deepest (pure black with a hue hint)
+val AFBg               = Color(0xFF0A0A0F)  // --bg-primary
+val AFBgAlt            = Color(0xFF12121A)  // --bg-secondary
+val AFBgSidebar        = Color(0xFF0D0D14)  // --bg-sidebar
+val AFOverlay          = Color(0xF20A0A0F)  // modal scrim (~95% opacity)
 
-// Surface tones — AFSurface = --bg-card, AFSurfaceHighlight = --bg-card-hover
-val AFSurface = Color(0xFF16161F)       // --bg-card
-val AFSurfaceVariant = Color(0xFF1A1A2E)// track/skeleton base
-val AFSurfaceHighlight = Color(0xFF1E1E2D) // --bg-card-hover
+// Surface tones
+val AFSurface          = Color(0xFF16161F)  // --bg-card
+val AFSurfaceVariant   = Color(0xFF1A1A2E)  // track/skeleton base
+val AFSurfaceHighlight = Color(0xFF1E1E2D)  // --bg-card-hover
+val AFSurfaceActive    = Color(0xFF23233A)  // focused/pressed card
 
-// Accents (spec §3.1 — indigo/violet, replacing the old cyan/teal Arctic Fuse look)
-val AFCyan = Color(0xFF6366F1)          // --accent-primary (indigo) — primary accent
-val AFTeal = Color(0xFF8B5CF6)          // --accent-secondary (violet) — secondary accent
-val AFAccentPrimary = AFCyan
-val AFAccentSecondary = AFTeal
-val AFGold = Color(0xFFFBBF24)          // amber — ratings
-val AFDanger = Color(0xFFEF4444)        // --accent-danger
-val AFWarning = Color(0xFFFBBF24)
+// Accents (spec §3.1 — indigo/violet)
+val AFAccentPrimary    = Color(0xFF6366F1)  // --accent-primary   (indigo-500)
+val AFAccentSecondary  = Color(0xFF8B5CF6)  // --accent-secondary (violet-500)
+val AFCyan             = AFAccentPrimary
+val AFTeal             = AFAccentSecondary
+val AFGold             = Color(0xFFFBBF24)  // amber — ratings & highlights
+val AFDanger           = Color(0xFFEF4444)  // error / danger
+val AFWarning          = Color(0xFFF59E0B)  // warning
+val AFSuccess          = Color(0xFF22C55E)  // success / online
 
-// Text (spec §3.1)
-val AFText = Color(0xFFFFFFFF)          // --text-primary
-val AFTextSec = Color(0xFF9CA3AF)       // --text-secondary
-val AFTextDim = Color(0xFF6B7280)       // --text-muted
-val AFTextMuted = Color(0xFF6B7280)     // --text-muted (alias)
+// Skip-button specific accents (§8.2 — player overlay)
+val AFSkipIntroBg      = Color(0xFF6366F1).copy(alpha = 0.15f)
+val AFSkipOutroBg      = Color(0xFF8B5CF6).copy(alpha = 0.15f)
+
+// Text
+val AFText             = Color(0xFFFFFFFF)  // --text-primary
+val AFTextSec          = Color(0xFF9CA3AF)  // --text-secondary
+val AFTextDim          = Color(0xFF6B7280)  // --text-muted
+val AFTextMuted        = AFTextDim
 
 // Borders
-val AFBorder = Color(0xFF1F1F2E)        // --border-subtle
-val AFBorderStrong = Color(0xFF2A2A3D)
+val AFBorder           = Color(0xFF1F1F2E)  // --border-subtle
+val AFBorderStrong     = Color(0xFF2A2A3D)
+val AFBorderFocus      = AFAccentPrimary    // keyboard focus ring
 
-// Star-rating amber (single source of truth, spec §6.1 metadata row)
-val AFStarGold = Color(0xFFFBBF24)
+// Star-rating amber
+val AFStarGold         = Color(0xFFFBBF24)
+
+// Gradient overlays (hero scrim, card hover, sidebar)
+val AFGradientHeroTop    = listOf(Color(0xCC0A0A0F), Color.Transparent)
+val AFGradientHeroBottom = listOf(Color.Transparent, Color(0xF00A0A0F))
+val AFGradientCard       = listOf(Color.Transparent, Color(0xD90A0A0F))
 
 // ===== Spacing tokens (4dp base grid, mirrors Tailwind scale) =====
 object AFSpacing {
-    val px1 = 4.dp
-    val px2 = 8.dp
-    val px3 = 12.dp
-    val px4 = 16.dp
-    val px5 = 20.dp
-    val px6 = 24.dp
-    val px8 = 32.dp
+    val px1  = 4.dp
+    val px2  = 8.dp
+    val px3  = 12.dp
+    val px4  = 16.dp
+    val px5  = 20.dp
+    val px6  = 24.dp
+    val px8  = 32.dp
     val px10 = 40.dp
     val px12 = 48.dp
     val px16 = 64.dp
 
-    // Safe zone padding around main content
-    val safeZoneH = 48.dp
-    val safeZoneV = 24.dp
+    val safeZoneH = 48.dp  // horizontal safe zone
+    val safeZoneV = 24.dp  // vertical safe zone
 }
 
 // ===== Radii (spec §3.4) =====
 object AFRadius {
-    val sm = 8.dp    // buttons, badges
-    val md = 12.dp   // cards, inputs
-    val lg = 16.dp   // modals, large cards
-    val xl = 20.dp   // hero images, featured cards
+    val xs   = 4.dp
+    val sm   = 8.dp   // buttons, badges
+    val md   = 12.dp  // cards, inputs
+    val lg   = 16.dp  // modals, large cards
+    val xl   = 20.dp  // hero images, featured cards
     val pill = 9999.dp
 }
 
-// ===== Card sizing mirrors Arctic Fuse dims =====
+// ===== Card sizing =====
 object AFCardSize {
-    // poster (portrait, 2:3 aspect)
-    val posterWidth = 160.dp
-    val posterHeight = 240.dp
-
-    // landscape (16:9)
+    val posterWidth    = 160.dp
+    val posterHeight   = 240.dp   // 2:3 aspect
     val landscapeWidth = 280.dp
-    val landscapeHeight = 158.dp
-
-    // episode (landscape with progress)
-    val episodeWidth = 280.dp
-    val episodeHeight = 158.dp
+    val landscapeHeight= 158.dp   // 16:9
+    val episodeWidth   = 280.dp
+    val episodeHeight  = 158.dp
 }
 
-// ===== Hero sizing (spec §6.1 — TV/Desktop: 70vh, min 500dp, max 700dp) =====
+// ===== Hero sizing (spec §6.1) =====
 object AFHero {
-    val height = 560.dp
-    val minHeight = 500.dp
-    val maxHeight = 700.dp
-    val tabletHeightFraction = 0.5f
-    val mobileHeightFraction = 0.45f
+    val height              = 560.dp
+    val minHeight           = 500.dp
+    val maxHeight           = 700.dp
+    val tabletHeightFraction= 0.5f
+    val mobileHeightFraction= 0.45f
 }
 
 // ===== Typography =====
-// Arctic Fuse uses Inter-like sans-serif. We map to Material3 type scale.
 object AFTypo {
-    val display = 36.sp
-    val title = 24.sp
-    val heading = 20.sp
-    val section = 18.sp
-    val body = 14.sp
-    val meta = 12.sp
-    val micro = 10.sp
-    val tag = 12.sp
-    val navLabel = 14.sp
-    val clockTime = 16.sp
-    val clockDate = 11.sp
+    val display          = 36.sp
+    val title            = 24.sp
+    val heading          = 20.sp
+    val section          = 18.sp
+    val body             = 14.sp
+    val meta             = 12.sp
+    val micro            = 10.sp
+    val tag              = 12.sp
+    val navLabel         = 14.sp
+    val clockTime        = 16.sp
+    val clockDate        = 11.sp
     val sectionTitleSpacing = 2.sp
+    // Player overlay
+    val playerTitle      = 22.sp
+    val playerMeta       = 13.sp
+    val skipChipLabel    = 14.sp
 }
 
-// ===== Sidebar sizing (spec §4.2 — 72dp desktop rail) =====
+// ===== Sidebar (spec §4.2) =====
 object AFSidebar {
     val collapsedWidth = 72.dp
-    val expandedWidth = 200.dp
-    val headerHeight = 64.dp
-    val weatherHeight = 56.dp
-    val navItemHeight = 48.dp
-    val profileHeight = 56.dp
+    val expandedWidth  = 200.dp
+    val headerHeight   = 64.dp
+    val weatherHeight  = 56.dp
+    val navItemHeight  = 48.dp
+    val profileHeight  = 56.dp
 }
 
 // ===== Hub switcher =====
 object AFHub {
-    val height = 56.dp
-    val tabLetterSpacing = 2.sp
+    val height          = 56.dp
+    val tabLetterSpacing= 2.sp
     val indicatorHeight = 2.dp
 }
 
-// ===== Motion durations =====
+// ===== Motion =====
 object AFMotion {
-    const val fast = 150
-    const val normal = 200
-    const val slow = 300
-    const val pageEnter = 200
-    const val panelEnter = 200
-    const val toast = 3000
-    const val playerShowHide = 3000
+    const val fast          = 150
+    const val normal        = 200
+    const val slow          = 300
+    const val pageEnter     = 200
+    const val panelEnter    = 200
+    const val toast         = 3000
+    const val playerShowHide= 3000
+    // Skip chip slide-in duration
+    const val skipChipEnter = 180
+    const val skipChipExit  = 120
 }
 
-// ===== Toast stack cap =====
-const val AFMaxToasts = 3
+// ===== Misc caps =====
+const val AFMaxToasts         = 3
 const val AFMaxRecentSearches = 5

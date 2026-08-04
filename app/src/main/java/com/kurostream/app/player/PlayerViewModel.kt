@@ -240,15 +240,79 @@ class PlayerViewModel @Inject constructor(
         seekBack()
     }
 
-    fun skipIntro() {}
-    fun skipOutro() {}
-    fun playNextEpisode() {}
-    fun setSubtitleFontSize(size: Float) {}
-    fun setSubtitleFontColor(color: String) {}
-    fun setSubtitleBgColor(color: String) {}
-    fun setSubtitleEnabled(enabled: Boolean) {}
+    fun skipIntro() {
+        val skipPos = _uiState.value.introEndMs
+        if (skipPos > 0L) {
+            engine?.seekTo(skipPos)
+            Timber.d("PlayerViewModel: skipped intro to ${skipPos}ms")
+        } else {
+            // Fall back: jump forward 90 seconds as a best-effort intro skip
+            val pos = engine?.currentPosition?.value ?: 0L
+            engine?.seekTo(pos + 90_000L)
+        }
+    }
+
+    fun skipOutro() {
+        val skipPos = _uiState.value.outroEndMs
+        if (skipPos > 0L) {
+            engine?.seekTo(skipPos)
+            Timber.d("PlayerViewModel: skipped outro to ${skipPos}ms")
+        } else {
+            val duration = engine?.duration?.value ?: 0L
+            val pos = engine?.currentPosition?.value ?: 0L
+            // Jump to 30s before end (next episode territory)
+            if (duration > 0) engine?.seekTo((duration - 30_000L).coerceAtLeast(pos))
+        }
+    }
+
+    fun playNextEpisode() {
+        val nextId = _uiState.value.nextEpisodeId ?: return
+        viewModelScope.launch(Dispatchers.Main + exceptionHandler) {
+            engine?.stop()
+            _uiState.update { it.copy(isPlaying = false) }
+            preparePlayback(nextId, null, 0L)
+            Timber.d("PlayerViewModel: advancing to next episode $nextId")
+        }
+    }
+
+    fun setSubtitleFontSize(size: Float) {
+        _uiState.update { it.copy(subtitleFontSize = size.coerceIn(10f, 60f)) }
+    }
+
+    fun setSubtitleFontColor(color: String) {
+        _uiState.update { it.copy(subtitleFontColorHex = color) }
+    }
+
+    fun setSubtitleBgColor(color: String) {
+        _uiState.update { it.copy(subtitleBgColorHex = color) }
+    }
+
+    fun setSubtitleEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(subtitleEnabled = enabled) }
+        engine?.setSubtitleEnabled(enabled)
+    }
 
     fun setAudioPassthrough(enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            try {
+                settingsRepository.setAudioPassthroughEnabled(enabled)
+                Timber.d("PlayerViewModel: audio passthrough=$enabled")
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to persist audio passthrough preference")
+            }
+        }
+    }
+
+    fun setIntroRange(startMs: Long, endMs: Long) {
+        _uiState.update { it.copy(introStartMs = startMs, introEndMs = endMs) }
+    }
+
+    fun setOutroRange(startMs: Long, endMs: Long) {
+        _uiState.update { it.copy(outroStartMs = startMs, outroEndMs = endMs) }
+    }
+
+    fun setNextEpisodeId(id: String?) {
+        _uiState.update { it.copy(nextEpisodeId = id) }
     }
 
     fun saveProgress() {
@@ -267,7 +331,8 @@ class PlayerViewModel @Inject constructor(
 
     fun saveState() {
         val position = engine?.currentPosition?.value ?: 0L
-        // In a real app, save to SavedStateHandle or persistent storage
+        savedStateHandle["player_position"] = position
+        mediaId?.let { savedStateHandle["media_id"] = it }
     }
 
     fun releasePlayer() {
@@ -311,20 +376,45 @@ class PlayerViewModel @Inject constructor(
     }
 
     private fun reportTraktScrobble(action: String) {
-        val mediaId = this.mediaId ?: return
+        val currentMediaId = mediaId ?: return
         val position = engine?.currentPosition?.value ?: 0L
         val duration = engine?.duration?.value ?: 0L
-        val progress = if (duration > 0) (engine?.currentPosition?.value?.toFloat() ?: 0f) / duration * 100 else 0f
-        
-        // This would integrate with TraktSyncManager
-        // traktSyncManager.onPlaybackStarted/Stopped/Paused etc.
+        val progress = if (duration > 0) (position.toFloat() / duration * 100).coerceIn(0f, 100f) else 0f
+
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            try {
+                when (action) {
+                    "start"  -> traktSyncManager.onPlaybackStarted(currentMediaId, episodeId, progress)
+                    "pause"  -> traktSyncManager.onPlaybackPaused(currentMediaId, episodeId, progress)
+                    "stop"   -> traktSyncManager.onPlaybackStopped(currentMediaId, episodeId, progress)
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Trakt scrobble '$action' failed")
+            }
+        }
     }
 
     private fun reportTraktScrobbleProgress(progress: Int) {
-        // Report progress to Trakt every 10%
+        val currentMediaId = mediaId ?: return
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            try {
+                traktSyncManager.onProgressUpdate(currentMediaId, episodeId, progress.toFloat())
+            } catch (e: Exception) {
+                Timber.w(e, "Trakt progress update failed")
+            }
+        }
     }
 
     private fun onPlaybackCompleted() {
-        // Mark episode as watched on Trakt
+        val currentMediaId = mediaId ?: return
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            try {
+                traktSyncManager.onPlaybackStopped(currentMediaId, episodeId, 100f)
+                watchProgressRepository.markCompleted(currentMediaId)
+                Timber.d("Playback completed for media=$currentMediaId")
+            } catch (e: Exception) {
+                Timber.w(e, "onPlaybackCompleted cleanup failed")
+            }
+        }
     }
 }

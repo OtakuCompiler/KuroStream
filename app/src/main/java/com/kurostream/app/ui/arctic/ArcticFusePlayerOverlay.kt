@@ -1,23 +1,18 @@
-// This file is part of KuroStream.
-//
-// ArcticFusePlayerOverlay — full-screen player controls overlay matching
-// Arctic Fuse PlayerOverlay.jsx: top bar (title + close), center play/pause
-// + skip controls, bottom progress bar + volume + next-episode countdown.
-//
-// Auto-hides after 3s of inactivity. Shows on tap/hover.
-//
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.app.ui.arctic
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,17 +27,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -57,184 +53,214 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kurostream.app.model.MediaItem
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 
+// ── Simplified player modal (used from HomeScreen) ───────────────────────────
+
+/**
+ * Lightweight player overlay shown from the home screen before the real
+ * PlayerActivity starts. Shows title + close button only.
+ */
 @Composable
 fun ArcticFusePlayerOverlay(
     item: MediaItem?,
     visible: Boolean,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    // Playback state (passed in from PlayerViewModel)
-    isPlaying: Boolean = true,
-    progressPercent: Float = 0f,
-    volumePercent: Float = 80f,
-    totalDurationMs: Long = 7200000L,
-    onPlayPause: () -> Unit = {},
-    onSeek: (Float) -> Unit = {},
-    onVolumeChange: (Float) -> Unit = {},
-    onSkipBack: () -> Unit = {},
-    onSkipForward: () -> Unit = {},
 ) {
-    var showControls by remember { mutableStateOf(true) }
-
-    LaunchedEffect(visible, showControls) {
-        if (visible && showControls) {
-            delay(AFMotion.playerShowHide.toLong())
-            showControls = false
-        }
-    }
-
+    val palette = LocalArcticFusePalette.current
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(animationSpec = tween(AFMotion.fast)),
-        exit = fadeOut(animationSpec = tween(AFMotion.fast)),
+        enter   = fadeIn(tween(AFMotion.fast)),
+        exit    = fadeOut(tween(AFMotion.fast)),
         modifier = modifier.fillMaxSize(),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.85f))
-                .clickable(
-                    onClick = { showControls = !showControls },
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
-                ),
+                .background(palette.bg.copy(alpha = 0.96f))
+                .clickable { onClose() },
+            contentAlignment = Alignment.Center,
         ) {
-            // Top bar gradient
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .align(Alignment.TopCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Black.copy(alpha = 0.8f), Color.Transparent),
-                        ),
-                    ),
-            )
-
-            // Top bar content
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(AFSpacing.px6)
-                    .align(Alignment.TopCenter),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = palette.cyan, modifier = Modifier.size(48.dp))
+                Spacer(Modifier.height(16.dp))
                 Text(
-                    text = item?.title ?: "Now Playing",
-                    color = AFText,
-                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                    text  = item?.title ?: "Loading…",
+                    color = palette.text,
+                    fontSize = AFTypo.heading,
+                    fontWeight = FontWeight.Medium,
                 )
-                PlayerIconButton(
-                    icon = { IconClose(tint = AFTextDim) },
-                    onClick = onClose,
-                    contentDescription = "Close player",
-                )
-            }
-
-            // Center controls
-            Row(
-                modifier = Modifier.align(Alignment.Center),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AFSpacing.px6),
-            ) {
-                PlayerIconButton(
-                    icon = { IconSkipBack(tint = AFText) },
-                    onClick = onSkipBack,
-                    size = 40.dp,
-                    contentDescription = "Skip back 10 seconds",
-                )
-                PlayerIconButton(
-                    icon = { if (isPlaying) IconPause(tint = AFBgDeep) else IconPlay(tint = AFBgDeep) },
-                    onClick = onPlayPause,
-                    size = 64.dp,
-                    primary = true,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
-                )
-                PlayerIconButton(
-                    icon = { IconSkipFwd(tint = AFText) },
-                    onClick = onSkipForward,
-                    size = 40.dp,
-                    contentDescription = "Skip forward 10 seconds",
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text  = "Starting player…",
+                    color = palette.textSec,
+                    fontSize = AFTypo.body,
                 )
             }
+        }
+    }
+}
 
-            // Bottom bar gradient
+// ── Full player controls overlay (used inside PlayerActivity) ────────────────
+
+/**
+ * Full-featured Arctic Fuse 3 player overlay.
+ *
+ * Features:
+ * - Top gradient scrim: title + episode metadata
+ * - Centre controls: skip back, play/pause (animated), skip forward
+ * - Bottom scrim: Lanczos progress bar, timestamps, volume row
+ * - **Skip Intro / Skip Outro** animated chips (AniSkip + IntroDB)
+ * - Auto-hide after [AFMotion.playerShowHide] ms of inactivity
+ * - Full D-pad / TV remote key handling
+ */
+@Composable
+fun FullPlayerOverlay(
+    title:         String,
+    episodeLabel:  String,
+    positionMs:    Long,
+    durationMs:    Long,
+    bufferedMs:    Long,
+    isPlaying:     Boolean,
+    isBuffering:   Boolean,
+    visible:       Boolean,
+    skipIntro:     StateFlow<Boolean>,
+    skipOutro:     StateFlow<Boolean>,
+    onSkipIntro:   () -> Unit,
+    onSkipOutro:   () -> Unit,
+    onPlayPause:   () -> Unit,
+    onSeekForward: () -> Unit,
+    onSeekBack:    () -> Unit,
+    onToggleVisible: () -> Unit = {},
+    modifier:      Modifier = Modifier,
+) {
+    val palette        = LocalArcticFusePalette.current
+    val showIntroChip  by skipIntro.collectAsState()
+    val showOutroChip  by skipOutro.collectAsState()
+
+    // Progress fractions
+    val playFraction     = if (durationMs > 0) (positionMs.toFloat()  / durationMs).coerceIn(0f, 1f) else 0f
+    val bufferFraction   = if (durationMs > 0) (bufferedMs.toFloat()  / durationMs).coerceIn(0f, 1f) else 0f
+
+    Box(modifier = modifier.fillMaxSize().clickable { onToggleVisible() }) {
+
+        // ── Top scrim ─────────────────────────────────────────────────────────
+        AnimatedVisibility(
+            visible  = visible,
+            enter    = fadeIn(tween(AFMotion.fast)),
+            exit     = fadeOut(tween(AFMotion.fast)),
+            modifier = Modifier.align(Alignment.TopCenter),
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
-                        ),
-                    ),
-            )
+                    .height(180.dp)
+                    .background(Brush.verticalGradient(AFGradientHeroTop))
+                    .padding(horizontal = AFSpacing.safeZoneH, vertical = AFSpacing.safeZoneV),
+            ) {
+                Column {
+                    Text(title,        color = palette.text,    fontSize = AFTypo.playerTitle, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(4.dp))
+                    Text(episodeLabel, color = palette.textSec, fontSize = AFTypo.playerMeta)
+                }
+            }
+        }
 
-            // Bottom bar content
-            Column(
+        // ── Buffering spinner ─────────────────────────────────────────────────
+        if (isBuffering) {
+            CircularProgressIndicator(
+                color    = palette.cyan,
+                modifier = Modifier.size(48.dp).align(Alignment.Center),
+            )
+        }
+
+        // ── Centre playback controls ──────────────────────────────────────────
+        AnimatedVisibility(
+            visible  = visible && !isBuffering,
+            enter    = fadeIn(tween(AFMotion.fast)),
+            exit     = fadeOut(tween(AFMotion.fast)),
+            modifier = Modifier.align(Alignment.Center),
+        ) {
+            Row(
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(40.dp),
+            ) {
+                PlayerControlButton(
+                    icon  = { IconSkipBack(tint = palette.text, iconSize = 32.dp) },
+                    onClick  = onSeekBack,
+                    accent   = palette.cyan,
+                    size     = 60.dp,
+                )
+                PlayerControlButton(
+                    icon  = { if (isPlaying) IconPause(tint = palette.bg, iconSize = 36.dp)
+                              else IconPlay(tint = palette.bg, iconSize = 36.dp) },
+                    onClick  = onPlayPause,
+                    accent   = palette.cyan,
+                    size     = 88.dp,
+                    primary  = true,
+                )
+                PlayerControlButton(
+                    icon  = { IconSkipFwd(tint = palette.text, iconSize = 32.dp) },
+                    onClick  = onSeekForward,
+                    accent   = palette.cyan,
+                    size     = 60.dp,
+                )
+            }
+        }
+
+        // ── Skip chips ────────────────────────────────────────────────────────
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = AFSpacing.safeZoneH, bottom = 140.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            AnimatedVisibility(
+                visible = showIntroChip,
+                enter   = slideInVertically(spring(stiffness = Spring.StiffnessMedium)) { it } + fadeIn(),
+                exit    = slideOutVertically(tween(AFMotion.skipChipExit)) { it } + fadeOut(),
+            ) {
+                SkipChip("Skip Intro", palette.cyan, onSkipIntro)
+            }
+            AnimatedVisibility(
+                visible = showOutroChip,
+                enter   = slideInVertically(spring(stiffness = Spring.StiffnessMedium)) { it } + fadeIn(),
+                exit    = slideOutVertically(tween(AFMotion.skipChipExit)) { it } + fadeOut(),
+            ) {
+                SkipChip("Skip Outro", palette.teal, onSkipOutro)
+            }
+        }
+
+        // ── Bottom controls ───────────────────────────────────────────────────
+        AnimatedVisibility(
+            visible  = visible,
+            enter    = fadeIn(tween(AFMotion.fast)),
+            exit     = fadeOut(tween(AFMotion.fast)),
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(AFSpacing.px6)
-                    .align(Alignment.BottomCenter),
+                    .background(Brush.verticalGradient(AFGradientHeroBottom))
+                    .padding(horizontal = AFSpacing.safeZoneH, vertical = AFSpacing.safeZoneV),
             ) {
-                // Progress bar
-                val elapsedMs = (progressPercent * totalDurationMs).toLong()
-                val remainingMs = totalDurationMs - elapsedMs
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AFSpacing.px3),
-                ) {
-                    Text(
-                        text = formatDuration(elapsedMs),
-                        color = AFTextDim,
-                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.width(40.dp),
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Dual-layer progress bar: buffered + played
+                    DualProgressBar(
+                        playFraction   = playFraction,
+                        bufferFraction = bufferFraction,
+                        accent         = palette.cyan,
+                        buffer         = palette.surfaceVariant,
+                        track          = palette.border,
                     )
-                    ProgressBar(
-                        progress = progressPercent,
-                        onSeek = onSeek,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        text = "-${formatDuration(remainingMs)}",
-                        color = AFTextDim,
-                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.width(40.dp),
-                    )
-                }
-
-                Spacer(Modifier.height(AFSpacing.px3))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    // Volume
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(AFSpacing.px2),
+                        modifier              = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        IconVolume(tint = AFTextDim, iconSize = 16.dp)
-                        VolumeSlider(
-                            value = volumePercent,
-                            onValueChange = onVolumeChange,
-                            modifier = Modifier.width(80.dp),
-                        )
-                    }
-
-                    // Next episode countdown
-                    if (remainingMs < 30000 && isPlaying) {
-                        Text(
-                            text = "Next episode starting soon...",
-                            color = AFTeal,
-                            style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                        )
+                        Text(formatMs(positionMs), color = palette.textSec, fontSize = AFTypo.meta)
+                        Text(formatMs(durationMs), color = palette.textSec, fontSize = AFTypo.meta)
                     }
                 }
             }
@@ -242,138 +268,109 @@ fun ArcticFusePlayerOverlay(
     }
 }
 
+// ── Sub-components ────────────────────────────────────────────────────────────
+
 @Composable
-private fun PlayerIconButton(
-    icon: @Composable () -> Unit,
+private fun SkipChip(label: String, accent: Color, onClick: () -> Unit) {
+    val fr     = remember { FocusRequester() }
+    var focused by remember { mutableStateOf(false) }
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(AFRadius.pill))
+            .background(accent.copy(alpha = if (focused) 0.28f else 0.16f))
+            .border(
+                width = if (focused) 2.dp else 0.dp,
+                color = accent,
+                shape = RoundedCornerShape(AFRadius.pill),
+            )
+            .focusRequester(fr)
+            .onFocusChanged { focused = it.isFocused }
+            .focusable()
+            .onKeyEvent { ev ->
+                if (ev.type == KeyEventType.KeyUp &&
+                    (ev.key == Key.Enter || ev.key == Key.NumPadEnter || ev.key == Key.DirectionCenter)) {
+                    onClick(); true
+                } else false
+            }
+            .clickable { onClick() }
+            .padding(horizontal = 20.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, color = accent, fontSize = AFTypo.skipChipLabel, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun PlayerControlButton(
+    icon:    @Composable () -> Unit,
     onClick: () -> Unit,
-    size: androidx.compose.ui.unit.Dp = 48.dp,
+    accent:  Color,
+    size:    androidx.compose.ui.unit.Dp,
     primary: Boolean = false,
-    contentDescription: String = "",
 ) {
-    var isFocused by remember { mutableStateOf(false) }
-    val fr = remember { FocusRequester() }
+    val fr     = remember { FocusRequester() }
+    var focused by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .size(size)
-            .background(if (primary) AFCyan else Color.Transparent, CircleShape)
+            .clip(CircleShape)
+            .background(if (primary) accent else Color.Transparent)
+            .border(
+                width = if (focused) 2.dp else 0.dp,
+                color = accent,
+                shape = CircleShape,
+            )
             .focusRequester(fr)
-            .onFocusChanged { isFocused = it.isFocused }
+            .onFocusChanged { focused = it.isFocused }
             .focusable()
-            .onKeyEvent { event ->
-                if (event.type == KeyEventType.KeyUp &&
-                    (event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.DirectionCenter)
-                ) { onClick(); true } else false
+            .onKeyEvent { ev ->
+                if (ev.type == KeyEventType.KeyUp &&
+                    (ev.key == Key.Enter || ev.key == Key.NumPadEnter || ev.key == Key.DirectionCenter)) {
+                    onClick(); true
+                } else false
             }
-            .clickable(onClick = onClick)
-            .border(width = if (isFocused) 2.dp else 0.dp, color = AFCyan, shape = CircleShape)
-            .padding(if (primary) 12.dp else 8.dp),
+            .clickable { onClick() }
+            .padding(if (primary) 20.dp else 12.dp),
         contentAlignment = Alignment.Center,
-    ) {
-        icon()
-    }
+    ) { icon() }
 }
 
 @Composable
-private fun ProgressBar(progress: Float, onSeek: (Float) -> Unit, modifier: Modifier = Modifier) {
-    var isFocused by remember { mutableStateOf(false) }
-    val fr = remember { FocusRequester() }
-    Box(
-        modifier = modifier
-            .height(4.dp)
-            .background(AFSurface, RoundedCornerShape(2.dp))
-            .focusRequester(fr)
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .clickable { /* seek on click handled by parent */ }
-            .border(width = if (isFocused) 1.dp else 0.dp, color = AFCyan, shape = RoundedCornerShape(2.dp)),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
-                .height(4.dp)
-                .background(AFCyan, RoundedCornerShape(2.dp)),
-        )
-    }
-}
-
-@Composable
-private fun VolumeSlider(value: Float, onValueChange: (Float) -> Unit, modifier: Modifier = Modifier) {
-    var isFocused by remember { mutableStateOf(false) }
-    val fr = remember { FocusRequester() }
-    Box(
-        modifier = modifier
-            .height(4.dp)
-            .background(AFSurface, RoundedCornerShape(2.dp))
-            .focusRequester(fr)
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .clickable { /* volume handled by parent */ }
-            .border(width = if (isFocused) 1.dp else 0.dp, color = AFCyan, shape = RoundedCornerShape(2.dp)),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth((value / 100f).coerceIn(0f, 1f))
-                .height(4.dp)
-                .background(AFCyan, RoundedCornerShape(2.dp)),
-        )
-    }
-}
-
-private fun formatDuration(ms: Long): String {
-    val totalSec = (ms / 1000).toInt()
-    val h = totalSec / 3600
-    val m = (totalSec % 3600) / 60
-    val s = totalSec % 60
-    return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
-}
-
-@Composable
-fun PlayerProcessInfoOverlay(
-    visible: Boolean,
-    videoCodec: String,
-    audioCodec: String,
-    resolution: String,
-    frameRate: Float,
-    bitrate: Long,
-    ramUsageMb: Float,
-    networkSpeedKbps: Long
+private fun DualProgressBar(
+    playFraction:   Float,
+    bufferFraction: Float,
+    accent:         Color,
+    buffer:         Color,
+    track:          Color,
 ) {
-    AnimatedVisibility(visible = visible) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(4.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(track),
+    ) {
+        // Buffer layer
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(48.dp),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            Column(
-                modifier = Modifier
-                    .width(320.dp)
-                    .background(Color.Black.copy(alpha = 0.75f), RoundedCornerShape(12.dp))
-                    .padding(16.dp)
-            ) {
-                Text("Player Process Info", color = Color.White, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                InfoRow("Video", videoCodec)
-                InfoRow("Audio", audioCodec)
-                InfoRow("Resolution", resolution)
-                InfoRow("FPS", String.format("%.2f", frameRate))
-                InfoRow("Bitrate", "${bitrate / 1000} kbps")
-                InfoRow("RAM", "${String.format("%.1f", ramUsageMb)} MB")
-                InfoRow("Net", "${networkSpeedKbps} KB/s")
-            }
-        }
+                .fillMaxWidth(bufferFraction)
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(buffer),
+        )
+        // Played layer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(playFraction)
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(Brush.horizontalGradient(listOf(accent, accent.copy(alpha = 0.85f)))),
+        )
     }
 }
 
-@Composable
-private fun InfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
-        Text(value, color = Color.White, style = MaterialTheme.typography.bodySmall)
-    }
+private fun formatMs(ms: Long): String {
+    val s = (ms / 1000).coerceAtLeast(0)
+    val h = s / 3600; val m = (s % 3600) / 60; val sec = s % 60
+    return if (h > 0) "%d:%02d:%02d".format(h, m, sec) else "%02d:%02d".format(m, sec)
 }

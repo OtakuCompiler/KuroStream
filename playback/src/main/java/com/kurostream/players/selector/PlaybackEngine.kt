@@ -40,6 +40,12 @@ interface PlaybackEngine {
     fun addListener(listener: Listener)
     fun removeListener(listener: Listener)
 
+    /** Stop playback and release the current media item (but not the engine). */
+    fun stop()
+
+    /** Enable or disable subtitle rendering on this engine. */
+    fun setSubtitleEnabled(enabled: Boolean)
+
     fun release()
 
     /** Backend-specific native handle for UI that requires it (e.g. [androidx.media3.ui.PlayerView]). */

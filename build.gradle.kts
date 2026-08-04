@@ -17,8 +17,10 @@ plugins {
 // /sdcard - this is the single biggest build speed win on this device.
 // Only apply when KURO_BUILD_DIR is explicitly set or when not running on CI.
 val isCI = System.getenv("CI") == "true"
+// In Replit the runner user is 'runner', not 'root'. Fall back to the
+// in-tree default (null = let Gradle use each module's build/ dir) so
+// reports can always be written.
 val kurostreamBuildDir = System.getenv("KURO_BUILD_DIR")?.takeIf { it.isNotBlank() }
-    ?: if (isCI) null else "/root/.kurostream-build"
 
 if (kurostreamBuildDir != null) {
     layout.buildDirectory.set(file("$kurostreamBuildDir/root"))

@@ -90,6 +90,9 @@ interface SettingsRepository {
     suspend fun setSubtitleBgColor(hex: String)
     suspend fun setSubtitleEnabled(enabled: Boolean)
 
+    // ── Audio ──────────────────────────────────────────────────────────
+    suspend fun setAudioPassthroughEnabled(enabled: Boolean)
+
     // ── Bulk ───────────────────────────────────────────────────────────
     suspend fun clearAllSettings()
 

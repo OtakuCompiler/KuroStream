@@ -17,6 +17,7 @@ package com.kurostream.domain.sync
 
 import com.kurostream.domain.result.Result
 import com.kurostream.domain.model.*
+import kotlinx.serialization.Serializable
 
 interface SyncProvider {
     val providerName: String
@@ -29,6 +30,7 @@ interface SyncProvider {
     suspend fun deleteCloudData(): Result<Unit>
 }
 
+@Serializable
 data class SyncPayload(
     val profiles: List<Profile> = emptyList(),
     val watchHistory: List<WatchHistory> = emptyList(),

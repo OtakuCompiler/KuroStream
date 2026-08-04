@@ -72,7 +72,14 @@ class SmartPlayerSelector @Inject constructor(
     private fun isAdvancedCodec(codec: String): Boolean =
         codec.equals("hevc", true) || codec.equals("av1", true) || codec.equals("vp9", true)
 
-    private fun hasNativeMpv(): Boolean = false
+    private fun hasNativeMpv(): Boolean {
+        return try {
+            System.loadLibrary("mpv")
+            true
+        } catch (_: UnsatisfiedLinkError) {
+            false
+        }
+    }
 
     private fun qualityRank(quality: String): Int = when {
         quality.contains("8K", true) -> 5

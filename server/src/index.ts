@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
-import { metricsMiddleware, metricsEndpoint } from 'prom-client';
+import promClient, { Registry, collectDefaultMetrics } from 'prom-client';
 import { loadConfig } from './config';
 import { runAllMigrations, closePool } from './db';
 import { getRedisClient, closeRedis } from './db/redis';
@@ -24,6 +24,9 @@ import marketplaceRouter from './routes/marketplace';
 import notificationsRouter from './routes/notifications';
 import extensionsRouter from './routes/extensions';
 import healthRouter from './routes/health';
+
+const register = new Registry();
+collectDefaultMetrics({ register });
 
 async function startServer() {
   // Load configuration
@@ -56,7 +59,15 @@ async function startServer() {
   app.use('/health', healthRouter);
   
   // Metrics endpoint
-  app.get('/metrics', metricsEndpoint);
+  app.get('/metrics', async (req, res) => {
+    try {
+      res.set('Content-Type', register.contentType);
+      const metrics = await register.metrics();
+      res.end(metrics);
+    } catch (ex) {
+      res.status(500).end(ex instanceof Error ? ex.message : 'Unknown error');
+    }
+  });
   
   // API routes
   const apiRouter = express.Router();

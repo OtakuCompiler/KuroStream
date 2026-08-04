@@ -13,8 +13,11 @@ import com.frostwire.jlibtorrent.SessionParams
 import com.frostwire.jlibtorrent.SessionSettings
 import com.frostwire.jlibtorrent.TorrentHandle
 import com.frostwire.jlibtorrent.swig.add_torrent_params_flags_t
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class OptimizedTorrentEngine {
+@Singleton
+class OptimizedTorrentEngine @Inject constructor() {
 
     private val session = SessionManager()
 

@@ -44,5 +44,5 @@ dependencies {
     implementation(libs.jlibtorrent.android.arm)
     implementation(libs.jlibtorrent.android.arm64)
     implementation(libs.jlibtorrent.android.x86)
-    implementation(libs.findLibrary("jlibtorrent-android-x86-64").get())
+    implementation(libs.jlibtorrent.android.x64)
 }

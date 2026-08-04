@@ -134,6 +134,10 @@ class SettingsRepositoryImpl @Inject constructor() : SettingsRepository {
         playerSubtitleSettingsFlow.value = playerSubtitleSettingsFlow.value.copy(enabled = enabled)
     }
 
+    // ── Audio ──────────────────────────────────────────────────────────
+    private val audioPassthroughFlow = MutableStateFlow(false)
+    override suspend fun setAudioPassthroughEnabled(enabled: Boolean) { audioPassthroughFlow.value = enabled }
+
     // ── Bulk ───────────────────────────────────────────────────────────
     override suspend fun clearAllSettings() {
         themeFlow.value = AppTheme.SYSTEM

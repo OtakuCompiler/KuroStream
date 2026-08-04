@@ -155,7 +155,7 @@ jlibtorrent = { group = "com.frostwire", name = "jlibtorrent", version.ref = "jl
 jlibtorrent-android-arm = { group = "com.frostwire", name = "jlibtorrent-android-arm", version.ref = "jlibtorrent" }
 jlibtorrent-android-arm64 = { group = "com.frostwire", name = "jlibtorrent-android-arm64", version.ref = "jlibtorrent" }
 jlibtorrent-android-x86 = { group = "com.frostwire", name = "jlibtorrent-android-x86", version.ref = "jlibtorrent" }
-jlibtorrent-android-x86-64 = { group = "com.frostwire", name = "jlibtorrent-android-x86_64", version.ref = "jlibtorrent" }
+jlibtorrent-android-x64 = { group = "com.frostwire", name = "jlibtorrent-android-x86_64", version.ref = "jlibtorrent" }
 
 # Playback engines
 libvlc = { group = "org.videolan.android", name = "libvlc-all", version.ref = "vlc" }
