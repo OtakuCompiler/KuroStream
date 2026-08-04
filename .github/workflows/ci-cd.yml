@@ -20,8 +20,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
       - uses: android-actions/setup-android@v3
         with:
-          api-level: 35
-          build-tools: "35.0.0"
+          api-level: 36
       - name: Create google-services.json stub
         run: |
           mkdir -p app/src/debug
@@ -97,8 +96,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
       - uses: android-actions/setup-android@v3
         with:
-          api-level: 35
-          build-tools: "35.0.0"
+          api-level: 36
       - name: Create google-services.json stub
         run: |
           mkdir -p app/src/debug
