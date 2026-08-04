@@ -13,7 +13,6 @@ plugins {
 android {
     namespace = "com.kurostream.app"
     compileSdk = libs.versions.compileSdk.get().toInt()
-    buildToolsVersion = "35.0.0"
     ndkVersion = "28.0.13004108"
 
     defaultConfig {
