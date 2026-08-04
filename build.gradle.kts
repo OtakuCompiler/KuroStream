@@ -58,10 +58,10 @@ tasks.register("detektFormat") {
 subprojects {
     configurations.all {
         resolutionStrategy {
-            eachDependency { details ->
-                if (details.requested.group == "com.google.protobuf" && details.requested.name == "protobuf-javalite") {
-                    details.useTarget("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}")
-                    details.because("protobuf-javalite is deprecated; protobuf-java contains the same classes")
+            eachDependency {
+                if (requested.group == "com.google.protobuf" && requested.name == "protobuf-javalite") {
+                    useTarget("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}")
+                    because("protobuf-javalite is deprecated; protobuf-java contains the same classes")
                 }
             }
         }
