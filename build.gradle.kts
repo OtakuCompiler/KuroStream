@@ -55,15 +55,4 @@ tasks.register("detektFormat") {
 // configuration overhead on every build. Apply it explicitly in a module
 // when needed, or run the detektAll/detektFormat tasks above.
 
-subprojects {
-    configurations.all {
-        resolutionStrategy {
-            eachDependency {
-                if (requested.group == "com.google.protobuf" && requested.name == "protobuf-javalite") {
-                    useTarget("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}")
-                    because("protobuf-javalite is deprecated; protobuf-java contains the same classes")
-                }
-            }
-        }
-    }
-}
+

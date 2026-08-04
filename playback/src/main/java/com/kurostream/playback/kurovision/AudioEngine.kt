@@ -47,7 +47,7 @@ class KuroAudioEngine @Inject constructor(
     private var virtualizer:      Virtualizer?       = null
     private var loudnessEnhancer: LoudnessEnhancer?  = null
     private var reverb:           PresetReverb?      = null
-    private var activeSessionId:  Int                = AudioTrack.SESSION_ID_GENERATE
+    private var activeSessionId:  Int                = 0
 
     // ── State ────────────────────────────────────────────────────────────────
     private val _state = MutableStateFlow(AudioState())
@@ -89,7 +89,7 @@ class KuroAudioEngine @Inject constructor(
         ).forEach { try { it.run() } catch (_: Exception) {} }
         equalizer = null; bassBoost = null; virtualizer = null
         loudnessEnhancer = null; reverb = null
-        activeSessionId = AudioTrack.SESSION_ID_GENERATE
+        activeSessionId = 0
     }
 
     // ── EQ presets ────────────────────────────────────────────────────────────
