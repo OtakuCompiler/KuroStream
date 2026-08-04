@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import androidx.startup.Initializer
-import com.kurostream.app.repository.SyncInitializer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

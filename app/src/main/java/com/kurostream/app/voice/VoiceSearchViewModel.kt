@@ -1,22 +1,14 @@
 package com.kurostream.app.voice
 
-import android.app.Activity
-import android.app.SearchManager
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.util.Log
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class VoiceSearchViewModel : ViewModel() {

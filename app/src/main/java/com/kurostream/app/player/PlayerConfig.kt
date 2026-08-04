@@ -1,13 +1,11 @@
 package com.kurostream.app.player
 
 import android.content.Context
-import android.os.Build
 import androidx.media3.common.C
 import androidx.media3.common.AudioAttributes
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import timber.log.Timber

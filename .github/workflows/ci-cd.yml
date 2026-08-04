@@ -6,45 +6,7 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  NODE_VERSION: '20'
-  JAVA_VERSION: '17'
-  GRADLE_OPTS: "-Xmx1024m -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
-
 jobs:
-  server-lint:
-    name: Server Lint & Type Check
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./server
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: server/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npx tsc --noEmit
-
-  server-test:
-    name: Server Unit Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./server
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: server/package-lock.json
-      - run: npm ci
-      - run: npm test -- --ci --coverage
-
   android-build:
     name: Android Debug Build
     runs-on: ubuntu-latest
@@ -56,6 +18,40 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - uses: gradle/actions/setup-gradle@v3
+      - name: Create google-services.json stub
+        run: |
+          mkdir -p app/src/debug
+          cat > app/src/debug/google-services.json << 'STUB'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "kurostream-placeholder",
+              "storage_bucket": "kurostream-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.kurostream.app"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyPlaceholderKeyForCIOnly123456"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          STUB
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug --no-daemon --max-workers=2
       - uses: actions/upload-artifact@v4
@@ -76,6 +72,40 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - uses: gradle/actions/setup-gradle@v3
+      - name: Create google-services.json stub
+        run: |
+          mkdir -p app/src/debug
+          cat > app/src/debug/google-services.json << 'STUB'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "kurostream-placeholder",
+              "storage_bucket": "kurostream-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.kurostream.app"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyPlaceholderKeyForCIOnly123456"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          STUB
       - run: ./gradlew testDebugUnitTest --no-daemon --max-workers=2
       - uses: actions/upload-artifact@v4
         if: always()

@@ -48,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -61,7 +60,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Card
 import androidx.tv.material3.CardDefaults
@@ -74,7 +72,6 @@ import com.kurostream.app.ui.components.MediaCard
 import com.kurostream.app.ui.theme.TvFocusBorder
 import com.kurostream.app.ui.theme.TvOnSurfaceVariant
 import com.kurostream.app.ui.theme.TvSurfaceHighlight
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalTvMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable

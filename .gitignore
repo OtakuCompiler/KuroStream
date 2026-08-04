@@ -48,13 +48,8 @@ firebase-*.json
 *.keystore
 keystore.properties
 
-# Server
-server/node_modules/
-server/.env
-server/.env.local
-server/*.log
-server/dist/
-server/coverage/
+# Server (not used by Android app)
+server/
 
 # Kotlin
 .kotlin/

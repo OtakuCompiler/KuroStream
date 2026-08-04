@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,7 +44,6 @@ import androidx.tv.material3.Button
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import coil.compose.AsyncImage
-import com.kurostream.domain.extension.ExtensionType
 import com.kurostream.domain.extension.UnifiedExtension
 
 @OptIn(ExperimentalTvMaterial3Api::class)

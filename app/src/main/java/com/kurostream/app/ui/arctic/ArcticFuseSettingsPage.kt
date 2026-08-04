@@ -57,7 +57,6 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kurostream.app.ui.theme.AdaptiveProfile
 import com.kurostream.app.ui.theme.BlueGlowIntensity
 import com.kurostream.app.ui.theme.ThemeMode
 import com.kurostream.players.render.ColorProfile

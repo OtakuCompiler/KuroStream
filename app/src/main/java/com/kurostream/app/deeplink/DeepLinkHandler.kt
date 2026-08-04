@@ -1,7 +1,6 @@
 package com.kurostream.app.deeplink
 
 import android.content.Intent
-import android.net.Uri
 import androidx.navigation.NavController
 
 object DeepLinkHandler {

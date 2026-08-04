@@ -1,8 +1,6 @@
 package com.kurostream.app.di
 
 import android.content.Context
-import com.kurostream.app.repository.TvRepositories
-import com.kurostream.app.repository.FavoritesRepositoryBridge
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

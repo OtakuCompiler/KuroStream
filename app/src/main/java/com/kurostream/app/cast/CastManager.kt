@@ -4,7 +4,6 @@ import android.content.Context
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManagerListener
-import timber.log.Timber
 
 class CastManager(context: Context) {
 

@@ -17,7 +17,6 @@ package com.kurostream.app
 
 import android.app.Application
 import android.content.ComponentCallbacks2
-import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import androidx.lifecycle.ProcessLifecycleOwner

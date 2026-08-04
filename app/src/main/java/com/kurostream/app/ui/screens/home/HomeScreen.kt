@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.ExperimentalTvMaterial3Api
-import com.kurostream.app.ui.arctic.ArcticFuseHomeScreen
 import com.kurostream.app.ui.components.SidebarNavigation
 import com.kurostream.app.ui.theme.Skin
 import com.kurostream.app.ui.theme.TvBackground

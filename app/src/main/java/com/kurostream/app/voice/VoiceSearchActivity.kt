@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.ComponentActivity
@@ -35,7 +34,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel

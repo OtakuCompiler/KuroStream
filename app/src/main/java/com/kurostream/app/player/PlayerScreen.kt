@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -89,10 +88,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 import android.util.TypedValue
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import kotlinx.coroutines.delay

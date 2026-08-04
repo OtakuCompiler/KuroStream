@@ -2,8 +2,6 @@ package com.kurostream.app.leanback
 
 import android.app.IntentService
 import android.content.Intent
-import android.database.Cursor
-import android.database.MatrixCursor
 import androidx.tvprovider.media.tv.TvContractCompat
 import androidx.tvprovider.media.tv.PreviewProgram
 import com.kurostream.app.model.MediaItem

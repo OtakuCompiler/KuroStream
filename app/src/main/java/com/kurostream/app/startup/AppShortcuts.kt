@@ -1,11 +1,8 @@
 package com.kurostream.app.startup
 
 import android.content.Context
-import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
-import android.graphics.drawable.Icon
 import android.os.Build
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 

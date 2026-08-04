@@ -1,8 +1,6 @@
 package com.kurostream.app.lifecycle
 
 import android.app.Application
-import android.os.Build
-import android.os.Debug
 import timber.log.Timber
 import java.lang.ref.WeakReference
 import java.util.LinkedHashMap

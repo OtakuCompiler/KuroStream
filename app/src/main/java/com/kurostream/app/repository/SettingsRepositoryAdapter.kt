@@ -1,6 +1,5 @@
 package com.kurostream.app.repository
 
-import com.kurostream.domain.repository.AppTheme
 import com.kurostream.domain.repository.SettingsRepository as DomainSettingsRepo
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject

@@ -6,9 +6,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.app.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

@@ -69,7 +69,6 @@ import com.kurostream.app.ui.screens.home.RowState
 import com.kurostream.app.ui.theme.TvOnSurfaceVariant
 import com.kurostream.app.ui.theme.TvSurfaceHighlight
 import com.kurostream.app.ui.theme.focusedCardBorder
-import kotlinx.coroutines.delay
 
 /**
  * ModernMediaCard — Card with smooth focus animations (scale + border)

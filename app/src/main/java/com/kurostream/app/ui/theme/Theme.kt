@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Shapes

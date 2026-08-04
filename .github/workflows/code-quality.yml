@@ -30,6 +30,40 @@ jobs:
         build-tools: 35.0.0
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
+    - name: Create google-services.json stub
+      run: |
+        mkdir -p app/src/debug
+        cat > app/src/debug/google-services.json << 'STUB'
+        {
+          "project_info": {
+            "project_number": "000000000000",
+            "project_id": "kurostream-placeholder",
+            "storage_bucket": "kurostream-placeholder.appspot.com"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": {
+                  "package_name": "com.kurostream.app"
+                }
+              },
+              "oauth_client": [],
+              "api_key": [
+                {
+                  "current_key": "AIzaSyPlaceholderKeyForCIOnly123456"
+                }
+              ],
+              "services": {
+                "appinvite_service": {
+                  "other_platform_oauth_client": []
+                }
+              }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        STUB
     - name: Run Lint
       run: ./gradlew lintDebug --no-daemon --stacktrace --no-parallel || echo "Lint issues found"
     - name: Upload Lint Report
@@ -64,6 +98,40 @@ jobs:
         build-tools: 35.0.0
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
+    - name: Create google-services.json stub
+      run: |
+        mkdir -p app/src/debug
+        cat > app/src/debug/google-services.json << 'STUB'
+        {
+          "project_info": {
+            "project_number": "000000000000",
+            "project_id": "kurostream-placeholder",
+            "storage_bucket": "kurostream-placeholder.appspot.com"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": {
+                  "package_name": "com.kurostream.app"
+                }
+              },
+              "oauth_client": [],
+              "api_key": [
+                {
+                  "current_key": "AIzaSyPlaceholderKeyForCIOnly123456"
+                }
+              ],
+              "services": {
+                "appinvite_service": {
+                  "other_platform_oauth_client": []
+                }
+              }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        STUB
     - name: Run unit tests
       run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace --no-parallel
     - name: Upload test reports
@@ -92,6 +160,40 @@ jobs:
         cache: gradle
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
+    - name: Create google-services.json stub
+      run: |
+        mkdir -p app/src/debug
+        cat > app/src/debug/google-services.json << 'STUB'
+        {
+          "project_info": {
+            "project_number": "000000000000",
+            "project_id": "kurostream-placeholder",
+            "storage_bucket": "kurostream-placeholder.appspot.com"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": {
+                  "package_name": "com.kurostream.app"
+                }
+              },
+              "oauth_client": [],
+              "api_key": [
+                {
+                  "current_key": "AIzaSyPlaceholderKeyForCIOnly123456"
+                }
+              ],
+              "services": {
+                "appinvite_service": {
+                  "other_platform_oauth_client": []
+                }
+              }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        STUB
     - name: Run Detekt
       run: ./gradlew detektAll --no-daemon --stacktrace --no-parallel || echo "Detekt issues found"
     - name: Upload Detekt Reports

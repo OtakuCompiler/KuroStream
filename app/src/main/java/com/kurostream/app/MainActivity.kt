@@ -16,11 +16,8 @@
 package com.kurostream.app
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.WindowInsets
-import android.view.WindowInsetsController
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,7 +25,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController

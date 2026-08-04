@@ -1,7 +1,6 @@
 package com.kurostream.app.controller
 
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.focus.FocusRequester

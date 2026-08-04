@@ -1,17 +1,9 @@
 package com.kurostream.app.ui.theme
 
 import android.content.Context
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.DefaultLifecycleObserver
 import com.kurostream.data.kurocloud.sync.KuroSyncRepository
-import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

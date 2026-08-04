@@ -1,9 +1,6 @@
 package com.kurostream.app.fcm
 
-import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService

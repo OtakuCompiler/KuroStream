@@ -15,14 +15,11 @@
 
 package com.kurostream.app.player
 
-import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.UnstableApi
 import com.kurostream.app.sync.TraktSyncManager
 import com.kurostream.data.subtitle.SubtitleDownloadManager
-import com.kurostream.domain.entity.Episode
 import com.kurostream.domain.model.PlaybackUrl
 import com.kurostream.domain.result.Result
 import com.kurostream.domain.usecase.GetPlaybackUrlUseCase
