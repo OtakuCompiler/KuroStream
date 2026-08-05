@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/private/v1/checkout-session")({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),
-      POST: async ({ request, env }: { request: Request; env: unknown }) => {
+      POST: async ({ request, env }: any) => {
         const auth = await requireUser(request, env);
         if ("error" in auth) return auth.error;
 

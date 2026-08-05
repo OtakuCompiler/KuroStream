@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/private/v1/webhooks-stripe")({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),
-      POST: async ({ request, env }: { request: Request; env: unknown }) => {
+      POST: async ({ request, env }: any) => {
         const e = env as Record<string, unknown>;
         const stripeSecretKey = e.STRIPE_SECRET_KEY as string | undefined;
         const stripeWebhookSecret = e.STRIPE_WEBHOOK_SECRET as string | undefined;

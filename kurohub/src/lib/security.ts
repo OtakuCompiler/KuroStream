@@ -99,7 +99,7 @@ export function sql<T extends string>(
   strings: TemplateStringsArray,
   ...values: unknown[]
 ): { sql: string; params: unknown[] } {
-  let sql = strings[0];
+  let sql = strings[0]!;
   const params: unknown[] = [];
   for (let i = 0; i < values.length; i++) {
     sql += "?" + strings[i + 1];

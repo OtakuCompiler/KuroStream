@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, checkRateLimit } from "@/lib/kuro-api";
 import { getCatalog } from "@/integrations/cloudflare/db";
 import { RATE_LIMITS } from "@/lib/middleware";
-import { hasRequiredBindings } from "@/lib/env";
+import { hasRequiredBindings, type AppEnv } from "@/lib/env";
 
 const CACHE_TTL = 60;
 const CACHE_KEY = "catalog:public:v1";
@@ -11,12 +11,12 @@ export const Route = createFileRoute("/api/public/v1/catalog")({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),
-      GET: async ({ request, env }: { request: Request; env: unknown }) => {
+      GET: async ({ request, env }: any) => {
         if (!hasRequiredBindings(env)) {
           return json({ error: "storage_unavailable" }, 503);
         }
 
-        const appEnv = env as Record<string, unknown>;
+        const appEnv = env as AppEnv;
         const kv = appEnv.KURO_KV;
         const db = appEnv.KURO_DB;
 

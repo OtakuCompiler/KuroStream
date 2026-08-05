@@ -23,7 +23,7 @@ export const Route = createFileRoute("/api/admin/v1/entitlements")({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),
-      GET: async ({ request, env }: { request: Request; env: unknown }) => {
+      GET: async ({ request, env }: any) => {
         const kv = getKV(env);
         const auth = await requireAdmin(request, env);
         if ("error" in auth) return auth.error;

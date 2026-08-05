@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/admin/v1/reviews-action")({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),
-      POST: async ({ request, env }: { request: Request; env: unknown }) => {
+      POST: async ({ request, env }: any) => {
         const kv = getKV(env);
         const auth = await requireAdmin(request, env);
         if ("error" in auth) return auth.error;

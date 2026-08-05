@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/v1/purchases")({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),
-      GET: async ({ request, env }: { request: Request; env: unknown }) => {
+      GET: async ({ request, env }: any) => {
         const auth = await requireUser(request, env);
         if ("error" in auth) return auth.error;
 
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/api/public/v1/purchases")({
         const purchases = await getPurchases(db, auth.userId);
         return json({ purchases, rate_limit: { remaining: rate.remaining, reset: rate.reset } });
       },
-      POST: async ({ request, env }: { request: Request; env: unknown }) => {
+      POST: async ({ request, env }: any) => {
         const auth = await requireUser(request, env);
         if ("error" in auth) return auth.error;
 

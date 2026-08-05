@@ -1,8 +1,13 @@
 // Firebase client-side initialization — lazy, SSR-safe
-import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage, type FirebaseStorage } from "firebase/storage";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
+type FirebaseApp = ReturnType<typeof getApp>;
+type Auth = ReturnType<typeof getAuth>;
+type Firestore = ReturnType<typeof getFirestore>;
+type FirebaseStorage = ReturnType<typeof getStorage>;
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",

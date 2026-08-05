@@ -7,7 +7,7 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 
 export default defineConfig({
   plugins: [
-    tanstackStart({ target: "react", autoCodeSplitting: true }),
+    tanstackStart({}),
     react(),
     tailwindcss(),
     tsConfigPaths(),

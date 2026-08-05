@@ -80,15 +80,15 @@ export function Testimonials() {
               >
                 <Quote className="w-8 h-8 text-primary/30 mx-auto mb-4" />
                 <p className="text-lg md:text-xl text-foreground/90 leading-relaxed mb-6 max-w-2xl mx-auto">
-                  "{testimonials[idx].text}"
+                  "{testimonials[idx]!.text}"
                 </p>
                 <div className="flex items-center justify-center gap-1 mb-3">
-                  {Array.from({ length: testimonials[idx].rating }).map((_, i) => (
+                  {Array.from({ length: testimonials[idx]!.rating }).map((_, i) => (
                     <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
-                <div className="font-display font-semibold text-sm">{testimonials[idx].author}</div>
-                <div className="text-xs text-muted-foreground">{testimonials[idx].role}</div>
+                <div className="font-display font-semibold text-sm">{testimonials[idx]!.author}</div>
+                <div className="text-xs text-muted-foreground">{testimonials[idx]!.role}</div>
               </m.div>
             </AnimatePresence>
           </div>

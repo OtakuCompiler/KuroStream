@@ -13,8 +13,8 @@ jobs:
     name: Android Lint
     runs-on: ubuntu-latest
     env:
-      GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
-      KOTLIN_DAEMON_JVMARGS: "-Xmx1024m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
+      GRADLE_OPTS: "-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+      KOTLIN_DAEMON_JVMARGS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -83,7 +83,7 @@ jobs:
         }
         STUB
     - name: Run Lint
-      run: bash gradlew lintDebug --no-daemon --max-workers=4 || echo "Lint issues found"
+      run: bash gradlew lintDebug --no-daemon --max-workers=4 -Dorg.gradle.jvmargs="-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC" || echo "Lint issues found"
     - name: Upload Lint Report
       uses: actions/upload-artifact@v4
       if: always()
@@ -99,8 +99,8 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     env:
-      GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
-      KOTLIN_DAEMON_JVMARGS: "-Xmx1024m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
+      GRADLE_OPTS: "-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+      KOTLIN_DAEMON_JVMARGS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -169,7 +169,7 @@ jobs:
         }
         STUB
     - name: Run unit tests
-      run: bash gradlew :app:testDebugUnitTest --no-daemon --max-workers=4
+      run: bash gradlew :app:testDebugUnitTest --no-daemon --max-workers=4 -Dorg.gradle.jvmargs="-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC"
     - name: Upload test reports
       uses: actions/upload-artifact@v4
       if: always()
@@ -184,8 +184,8 @@ jobs:
     name: Detekt Static Analysis
     runs-on: ubuntu-latest
     env:
-      GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
-      KOTLIN_DAEMON_JVMARGS: "-Xmx1024m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
+      GRADLE_OPTS: "-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+      KOTLIN_DAEMON_JVMARGS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -250,7 +250,7 @@ jobs:
         }
         STUB
     - name: Run Detekt
-      run: bash gradlew detektAll --no-daemon --max-workers=4 || echo "Detekt issues found"
+      run: bash gradlew detektAll --no-daemon --max-workers=4 -Dorg.gradle.jvmargs="-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC" || echo "Detekt issues found"
     - name: Upload Detekt Reports
       uses: actions/upload-artifact@v4
       if: always()

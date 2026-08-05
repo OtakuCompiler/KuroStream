@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/public/v1/me")({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),
-      GET: async ({ request, env }: { request: Request; env: unknown }) => {
+      GET: async ({ request, env }: any) => {
         const auth = await requireUser(request, env);
         if ("error" in auth) return auth.error;
 
