@@ -228,8 +228,7 @@ class SmartSourceAggregator @Inject constructor(
                             media = MediaItem(
                                 id = "cs_${ext.id}_${p.name.hashCode()}",
                                 title = p.name,
-                                thumbnailUrl = p.icon ?: "",
-                                mediaType = types.firstOrNull()?.name ?: "MOVIE",
+                                posterUrl = p.icon ?: "",
                             ),
                             confidence = 0.7f,
                             sourceExtensionId = ext.id,
@@ -250,11 +249,10 @@ class SmartSourceAggregator @Inject constructor(
             val results = cloudStreamAdapter.fetchRepository(streamsUrl).getOrNull()
             results?.plugins?.map { p ->
                 StreamAggregateResult(
-                    url = p.url,
-                    title = p.name,
+                    source = ext,
+                    stream = VideoSource(url = p.url, quality = p.name),
                     qualityScore = 60f,
                     debridCached = false,
-                    sourceExtensionId = ext.id,
                 )
             } ?: emptyList()
         } catch (e: Exception) {

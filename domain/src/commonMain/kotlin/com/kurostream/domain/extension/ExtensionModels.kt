@@ -62,6 +62,8 @@ enum class ExtensionSourceFormat {
     CLOUDSTREAM_REPO,
     KODI_REPOSITORY,
     KUROSTREAM_NATIVE,
+    JELLYFIN_SERVER,
+    PLEX_SERVER,
 }
 
 @Serializable

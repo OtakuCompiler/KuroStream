@@ -5,7 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -78,7 +78,7 @@ class AniListTVAdapter @Inject constructor(
     private suspend fun query(gqlQuery: String): Result<List<AniListMedia>> = withContext(Dispatchers.IO) {
         runCatching {
             val body = """{"query":"$gqlQuery"}"""
-            val reqBody = RequestBody.create(MediaType.parse("application/json"), body)
+            val reqBody = RequestBody.create("application/json".toMediaType(), body)
             val builder = Request.Builder()
                 .url(endpoint)
                 .post(reqBody)
@@ -96,14 +96,15 @@ class AniListTVAdapter @Inject constructor(
         // Extract media list from nested data.Page.media or data.Media.recommendations
         val root = json.parseToJsonElement(body)
         // Try data.Page.media first
-        val pageMedia = root.jsonObjectOrNull
-            ?.get("data")?.jsonObjectOrNull
-            ?.get("Page")?.jsonObjectOrNull
-            ?.get("media")?.jsonArrayOrNull
+        val pageMedia = root.jsonObjectOrNull()
+            ?.get("data")?.jsonObjectOrNull()
+            ?.get("Page")?.jsonObjectOrNull()
+            ?.get("media")?.jsonArrayOrNull()
         if (pageMedia != null) {
-            return json.decodeFromString<List<AniListMedia>>(pageMedia.toString())
+            json.decodeFromString<List<AniListMedia>>(pageMedia.toString())
+        } else {
+            emptyList()
         }
-        emptyList()
     }.getOrElse { emptyList() }
 
     // ── Season helpers ────────────────────────────────────────────────────────

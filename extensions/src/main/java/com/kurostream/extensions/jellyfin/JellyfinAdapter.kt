@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -149,7 +150,7 @@ class JellyfinAdapter @Inject constructor(
     private suspend fun post(url: String, body: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             val reqBody = okhttp3.RequestBody.create(
-                okhttp3.MediaType.parse("application/json"), body
+                "application/json".toMediaType(), body
             )
             val request = Request.Builder()
                 .url(url)
