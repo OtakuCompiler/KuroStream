@@ -1,0 +1,20 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "snapshot": false,
+  "mcp": {
+    "firebase": {
+      "type": "local",
+      "command": ["firebase-mcp"],
+      "enabled": true,
+      "timeout": 30000
+    },
+    "cloudflare": {
+      "type": "remote",
+      "url": "https://mcp.cloudflare.com/mcp",
+      "oauth": {
+        "scope": "account:read account:write user:read"
+      },
+      "enabled": true
+    }
+  }
+}

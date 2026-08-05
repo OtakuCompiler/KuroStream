@@ -1,0 +1,277 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.875rem;
+
+  /* KuroStream — Arctic Fuse dark palette */
+  --background: oklch(0.09 0.015 285);          /* near-black w/ subtle blue tint */
+  --foreground: oklch(0.96 0.008 285);
+  --card: oklch(0.13 0.02 285);
+  --card-foreground: oklch(0.96 0.008 285);
+  --popover: oklch(0.11 0.018 285);
+  --popover-foreground: oklch(0.96 0.008 285);
+  --primary: oklch(0.55 0.24 295);              /* KuroStream violet */
+  --primary-foreground: oklch(0.98 0.004 285);
+  --secondary: oklch(0.72 0.14 220);            /* cool cyan accent */
+  --secondary-foreground: oklch(0.09 0.015 285);
+  --muted: oklch(0.16 0.018 285);
+  --muted-foreground: oklch(0.68 0.02 285);
+  --accent: oklch(0.48 0.2 295);
+  --accent-foreground: oklch(0.98 0.004 285);
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0.98 0.003 285);
+  --border: oklch(0.35 0.03 285 / 22%);
+  --input: oklch(0.18 0.025 285);
+  --ring: oklch(0.55 0.24 295 / 60%);
+
+  /* Arctic Fuse layered surfaces */
+  --surface-1: oklch(0.11 0.02 285 / 0.72);
+  --surface-2: oklch(0.14 0.022 285 / 0.62);
+  --surface-3: oklch(0.18 0.025 285 / 0.55);
+  --stroke-soft: oklch(0.55 0.04 285 / 0.14);
+  --stroke-strong: oklch(0.6 0.06 285 / 0.28);
+
+  --glow-primary: 0 0 60px -12px oklch(0.55 0.24 295 / 0.55);
+  --glow-secondary: 0 0 60px -12px oklch(0.72 0.14 220 / 0.4);
+  --elev-1: 0 1px 0 0 oklch(1 0 0 / 0.03) inset, 0 8px 24px -12px oklch(0 0 0 / 0.6);
+  --elev-2: 0 1px 0 0 oklch(1 0 0 / 0.04) inset, 0 20px 60px -20px oklch(0 0 0 / 0.75);
+  --elev-3: 0 1px 0 0 oklch(1 0 0 / 0.05) inset, 0 40px 100px -30px oklch(0 0 0 / 0.85);
+
+  --gradient-hero:
+    radial-gradient(60% 50% at 50% 0%, oklch(0.45 0.24 295 / 0.35), transparent 70%),
+    radial-gradient(50% 40% at 15% 30%, oklch(0.5 0.2 260 / 0.22), transparent 75%),
+    radial-gradient(45% 40% at 85% 40%, oklch(0.6 0.18 200 / 0.18), transparent 75%);
+  --gradient-text: linear-gradient(180deg, oklch(0.98 0.005 285), oklch(0.72 0.14 295));
+  --shadow-glow: var(--glow-primary);
+  --shadow-card: var(--elev-2);
+}
+
+.dark { /* dark-only site */ }
+
+html { color-scheme: dark; }
+
+@layer base {
+  * { border-color: var(--color-border); }
+
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-image:
+      radial-gradient(1200px 700px at 50% -10%, oklch(0.35 0.2 295 / 0.18), transparent 70%),
+      radial-gradient(900px 600px at 100% 30%, oklch(0.4 0.16 220 / 0.1), transparent 75%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: oklch(0.55 0.24 295 / 0.35);
+    color: oklch(0.98 0.005 285);
+  }
+}
+
+@layer components {
+  /* Arctic Fuse frosted panel */
+  .af-panel {
+    position: relative;
+    background: var(--surface-1);
+    backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid var(--stroke-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elev-1);
+  }
+  .af-panel-strong {
+    position: relative;
+    background: var(--surface-2);
+    backdrop-filter: blur(32px) saturate(160%);
+    border: 1px solid var(--stroke-strong);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--elev-2);
+  }
+  .af-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--surface-2);
+    border: 1px solid var(--stroke-soft);
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    backdrop-filter: blur(12px);
+  }
+  .af-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--stroke-strong), transparent);
+  }
+
+  /* Focus ring — WCAG-compliant, brand-aware */
+  .af-focus-ring:focus-visible,
+  .focusable:focus-visible {
+    outline: 2px solid oklch(0.72 0.14 220);
+    outline-offset: 3px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Ambient background layer */
+  .ambient-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    mask-image: radial-gradient(ellipse at center, black 55%, transparent 100%);
+  }
+  .ambient-layer::before,
+  .ambient-layer::after {
+    content: "";
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(90px);
+    opacity: 0.55;
+  }
+  .ambient-layer::before {
+    top: -20%;
+    left: 10%;
+    width: 55%;
+    height: 55%;
+    background: oklch(0.55 0.24 295 / 0.4);
+    animation: af-drift 18s ease-in-out infinite;
+  }
+  .ambient-layer::after {
+    bottom: -25%;
+    right: 5%;
+    width: 50%;
+    height: 50%;
+    background: oklch(0.6 0.18 220 / 0.32);
+    animation: af-drift 22s ease-in-out -8s infinite reverse;
+  }
+
+  /* Legacy alias used across older components */
+  .glass-card {
+    position: relative;
+    background: var(--surface-1);
+    backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid var(--stroke-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elev-1);
+  }
+
+  .hero-bg {
+    background: var(--gradient-hero), var(--color-background);
+  }
+
+  .text-gradient {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+  }
+}
+
+/* Motion primitives */
+@keyframes af-drift {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); opacity: 0.55; }
+  50%      { transform: translate3d(3%, -2%, 0) scale(1.08); opacity: 0.75; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+
+@keyframes reveal-word {
+  from { opacity: 0; transform: translateY(20px); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0);     filter: blur(0); }
+}
+.reveal-word {
+  display: inline-block;
+  opacity: 0;
+  animation: reveal-word 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.af-lift {
+  transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.af-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--elev-2), var(--glow-primary);
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 40s linear infinite; }
+
+/* Count-up shimmer for numbers */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    oklch(0.9 0.02 285) 0%,
+    oklch(0.98 0.04 295) 45%,
+    oklch(0.72 0.14 220) 55%,
+    oklch(0.9 0.02 285) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+/* Snap carousel scrollbar hide */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

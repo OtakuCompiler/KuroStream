@@ -72,3 +72,4 @@ PRODUCTION_IMPLEMENTATION_REPORT.md
 # Deployment / infra clutter
 docker-compose.yml
 nginx/kurostream.zip
+kurohub/node_modules/
