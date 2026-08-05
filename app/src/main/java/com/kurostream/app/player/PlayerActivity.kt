@@ -152,9 +152,9 @@ class PlayerActivity : ComponentActivity() {
                     onBackPressed = { finish() },
                     hdrMode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         when {
-                            hdrDetector.supportsDolbyVision() -> HdrMode.DOLBY_VISION
-                            hdrDetector.supportsHdr10() -> HdrMode.HDR10
-                            hdrDetector.supportsHdr10Plus() -> HdrMode.HDR10_PLUS
+                            hdrDetector.supportsDolbyVision(this@PlayerActivity) -> HdrMode.DOLBY_VISION
+                            hdrDetector.supportsHdr10(this@PlayerActivity) -> HdrMode.HDR10
+                            hdrDetector.supportsHdr10Plus(this@PlayerActivity) -> HdrMode.HDR10_PLUS
                             else -> HdrMode.SDR
                         }
                     } else HdrMode.SDR,

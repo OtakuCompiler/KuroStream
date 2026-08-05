@@ -47,7 +47,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val getPlaybackUrl: GetPlaybackUrlUseCase,
     private val watchProgressRepository: com.kurostream.domain.repository.WatchProgressRepository,
     private val mediaRepository: com.kurostream.domain.repository.MediaRepository,

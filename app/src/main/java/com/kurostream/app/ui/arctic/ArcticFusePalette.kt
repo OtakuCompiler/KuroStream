@@ -54,11 +54,12 @@ data class ArcticFusePalette(
 ) {
     companion object {
         fun forMode(mode: ThemeMode, custom: CustomTheme? = null): ArcticFusePalette = when (mode) {
-            ThemeMode.LIGHT -> lightPalette()
+            ThemeMode.LIGHT      -> lightPalette()
             ThemeMode.AMOLED_BLACK -> oledPalette()
             ThemeMode.OLED_CINEMA  -> oledPalette()
             ThemeMode.CUSTOM       -> custom?.let { customPalette(it) } ?: ArcticFusePalette()
             ThemeMode.DARK         -> ArcticFusePalette()
+            ThemeMode.AUTO         -> ArcticFusePalette()
         }
 
         private fun lightPalette() = ArcticFusePalette(
