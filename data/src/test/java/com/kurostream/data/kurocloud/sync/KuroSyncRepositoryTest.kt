@@ -26,6 +26,7 @@ import com.kurostream.domain.sync.KuroSyncState
 import com.kurostream.domain.sync.KuroEntitlementsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -439,7 +440,7 @@ class KuroSyncRepositoryTest {
 
         val states = mutableListOf<KuroSyncState>()
 
-        val collectJob = kotlinx.coroutines.launch {
+        val collectJob = launch {
             repository.syncState.collect { states.add(it) }
         }
 

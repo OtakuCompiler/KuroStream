@@ -193,13 +193,12 @@ fun MemoryStatusBar(
     val usedMB = totalMB - availableMB
     val usedPercent = if (totalMB > 0) (usedMB * 100 / totalMB) else 0
     
-    val (colors, icon) = when {
+    val (bgColor, textColor, icon) = when {
         memoryState.isCritical -> Triple(Color(0xFFB71C1C), Color.White, Icons.Filled.Error)
         memoryState.isLowMemory -> Triple(Color(0xFFC62828), Color.White, Icons.Filled.Warning)
         memoryState.memoryPressure > 0.75f -> Triple(Color(0xFFF57F17), Color.White, Icons.Filled.Warning)
         else -> Triple(Color(0xFF2E7D32), Color.White, Icons.Filled.CheckCircle)
     }
-    val (bgColor, textColor) = Pair(colors.first, colors.second)
     
     Surface(
         modifier = modifier

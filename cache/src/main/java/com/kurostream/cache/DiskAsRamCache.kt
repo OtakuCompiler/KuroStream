@@ -1,6 +1,7 @@
 package com.kurostream.cache
 
 import android.content.Context
+import com.kurostream.common.memory.LowRamDevice
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.MappedByteBuffer
@@ -8,7 +9,7 @@ import java.nio.channels.FileChannel
 
 class DiskAsRamCache(context: Context) {
     companion object {
-        private const val CACHE_SIZE_BYTES = 125L * 1024 * 1024
+        private val CACHE_SIZE_BYTES = if (LowRamDevice.isLowRamDevice) 64L * 1024 * 1024 else 125L * 1024 * 1024
         private const val CACHE_FILE_NAME = "kurostream_ram_cache.bin"
     }
 

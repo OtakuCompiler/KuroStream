@@ -16,6 +16,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.platform.LocalView
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
@@ -170,9 +171,14 @@ private fun ParticleBackground(type: Skin, count: Int, modifier: Modifier = Modi
     // on every vsync, even when particles are stationary (e.g. STARRY_NIGHT).
     var animFrameMs by remember { androidx.compose.runtime.mutableLongStateOf(0L) }
 
+    val view = LocalView.current
     LaunchedEffect(Unit) {
         var lastFrameMs = 0L
         while (true) {
+            if (!view.isShown) {
+                kotlinx.coroutines.delay(200)
+                continue
+            }
             val frameMs = withInfiniteAnimationFrameMillis { it }
             animFrameMs = frameMs                          // ← triggers Canvas redraw every frame
             val dt = ((frameMs - lastFrameMs).coerceAtMost(50)) / 1000f

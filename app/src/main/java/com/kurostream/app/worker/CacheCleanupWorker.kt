@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.kurostream.cache.VodCacheManager
+import com.kurostream.cache.KuroCacheManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import timber.log.Timber
@@ -13,12 +13,12 @@ import timber.log.Timber
 class CacheCleanupWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val cacheManager: VodCacheManager,
+    private val cacheManager: KuroCacheManager,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return try {
-            cacheManager.clearCache()
+            cacheManager.clearAllCaches()
             Timber.d("CacheCleanupWorker: cleared VOD cache")
             Result.success()
         } catch (e: Exception) {

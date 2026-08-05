@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -183,32 +186,24 @@ fun ArcticFuseWidgetWall(
         }
 
         val visibleItems = items.take(maxItems)
-        // Build a manual responsive grid: 6 cards per row (matching Arctic Fuse grid-cols-6).
-        // Each row participates in the parent LazyColumn so the grid scrolls with
-        // surrounding widgets instead of needing its own bounded scroll viewport.
-        Column(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(6),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AFSpacing.safeZoneH),
+            horizontalArrangement = Arrangement.spacedBy(AFSpacing.px3),
             verticalArrangement = Arrangement.spacedBy(AFSpacing.px3),
         ) {
-            visibleItems.chunked(6).forEach { rowItems ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(AFSpacing.px3),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    rowItems.forEach { item ->
-                        ArcticFuseMediaCard(
-                            item = item,
-                            view = CardView.Poster,
-                            onClick = { onItemClick(item) },
-                        )
-                    }
-                    // Pad the row so last row aligns left instead of spreading
-                    if (rowItems.size < 6) {
-                        Box(modifier = Modifier.fillMaxWidth())
-                    }
-                }
+            items(
+                items = visibleItems,
+                key = { it.id },
+                contentType = { "media_card" },
+            ) { item ->
+                ArcticFuseMediaCard(
+                    item = item,
+                    view = CardView.Poster,
+                    onClick = { onItemClick(item) },
+                )
             }
         }
     }

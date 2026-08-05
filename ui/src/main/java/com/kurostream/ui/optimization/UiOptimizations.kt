@@ -57,7 +57,12 @@ class UiTextureAtlas(
     private val padding = 2
     
     private val regions = ConcurrentHashMap<String, AtlasRegion>()
-    private val bitmapCache = LruCache<String, Bitmap>(50)
+    private val bitmapCache = object : LruCache<String, Bitmap>(8 * 1024) { // 8MB cap
+        override fun sizeOf(key: String, value: Bitmap) = value.byteCount / 1024
+        override fun entryRemoved(evicted: Boolean, key: String, oldValue: Bitmap, newValue: Bitmap?) {
+            if (evicted && oldValue != newValue) oldValue.recycle()
+        }
+    }
     
     data class AtlasRegion(
         val name: String,

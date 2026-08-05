@@ -12,7 +12,10 @@ import com.kurostream.data.kurocloud.db.KuroEntitlementsEntity
 import com.kurostream.data.kurocloud.db.KuroPurchaseEntity
 import com.kurostream.domain.sync.KuroEntitlementsState
 import com.kurostream.domain.sync.KuroSyncState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,6 +64,7 @@ class KuroSyncRepository @Inject constructor(
 
     override val purchases: Flow<List<KuroPurchase>> = _purchases
 
+    private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var syncJob: kotlinx.coroutines.Job? = null
 
     init {
@@ -70,7 +74,7 @@ class KuroSyncRepository @Inject constructor(
 
     override fun syncAll() {
         syncJob?.cancel()
-        syncJob = kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+        syncJob = syncScope.launch {
             try {
                 _syncState.value = KuroSyncState.Syncing
                 awaitFullSync()
@@ -83,7 +87,7 @@ class KuroSyncRepository @Inject constructor(
     }
 
     override fun syncEntitlements() {
-        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+        syncScope.launch {
             try {
                 awaitSyncEntitlements()
             } catch (e: Exception) {
@@ -93,7 +97,7 @@ class KuroSyncRepository @Inject constructor(
     }
 
     override fun syncCatalog() {
-        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+        syncScope.launch {
             try {
                 awaitSyncCatalog()
             } catch (e: Exception) {
@@ -103,7 +107,7 @@ class KuroSyncRepository @Inject constructor(
     }
 
     override fun syncPurchases() {
-        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+        syncScope.launch {
             try {
                 awaitSyncPurchases()
             } catch (e: Exception) {
@@ -127,8 +131,12 @@ class KuroSyncRepository @Inject constructor(
         syncAll()
     }
 
+    fun release() {
+        syncScope.cancel()
+    }
+
     override fun claimFreeItem(itemId: String) {
-        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+        syncScope.launch {
             try {
                 val auth = getAuthHeader()
                 val response = api.claimPurchase(auth, KuroClaimPurchaseRequest(itemId))
@@ -143,7 +151,7 @@ class KuroSyncRepository @Inject constructor(
     }
 
     override fun setActiveSkin(skinId: String) {
-        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+        syncScope.launch {
             try {
                 val auth = getAuthHeader()
                 api.setActiveSkin(auth, KuroSetActiveSkinRequest(skinId))
