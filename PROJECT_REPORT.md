@@ -1,5 +1,46 @@
 # KuroStream Project Report
-*Last updated: 2026-08-05*
+> Auto-generated — regenerate with shell commands. Updated every session.
+> Last session: 2026-08-05 | HEAD: 929479c | CI: PASSED (5m25s build, 3m21s quality)
+
+---
+
+## How to Regenerate
+
+Update the overview line counts with these shell commands (run from the repo root):
+
+```bash
+# Total Kotlin files and lines
+echo "Kotlin files: $(find . -name '*.kt' -not -path '*/build/*' -not -path '*/kurohub/*' -not -path '*/server/*' | wc -l)"
+echo "Kotlin lines: $(find . -name '*.kt' -not -path '*/build/*' -not -path '*/kurohub/*' -not -path '*/server/*' -exec cat {} + | wc -l)"
+
+# Per-module breakdown (repeat for each module: app, playback, data, domain, etc.)
+MODULE=app
+echo "$MODULE files: $(find $MODULE -name '*.kt' -not -path '*/build/*' | wc -l)"
+echo "$MODULE lines: $(find $MODULE -name '*.kt' -not -path '*/build/*' -exec cat {} + | wc -l)"
+
+# Arctic Fuse component line counts
+for f in app/src/main/java/com/kurostream/app/ui/arctic/*.kt; do
+  echo "$(basename $f): $(wc -l < $f)"
+done
+
+# XML resources
+echo "XML files: $(find . -name '*.xml' -path '*/res/*' -not -path '*/build/*' | wc -l)"
+
+# Proto files
+echo "Proto files: $(find . -name '*.proto' -not -path '*/build/*' | wc -l)"
+
+# Test files
+echo "androidTest: $(find . -path '*/androidTest/*.kt' | wc -l)"
+echo "unitTest: $(find . -path '*/test/*.kt' | wc -l)"
+
+# HEAD commit
+git log --oneline -1
+```
+
+To update CI status, check the latest GitHub Actions run:
+```bash
+gh run list --limit 1 --json status,conclusion,name,createdAt
+```
 
 ---
 
@@ -535,7 +576,7 @@
 | File | Lines | Description |
 |------|-------|-------------|
 | `KuroCacheManager.kt` | 123 | VOD cache: 500MB (normal) / 200MB (low RAM), LRU eviction, budget enforcement. |
-| `DiskAsRamCache.kt` | 45 | Disk-as-RAM cache for low-memory devices. |
+| `DiskAsRamCache.kt` | 45 | Disk-as-RAM cache: 125MB (normal) / 64MB (low RAM), memory-mapped I/O. |
 | `CacheNamespaceManager.kt` | 12 | Cache namespace isolation. |
 
 **UI Behavior:** Cache automatically evicts least recently used content. Low RAM devices get reduced cache (200MB). Cache budget can be manually enforced. Cache stats available in settings.
@@ -582,7 +623,7 @@
 
 | File | Lines | Description |
 |------|-------|-------------|
-| `UiOptimizations.kt` | 185 | UI performance optimizations: recomposition skipping, derived state, lazy list tuning. |
+| `UiOptimizations.kt` | 185 | UI performance optimizations: recomposition skipping, derived state, lazy list tuning. Includes 8MB LruCache bitmap cache. |
 | `Log.kt` | 8 | UI module logging. |
 
 ---
@@ -760,6 +801,8 @@
 
 ## Arctic Fuse 3 Compliance
 
+Reference implementation: [jurialmunkey/skin.arctic.fuse.3](https://github.com/jurialmunkey/skin.arctic.fuse.3)
+
 | Aspect | Status | Details |
 |--------|--------|---------|
 | Dark-first design | Complete | Pure black background (#07070E), indigo/violet accents |
@@ -780,6 +823,33 @@
 | Player overlay | Complete | Controls, skip chips, quality/audio/subtitle selectors |
 | Theme compliance score | **95%** | All major components implemented |
 
+### Arctic Fuse 3 Component Inventory (22 files)
+
+| # | Component | File | Lines | AF3 Feature |
+|---|-----------|------|-------|-------------|
+| 1 | `ArcticFuseHomeScreen.kt` | app/ui/arctic/ | 493 | Home screen with sidebar + hub + hero + widgets |
+| 2 | `ArcticFuseDetailPage.kt` | app/ui/arctic/ | 552 | Detail page with metadata, episodes, cast |
+| 3 | `ArcticFuseSettingsPage.kt` | app/ui/arctic/ | 478 | Settings with categorized sections |
+| 4 | `ArcticFuseSidebar.kt` | app/ui/arctic/ | 418 | Left-rail sidebar (72dp/200dp) |
+| 5 | `ArcticFuseSearchHub.kt` | app/ui/arctic/ | 391 | Search overlay with voice |
+| 6 | `ArcticFuseHeroSpotlight.kt` | app/ui/arctic/ | 380 | Auto-advancing hero banner |
+| 7 | `ArcticFusePlayerOverlay.kt` | app/ui/arctic/ | 373 | Player controls + skip chips |
+| 8 | `ArcticFuseIcons.kt` | app/ui/arctic/ | 362 | Custom icon set |
+| 9 | `ArcticFuseWidgets.kt` | app/ui/arctic/ | 302 | Content carousel widgets |
+| 10 | `ArcticFuseSkeleton.kt` | app/ui/arctic/ | 272 | Skeleton loading placeholders |
+| 11 | `ArcticFuseMediaCard.kt` | app/ui/arctic/ | 262 | Media card with focus glow |
+| 12 | `PremiumPlayerOverlay.kt` | app/ui/arctic/ | 269 | Premium player with Dolby/HDR badges |
+| 13 | `ArcticFuseInfoPanel.kt` | app/ui/arctic/ | 218 | Sliding info panel |
+| 14 | `ArcticFusePalette.kt` | app/ui/arctic/ | 165 | Extended color palette |
+| 15 | `ArcticFuseTheme.kt` | app/ui/arctic/ | 159 | Design tokens |
+| 16 | `ArcticFuseToast.kt` | app/ui/arctic/ | 146 | Toast notification system |
+| 17 | `DynamicFanartBackground.kt` | app/ui/arctic/ | 143 | Dynamic backdrop background |
+| 18 | `ArcticFuseContextMenu.kt` | app/ui/arctic/ | 142 | Context menu overlay |
+| 19 | `ArcticFuseHubSwitcher.kt` | app/ui/arctic/ | 132 | Hub tab switcher |
+| 20 | `SettingsComponents.kt` | app/ui/arctic/ | 152 | Reusable settings components |
+| 21 | `ArcticFuseScaffold.kt` | app/ui/arctic/ | 69 | Scaffold wrapper |
+| 22 | `ArcticSystemInfo.kt` | app/ui/arctic/ | 9 | System info display |
+
 ---
 
 ## Build Configuration
@@ -790,9 +860,20 @@
 - **Kotlin:** 2.0.21
 - **Configuration cache:** Enabled
 - **Build cache:** Enabled
-- **Parallel workers:** 1 (limited for low-RAM device)
 - **VFS watch:** Disabled (FUSE inotify expensive)
 - **AAPT2 mode:** Out-of-process (prevents proot race conditions)
+
+### CI Configuration (GitHub Actions)
+- **Flags:** `--no-daemon --max-workers=4 -Dorg.gradle.jvmargs="-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC"`
+- **GRADLE_OPTS:** `-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dfile.encoding=UTF-8`
+- **KOTLIN_DAEMON_JVMARGS:** `-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC`
+
+### Local Device Configuration (Termux + proot)
+- **org.gradle.jvmargs:** `-Xmx1024m -XX:MaxMetaspaceSize=512m -XX:ReservedCodeCacheSize=64m`
+- **org.gradle.daemon:** false
+- **org.gradle.workers.max:** 1
+- **kotlin.daemon.jvmargs:** `-Xmx768m -XX:MaxMetaspaceSize=192m`
+- **OOM watchdog:** `oom-guard.sh` kills stale daemons when free memory < 250MB
 
 ### ProGuard/R8 Configuration
 - **R8 full mode:** Enabled
@@ -834,6 +915,19 @@
 
 ---
 
+## Cache Configuration
+
+| Cache | Size | Eviction | Details |
+|-------|------|----------|---------|
+| VOD Cache (KuroCacheManager) | 500MB (normal) / 200MB (low RAM) | LRU | Single `@Singleton` instance, `LeastRecentlyUsedCacheEvictor`, `SimpleCache` at `kurostream_vod_cache/`. Budget enforcement via `enforceBudget()`. |
+| DiskAsRamCache | 125MB (normal) / 64MB (low RAM) | None (mapped file) | Memory-mapped `ByteBuffer` for zero-copy frame processing. Conditioned on `LowRamDevice.isLowRamDevice`. |
+| UiOptimizations Bitmap Cache | 8MB cap | LRU | `LruCache<String, Bitmap>(8 * 1024)` — ~8MB for UI textures. Evicts least-recently-used bitmaps. |
+| Coil Image Cache | ~20-50MB | LRU | Configured via `CoilCacheConfig` in common module. |
+
+**No duplicate cache instances.** `KuroCacheManager` is `@Singleton` injected via Hilt. `DiskAsRamCache` is instantiated per-use in the playback pipeline. `UiOptimizations` bitmap cache is a static `LruCache` on the `UiTextureAtlas` class.
+
+---
+
 ## Recommendations
 
 ### Priority 1: Critical Fixes
@@ -856,3 +950,12 @@
 3. **Offline downloads** — DownloadManager exists but UI is minimal
 4. **Multi-language support** — Currently English only (resourceConfigurations += setOf("en"))
 5. **Analytics** — AnalyticsManager exists but is empty; implement privacy-respecting analytics
+
+---
+
+## Session History
+
+| Date | Changes | CI Status |
+|------|---------|-----------|
+| 2026-08-04 | Initial setup, dead code removal, CI fixes | Partial |
+| 2026-08-05 | KuroHub integration, performance optimization, cache consolidation, CI speed fixes, KuroHub TS fixes | PASSED |
