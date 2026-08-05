@@ -47,7 +47,7 @@ async function fetchJWKS(): Promise<JWKS> {
   if (cacheControl) {
     const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
     if (maxAgeMatch) {
-      const maxAge = parseInt(maxAgeMatch[1], 10) * 1000; // Convert to ms
+      const maxAge = parseInt(maxAgeMatch[1]!, 10) * 1000; // Convert to ms
       jwksExpiresAt = now + maxAge;
     } else {
       jwksExpiresAt = now + 3600000; // Default 1 hour
@@ -63,7 +63,7 @@ async function fetchJWKS(): Promise<JWKS> {
 
 function parseJwtHeader(token: string): { kid: string; alg: string } | null {
   try {
-    const headerB64 = token.split(".")[0];
+    const headerB64 = token.split(".")[0] ?? "";
     const headerJson = atob(headerB64.replace(/-/g, "+").replace(/_/g, "/"));
     return JSON.parse(headerJson);
   } catch {
@@ -72,7 +72,7 @@ function parseJwtHeader(token: string): { kid: string; alg: string } | null {
 }
 
 async function verifySignature(token: string, publicKey: string): Promise<boolean> {
-  const [headerB64, payloadB64, signatureB64] = token.split(".");
+  const [headerB64, payloadB64, signatureB64] = token.split(".") as [string, string, string];
   const signingInput = `${headerB64}.${payloadB64}`;
 
   // Import public key
@@ -90,7 +90,7 @@ async function verifySignature(token: string, publicKey: string): Promise<boolea
   );
 
   // Verify signature
-  const signature = Uint8Array.from(atob(signatureB64.replace(/-/g, "+").replace(/_/g, "/")), (c) =>
+    const signature = Uint8Array.from(atob(signatureB64!.replace(/-/g, "+").replace(/_/g, "/")), (c) =>
     c.charCodeAt(0),
   );
   const data = new TextEncoder().encode(signingInput);
@@ -126,8 +126,8 @@ export async function verifyFirebaseIdToken(
     }
 
     // 4. Parse and validate payload
-    const payloadB64 = token.split(".")[1];
-    const payloadJson = atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/"));
+  const payloadB64 = token.split(".")[1] ?? "";
+  const payloadJson = atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/"));
     const payload: TokenPayload = JSON.parse(payloadJson);
 
     // 5. Validate claims

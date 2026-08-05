@@ -1,4 +1,3 @@
-import type { KVNamespace } from "@/integrations/cloudflare/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { json, preflight, requireUser, getDB, getKV, checkRateLimit } from "@/lib/kuro-api";

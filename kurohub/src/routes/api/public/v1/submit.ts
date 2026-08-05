@@ -1,14 +1,8 @@
-import type { KVNamespace } from "@/integrations/cloudflare/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { json, preflight, requireUser, getDB, getKV, checkRateLimit } from "@/lib/kuro-api";
-import { autoScreenSubmission, generatePermissionsList } from "@/lib/content-safety";
-import {
-  getItemById,
-  insertMarketplaceItem,
-  getPendingReviews,
-  updateReviewStatus,
-} from "@/integrations/cloudflare/db";
+import { autoScreenSubmission } from "@/lib/content-safety";
+import { insertMarketplaceItem } from "@/integrations/cloudflare/db";
 
 const submitSchema = z.object({
   id: z.string().min(1).max(120),
@@ -42,7 +36,7 @@ export const Route = createFileRoute("/api/public/v1/submit")({
           return json({ error: "invalid_body", details: parsed.error.flatten() }, 400);
 
         const input = parsed.data;
-        const screening = autoScreenSubmission({ ...input, aup_accepted: input.aup_accepted });
+        const screening = autoScreenSubmission({ ...input, aup_accepted: input.aup_accepted } as import("@/lib/content-safety").SubmissionInput);
 
         const itemId = input.id;
         const now = new Date().toISOString();

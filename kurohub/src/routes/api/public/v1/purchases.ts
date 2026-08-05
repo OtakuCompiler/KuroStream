@@ -1,7 +1,7 @@
-import type { D1Database, KVNamespace } from "@/integrations/cloudflare/types";
+import type { D1Database } from "@/integrations/cloudflare/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { json, preflight, requireUser, getDB, getKV, checkRateLimit, secureId } from "@/lib/kuro-api";
+import { json, preflight, requireUser, getDB, getKV, checkRateLimit } from "@/lib/kuro-api";
 import { getPurchases, insertPurchase, getItemById } from "@/integrations/cloudflare/db";
 
 const SKINS_PASS_ID = "skins_pass";

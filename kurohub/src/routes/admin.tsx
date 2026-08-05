@@ -24,8 +24,14 @@ function AdminPage() {
   useEffect(() => {
     if (!adminKey) return;
     Promise.all([
-      fetch("/api/admin/v1/reviews", { headers: { "x-admin-key": adminKey } }).then((r) => r.json()),
-      fetch("/api/admin/v1/reports?status=open", { headers: { "x-admin-key": adminKey } }).then((r) => r.json()),
+      fetch("/api/admin/v1/reviews", { headers: { "x-admin-key": adminKey } }).then((r) => {
+        if (!r.ok) throw new Error(`reviews: ${r.status}`);
+        return r.json();
+      }),
+      fetch("/api/admin/v1/reports?status=open", { headers: { "x-admin-key": adminKey } }).then((r) => {
+        if (!r.ok) throw new Error(`reports: ${r.status}`);
+        return r.json();
+      }),
     ])
       .then(([reviewsRes, reportsRes]) => {
         setData({ reviews: reviewsRes.reviews || [], reports: reportsRes.reports || [] });

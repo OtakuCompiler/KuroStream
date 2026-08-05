@@ -47,7 +47,7 @@ fun DynamicFanartBackground(
             val imageModifier = if (kenBurns) {
                 Modifier
                     .fillMaxSize()
-                    .kenBurnsEffect()
+                    .kenBurnsGraphicsLayer()
             } else {
                 Modifier.fillMaxSize()
             }
@@ -102,64 +102,42 @@ fun DynamicFanartBackground(
 
 private const val KB_DURATION_MS = 18_000
 
-/**
- * Slow animated pan+scale modifier. Cycles through four poses:
- *   0 %  — 1.08× zoom, translated top-left
- *   50 % — 1.12× zoom, centred
- *  100 % — 1.08× zoom, translated bottom-right
- *
- * The scale never drops below 1.0 so we never see letter-box edges.
- */
-private fun Modifier.kenBurnsEffect(): Modifier = composed(
-    factory = {
-        val transition = rememberInfiniteTransition(label = "kenBurns")
+@Composable
+private fun Modifier.kenBurnsGraphicsLayer(): Modifier {
+    val transition = rememberInfiniteTransition(label = "kenBurns")
 
-        // Primary pan axis (X)
-        val tx by transition.animateFloat(
-            initialValue   = -0.04f,
-            targetValue    =  0.04f,
-            animationSpec  = infiniteRepeatable(
-                animation  = tween(KB_DURATION_MS, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "kenBurns_tx",
-        )
-        // Secondary pan axis (Y) — offset phase via different duration
-        val ty by transition.animateFloat(
-            initialValue   =  0.03f,
-            targetValue    = -0.03f,
-            animationSpec  = infiniteRepeatable(
-                animation  = tween((KB_DURATION_MS * 1.3).toInt(), easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "kenBurns_ty",
-        )
-        // Scale pulse
-        val scale by transition.animateFloat(
-            initialValue   = 1.08f,
-            targetValue    = 1.14f,
-            animationSpec  = infiniteRepeatable(
-                animation  = tween(KB_DURATION_MS, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "kenBurns_scale",
-        )
+    val tx by transition.animateFloat(
+        initialValue   = -0.04f,
+        targetValue    =  0.04f,
+        animationSpec  = infiniteRepeatable(
+            animation  = tween(KB_DURATION_MS, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "kenBurns_tx",
+    )
+    val ty by transition.animateFloat(
+        initialValue   =  0.03f,
+        targetValue    = -0.03f,
+        animationSpec  = infiniteRepeatable(
+            animation  = tween((KB_DURATION_MS * 1.3).toInt(), easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "kenBurns_ty",
+    )
+    val scale by transition.animateFloat(
+        initialValue   = 1.08f,
+        targetValue    = 1.14f,
+        animationSpec  = infiniteRepeatable(
+            animation  = tween(KB_DURATION_MS, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "kenBurns_scale",
+    )
 
-        this.graphicsLayer {
-            scaleX        = scale
-            scaleY        = scale
-            translationX  = tx * size.width
-            translationY  = ty * size.height
-        }
-    },
-    inspectorInfo = { name = "kenBurnsEffect" },
-)
-
-// Missing Modifier.composed workaround for Compose TV if needed
-private fun Modifier.composed(
-    factory: @Composable Modifier.() -> Modifier,
-    inspectorInfo: androidx.compose.ui.platform.InspectorInfo.() -> Unit = {},
-): Modifier = then(object : androidx.compose.ui.Modifier.Element {}).run {
-    // Compose's standard composed() from compose-ui is available; this just calls it.
-    androidx.compose.ui.composed(inspectorInfo) { factory() }
+    return this.graphicsLayer {
+        scaleX        = scale
+        scaleY        = scale
+        translationX  = tx * size.width
+        translationY  = ty * size.height
+    }
 }

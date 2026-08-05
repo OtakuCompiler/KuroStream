@@ -3,8 +3,7 @@ package com.kurostream.data.kurocloud.auth
 import com.google.common.truth.Truth.assertThat
 import com.kurostream.data.security.EncryptedPreferences
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -37,7 +36,7 @@ class KuroTokenManagerTest {
     }
 
     @Test
-    fun `saveTokens stores all values`() = runBlockingTest {
+    fun `saveTokens stores all values`() = runTest {
         tokenManager.saveTokens("access-123", "refresh-456", 3600)
 
         assertThat(tokenManager.accessToken).isEqualTo("access-123")
@@ -46,21 +45,21 @@ class KuroTokenManagerTest {
     }
 
     @Test
-    fun `isTokenValid returns true for valid token`() = runBlockingTest {
+    fun `isTokenValid returns true for valid token`() = runTest {
         tokenManager.saveTokens("access-123", "refresh-456", 3600)
 
         assertThat(tokenManager.isTokenValid()).isTrue()
     }
 
     @Test
-    fun `isTokenValid returns false for expired token`() = runBlockingTest {
+    fun `isTokenValid returns false for expired token`() = runTest {
         tokenManager.saveTokens("access-123", "refresh-456", -1) // Expired
 
         assertThat(tokenManager.isTokenValid()).isFalse()
     }
 
     @Test
-    fun `clear removes all tokens`() = runBlockingTest {
+    fun `clear removes all tokens`() = runTest {
         tokenManager.saveTokens("access-123", "refresh-456", 3600)
         tokenManager.clear()
 
@@ -70,7 +69,7 @@ class KuroTokenManagerTest {
     }
 
     @Test
-    fun `thread safety - concurrent access`() = runBlockingTest {
+    fun `thread safety - concurrent access`() = runTest {
         val threads = 10
         val iterations = 100
 

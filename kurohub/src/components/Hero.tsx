@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Github, Sparkles, Play, ArrowRight, Zap } from "lucide-react";
+import { BookOpen, Github, Sparkles, Zap } from "lucide-react";
 import { m, useScroll, useTransform } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 
 const HEADLINE = ["The", "anime", "player", "your", "TV", "deserves."];
 
@@ -55,13 +55,13 @@ function ParticleCanvas() {
 
         // Connect nearby particles
         for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[j].x - p.x;
-          const dy = particles[j].y - p.y;
+          const dx = particles[j]!.x - p.x;
+          const dy = particles[j]!.y - p.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 120) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
-            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.lineTo(particles[j]!.x, particles[j]!.y);
             ctx.strokeStyle = `rgba(187, 134, 252, ${0.08 * (1 - dist / 120)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();

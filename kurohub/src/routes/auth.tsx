@@ -46,7 +46,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        await signUpWithEmail(email, password, displayName || email.split("@")[0]);
+        await signUpWithEmail(email, password, displayName || (email.split("@")[0] ?? email));
       } else {
         await signInWithEmail(email, password);
       }

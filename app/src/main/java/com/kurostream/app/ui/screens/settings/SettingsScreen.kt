@@ -17,6 +17,7 @@ package com.kurostream.app.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.Spacer
@@ -42,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kurostream.app.ui.arctic.AFCyan
+import com.kurostream.app.ui.arctic.AFText
 import com.kurostream.app.ui.components.SettingsSkinPicker
 import com.kurostream.app.ui.arctic.ArcticFuseTheme
 import com.kurostream.app.ui.theme.Skin

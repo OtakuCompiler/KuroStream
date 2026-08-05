@@ -89,6 +89,9 @@ function parseScreenshots(s: string | null): string[] {
 }
 
 function mapItem(r: ApiItem): Extension {
+  const emoji = r.emoji ?? undefined;
+  const palette = parsePalette(r.palette);
+  const particle = r.particle ?? undefined;
   return {
     id: r.id,
     name: r.name,
@@ -103,9 +106,9 @@ function mapItem(r: ApiItem): Extension {
     screenshots: parseScreenshots(r.screenshots),
     reviews: [],
     fileUrl: r.file_url ?? "#",
-    emoji: r.emoji ?? undefined,
-    palette: parsePalette(r.palette),
-    particle: r.particle ?? undefined,
+    ...(emoji !== undefined && { emoji }),
+    ...(palette !== undefined && { palette }),
+    ...(particle !== undefined && { particle }),
     isPremium: !!r.is_premium,
   };
 }

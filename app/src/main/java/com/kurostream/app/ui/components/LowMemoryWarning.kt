@@ -130,7 +130,7 @@ fun LowMemoryWarning(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Warning,
+                            imageVector = Warning,
                             contentDescription = "Memory warning",
                             tint = warningData.iconColor,
                             modifier = Modifier.size(28.dp)
@@ -157,7 +157,7 @@ fun LowMemoryWarning(
                                 modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Close,
+                                    imageVector = Close,
                                     contentDescription = "Dismiss",
                                     tint = warningData.textColor,
                                     modifier = Modifier.size(24.dp)
@@ -193,10 +193,10 @@ fun MemoryStatusBar(
     val usedPercent = if (totalMB > 0) (usedMB * 100 / totalMB) else 0
     
     val (colors, icon) = when {
-        memoryState.isCritical -> Color(0xFFB71C1C) to Color.White to Icons.Default.Error
-        memoryState.isLowMemory -> Color(0xFFC62828) to Color.White to Icons.Default.Warning
-        memoryState.memoryPressure > 0.75f -> Color(0xFFF57F17) to Color.White to Icons.Default.Warning
-        else -> Color(0xFF2E7D32) to Color.White to Icons.Default.CheckCircle
+        memoryState.isCritical -> Color(0xFFB71C1C) to Color.White to Error
+        memoryState.isLowMemory -> Color(0xFFC62828) to Color.White to Warning
+        memoryState.memoryPressure > 0.75f -> Color(0xFFF57F17) to Color.White to Warning
+        else -> Color(0xFF2E7D32) to Color.White to CheckCircle
     }
     val (bgColor, textColor) = colors
     
@@ -286,7 +286,7 @@ fun MemoryDiagnosticsScreen(
         ) {
             Text("Memory Diagnostics", style = MaterialTheme.typography.displaySmall)
             IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface)
+                Icon(ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface)
             }
         }
         
@@ -310,11 +310,11 @@ fun MemoryDiagnosticsScreen(
                 ) {
                     Icon(
                         imageVector = when {
-                            memoryState.isCritical -> Icons.Default.Error
-                            memoryState.isLowMemory -> Icons.Default.Warning
-                            memoryState.memoryPressure > 0.75f -> Icons.Default.Warning
-                            memoryState.memoryPressure > 0.5f -> Icons.Default.Info
-                            else -> Icons.Default.CheckCircle
+                            memoryState.isCritical -> Error
+                            memoryState.isLowMemory -> Warning
+                            memoryState.memoryPressure > 0.75f -> Warning
+                            memoryState.memoryPressure > 0.5f -> Info
+                            else -> CheckCircle
                         },
                         contentDescription = "Pressure level",
                         tint = Color.White,
@@ -382,10 +382,10 @@ fun MemoryDiagnosticsScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { StatCard("Available Memory", formatBytes(availableMemory), Icons.Default.Info) }
-            item { StatCard("Used Memory", formatBytes(usedMemory), Icons.AutoMirrored.Filled.List) }
-            item { StatCard("Total Memory", formatBytes(totalMemory), Icons.Default.Info) }
-            item { StatCard("Headroom", "${(memoryState.targetMemoryMb - memoryState.totalPssMb).coerceAtLeast(0)}MB", Icons.Default.Info) }
+            item { StatCard("Available Memory", formatBytes(availableMemory), Info) }
+            item { StatCard("Used Memory", formatBytes(usedMemory), List) }
+            item { StatCard("Total Memory", formatBytes(totalMemory), Info) }
+            item { StatCard("Headroom", "${(memoryState.targetMemoryMb - memoryState.totalPssMb).coerceAtLeast(0)}MB", Info) }
             
             val runtime = Runtime.getRuntime()
             val heapMax = runtime.maxMemory()
@@ -393,9 +393,9 @@ fun MemoryDiagnosticsScreen(
             val heapFree = runtime.freeMemory()
             val heapUsed = heapTotal - heapFree
             
-            item { StatCard("Java Heap Max", formatBytes(heapMax), Icons.Default.Info) }
-            item { StatCard("Java Heap Used", formatBytes(heapUsed), Icons.AutoMirrored.Filled.List) }
-            item { StatCard("Java Heap Free", formatBytes(heapFree), Icons.Default.Favorite) }
+            item { StatCard("Java Heap Max", formatBytes(heapMax), Info) }
+            item { StatCard("Java Heap Used", formatBytes(heapUsed), List) }
+            item { StatCard("Java Heap Free", formatBytes(heapFree), Favorite) }
         }
     }
 }

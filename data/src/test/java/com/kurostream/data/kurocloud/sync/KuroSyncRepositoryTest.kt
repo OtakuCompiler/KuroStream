@@ -6,9 +6,11 @@ import com.kurostream.data.kurocloud.KuroCatalogResponse
 import com.kurostream.data.kurocloud.KuroClaimPurchaseRequest
 import com.kurostream.data.kurocloud.KuroMeResponse
 import com.kurostream.data.kurocloud.KuroPurchase
-import com.kurostream.data.kurocloud.KuroPurchase
 import com.kurostream.data.kurocloud.KuroSetActiveSkinRequest
 import com.kurostream.data.kurocloud.KuroSyncResponse
+import com.kurostream.data.kurocloud.KuroSyncCounts
+import com.kurostream.data.kurocloud.KuroUser
+import com.kurostream.data.kurocloud.KuroEntitlements
 import com.kurostream.data.kurocloud.auth.KuroAuthTokens
 import com.kurostream.data.kurocloud.auth.KuroTokenManager
 import com.kurostream.data.kurocloud.db.KuroCloudDatabase
@@ -23,7 +25,7 @@ import com.kurostream.data.kurocloud.db.KuroCatalogMetaEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
@@ -97,7 +99,7 @@ class KuroSyncRepositoryTest {
     }
 
     @Test
-    fun `syncEntitlements updates database with server data`() = runBlockingTest {
+    fun `syncEntitlements updates database with server data`() = runTest {
         // Setup mock response
         val meResponse = KuroMeResponse(
             user = com.kurostream.data.kurocloud.KuroUser(
@@ -123,7 +125,7 @@ class KuroSyncRepositoryTest {
 
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(meResponse))
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroMeResponse.serializer(), meResponse))
             .addHeader("Content-Type", "application/json"))
 
         // Mock DAO responses
@@ -141,16 +143,16 @@ class KuroSyncRepositoryTest {
 
         // Verify request
         val request = mockWebServer.takeRequest(1, TimeUnit.SECONDS)
-        assertThat(request.method).isEqualTo("GET")
-        assertThat(request.path).isEqualTo("/api/public/v1/me")
-        assertThat(request.getHeader("Authorization")).isEqualTo("Bearer test-access-token")
+        assertThat(request?.method).isEqualTo("GET")
+        assertThat(request?.path).isEqualTo("/api/public/v1/me")
+        assertThat(request?.getHeader("Authorization")).isEqualTo("Bearer test-access-token")
 
         // Verify DAO was called
         org.mockito.Mockito.verify(mockEntitlementsDao).insert(org.mockito.ArgumentMatchers.any())
     }
 
     @Test
-    fun `syncCatalog updates database with server catalog`() = runBlockingTest {
+    fun `syncCatalog updates database with server catalog`() = runTest {
         val catalogResponse = KuroCatalogResponse(
             skins = listOf(
                 KuroCatalogItem(
@@ -194,7 +196,7 @@ class KuroSyncRepositoryTest {
 
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(catalogResponse))
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroCatalogResponse.serializer(), catalogResponse))
             .addHeader("Content-Type", "application/json"))
 
         org.mockito.Mockito.`when`(mockCatalogDao.insertAll(org.mockito.ArgumentMatchers.any()))
@@ -206,12 +208,12 @@ class KuroSyncRepositoryTest {
         kotlinx.coroutines.delay(100)
 
         val request = mockWebServer.takeRequest(1, TimeUnit.SECONDS)
-        assertThat(request.path).isEqualTo("/api/public/v1/catalog")
+        assertThat(request?.path).isEqualTo("/api/public/v1/catalog")
         org.mockito.Mockito.verify(mockCatalogDao).insertAll(org.mockito.ArgumentMatchers.any())
     }
 
     @Test
-    fun `claimFreeItem calls API and triggers re-sync`() = runBlockingTest {
+    fun `claimFreeItem calls API and triggers re-sync`() = runTest {
         val syncResponse = KuroSyncResponse(
             added = com.kurostream.data.kurocloud.KuroSyncCounts(skins = 1),
             deleted = com.kurostream.data.kurocloud.KuroSyncCounts(),
@@ -219,7 +221,7 @@ class KuroSyncRepositoryTest {
 
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(syncResponse))
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroSyncResponse.serializer(), syncResponse))
             .addHeader("Content-Type", "application/json"))
 
         // Mock subsequent sync calls
@@ -240,7 +242,7 @@ class KuroSyncRepositoryTest {
 
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(meResponse))
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroMeResponse.serializer(), meResponse))
             .addHeader("Content-Type", "application/json"))
 
         org.mockito.Mockito.`when`(mockEntitlementsDao.insert(org.mockito.ArgumentMatchers.any()))
@@ -253,24 +255,24 @@ class KuroSyncRepositoryTest {
 
         // Verify claim request
         val claimRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS)
-        assertThat(claimRequest.method).isEqualTo("POST")
-        assertThat(claimRequest.path).isEqualTo("/api/public/v1/purchases")
+        assertThat(claimRequest?.method).isEqualTo("POST")
+        assertThat(claimRequest?.path).isEqualTo("/api/public/v1/purchases")
 
-        val body = claimRequest.body.readUtf8()
+        val body = claimRequest?.body?.readUtf8()
         assertThat(body).contains("skins_pass")
 
         // Verify subsequent sync
         val meRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS)
-        assertThat(meRequest.path).isEqualTo("/api/public/v1/me")
+        assertThat(meRequest?.path).isEqualTo("/api/public/v1/me")
     }
 
     @Test
-    fun `setActiveSkin calls API and triggers entitlements sync`() = runBlockingTest {
+    fun `setActiveSkin calls API and triggers entitlements sync`() = runTest {
         val syncResponse = KuroSyncResponse()
 
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(syncResponse))
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroSyncResponse.serializer(), syncResponse))
             .addHeader("Content-Type", "application/json"))
 
         val meResponse = KuroMeResponse(
@@ -290,7 +292,7 @@ class KuroSyncRepositoryTest {
 
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(meResponse))
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroMeResponse.serializer(), meResponse))
             .addHeader("Content-Type", "application/json"))
 
         org.mockito.Mockito.`when`(mockEntitlementsDao.insert(org.mockito.ArgumentMatchers.any()))
@@ -302,21 +304,21 @@ class KuroSyncRepositoryTest {
         kotlinx.coroutines.delay(200)
 
         val request = mockWebServer.takeRequest(1, TimeUnit.SECONDS)
-        assertThat(request.method).isEqualTo("POST")
-        assertThat(request.path).isEqualTo("/api/public/v1/active-skin")
+        assertThat(request?.method).isEqualTo("POST")
+        assertThat(request?.path).isEqualTo("/api/public/v1/active-skin")
 
-        val body = request.body.readUtf8()
+        val body = request?.body?.readUtf8()
         assertThat(body).contains("skin_2")
     }
 
     @Test
-    fun `checkoutPremiumItem returns correct web URL`() = runBlockingTest {
+    fun `checkoutPremiumItem returns correct web URL`() = runTest {
         val url = repository.checkoutPremiumItem("premium_skin")
         assertThat(url).isEqualTo("https://kuro-stream-tv.lovable.app/marketplace/premium_skin")
     }
 
     @Test
-    fun `handle 401 triggers token refresh`() = runBlockingTest {
+    fun `handle 401 triggers token refresh`() = runTest {
         // First request returns 401
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(401))
@@ -330,7 +332,7 @@ class KuroSyncRepositoryTest {
 
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(authTokens))
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroAuthTokens.serializer(), authTokens))
             .addHeader("Content-Type", "application/json"))
 
         // Retry succeeds
@@ -351,7 +353,7 @@ class KuroSyncRepositoryTest {
 
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(meResponse))
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroMeResponse.serializer(), meResponse))
             .addHeader("Content-Type", "application/json"))
 
         org.mockito.Mockito.`when`(mockTokenManager.refreshToken).thenReturn("old-refresh-token")
@@ -369,7 +371,7 @@ class KuroSyncRepositoryTest {
     }
 
     @Test
-    fun `handle 402 payment required returns checkout URL`() = runBlockingTest {
+    fun `handle 402 payment required returns checkout URL`() = runTest {
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(402)
             .setBody("{\"error\": \"Payment required\"}")
@@ -380,7 +382,7 @@ class KuroSyncRepositoryTest {
     }
 
     @Test
-    fun `handle 403 not entitled`() = runBlockingTest {
+    fun `handle 403 not entitled`() = runTest {
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(403)
             .setBody("{\"error\": \"Not entitled\"}")
@@ -391,11 +393,11 @@ class KuroSyncRepositoryTest {
         kotlinx.coroutines.delay(100)
 
         val request = mockWebServer.takeRequest(1, TimeUnit.SECONDS)
-        assertThat(request.path).isEqualTo("/api/public/v1/me")
+        assertThat(request?.path).isEqualTo("/api/public/v1/me")
     }
 
     @Test
-    fun `offline state uses cached data`() = runBlockingTest {
+    fun `offline state uses cached data`() = runTest {
         // Simulate network failure
         mockWebServer.shutdown()
 
@@ -411,17 +413,17 @@ class KuroSyncRepositoryTest {
     }
 
     @Test
-    fun `syncState emits correct states`() = runBlockingTest {
+    fun `syncState emits correct states`() = runTest {
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
-            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroMeResponse(
-                user = com.kurostream.data.kurocloud.KuroUser(
+            .setBody(kotlinx.serialization.json.Json.encodeToString(KuroMeResponse.serializer(), KuroMeResponse(
+                user = com.kurostream.domain.kurocloud.KuroUser(
                     id = "user123",
                     email = "test@test.com",
                     displayName = "Test",
                     avatarUrl = null,
                 ),
-                entitlements = com.kurostream.data.kurocloud.KuroEntitlements(
+                entitlements = com.kurostream.domain.kurocloud.KuroEntitlements(
                     ownedItemIds = listOf(),
                     hasSkinsPass = false,
                     activeSkinId = null,
