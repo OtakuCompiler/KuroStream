@@ -1,7 +1,6 @@
-import type { KVNamespace } from "@/integrations/cloudflare/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { json, preflight, requireUser, getDB, getKV, checkRateLimit } from "@/lib/kuro-api";
+import { json, preflight, requireUser, getDB, getKV, getEnvVar, checkRateLimit } from "@/lib/kuro-api";
 import { getReports, updateReportStatus } from "@/integrations/cloudflare/db";
 
 const reportActionSchema = z.object({
@@ -61,8 +60,3 @@ export const Route = createFileRoute("/api/admin/v1/reports")({
     },
   },
 });
-
-function getEnvVar(env: unknown, key: string): string | undefined {
-  const e = env as Record<string, unknown>;
-  return e[key] as string | undefined;
-}

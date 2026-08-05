@@ -1,7 +1,6 @@
-import type { KVNamespace } from "@/integrations/cloudflare/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { json, preflight, requireUser, getDB, getKV, checkRateLimit } from "@/lib/kuro-api";
+import { json, preflight, requireUser, getDB, getKV, getEnvVar } from "@/lib/kuro-api";
 import { getPurchases, getItemById } from "@/integrations/cloudflare/db";
 
 const querySchema = z.object({ user_id: z.string().min(1).max(120) });
@@ -60,8 +59,3 @@ export const Route = createFileRoute("/api/admin/v1/entitlements")({
     },
   },
 });
-
-function getEnvVar(env: unknown, key: string): string | undefined {
-  const e = env as Record<string, unknown>;
-  return e[key] as string | undefined;
-}

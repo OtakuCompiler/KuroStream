@@ -17,8 +17,6 @@
 
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" tools:overrideLibrary="androidx.tvprovider,dev.jdtech.mpv" />
 
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
-    <uses-feature android:name="android.software.leanback" android:required="true" />
     <uses-feature android:name="android.hardware.gamepad" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { json, preflight } from "@/lib/kuro-api";
+import { json, preflight, checkRateLimit } from "@/lib/kuro-api";
 import { getCatalog } from "@/integrations/cloudflare/db";
 import { RATE_LIMITS } from "@/lib/middleware";
 import { hasRequiredBindings } from "@/lib/env";
@@ -51,6 +51,3 @@ export const Route = createFileRoute("/api/public/v1/catalog")({
     },
   },
 });
-
-// Import checkRateLimit locally since it's in kuro-api
-import { checkRateLimit } from "@/lib/kuro-api";
