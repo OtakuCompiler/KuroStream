@@ -78,7 +78,7 @@ jobs:
           }
           STUB
       - name: Build debug APK
-        run: bash gradlew :app:assembleDebug --stacktrace
+        run: bash gradlew :app:assembleDebug --no-daemon --max-workers=4
       - uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -156,7 +156,7 @@ jobs:
             "configuration_version": "1"
           }
           STUB
-      - run: bash gradlew :app:testDebugUnitTest --stacktrace
+      - run: bash gradlew :app:testDebugUnitTest --no-daemon --max-workers=4
       - uses: actions/upload-artifact@v4
         if: always()
         with:
