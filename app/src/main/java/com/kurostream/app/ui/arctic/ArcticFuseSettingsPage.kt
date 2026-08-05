@@ -96,15 +96,7 @@ data class ArcticSettingsState(
     val autoScrollHero:   Boolean            = true,
 )
 
-data class ArcticSystemInfo(
-    val version: String = BuildConfig_VERSION_NAME,
-    val device:  String = "${android.os.Build.MODEL}",
-    val storage: String = "—",
-    val memory:  String = "—",
-    val uptime:  String = "—",
-)
 
-private const val BuildConfig_VERSION_NAME = "1.0.0"
 
 @Composable
 fun ArcticFuseSettingsPage(
