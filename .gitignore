@@ -73,3 +73,6 @@ PRODUCTION_IMPLEMENTATION_REPORT.md
 docker-compose.yml
 nginx/kurostream.zip
 kurohub/node_modules/
+
+# Kilo agent config (local only)
+kilo.json

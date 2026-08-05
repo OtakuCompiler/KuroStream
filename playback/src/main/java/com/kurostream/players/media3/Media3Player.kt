@@ -1,6 +1,7 @@
 package com.kurostream.players.media3
 
 import android.content.Context
+import android.os.Build
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Format
@@ -20,6 +21,7 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.common.util.UnstableApi
 import com.kurostream.common.memory.CodecCapabilityDetector
 import com.kurostream.common.memory.LowRamDevice
+import com.kurostream.playback.audio.DolbyAtmosPassthrough
 import com.kurostream.players.selector.PlaybackEngine
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +43,7 @@ class Media3Player @Inject constructor(
 ) : PlaybackEngine {
 
     private var player: ExoPlayer? = null
+    private val atmosPassthrough = DolbyAtmosPassthrough(context)
     private val listeners = mutableSetOf<PlaybackEngine.Listener>()
 
     private val _currentPosition   = MutableStateFlow(0L)
@@ -142,8 +145,15 @@ class Media3Player @Inject constructor(
         }
 
         // ── Audio: Dolby Atmos offload ────────────────────────────────────────
-        // When the audio HAL supports offload the DSP handles decode entirely,
-        // freeing the CPU and dropping ~15-20 MB of working RAM.
+        val audioSink = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && atmosPassthrough.isDolbyAtmosSupported()) {
+            DefaultAudioSink.Builder(context)
+                .setEnableAudioTrackPlaybackParams(true)
+                .build()
+        } else {
+            DefaultAudioSink.Builder(context).build()
+        }
+        atmosPassthrough.logAudioCapabilities()
+
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
@@ -172,6 +182,7 @@ class Media3Player @Inject constructor(
         return ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
+            .setAudioSink(audioSink)
             .setLoadControl(loadControl)
             .setHandleAudioBecomingNoisy(true)
             // LOCAL keeps the screen + audio alive without a wake lock service.

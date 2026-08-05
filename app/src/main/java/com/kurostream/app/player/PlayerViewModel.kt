@@ -19,12 +19,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kurostream.app.sync.TraktSyncManager
+import com.kurostream.common.memory.LowRamDevice
 import com.kurostream.data.subtitle.SubtitleDownloadManager
 import com.kurostream.domain.model.PlaybackUrl
 import com.kurostream.domain.result.Result
 import com.kurostream.domain.usecase.GetPlaybackUrlUseCase
 import com.kurostream.players.selector.PlaybackEngine
 import com.kurostream.players.selector.PlaybackEngine.PlaybackState
+import com.kurostream.players.upscaling.UpscalingManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +45,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 import timber.log.Timber
+import android.view.Surface
 import javax.inject.Inject
 
 @HiltViewModel
@@ -55,6 +58,7 @@ class PlayerViewModel @Inject constructor(
     private val traktSyncManager: TraktSyncManager,
     private val subtitleDownloadManager: SubtitleDownloadManager,
     private val backendSelector: com.kurostream.players.selector.BackendSelector,
+    private val upscalingManager: UpscalingManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
@@ -289,6 +293,12 @@ class PlayerViewModel @Inject constructor(
         engine?.setSubtitleEnabled(enabled)
     }
 
+    fun onVideoSurfaceAvailable(surface: Surface, width: Int, height: Int) {
+        if (!LowRamDevice.isLowRamDevice) {
+            upscalingManager.attach(surface, width, height)
+        }
+    }
+
     fun setAudioPassthrough(enabled: Boolean) {
         viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             try {
@@ -346,6 +356,7 @@ class PlayerViewModel @Inject constructor(
         saveProgress()
         reportTraktScrobble("stop")
         engine?.release()
+        upscalingManager.release()
         progressUpdateJob?.cancel()
     }
 

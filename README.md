@@ -1,5 +1,7 @@
 # KuroStream - Premium Android TV Streaming App
 
+[![CI](https://github.com/OtakuCompiler/KuroStream/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/OtakuCompiler/KuroStream/actions)
+
 A feature-rich, privacy-focused streaming application for Android TV with Trakt.tv integration, voice search, Cast support, and enterprise-grade security.
 
 ## 🌟 Features
@@ -236,6 +238,15 @@ anilist.client.id=YOUR_CLIENT_ID
 4. Commit changes (`git commit -m 'feat: add amazing feature'`)
 5. Push to branch (`git push origin feature/amazing-feature`)
 6. Open Pull Request
+
+## Building from Source
+
+**Requirements:** JDK 17, Android SDK 36, NDK 28.0.13004108, Gradle 9.6.1
+
+1. Clone: `git clone https://github.com/OtakuCompiler/KuroStream.git`
+2. Copy `app/google-services.json` from Firebase Console → Project Settings
+3. Set env vars: `YOUTUBE_API_KEY`, `TMDB_API_KEY`, `MAL_CLIENT_ID`
+4. Build: `./gradlew :app:assembleDebug`
 
 ## 📄 License
 

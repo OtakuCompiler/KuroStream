@@ -201,6 +201,13 @@ fun PlayerScreen(
                     (engine?.nativePlayer() as? ExoPlayer)?.let { exo ->
                         this.player = exo
                     }
+                    videoSurfaceView?.holder?.addCallback(object : android.view.SurfaceHolder.Callback {
+                        override fun surfaceCreated(holder: android.view.SurfaceHolder) {
+                            viewModel.onVideoSurfaceAvailable(holder.surface, holder.surfaceFrame.width(), holder.surfaceFrame.height())
+                        }
+                        override fun surfaceChanged(holder: android.view.SurfaceHolder, format: Int, width: Int, height: Int) = Unit
+                        override fun surfaceDestroyed(holder: android.view.SurfaceHolder) = Unit
+                    })
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hdrMode != HdrMode.SDR) {
                         val surfaceView = videoSurfaceView as? android.view.SurfaceView
                         surfaceView?.setSecure(true)
@@ -233,6 +240,7 @@ fun PlayerScreen(
                             if (currentEngine is com.kurostream.players.mpv.MpvPlayer) {
                                 currentEngine.setSurface(holder.surface)
                             }
+                            viewModel.onVideoSurfaceAvailable(holder.surface, holder.surfaceFrame.width(), holder.surfaceFrame.height())
                         }
                         override fun surfaceChanged(
                             holder: android.view.SurfaceHolder,

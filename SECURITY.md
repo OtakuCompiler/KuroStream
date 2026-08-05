@@ -1,23 +1,15 @@
 # Security Policy
 
-## Supported Versions
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
-
 ## Reporting a Vulnerability
 
-Please report security vulnerabilities to **mystical1309@gmail.com**.
+Please **do not** file a public GitHub issue for security vulnerabilities.
 
-Do NOT open public issues for security bugs.
+Email: security@kurostream.app  
+Expected response: within 72 hours
 
-## Security Features
+## Supported Versions
 
-- Certificate pinning for API endpoints
-- Encrypted Proto DataStore for sensitive settings
-- Plugin sandbox with ClassLoader isolation
-- Extension signature verification
-- Network Security Config with cleartext disabled in release
-- ProGuard/R8 obfuscation
+| Version | Supported |
+|---------|-----------|
+| Latest  | ✅ |
+| < 1.0   | ❌ |

@@ -55,4 +55,10 @@ tasks.register("detektFormat") {
 // configuration overhead on every build. Apply it explicitly in a module
 // when needed, or run the detektAll/detektFormat tasks above.
 
+subprojects {
+    configurations.all {
+        resolutionStrategy.force("org.xerial:sqlite-jdbc:3.49.1.0")
+    }
+}
+
 

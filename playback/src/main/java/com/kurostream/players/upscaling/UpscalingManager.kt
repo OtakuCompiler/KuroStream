@@ -4,10 +4,20 @@ import android.content.Context
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.os.Build
+import android.view.Surface
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class UpscalingManager(context: Context) {
+@Singleton
+class UpscalingManager @Inject constructor(
+    context: Context
+) {
 
     private val prefs = context.getSharedPreferences("upscaling", Context.MODE_PRIVATE)
+
+    private var attachedSurface: Surface? = null
+    private var attachedWidth: Int = 0
+    private var attachedHeight: Int = 0
 
     var isAiUpscalingEnabled: Boolean
         get() = prefs.getBoolean("ai_upscaling", false)
@@ -37,5 +47,17 @@ class UpscalingManager(context: Context) {
     fun applyToExoPlayer(player: androidx.media3.exoplayer.ExoPlayer) {
         if (!isAiUpscalingEnabled) return
         player.setVideoScalingMode(androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
+    }
+
+    fun attach(surface: Surface, width: Int, height: Int) {
+        attachedSurface = surface
+        attachedWidth = width
+        attachedHeight = height
+    }
+
+    fun release() {
+        attachedSurface = null
+        attachedWidth = 0
+        attachedHeight = 0
     }
 }

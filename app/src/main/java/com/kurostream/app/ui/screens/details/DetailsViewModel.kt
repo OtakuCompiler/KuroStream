@@ -18,6 +18,7 @@ package com.kurostream.app.ui.screens.details
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kurostream.app.model.Episode
+import com.kurostream.app.metadata.UnifiedMetadataRepository
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.repository.TvRepositories.FavoritesRepository
 import com.kurostream.app.repository.TvRepositories.MediaRepository
@@ -46,7 +47,8 @@ sealed interface DetailsUiState {
 @HiltViewModel
 class DetailsViewModel @Inject constructor(
     private val mediaRepository: MediaRepository,
-    private val favoritesRepository: FavoritesRepository
+    private val favoritesRepository: FavoritesRepository,
+    private val metadataRepository: UnifiedMetadataRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DetailsUiState>(DetailsUiState.Loading)
@@ -57,10 +59,28 @@ class DetailsViewModel @Inject constructor(
             try {
                 _uiState.value = DetailsUiState.Loading
 
-                val mediaItem = mediaRepository.getMediaItem(mediaId).first()
-                if (mediaItem == null) {
-                    _uiState.value = DetailsUiState.Error("Media not found")
-                    return@launch
+                val metadataDetails = metadataRepository.getDetails(mediaId)
+                val mediaItem = if (metadataDetails != null) {
+                    MediaItem(
+                        id = metadataDetails.id,
+                        title = metadataDetails.title,
+                        description = metadataDetails.description ?: "",
+                        posterUrl = metadataDetails.coverImageUrl ?: "",
+                        backdropUrl = metadataDetails.bannerImageUrl ?: "",
+                        genre = metadataDetails.genres,
+                        rating = metadataDetails.score?.toFloat() ?: 0f,
+                        year = metadataDetails.seasonYear ?: 0,
+                        duration = metadataDetails.durationMinutes ?: 0,
+                        source = metadataDetails.providerData["_source"] ?: "metadata",
+                        episodes = emptyList()
+                    )
+                } else {
+                    val fallback = mediaRepository.getMediaItem(mediaId).first()
+                    if (fallback == null) {
+                        _uiState.value = DetailsUiState.Error("Media not found")
+                        return@launch
+                    }
+                    fallback
                 }
 
                 val favorites = favoritesRepository.getFavorites().first()

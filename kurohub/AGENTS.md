@@ -33,3 +33,17 @@ Stack: Vite, React 19, TanStack Router/Query, Tailwind CSS 4, Firebase, Cloudfla
 
 - `kh` → cd to this folder
 - `kbuild` → not used here; use `npm run build`
+## Kilo Skills & MCPs
+
+This project uses Kilo skills for AI-assisted development:
+- Skill location: `/root/.config/kilo/skills/kurohub/SKILL.md`
+- Project MCP config: `.kilo/kilo.jsonc`
+- Key MCPs: firebase, cloudflare, playwright, context7, parallel-search, duckduckgo, html-extractor
+
+## Quick Reference
+
+- Dev: `npm run dev`
+- Build: `npm run build`
+- Deploy: `npm run deploy`
+- Typecheck: `npx tsc --noEmit`
+- Firebase: `kurostream13`

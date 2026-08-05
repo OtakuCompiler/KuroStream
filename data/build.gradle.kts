@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.protobuf)
     alias(libs.plugins.apollo)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -62,7 +63,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    ksp(libs.sqlite.jdbc)
     implementation(libs.gson)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
@@ -75,14 +75,14 @@ dependencies {
     implementation(libs.coil.gif)
     implementation(libs.coil.svg)
     implementation(libs.coil.video)
-    
+
     // AniList GraphQL
     implementation(libs.anilist.graphql)
     implementation(libs.anilist.cache)
-    
+
     // Protobuf
     implementation(libs.protobuf.kotlin)
-    
+
     // Networking
     implementation(libs.jsoup)
     implementation(libs.sqlcipher)
@@ -98,6 +98,10 @@ dependencies {
     testImplementation("com.google.truth:truth:1.1.5")
     testImplementation("org.mockito:mockito-core:5.11.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+}
+
+configurations.named("ksp") {
+    resolutionStrategy.force("org.xerial:sqlite-jdbc:3.49.1.0")
 }
 
 protobuf {
@@ -121,4 +125,9 @@ apollo {
     service("anilist") {
         packageName.set("com.kurostream.data.anilist")
     }
+}
+
+detekt {
+    config.setFrom(rootProject.files("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
 }

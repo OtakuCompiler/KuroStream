@@ -16,8 +16,8 @@ dependencyResolutionManagement {
 }
 rootProject.name = "KuroStream"
 include(":app")
-include(":baseline-profile")
-include(":benchmark")
+// include(":baseline-profile")
+// include(":benchmark")
 include(":cache")
 include(":common")
 include(":config")

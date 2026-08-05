@@ -116,6 +116,7 @@ fun ArcticFuseHomeScreen(
                 activeHub = hub
                 when (hub) {
                     ArcticHub.Home -> { /* stay on home */ }
+                    ArcticHub.Anime -> { activeHubTab = ArcticHubTab.Anime }
                     ArcticHub.Movies -> { activeHubTab = ArcticHubTab.Movies }
                     ArcticHub.TVShows -> { activeHubTab = ArcticHubTab.TVShows }
                     ArcticHub.YouTube -> { /* future */ }
@@ -194,6 +195,46 @@ fun ArcticFuseHomeScreen(
                                     view = CardView.Landscape,
                                     modifier = Modifier.padding(top = AFSpacing.px6),
                                 )
+                            }
+                        }
+                    }
+                }
+
+                // Anime Hub Grid
+                if (activeHub == ArcticHub.Anime) {
+                    item(key = "anime_grid") {
+                        when (val state = trending) {
+                            is RowState.Loading -> {
+                                ArcticFuseWidgetWall(
+                                    title = "Trending Anime",
+                                    items = emptyList(),
+                                    onItemClick = {},
+                                    loading = true,
+                                    modifier = Modifier.padding(top = AFSpacing.px6),
+                                )
+                            }
+                            is RowState.Error -> {
+                                ArcticFuseWidgetWall(
+                                    title = "Trending Anime",
+                                    items = emptyList(),
+                                    onItemClick = {},
+                                    error = state.message,
+                                    onRetry = onRetry,
+                                    modifier = Modifier.padding(top = AFSpacing.px6),
+                                )
+                            }
+                            is RowState.Success -> {
+                                val animeItems = state.items.filter { item ->
+                                    item.genre.any { it.equals("Anime", ignoreCase = true) }
+                                }
+                                if (animeItems.isNotEmpty()) {
+                                    ArcticFuseWidgetWall(
+                                        title = "Trending Anime",
+                                        items = animeItems.take(18),
+                                        onItemClick = { onMediaClick(it.id) },
+                                        modifier = Modifier.padding(top = AFSpacing.px6),
+                                    )
+                                }
                             }
                         }
                     }

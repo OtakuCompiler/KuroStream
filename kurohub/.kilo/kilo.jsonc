@@ -1,10 +1,9 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
-  "snapshot": false,
   "mcp": {
     "firebase": {
       "type": "local",
-      "command": ["firebase-mcp"],
+      "command": ["node", "/usr/local/lib/node_modules/firebase-mcp/dist/cli/index.js"],
       "enabled": true,
       "timeout": 30000
     },
@@ -12,9 +11,26 @@
       "type": "remote",
       "url": "https://mcp.cloudflare.com/mcp",
       "oauth": {
-        "scope": "account:read account:write user:read"
+        "scope": "account:read user:read"
       },
-      "enabled": true
+      "enabled": true,
+      "timeout": 30000
+    }
+  },
+  "permission": {
+    "external_directory": {
+      "/proc/*": "allow",
+      "/etc/*": "allow",
+      "/root/.tmp/*": "allow",
+      "/*": "allow"
+    },
+    "bash": {
+      "*": "allow"
+    },
+    "*": {
+    },
+    "read": {
+      "*": "allow"
     }
   }
 }

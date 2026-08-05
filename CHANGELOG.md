@@ -1,22 +1,20 @@
 # Changelog
 
-All notable changes to KuroStream will be documented in this file.
-
-## [1.0.0] - 2026-08-01
-### Added
-- Arctic Fuse 3 inspired UI
-- 4K/HDR/Dolby Vision support with <125MB RAM target
-- 500MB VOD disk cache + 125MB RAM disk
-- Optimized torrent streaming engine (DHT/PEX/LSD)
-- PlayerProcessInfo overlay
-- Low-RAM ExoPlayer with tunneling support
-
+## [Unreleased]
 ### Fixed
-- PlayerViewModel scope crash
-- PlayerActivity memory leaks (receiver, wakelock, audiofocus)
-- Manifest incomplete queries section
-- Coil cache misconfiguration
+- App now visible in phone launcher (missing LAUNCHER category)
+- Removed duplicate TV launcher icons (VoiceSearchActivity and RecommendationService misconfiguration)
+- Fixed build failure on ARM hosts (KSP/sqlite-jdbc version override)
+- Deleted orphaned duplicate MarketplaceScreen/ViewModel
+- Deleted empty PlaybackModuleStub.kt
 
-### Security
-- FLAG_SECURE on player window
-- Network security config enforced
+### Added
+- Dolby Atmos bitstream passthrough wired to Media3 player
+- GPU upscaling (EnhancedUpscaleEngine) connected to player surface
+- Anime hub added to Arctic Fuse sidebar navigation
+- Multi-source metadata (TMDB/Kitsu/TVDB fallback) wired to Details screen
+- detekt static analysis enabled with CI enforcement
+
+### Changed
+- README: corrected RAM, Atmos, and Arctic Fuse fidelity claims
+- Removed empty benchmark/baseline-profile modules from build

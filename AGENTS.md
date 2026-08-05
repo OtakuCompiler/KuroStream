@@ -43,3 +43,17 @@ KuroStream is a privacy-focused Android TV streaming app (Kotlin, Jetpack Compos
 - Performance governor is locked to `performance`; CPU affinity limits the build to 6 of 8 cores.
 - Kilo itself runs on the Termux side (`kilo` is not on PATH inside proot root).
 - Prefer internal-storage paths (`/root/...`) for anything performance-sensitive; keep source in the repo.
+
+## Kilo Skills & MCPs
+
+This project uses Kilo skills for AI-assisted development:
+- Skill location: `/root/.config/kilo/skills/kurostream/SKILL.md`
+- Global MCPs configured in `~/.config/kilo/kilo.jsonc`
+- Key MCPs: firebase, cloudflare, playwright, context7, parallel-search, duckduckgo, html-extractor
+
+## Quick Reference
+
+- Always use `bash gradlew` instead of `./gradlew`
+- Build outputs: `/root/.kurostream-build/`
+- Gradle cache: `/root/.kurostream-gradle/`
+- Firebase: `kurostream13`

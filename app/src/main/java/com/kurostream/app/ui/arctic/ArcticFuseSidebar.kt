@@ -61,6 +61,7 @@ import java.util.Locale
 
 enum class ArcticHub(val label: String) {
     Home("HOME"),
+    Anime("ANIME"),
     Movies("MOVIES"),
     TVShows("TV SHOWS"),
     YouTube("YOUTUBE"),
@@ -220,6 +221,7 @@ private fun NavList(
     val items = remember {
         listOf(
             ArcticHub.Home,
+            ArcticHub.Anime,
             ArcticHub.Movies,
             ArcticHub.TVShows,
             ArcticHub.YouTube,
@@ -246,6 +248,7 @@ private fun NavList(
 private fun hubIcon(hub: ArcticHub) {
     when (hub) {
         ArcticHub.Home -> IconHome()
+        ArcticHub.Anime -> IconStar(tint = AFText)
         ArcticHub.Movies -> IconLibrary()
         ArcticHub.TVShows -> IconTV()
         ArcticHub.YouTube -> IconYouTube()
