@@ -3,6 +3,7 @@ package com.kurostream.extensions.jellyfin
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -174,11 +175,11 @@ class JellyfinAdapter @Inject constructor(
 
 @Serializable
 data class JellyfinItemsResponse(
-    val Items:            List<JellyfinItem> = emptyList(),
-    val TotalRecordCount: Int                = 0,
-) {
-    val items: List<JellyfinItem> get() = Items
-}
+    @SerialName("Items")
+    val items:            List<JellyfinItem> = emptyList(),
+    @SerialName("TotalRecordCount")
+    val totalRecordCount: Int                = 0,
+)
 
 @Serializable
 data class JellyfinItem(

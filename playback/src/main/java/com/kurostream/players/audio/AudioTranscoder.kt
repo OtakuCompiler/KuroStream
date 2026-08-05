@@ -225,7 +225,7 @@ class AudioTranscoder(private val context: Context) {
     }
 
     private fun isDecodableToAac(mime: String): Boolean {
-        val codecList = MediaCodecList()
+        val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
         val testFormat = MediaFormat.createAudioFormat(mime, 48_000, 2)
         return try {
             codecList.findDecoderForFormat(testFormat) != null
