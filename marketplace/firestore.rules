@@ -1,6 +1,52 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ── User sync data ──────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      match /sync/{doc=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /favorites/{doc=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /watchHistory/{doc=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /settings/{doc=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /profiles/{doc=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ── Marketplace (public read, authenticated write) ─────────────────────
+    match /products/{doc=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    match /purchases/{doc=**} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    match /transactions/{doc=**} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+    }
+
+    // ── Extensions/addons ──────────────────────────────────────────────────
+    match /extensions/{doc=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    match /addons/{doc=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // ── Legacy fallback ────────────────────────────────────────────────────
     match /{document=**} {
       allow read: if true;
       allow write: if request.auth != null;

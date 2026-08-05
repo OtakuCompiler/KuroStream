@@ -6,7 +6,8 @@
       "ignore": [
         "node_modules",
         ".git",
-        "firebase-debug.log"
+        "firebase-debug.log",
+        ".env.local"
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"
@@ -19,5 +20,16 @@
   },
   "storage": {
     "rules": "marketplace/storage.rules"
+  },
+  "hosting": {
+    "public": "kurohub/dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
+    ]
   }
 }

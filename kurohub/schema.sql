@@ -81,6 +81,65 @@ CREATE TABLE IF NOT EXISTS user_active_skin (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Cross-device sync tables
+CREATE TABLE IF NOT EXISTS sync_favorites (
+  user_id TEXT NOT NULL,
+  media_id TEXT NOT NULL,
+  media_type TEXT NOT NULL DEFAULT 'anime',
+  title TEXT,
+  poster_url TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, media_id)
+);
+
+CREATE TABLE IF NOT EXISTS sync_watch_history (
+  user_id TEXT NOT NULL,
+  media_id TEXT NOT NULL,
+  episode_id TEXT,
+  title TEXT,
+  progress_ms INTEGER NOT NULL DEFAULT 0,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  completed INTEGER NOT NULL DEFAULT 0,
+  last_watched_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, media_id, episode_id)
+);
+
+CREATE TABLE IF NOT EXISTS sync_settings (
+  user_id TEXT NOT NULL,
+  key TEXT NOT NULL,
+  value TEXT NOT NULL,
+  updated_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, key)
+);
+
+CREATE TABLE IF NOT EXISTS sync_profiles (
+  user_id TEXT NOT NULL,
+  profile_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  avatar_url TEXT,
+  is_kids INTEGER NOT NULL DEFAULT 0,
+  settings TEXT, -- JSON
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, profile_id)
+);
+
+CREATE TABLE IF NOT EXISTS sync_queue (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  user_id TEXT NOT NULL,
+  device_id TEXT NOT NULL,
+  entity_type TEXT NOT NULL, -- 'favorite', 'watch_history', 'settings', 'profile'
+  entity_id TEXT NOT NULL,
+  action TEXT NOT NULL, -- 'create', 'update', 'delete'
+  payload TEXT NOT NULL, -- JSON
+  created_at TEXT DEFAULT (datetime('now')),
+  processed INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_sync_queue_user ON sync_queue(user_id, processed);
+CREATE INDEX IF NOT EXISTS idx_sync_watch_user ON sync_watch_history(user_id, last_watched_at);
+
 -- Seed data
 -- All skin names, palettes, and descriptions below are original —
 -- no third-party character names, franchise references, or trademarks.
