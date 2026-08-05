@@ -14,13 +14,13 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
       - uses: android-actions/setup-android@v3
         with:
           api-level: 36
       - name: Decode signing key
         run: echo "${{ secrets.SIGNING_KEY }}" | base64 -d > upload-keystore.jks
-      - run: bash gradlew :app:bundleRelease --no-daemon --max-workers=2
+      - run: bash gradlew :app:bundleRelease --stacktrace
         env:
           UPLOAD_KEYSTORE_PATH: upload-keystore.jks
           UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}

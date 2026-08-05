@@ -83,7 +83,7 @@ jobs:
         }
         STUB
     - name: Run Lint
-      run: bash gradlew lintDebug --no-daemon --stacktrace --no-parallel || echo "Lint issues found"
+      run: bash gradlew lintDebug --stacktrace || echo "Lint issues found"
     - name: Upload Lint Report
       uses: actions/upload-artifact@v4
       if: always()
@@ -169,7 +169,7 @@ jobs:
         }
         STUB
     - name: Run unit tests
-      run: bash gradlew :app:testDebugUnitTest --no-daemon --stacktrace --no-parallel
+      run: bash gradlew :app:testDebugUnitTest --stacktrace
     - name: Upload test reports
       uses: actions/upload-artifact@v4
       if: always()
@@ -250,7 +250,7 @@ jobs:
         }
         STUB
     - name: Run Detekt
-      run: bash gradlew detektAll --no-daemon --stacktrace --no-parallel || echo "Detekt issues found"
+      run: bash gradlew detektAll --stacktrace || echo "Detekt issues found"
     - name: Upload Detekt Reports
       uses: actions/upload-artifact@v4
       if: always()

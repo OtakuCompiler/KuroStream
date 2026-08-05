@@ -20,7 +20,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
       - uses: android-actions/setup-android@v3
         with:
           api-level: 36
@@ -78,7 +78,7 @@ jobs:
           }
           STUB
       - name: Build debug APK
-        run: bash gradlew :app:assembleDebug --no-daemon --max-workers=2
+        run: bash gradlew :app:assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -99,7 +99,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
       - uses: android-actions/setup-android@v3
         with:
           api-level: 36
@@ -156,7 +156,7 @@ jobs:
             "configuration_version": "1"
           }
           STUB
-      - run: bash gradlew testDebugUnitTest --no-daemon --max-workers=2
+      - run: bash gradlew :app:testDebugUnitTest --stacktrace
       - uses: actions/upload-artifact@v4
         if: always()
         with:
