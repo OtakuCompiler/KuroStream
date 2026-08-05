@@ -210,7 +210,8 @@ fun PlayerScreen(
             update = { view ->
                 (engine?.nativePlayer() as? ExoPlayer)?.let { player ->
                     view.player = player
-                    view.videoSurfaceView?.holder?.addCallback(object : android.view.SurfaceHolder.Callback {
+                    val surfaceView = view.videoSurfaceView as? android.view.SurfaceView
+                    surfaceView?.holder?.addCallback(object : android.view.SurfaceHolder.Callback {
                         override fun surfaceCreated(holder: android.view.SurfaceHolder) {
                             viewModel.onVideoSurfaceAvailable(holder.surface, holder.surfaceFrame.width(), holder.surfaceFrame.height())
                         }
@@ -218,7 +219,6 @@ fun PlayerScreen(
                         override fun surfaceDestroyed(holder: android.view.SurfaceHolder) = Unit
                     })
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        val surfaceView = view.videoSurfaceView as? android.view.SurfaceView
                         surfaceView?.setSecure(true)
                     }
                 }
