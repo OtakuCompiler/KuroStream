@@ -1,12 +1,18 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
-  "instructions": ["AGENTS.md", "web.md"],
+  "instructions": [
+    "AGENTS.md",
+    "web.md"
+  ],
   "mcp": {
     "firebase": {
       "type": "local",
-      "command": ["firebase-mcp"],
+      "command": [
+        "firebase-mcp"
+      ],
       "enabled": true,
       "timeout": 30000
     }
-  }
+  },
+  "snapshot": false
 }

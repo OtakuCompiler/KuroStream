@@ -34,7 +34,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
@@ -382,11 +381,11 @@ fun DebouncedKeyHandler(
 
     Box(
         modifier = modifier.onKeyEvent { event ->
-            if (event.type == androidx.compose.ui.input.key.KeyEventType.KeyUp) {
+            if (event.nativeKeyEvent.action == android.view.KeyEvent.ACTION_UP) {
                 val now = System.currentTimeMillis()
                 if (now - lastKeyTime > debounceMs) {
                     lastKeyTime = now
-                    onKeyEvent(event.key)
+                    onKeyEvent(Key(event.nativeKeyEvent.keyCode))
                 } else {
                     true
                 }

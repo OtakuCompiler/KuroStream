@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -93,7 +94,7 @@ class TorrentsViewModel @Inject constructor(
     }
 
     private suspend fun pollProgress() {
-        while (isActive) {
+        while (currentCoroutineContext().isActive) {
             _torrents.value = _torrents.value.map { ui ->
                 val handle = handles[ui.magnet]
                 if (handle != null) {

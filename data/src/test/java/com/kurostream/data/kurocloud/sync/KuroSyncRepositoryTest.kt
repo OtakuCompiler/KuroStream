@@ -11,7 +11,6 @@ import com.kurostream.data.kurocloud.KuroSyncResponse
 import com.kurostream.data.kurocloud.KuroSyncCounts
 import com.kurostream.data.kurocloud.KuroUser
 import com.kurostream.data.kurocloud.KuroEntitlements
-import com.kurostream.data.kurocloud.auth.KuroAuthTokens
 import com.kurostream.data.kurocloud.auth.KuroTokenManager
 import com.kurostream.data.kurocloud.db.KuroCloudDatabase
 import com.kurostream.data.kurocloud.db.KuroEntitlementsDao
@@ -22,13 +21,14 @@ import com.kurostream.data.kurocloud.db.KuroEntitlementsEntity
 import com.kurostream.data.kurocloud.db.KuroCatalogEntity
 import com.kurostream.data.kurocloud.db.KuroPurchaseEntity
 import com.kurostream.data.kurocloud.db.KuroCatalogMetaEntity
+import com.kurostream.domain.kurocloud.KuroAuthTokens
+import com.kurostream.domain.sync.KuroSyncState
+import com.kurostream.domain.sync.KuroEntitlementsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -406,7 +406,7 @@ class KuroSyncRepositoryTest {
         assertThat(catalog).isEmpty()
 
         val entitlements = repository.entitlements.first()
-        assertThat(entitlements).isEqualTo(com.kurostream.data.kurocloud.sync.KuroEntitlementsState.Empty)
+        assertThat(entitlements).isEqualTo(KuroEntitlementsState.Empty)
 
         val purchases = repository.purchases.first()
         assertThat(purchases).isEmpty()
@@ -437,19 +437,18 @@ class KuroSyncRepositoryTest {
                 kotlin.Unit
             }
 
-        val states = mutableListOf<com.kurostream.data.kurocloud.sync.KuroSyncState>()
+        val states = mutableListOf<KuroSyncState>()
 
-        runBlocking {
-            kotlinx.coroutines.launch {
-                repository.syncState.collect { states.add(it) }
-            }
+        val collectJob = kotlinx.coroutines.launch {
+            repository.syncState.collect { states.add(it) }
         }
 
         repository.syncAll()
         kotlinx.coroutines.delay(200)
+        collectJob.cancel()
 
         // Should emit Syncing then Idle
-        assertThat(states).containsAtLeastOnce(com.kurostream.data.kurocloud.sync.KuroSyncState.Syncing)
-        assertThat(states).containsAtLeastOnce(com.kurostream.data.kurocloud.sync.KuroSyncState.Idle)
+        assertThat(states).contains(KuroSyncState.Syncing)
+        assertThat(states).contains(KuroSyncState.Idle)
     }
 }

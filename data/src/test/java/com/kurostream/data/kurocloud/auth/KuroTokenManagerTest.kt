@@ -3,6 +3,9 @@ package com.kurostream.data.kurocloud.auth
 import com.google.common.truth.Truth.assertThat
 import com.kurostream.data.security.EncryptedPreferences
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -74,7 +77,7 @@ class KuroTokenManagerTest {
         val iterations = 100
 
         val jobs = (1..threads).map { i ->
-            kotlinx.coroutines.launch(Dispatchers.IO) {
+            launch(Dispatchers.IO) {
                 repeat(iterations) {
                     val access = "access-$i-$it"
                     val refresh = "refresh-$i-$it"
@@ -85,6 +88,6 @@ class KuroTokenManagerTest {
             }
         }
 
-        kotlinx.coroutines.awaitAll(*jobs.toTypedArray())
+        jobs.forEach { it.join() }
     }
 }
