@@ -10,9 +10,14 @@ import android.util.Log
 import com.frostwire.jlibtorrent.AddTorrentParams
 import com.frostwire.jlibtorrent.SessionManager
 import com.frostwire.jlibtorrent.SessionParams
-import com.frostwire.jlibtorrent.SessionSettings
+import com.frostwire.jlibtorrent.SettingsPack
 import com.frostwire.jlibtorrent.TorrentHandle
-import com.frostwire.jlibtorrent.swig.add_torrent_params_flags_t
+import com.frostwire.jlibtorrent.swig.settings_pack
+import com.frostwire.jlibtorrent.swig.settings_pack.int_types
+import com.frostwire.jlibtorrent.swig.settings_pack.bool_types
+import com.frostwire.jlibtorrent.swig.settings_pack.io_buffer_mode_t
+import com.frostwire.jlibtorrent.swig.settings_pack.suggest_mode_t
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,46 +27,48 @@ class OptimizedTorrentEngine @Inject constructor() {
     private val session = SessionManager()
 
     fun start() {
-        val sp = SessionParams()
+        val sp = SessionParams(SettingsPack())
         val settings = sp.settings()
 
-        settings.setMaxPeers(500)
-        settings.setMaxPeerlistSize(1000)
-        settings.setConnectionSpeed(50)
-        settings.setEnableDht(true)
-        settings.setEnableLsd(true)
-        settings.setEnableUtp(true)
-        settings.setTorrentConnectBoost(50)
-        settings.setRateLimitIpOverhead(true)
+        settings.connectionsLimit(500)
+        settings.maxPeerlistSize(1000)
+        settings.setInteger(int_types.connection_speed.swigValue(), 50)
+        settings.enableDht(true)
+        settings.setBoolean(bool_types.enable_lsd.swigValue(), true)
+        settings.setBoolean(bool_types.enable_outgoing_utp.swigValue(), true)
+        settings.setBoolean(bool_types.enable_incoming_utp.swigValue(), true)
+        settings.setInteger(int_types.torrent_connect_boost.swigValue(), 50)
+        settings.setBoolean(bool_types.rate_limit_ip_overhead.swigValue(), true)
 
-        settings.setCacheSize(2048)
-        settings.setActiveDownloads(3)
-        settings.setActiveSeeds(5)
-        settings.setActiveLimit(8)
-        settings.setActiveDhtLimit(200)
+        settings.cacheSize(2048)
+        settings.activeDownloads(3)
+        settings.activeSeeds(5)
+        settings.activeLimit(8)
+        settings.activeDhtLimit(200)
 
-        settings.setDiskIoWriteMode(SessionSettings.io_buffer_mode_t.enable_os_cache)
-        settings.setDiskIoReadMode(SessionSettings.io_buffer_mode_t.enable_os_cache)
-        settings.setGuidedReadCache(true)
-        settings.setVolatileReadCache(true)
+        settings.setInteger(int_types.disk_io_write_mode.swigValue(), io_buffer_mode_t.enable_os_cache.swigValue())
+        settings.setInteger(int_types.disk_io_read_mode.swigValue(), io_buffer_mode_t.enable_os_cache.swigValue())
+        settings.setBoolean(bool_types.use_read_cache.swigValue(), true)
+        settings.setBoolean(bool_types.volatile_read_cache.swigValue(), true)
 
-        settings.setSuggestMode(true)
-        settings.setSeedingOutgoingConnections(false)
+        settings.setInteger(int_types.suggest_mode.swigValue(), suggest_mode_t.suggest_read_cache.swigValue())
+        settings.seedingOutgoingConnections(false)
 
-        sp.setSettings(settings)
         session.start(sp)
     }
 
     fun addStreamingTorrent(magnet: String, savePath: String): TorrentHandle {
         val addParams = AddTorrentParams.parseMagnetUri(magnet)
-        addParams.savePath(savePath)
-        addParams.flags = addParams.flags.and(add_torrent_params_flags_t.seed_mode.swigValue().inv())
+        val infoHash = addParams.infoHash()
 
-        val th = session.addTorrent(addParams)
-        th.setSequentialDownload(true)
-        th.setPriority(7)
+        session.download(magnet, File(savePath))
 
-        val pieceLength = th.torrentFile().swig().pieceLength()
+        val th = session.find(infoHash)
+        if (th == null || !th.isValid()) {
+            throw IllegalStateException("Torrent not found after adding: $magnet")
+        }
+
+        val pieceLength = th.torrentFile().pieceLength()
         val piecesToBuffer = (5 * 1024 * 1024) / pieceLength
         val numPieces = th.torrentFile().numPieces()
         for (i in 0 until piecesToBuffer.coerceAtMost(numPieces)) {

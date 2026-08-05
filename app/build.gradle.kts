@@ -182,8 +182,22 @@ dependencies {
     implementation("com.google.android.play:integrity:1.4.0")
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
-    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-firestore") {
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
     implementation("com.google.firebase:firebase-messaging")
+
+    // Resolve protobuf duplicate-class conflict: redirect any protobuf-javalite
+    // request to the full protobuf-java runtime (already present via protobuf-kotlin
+    // in the data module). Also exclude protolite-well-known-types which bundles
+    // duplicate protobuf classes. This eliminates the duplicate AbstractMessageLite etc.
+    configurations.all {
+        exclude(group = "com.google.protobuf", module = "protolite-well-known-types")
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("com.google.protobuf:protobuf-javalite"))
+                .using(module("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}"))
+        }
+    }
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
