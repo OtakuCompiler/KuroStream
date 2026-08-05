@@ -175,12 +175,12 @@ class CloudSyncProvider @Inject constructor(
     override suspend fun resolveConflicts(local: SyncPayload, remote: SyncPayload): SyncPayload {
         // Merge watch history — keep entry with larger timestamp
         val historyById = (local.watchHistory + remote.watchHistory)
-            .groupBy { it.mediaId }
+            .groupBy { it.mediaItemId }
             .mapValues { (_, entries) -> entries.maxByOrNull { it.watchedAt } ?: entries.first() }
 
         // Union favourites by id
         val mergedFavs = (local.favorites + remote.favorites)
-            .distinctBy { it.mediaId }
+            .distinctBy { it.mediaItemId }
 
         return local.copy(
             watchHistory = historyById.values.toList(),

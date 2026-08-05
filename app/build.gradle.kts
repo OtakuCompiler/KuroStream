@@ -192,7 +192,7 @@ dependencies {
     // in the data module). Also exclude protolite-well-known-types which bundles
     // duplicate protobuf classes. This eliminates the duplicate AbstractMessageLite etc.
     configurations.all {
-        exclude(group = "com.google.protobuf", module = "protolite-well-known-types")
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
         resolutionStrategy.dependencySubstitution {
             substitute(module("com.google.protobuf:protobuf-javalite"))
                 .using(module("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}"))
