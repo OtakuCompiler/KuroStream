@@ -1,7 +1,6 @@
 package com.kurostream.players.media3
 
 import android.content.Context
-import android.os.Build
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Format
@@ -13,8 +12,6 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
-import androidx.media3.exoplayer.audio.AudioSink
-import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
@@ -145,13 +142,6 @@ class Media3Player @Inject constructor(
         }
 
         // ── Audio: Dolby Atmos offload ────────────────────────────────────────
-        val audioSink = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && atmosPassthrough.isDolbyAtmosSupported()) {
-            DefaultAudioSink.Builder(context)
-                .setEnableAudioTrackPlaybackParams(true)
-                .build()
-        } else {
-            DefaultAudioSink.Builder(context).build()
-        }
         atmosPassthrough.logAudioCapabilities()
 
         val audioAttributes = AudioAttributes.Builder()
@@ -182,7 +172,6 @@ class Media3Player @Inject constructor(
         return ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
-            .setAudioSink(audioSink)
             .setLoadControl(loadControl)
             .setHandleAudioBecomingNoisy(true)
             // LOCAL keeps the screen + audio alive without a wake lock service.
