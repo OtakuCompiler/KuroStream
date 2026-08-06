@@ -63,8 +63,6 @@ fun IconLibrary(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier =
         }
     }
 
-@Composable fun IconMovies(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) = IconLibrary(tint, iconSize, modifier)
-
 @Composable
 fun IconDownloads(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) =
     IconSlot(iconSize, modifier) {
@@ -129,8 +127,6 @@ fun IconFav(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Mod
             cubicTo(g(21f,8.5f).x,g(21f,8.5f).y,g(20f,13f).x,g(20f,13f).y,g(12f,19f).x,g(12f,19f).y); close()
         }, tint, style = afStroke())
     }
-
-@Composable fun IconFavOutline(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) = IconFav(tint, iconSize, modifier)
 
 // ── Playback icons ────────────────────────────────────────────────────────────
 
