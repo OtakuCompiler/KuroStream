@@ -25,6 +25,7 @@ import com.frostwire.jlibtorrent.swig.settings_pack.io_buffer_mode_t
 import com.frostwire.jlibtorrent.swig.settings_pack.suggest_mode_t
 import com.kurostream.torrent.server.TorrentStreamServer
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import java.io.File
 import javax.inject.Inject
@@ -101,7 +102,7 @@ class OptimizedTorrentEngine @Inject constructor() {
             val status = handle.status()
             emit(
                 TorrentProgress(
-                    downloadRateBps = status.downloadRate(),
+                    downloadRateBps = status.downloadRate().toLong(),
                     progress = status.progress(),
                     seeds = status.numSeeds(),
                     peers = status.numPeers(),
