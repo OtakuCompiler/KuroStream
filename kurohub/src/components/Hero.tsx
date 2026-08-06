@@ -26,7 +26,7 @@ function ParticleCanvas() {
       size: number;
       alpha: number;
     }[] = [];
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 30; i++) {
       particles.push({
         x: Math.random() * w,
         y: Math.random() * h,
