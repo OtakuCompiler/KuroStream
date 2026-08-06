@@ -90,9 +90,9 @@ class TorrentsViewModel @Inject constructor(
     }
 
     fun removeTorrent(magnet: String) {
-        val handle = handles.remove(magnet) ?: return
+        val entry = entries.remove(magnet) ?: return
         try {
-            handle.pause()
+            entry.first.pause()
         } catch (t: Throwable) {
             Log.w("Torrents", "Pause failed", t)
         }
@@ -102,8 +102,9 @@ class TorrentsViewModel @Inject constructor(
     private suspend fun pollProgress() {
         while (currentCoroutineContext().isActive) {
             _torrents.value = _torrents.value.map { ui ->
-                val handle = handles[ui.magnet]
-                if (handle != null) {
+                val entry = entries[ui.magnet]
+                if (entry != null) {
+                    val handle = entry.first
                     val status = try {
                         handle.status()
                     } catch (t: Throwable) {

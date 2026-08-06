@@ -9,6 +9,7 @@ import Hls from 'hls.js'
 import screenfull from 'screenfull'
 import { cn, formatDuration, getDeviceProfile } from '@/lib/utils'
 import { useStore } from '@/lib/store'
+import { createWebGLUpscaler } from '@/lib/webgl-upscaler'
 import type { Title, Episode, Source, SubtitleTrack, PlaybackPreset } from '@/lib/types'
 import { fetchSkipTimes, detectIntroHeuristic, detectChapters, getBookmarks, addBookmark, removeBookmark } from '@/lib/aniskip'
 import { searchSubtitles, parseSRT, parseASS, parseVTT, syncSubtitles } from '@/lib/subtitles/engine'
@@ -27,6 +28,8 @@ export default function ArcticPlayer({ title, episode, source, onNext, onPrev, o
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const upscalerRef = useRef<ReturnType<typeof createWebGLUpscaler> | null>(null)
+  const webglFailedRef = useRef(false)
   const hlsRef = useRef<Hls | null>(null)
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const skipCheckRef = useRef<ReturnType<typeof setInterval>>()
@@ -373,31 +376,51 @@ export default function ArcticPlayer({ title, episode, source, onNext, onPrev, o
     return () => clearInterval(interval)
   }, [showStats])
 
-  // ─── Upscaling Canvas ───
+  // ─── WebGL Upscaling ───
   useEffect(() => {
-    if (!upscalingEnabled || !canvasRef.current || !videoRef.current) return
+    if (!upscalingEnabled || !canvasRef.current || !videoRef.current) {
+      upscalerRef.current?.stop()
+      return
+    }
 
     const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const video = videoRef.current
 
-    const v = videoRef.current
-    canvas.width = v.videoWidth * 1.5
-    canvas.height = v.videoHeight * 1.5
+    try {
+      webglFailedRef.current = false
+      const upscaler = createWebGLUpscaler(canvas)
+      upscalerRef.current = upscaler
+      upscaler.setVideo(video)
 
-    let animId: number
-    const render = () => {
-      if (v.paused || v.ended) { animId = requestAnimationFrame(render); return }
-      ctx.drawImage(v, 0, 0, canvas.width, canvas.height)
-      // Apply sharpening filter
-      if (preset.sharpness > 0) {
-        ctx.filter = `contrast(${preset.contrast}%) saturate(${preset.saturation}%) brightness(${preset.brightness}%)`
+      const updateSize = () => {
+        const rect = canvas.getBoundingClientRect()
+        upscaler.setTargetSize(Math.max(1, Math.floor(rect.width)), Math.max(1, Math.floor(rect.height)))
       }
-      animId = requestAnimationFrame(render)
-    }
-    render()
+      updateSize()
 
-    return () => cancelAnimationFrame(animId)
+      const resizeObserver = new ResizeObserver(updateSize)
+      resizeObserver.observe(canvas)
+
+      upscaler.start(() => {
+        if (video.paused || video.ended) return
+        upscaler.render(
+          preset.sharpness,
+          preset.contrast,
+          preset.saturation,
+          preset.brightness
+        )
+      })
+
+      return () => {
+        resizeObserver.disconnect()
+        upscalerRef.current?.stop()
+        upscalerRef.current?.destroy()
+        upscalerRef.current = null
+      }
+    } catch (e) {
+      webglFailedRef.current = true
+      console.warn('[Arctic] WebGL upscaler failed, falling back to CSS filters', e)
+    }
   }, [upscalingEnabled, preset])
 
   // ─── Actions ───
@@ -568,7 +591,10 @@ export default function ArcticPlayer({ title, episode, source, onNext, onPrev, o
       {/* Video Element */}
       <video
         ref={videoRef}
-        className={cn("w-full h-full object-contain", upscalingEnabled && "hidden")}
+        className={cn(
+          "w-full h-full object-contain",
+          upscalingEnabled && !webglFailedRef.current && "hidden"
+        )}
         playsInline
         preload={deviceProfile === 'LOW' ? 'metadata' : 'auto'}
         crossOrigin="anonymous"

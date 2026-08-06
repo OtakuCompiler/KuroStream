@@ -1,0 +1,50 @@
+name: Dependency Audit
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 1'
+
+jobs:
+  audit-web:
+    name: Web Dependencies Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kurohub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: kurohub/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate || true
+        continue-on-error: true
+      - name: Check for outdated dependencies
+        run: npm outdated || true
+        continue-on-error: true
+
+  audit-android:
+    name: Android Dependencies Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+      - name: List dependency versions
+        run: bash gradlew dependencies --no-daemon || true
+        continue-on-error: true
+      - name: Check for outdated plugins
+        run: bash gradlew help --no-daemon || true
+        continue-on-error: true

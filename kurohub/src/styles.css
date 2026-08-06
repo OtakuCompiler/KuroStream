@@ -238,17 +238,77 @@ html { color-scheme: dark; }
   box-shadow: var(--elev-2), var(--glow-primary);
 }
 
+/* ── Glow text ── */
+.text-glow {
+  text-shadow: 0 0 40px oklch(0.55 0.24 295 / 0.4), 0 0 80px oklch(0.55 0.24 295 / 0.2);
+}
+
+/* ── Pulse glow ── */
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px -4px oklch(0.55 0.24 295 / 0.3); }
+  50% { box-shadow: 0 0 50px -4px oklch(0.55 0.24 295 / 0.7); }
+}
+
+/* ── Shimmer ── */
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--surface-1) 25%, var(--surface-2) 50%, var(--surface-1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Spotlight card effect ── */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+}
+.spotlight-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), oklch(0.55 0.24 295 / 0.08), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.spotlight-card:hover::after { opacity: 1; }
+
+/* ── Noise texture overlay ── */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px;
+}
+
+/* ── Progress bar ── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  z-index: 9999;
+  transform-origin: left;
+}
+
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
 .marquee-track { animation: marquee 40s linear infinite; }
 
-/* Count-up shimmer for numbers */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
 .shimmer-text {
   background: linear-gradient(
     90deg,
