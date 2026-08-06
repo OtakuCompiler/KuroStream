@@ -11,6 +11,7 @@ on:
     paths:
       - 'kurohub/**'
       - '.github/workflows/kurohub-ci.yml'
+  workflow_dispatch:
 
 jobs:
   build:
