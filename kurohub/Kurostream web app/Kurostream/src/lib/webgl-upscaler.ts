@@ -98,20 +98,30 @@ class WebGLUpscaler {
     gl.shaderSource(vertShader, vs)
     gl.compileShader(vertShader)
     if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-      console.error('Vertex shader error:', gl.getShaderInfoLog(vertShader))
+      const error = gl.getShaderInfoLog(vertShader)
+      gl.deleteShader(vertShader)
+      throw new Error(`Vertex shader compilation failed: ${error}`)
     }
 
     const fragShader = gl.createShader(gl.FRAGMENT_SHADER)!
     gl.shaderSource(fragShader, fs)
     gl.compileShader(fragShader)
     if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-      console.error('Fragment shader error:', gl.getShaderInfoLog(fragShader))
+      const error = gl.getShaderInfoLog(fragShader)
+      gl.deleteShader(fragShader)
+      throw new Error(`Fragment shader compilation failed: ${error}`)
     }
 
     this.program = gl.createProgram()!
     gl.attachShader(this.program, vertShader)
     gl.attachShader(this.program, fragShader)
     gl.linkProgram(this.program)
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+      const error = gl.getProgramInfoLog(this.program)
+      gl.deleteProgram(this.program)
+      this.program = null
+      throw new Error(`WebGL program link failed: ${error}`)
+    }
     gl.useProgram(this.program)
   }
 
