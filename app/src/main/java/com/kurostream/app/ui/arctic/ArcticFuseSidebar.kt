@@ -61,12 +61,17 @@ import java.util.Locale
 
 enum class ArcticHub(val label: String) {
     Home("HOME"),
-    Anime("ANIME"),
+    Search("SEARCH"),
+    Library("LIBRARY"),
+    History("HISTORY"),
     Movies("MOVIES"),
     TVShows("TV SHOWS"),
+    Anime("ANIME"),
+    Favorites("FAVORITES"),
     YouTube("YOUTUBE"),
     Addons("ADD-ONS"),
-    Favourites("FAVOURITES"),
+    Debrid("DEBRID"),
+    Backup("BACKUP"),
     System("SYSTEM"),
 }
 
@@ -82,7 +87,11 @@ fun ArcticFuseSidebar(
 ) {
     var expanded by remember { mutableStateOf(initialExpanded) }
 
-    val width = if (expanded) AFSidebar.expandedWidth else AFSidebar.collapsedWidth
+    val width by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (expanded) AFSidebar.expandedWidth else AFSidebar.collapsedWidth,
+        animationSpec = tween(AFMotion.fast),
+        label = "sidebarWidth",
+    )
 
     Row(
         modifier = modifier
@@ -106,6 +115,7 @@ fun ArcticFuseSidebar(
                 activeHub = activeHub,
                 expanded = expanded,
                 onNavigate = onNavigate,
+                onFocusItem = { if (!expanded) expanded = true },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
@@ -216,17 +226,23 @@ private fun NavList(
     activeHub: ArcticHub,
     expanded: Boolean,
     onNavigate: (ArcticHub) -> Unit,
+    onFocusItem: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val items = remember {
         listOf(
             ArcticHub.Home,
-            ArcticHub.Anime,
+            ArcticHub.Search,
+            ArcticHub.Library,
+            ArcticHub.History,
             ArcticHub.Movies,
             ArcticHub.TVShows,
+            ArcticHub.Anime,
+            ArcticHub.Favorites,
             ArcticHub.YouTube,
             ArcticHub.Addons,
-            ArcticHub.Favourites,
+            ArcticHub.Debrid,
+            ArcticHub.Backup,
             ArcticHub.System,
         )
     }
@@ -234,11 +250,12 @@ private fun NavList(
     Column(modifier = modifier.padding(vertical = AFSpacing.px2)) {
         items.forEach { hub ->
             NavItem(
-                label = hub.label,
-                icon = { hubIcon(hub) },
-                isActive = activeHub == hub,
-                expanded = expanded,
-                onClick = { onNavigate(hub) },
+                label      = hub.label,
+                icon       = { hubIcon(hub) },
+                isActive   = activeHub == hub,
+                expanded   = expanded,
+                onFocus    = onFocusItem,
+                onClick    = { onNavigate(hub) },
             )
         }
     }
@@ -247,14 +264,19 @@ private fun NavList(
 @Composable
 private fun hubIcon(hub: ArcticHub) {
     when (hub) {
-        ArcticHub.Home -> IconHome()
-        ArcticHub.Anime -> IconStar(tint = AFText)
-        ArcticHub.Movies -> IconLibrary()
-        ArcticHub.TVShows -> IconTV()
-        ArcticHub.YouTube -> IconYouTube()
-        ArcticHub.Addons -> IconExtensions()
-        ArcticHub.Favourites -> IconFav()
-        ArcticHub.System -> IconSettings()
+        ArcticHub.Home     -> IconHome()
+        ArcticHub.Search   -> IconSearch()
+        ArcticHub.Library  -> IconLibrary()
+        ArcticHub.History  -> IconClock()
+        ArcticHub.Movies   -> IconLibrary()
+        ArcticHub.TVShows  -> IconTV()
+        ArcticHub.Anime    -> IconStar(tint = AFText)
+        ArcticHub.Favorites-> IconFav()
+        ArcticHub.YouTube  -> IconYouTube()
+        ArcticHub.Addons   -> IconExtensions()
+        ArcticHub.Debrid   -> IconZap()
+        ArcticHub.Backup   -> IconSave()
+        ArcticHub.System   -> IconSettings()
     }
 }
 
@@ -264,10 +286,16 @@ private fun NavItem(
     icon: @Composable () -> Unit,
     isActive: Boolean,
     expanded: Boolean,
+    onFocus: () -> Unit,
     onClick: () -> Unit,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val fr = remember { FocusRequester() }
+
+    LaunchedEffect(isFocused) {
+        if (isFocused) onFocus()
+    }
+
     // Active state (spec §4.2): tinted indigo bg, 3dp left accent border,
     // rounded corner on the right side only.
     val rowColor = when {
@@ -299,12 +327,11 @@ private fun NavItem(
             .onFocusChanged { isFocused = it.isFocused }
             .focusable()
             .onPreviewKeyEvent { event ->
-                if (event.type == KeyEventType.KeyUp &&
-                    (event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.DirectionCenter)
-                ) {
-                    onClick(); true
-                } else {
-                    false
+                when {
+                    event.type == KeyEventType.KeyUp && event.key == Key.Enter -> { onClick(); true }
+                    event.type == KeyEventType.KeyUp && event.key == Key.NumPadEnter -> { onClick(); true }
+                    event.type == KeyEventType.KeyUp && event.key == Key.DirectionCenter -> { onClick(); true }
+                    else -> false
                 }
             }
             .clickable(onClick = onClick)

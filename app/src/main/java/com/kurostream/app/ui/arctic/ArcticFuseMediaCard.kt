@@ -161,7 +161,7 @@ fun ArcticFuseMediaCard(
                 ),
         )
 
-        // Quality badge top-left
+        // Quality badge top-left (AF3: resource quality or source tag)
         val shownQuality = quality ?: item.genre.firstOrNull()
         if (!shownQuality.isNullOrBlank()) {
             Box(
@@ -180,24 +180,42 @@ fun ArcticFuseMediaCard(
             }
         }
 
-        // Star rating top-right
-        if (item.rating > 0f) {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(AFSpacing.px1)
-                    .background(AFBgDeep.copy(alpha = 0.6f), RoundedCornerShape(AFRadius.sm))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconStar(tint = AFStarGold, iconSize = 12.dp)
-                Spacer(Modifier.width(2.dp))
-                Text(
-                    text = "%.1f".format(item.rating),
-                    style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                    color = AFStarGold,
+        // AF3 badge cluster — top-right: rating + resolution badges
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(AFSpacing.px1),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            // Rating
+            if (item.rating > 0f) {
+                Badge(
+                    text = "★ %.1f".format(item.rating),
+                    color = AFBadges.rating,
+                    textColor = Color.Black,
                 )
             }
+            // Resolution stack
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                if (item.has4k) Badge("4K", AFBadges.uhd)
+                if (item.hasDolbyVision) Badge("DV", AFBadges.dolbyVision)
+                if (item.hasHdr) Badge("HDR", AFBadges.hdr10)
+            }
+        }
+
+        // AF3 audio badge — bottom-right
+        if (item.audioCodec.contains("Atmos", ignoreCase = true) ||
+            item.audioCodec.contains("TrueHD", ignoreCase = true) ||
+            item.audioCodec.contains("DTS-HD", ignoreCase = true)
+        ) {
+            Badge(
+                text = "Atmos",
+                color = AFBadges.atmos,
+                textColor = Color.White,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(AFSpacing.px1),
+            )
         }
 
         // Title + optional sub-line
@@ -260,3 +278,28 @@ private fun CardImage(url: String, title: String, modifier: Modifier = Modifier)
         )
     }
 }
+
+@Composable
+private fun Badge(
+    text: String,
+    color: Color,
+    textColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(AFRadius.xs))
+            .background(color)
+            .padding(horizontal = 4.dp, vertical = 1.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text       = text,
+            color      = textColor,
+            fontSize   = AFTypo.micro,
+            fontWeight = FontWeight.Bold,
+            maxLines   = 1,
+        )
+    }
+}
+

@@ -13,4 +13,15 @@ interface KitsuApi {
 
     @GET("anime")
     suspend fun searchAnime(@Query("filter[text]") query: String, @Query("page[limit]") limit: Int = 20): Response<SearchResponse>
+
+    @GET("anime")
+    suspend fun getAnimeByMalId(@Query("filter[malId]") malId: String): Response<SearchResponse>
+
+    @GET("anime")
+    suspend fun getAnimeByExternalId(
+        @Query("filter[malId]") malId: String? = null,
+        @Query("filter[text]") text: String? = null,
+        @Query("page[limit]") limit: Int = 1,
+    ): Response<SearchResponse>
 }
+

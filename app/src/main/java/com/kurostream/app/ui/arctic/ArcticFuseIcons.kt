@@ -360,3 +360,53 @@ fun IconServer(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = 
         drawCircle(tint, 1f*scale, g(18f,6f))
         drawCircle(tint, 1f*scale, g(18f,14f))
     }
+
+// ── Additional hub icons (AF3 spec) ───────────────────────────────────────────
+
+/** Clock face — History hub. */
+@Composable
+fun IconClock(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) =
+    IconSlot(iconSize, modifier) {
+        val s = afStroke(); val scale = size.width/24f
+        drawCircle(tint, 8f*scale, g(12f,12f), style = s)
+        drawLine(tint, g(12f,12f), g(12f,6f), s.width, cap = StrokeCap.Round)
+        drawLine(tint, g(12f,12f), g(16f,12f), s.width, cap = StrokeCap.Round)
+        drawCircle(tint, 1.5f*scale, g(12f,12f))
+    }
+
+/** Puzzle piece — Add-ons hub. */
+@Composable
+fun IconPuzzle(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) =
+    IconSlot(iconSize, modifier) {
+        val s = afStroke()
+        drawRoundRect(tint, g(3f,7f), androidx.compose.ui.geometry.Size(9f,9f), androidx.compose.ui.geometry.CornerRadius(2f), style = s)
+        drawRoundRect(tint, g(13f,3f), androidx.compose.ui.geometry.Size(9f,9f), androidx.compose.ui.geometry.CornerRadius(2f), style = s)
+        drawRoundRect(tint, g(13f,13f), androidx.compose.ui.geometry.Size(9f,9f), androidx.compose.ui.geometry.CornerRadius(2f), style = s)
+        drawLine(tint, g(7f,12f), g(13f,12f), s.width, cap = StrokeCap.Round)
+        drawLine(tint, g(12f,7f), g(12f,13f), s.width, cap = StrokeCap.Round)
+        drawLine(tint, g(14f,8f), g(15f,9f), s.width, cap = StrokeCap.Round)
+    }
+
+/** Lightning bolt — Debrid hub. */
+@Composable
+fun IconZap(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) =
+    IconSlot(iconSize, modifier) {
+        val s = afStroke()
+        drawPath(Path().apply {
+            moveTo(g(14f,2f).x,g(14f,2f).y); lineTo(g(5f,13f).x,g(5f,13f).y); lineTo(g(11f,13f).x,g(11f,13f).y)
+            lineTo(g(10f,22f).x,g(10f,22f).y); lineTo(g(19f,11f).x,g(19f,11f).y); lineTo(g(13f,11f).x,g(13f,11f).y); close()
+        }, tint, style = s)
+    }
+
+/** Floppy / save disk — Backup hub. */
+@Composable
+fun IconSave(tint: Color = AFText, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) =
+    IconSlot(iconSize, modifier) {
+        val s = afStroke()
+        drawRoundRect(tint, g(3f,4f), androidx.compose.ui.geometry.Size(18f,16f), androidx.compose.ui.geometry.CornerRadius(2f), style = s)
+        drawRoundRect(tint, g(6f,2f), androidx.compose.ui.geometry.Size(12f,5f), androidx.compose.ui.geometry.CornerRadius(1f), style = s)
+        drawLine(tint, g(3f,10f), g(21f,10f), s.width, cap = StrokeCap.Round)
+        drawLine(tint, g(3f,14f), g(21f,14f), s.width, cap = StrokeCap.Round)
+        drawLine(tint, g(12f,10f), g(12f,14f), s.width, cap = StrokeCap.Round)
+    }
+

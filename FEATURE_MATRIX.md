@@ -1,5 +1,5 @@
 # KuroStream — Feature Matrix
-**Date:** 2026-08-03 | **Method:** Source-code verification. Every claim backed by file + line evidence.
+**Date:** 2026-08-06 | **Method:** Source-code verification. Every claim backed by file + line evidence.
 
 Legend: ✅ Verified real | ⚠️ Partial/incomplete | ❌ Missing/broken/stub
 
@@ -17,12 +17,12 @@ Legend: ✅ Verified real | ⚠️ Partial/incomplete | ❌ Missing/broken/stub
 | Player overlay | ✅ | `PlayerScreen.kt` with playback controls | — |
 | Search UI | ✅ | Search screen with voice search integration | — |
 | Settings UI | ✅ | Settings screen with DataStore-backed prefs | — |
-| Glass cards / OLED black | ⚠️ | `KuroVisionSettings.fakeHdrIntensity` exists; full OLED/glass styling not verified in shared component | No shared `ui/` components |
-| Animations / transitions | ⚠️ | Basic Compose animations present; TV-specific transition polish unclear | — |
+| Glass cards / OLED black | ✅ | `ArcticFuseTheme.kt` — AFGlass tokens, AFBadges, AFOverlay; MediaItem.has4k/hasDolbyVision/hasHdr fields | — |
+| Animations / transitions | ✅ | `AFMotion` tokens, `animateDpAsState` sidebar, `slideInHorizontally` InfoPanel | — |
 | Android TV target | ✅ | `AndroidManifest.xml` declares Leanback launcher, TV feature required | — |
 | Fire TV target | ⚠️ | Same APK; no Fire TV-specific manifest tested | — |
 | Mobile layout | ⚠️ | TV-optimized UI; mobile responsive layout not verified | — |
-| Web UI | ❌ | No web frontend found in repo | Entire web frontend missing |
+| Web UI | ✅ | `kurohub/` — TanStack Start + Cloudflare Workers dashboard | — |
 
 ---
 
@@ -33,7 +33,7 @@ Legend: ✅ Verified real | ⚠️ Partial/incomplete | ❌ Missing/broken/stub
 | Multiple profiles | ✅ | `ProfileRepositoryImpl.kt` — max profile validation, CRUD via Room | — |
 | Profile switching | ✅ | `switchActiveProfile()` in repo impl | — |
 | Avatars | ✅ | `avatarUrl` field on Profile entity | — |
-| PIN protection | ⚠️ | PIN check exists but `saveProfile` stores literal `"has_pin"` string instead of hash | Fix PIN storage to hash before save |
+| PIN protection | ✅ | `ProfileRepositoryImpl.kt` — BCrypt cost 12, `BCrypt.checkpw` for verification | — |
 | Kids mode | ✅ | `is_kids_mode` DB column + `ParentalControls` in domain model | — |
 | Parental controls | ✅ | `parental_controls` field in DB and domain | — |
 | Separate history/watch progress | ✅ | `WatchProgressDao` keyed by `profileId` | — |
@@ -48,11 +48,11 @@ Legend: ✅ Verified real | ⚠️ Partial/incomplete | ❌ Missing/broken/stub
 | Feature | Status | Evidence | Missing Work |
 |---------|--------|----------|--------------|
 | TMDB (movies/series) | ✅ | `TmdbApi.kt` + `TmdbMetadataProvider.kt` — real Retrofit + mapping | — |
-| AniList (anime) | ✅ | `AniListApi.kt` + `AniListMetadataProvider.kt` — real GraphQL POST | Fix variable type bug in `getAnimeByExternalId` |
+| AniList (anime) | ✅ | `AniListApi.kt` + `AniListMetadataProvider.kt` — real GraphQL POST; type bug fixed; format field mapped | — |
 | TVDB | ✅ | `MetadataApis.kt:30-74` — real Retrofit endpoints | — |
 | IMDb / OMDb | ✅ | `MetadataApis.kt` includes IMDb find endpoint | — |
 | MyAnimeList / Jikan | ⚠️ | MAL API interface present; Jikan not found separately | Verify MAL token flow |
-| Kitsu | ❌ | Not found in codebase | Not implemented |
+| Kitsu | ✅ | `KitsuMetadataProvider.kt` — search, getAnime, seasonal, trending, MAL-id external lookup | — |
 | Metadata fallback chain | ✅ | Multiple providers with try/catch chains | — |
 | Response caching | ✅ | OkHttp cache + Room persistence for metadata | — |
 | Offline metadata | ✅ | Room DB stores fetched metadata | — |
@@ -73,9 +73,9 @@ Legend: ✅ Verified real | ⚠️ Partial/incomplete | ❌ Missing/broken/stub
 | Kodi repository | ⚠️ | `KodiAdapter`/`KodiImporter` exist; actual Kodi RPC not verified | — |
 | Source aggregation | ⚠️ | Fixed for Stremio; CloudStream/Kodi sources still return empty | Fix CloudStream execution |
 | Extension health monitoring | ✅ | `ExtensionHealthMonitorImpl` with real health checks | — |
-| Extension sandbox security | ❌ | `SandboxClassLoader` explicitly unsafe; blocklist bypassable | Redesign to isolated process |
-| Marketplace — install | ⚠️ | UI + ViewModel exist; no marketplace repository impl | Implement repo + backend |
-| Marketplace — purchase | ❌ | Checkout URL computed but never opened (`MarketplaceScreen.kt:102-106`) | Wire URL to intent launch |
+| Extension sandbox security | ⚠️ | `SandboxClassLoader` now delegates to `DexClassLoader` with package blocklist; indirect reflection/JNI bypass still possible | Harden to isolated process for untrusted code |
+| Marketplace — install | ⚠️ | UI + ViewModel exist; KuroCloud sync wired; marketplace backend incomplete | Complete repo + backend integration |
+| Marketplace — purchase | ✅ | Checkout URL launched via `ACTION_VIEW` intent in `MarketplaceScreen.kt` | — |
 | Marketplace — entitlements | ⚠️ | KuroCloud entitlement sync exists; marketplace side incomplete | — |
 | Extension updates | ⚠️ | `checkForUpdates()` in `ExtensionRepository` interface; impl not verified | — |
 | Extension ratings/reviews | ❌ | Not found in codebase | Not implemented |
@@ -91,8 +91,8 @@ Legend: ✅ Verified real | ⚠️ Partial/incomplete | ❌ Missing/broken/stub
 | Magnet link parsing | ✅ | `MagnetUri.parse(magnet)` in `addStreamingTorrent()` | — |
 | Sequential/piece-priority streaming | ✅ | Sequential download enabled + `setPieceDeadline` for first ~5MB | — |
 | DHT / peer discovery | ✅ | DHT + LSD enabled in session settings | — |
-| Streaming URL / progress API | ❌ | `addStreamingTorrent()` returns a handle but no HTTP serve URL or progress flow | Not implemented |
-| Torrent-embedded subtitles | ❌ | Not found | Not implemented |
+| Streaming URL / progress API | ✅ | `OptimizedTorrentEngine.addStreamingTorrent` returns `TorrentStream(url, progressFlow)`; `TorrentStreamServer` serves on `:8090` | Range requests not implemented |
+| Torrent-embedded subtitles | ⚠️ | `TorrentStream.subtitleTracks` field exists; extraction not yet implemented | Parse torrent file for .srt/.ass/.vtt |
 | Extensions/torrent integration | ❌ | `extensions/torrent` package does not exist | Not implemented |
 | UI visibility / torrent provider | ❌ | No torrent source visible in aggregator or UI | Not implemented |
 
@@ -150,8 +150,8 @@ Legend: ✅ Verified real | ⚠️ Partial/incomplete | ❌ Missing/broken/stub
 |---------|--------|----------|--------------|
 | OpenSubtitles provider | ✅ | `OpenSubtitlesProvider.kt` + `OpenSubtitlesApi.kt` — real Retrofit | — |
 | SubDL provider | ✅ | `SubDLProvider.kt` — real OkHttp calls to `api.subdl.com` | — |
-| Addic7ed provider | ❌ | Not found in codebase | Not implemented |
-| Podnapisi provider | ❌ | Not found in codebase | Not implemented |
+| Addic7ed provider | ✅ | `Addic7edProvider.kt` — Jsoup HTML scraping with season/episode filtering | May break if DOM changes |
+| Podnapisi provider | ✅ | `PodnapisiProvider.kt` — Jsoup HTML scraping with multi-language support | May break if DOM changes |
 | Auto subtitle selection | ✅ | `SubtitleTrackSelector` with language preference | — |
 | Hearing-impaired flag | ✅ | `SubtitleCandidate.isHearingImpaired` in domain model | — |
 | Subtitle delay/offset | ✅ | `SubtitleSyncEngine.kt` | — |

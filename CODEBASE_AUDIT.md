@@ -1,9 +1,9 @@
 # KuroStream Codebase Audit Report
 
-**Date:** 2026-08-05
-**Total Kotlin Files:** 492
-**Total Kotlin Lines:** 54,082
-**Test Files:** 5 (876 lines)
+**Date:** 2026-08-06
+**Total Kotlin Files:** 500+
+**Total Kotlin Lines:** 60,000+
+**Test Files:** 5+ (876 lines)
 
 ---
 
@@ -517,3 +517,43 @@ The Arctic Fuse theme follows a **comprehensive dark-first design system** based
 - **Arctic Fuse:** 22 files, 5,892 lines (comprehensive implementation)
 - **Native Libraries:** ~48-58 MB (VLC, MPV, jlibtorrent, Media3 codecs)
 - **Estimated APK Size:** ~50-65 MB (compressed, per-ABI split) — under 125 MB target
+
+---
+
+## Verified Fixes (2026-08-06 session)
+
+| # | Area | File | Status |
+|---|------|------|--------|
+| 1 | Build: java toolchain | `build.gradle.kts` (root) | ✅ Fixed |
+| 2 | Build: protobuf hardening | `app/build.gradle.kts` | ✅ Fixed |
+| 3 | Build: AAPT2 qemu wrapper | `/opt/aapt2-qemu/aapt2` | ✅ Documented |
+| 4 | AniList: type mismatch | `AniListMetadataProvider.kt` | ✅ Fixed |
+| 5 | AniList: mapMediaType | `AniListMetadataProvider.kt` | ✅ Fixed |
+| 6 | Kitsu: external-id stub | `KitsuMetadataProvider.kt` | ✅ Fixed |
+| 7 | Extensions: SandboxClassLoader | `SandboxClassLoader.kt` | ✅ Rewritten |
+| 8 | Extensions: CloudstreamPluginLoader | `CloudstreamPluginLoader.kt` | ✅ Fixed |
+| 9 | Extensions: marketplace intent | `MarketplaceScreen.kt` | ✅ Fixed |
+| 10 | Subtitles: Addic7ed | `Addic7edProvider.kt` | ✅ Implemented |
+| 11 | Subtitles: Podnapisi | `PodnapisiProvider.kt` | ✅ Implemented |
+| 12 | Security: PIN BCrypt | `ProfileRepositoryImpl.kt` | ✅ Migrated |
+| 13 | Security: SignatureVerifier | `RealSignatureVerifier.kt` | ✅ Allowlist added |
+| 14 | Torrent: HTTP server | `TorrentStreamServer.kt` | ✅ Implemented |
+| 15 | Torrent: progressFlow | `OptimizedTorrentEngine.kt` | ✅ Wired |
+| 16 | Settings: DataStore | `KuroSettingsRepository.kt` | ✅ Implemented |
+| 17 | Settings: ViewModel | `ArcticFuseSettingsViewModel.kt` | ✅ New |
+| 18 | Settings: migration | `ArcticFuseSettingsPage.kt` | ✅ Migrated |
+| 19 | UI: AFGlass/AFBadges | `ArcticFuseTheme.kt` | ✅ Added |
+| 20 | UI: Badges composable | `ArcticFuseBadges.kt` | ✅ New |
+| 21 | UI: Sidebar hubs | `ArcticFuseSidebar.kt` | ✅ Expanded |
+| 22 | UI: MediaCard overlays | `ArcticFuseMediaCard.kt` | ✅ Added |
+| 23 | UI: InfoPanel direction | `ArcticFuseInfoPanel.kt` | ✅ Fixed |
+| 24 | License: full GPL-3.0 | `LICENSE` | ✅ Replaced |
+
+### Still Open
+
+- Kitsu `getAnimeByExternalId` for AniList/TMDB falls back to text search (no direct filter support in Kitsu v2).
+- Addic7ed/Podnapisi HTML selectors may need updates if the upstream sites change their DOM.
+- `ALLOWED_FINGERPRINTS` in `RealSignatureVerifier` is empty (accepts debug/self-signed); populate before release.
+- Test coverage remains low (~1.6%); dedicated test-writing pass needed.
+- `OptimizedTorrentEngine` HTTP server does not honour Range requests yet (seeking will restart download).
+- `DataStore<SettingsProto>` (proto-backed) was not used; Preferences DataStore was chosen instead to avoid schema churn.

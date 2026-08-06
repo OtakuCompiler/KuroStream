@@ -123,14 +123,32 @@ object AFTypo {
     val skipChipLabel    = 14.sp
 }
 
-// ===== Sidebar (spec §4.2) =====
+// ===== Sidebar (spec §4.2 — AF3 pixel values) =====
 object AFSidebar {
-    val collapsedWidth = 72.dp
-    val expandedWidth  = 200.dp
-    val headerHeight   = 64.dp
-    val weatherHeight  = 56.dp
-    val navItemHeight  = 48.dp
-    val profileHeight  = 56.dp
+    val collapsedWidth = 60.dp
+    val expandedWidth  = 220.dp
+    val headerHeight   = 56.dp
+    val weatherHeight  = 48.dp
+    val navItemHeight  = 44.dp
+    val profileHeight  = 52.dp
+    val iconSize       = 20.dp
+}
+
+// ===== Glass morphism (AF3 spec) =====
+object AFGlass {
+    val blurRadius     = 24.dp
+    val overlayAlpha   = 0.65f
+    val saturation     = 1.2f
+    val cardBorder     = Color.White.copy(alpha = 0.08f)
+}
+
+// ===== Badge colours for poster overlays (AF3 spec) =====
+object AFBadges {
+    val uhd          = Color(0xFF3B82F6)   // 4K blue
+    val dolbyVision  = Color(0xFF10B981)   // DV green
+    val hdr10        = Color(0xFFF59E0B)   // HDR amber
+    val atmos        = Color(0xFF8B5CF6)   // 7.1/Atmos violet
+    val rating       = Color(0xFFFBBF24)   // IMDb star amber
 }
 
 // ===== Hub switcher =====

@@ -37,4 +37,14 @@ class SubtitleProviderModule {
     @IntoSet
     @Singleton
     fun provideExtension(provider: ExtensionSubtitleProvider): SubtitleProvider = provider
+
+    @Provides
+    @IntoSet
+    @Singleton
+    fun provideAddic7ed(provider: Addic7edProvider): SubtitleProvider = provider
+
+    @Provides
+    @IntoSet
+    @Singleton
+    fun providePodnapisi(provider: PodnapisiProvider): SubtitleProvider = provider
 }

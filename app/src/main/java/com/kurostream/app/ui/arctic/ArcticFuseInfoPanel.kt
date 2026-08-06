@@ -13,8 +13,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -62,8 +62,8 @@ fun ArcticFuseInfoPanel(
 ) {
     AnimatedVisibility(
         visible = visible && item != null,
-        enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(AFMotion.panelEnter)) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(AFMotion.panelEnter)) + fadeOut(),
+        enter = slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(AFMotion.panelEnter)) + fadeIn(),
+        exit  = slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(AFMotion.panelEnter)) + fadeOut(),
         modifier = modifier,
     ) {
         if (item != null) {
@@ -88,7 +88,7 @@ private fun PanelContent(
         modifier = Modifier
             .width(420.dp)
             .background(AFOverlay, RoundedCornerShape(topEnd = AFRadius.xl))
-            .border(width = 1.dp, color = AFBorderStrong, shape = RoundedCornerShape(topEnd = AFRadius.xl))
+            .border(width = 1.dp, color = AFGlass.cardBorder, shape = RoundedCornerShape(topEnd = AFRadius.xl))
             .padding(AFSpacing.px6),
     ) {
         Row(

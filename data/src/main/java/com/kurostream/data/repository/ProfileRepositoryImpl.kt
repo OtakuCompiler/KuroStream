@@ -24,7 +24,7 @@ import com.kurostream.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import java.security.MessageDigest
+import org.mindrot.jbcrypt.BCrypt
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,7 +34,7 @@ class ProfileRepositoryImpl @Inject constructor(
     private val profileDao: ProfileDao
 ) : ProfileRepository {
 
-companion object {
+    companion object {
         private const val MAX_PROFILES = 5
         private const val PIN_SALT = "kurostream_pin_salt_v1"
     }
@@ -104,7 +104,8 @@ companion object {
     }
 
     override suspend fun verifyPin(profileId: String, pin: String): Boolean {
-        return profileDao.getById(profileId)?.pinHash == hashPin(pin)
+        val storedHash = profileDao.getById(profileId)?.pinHash ?: return false
+        return BCrypt.checkpw(pin, storedHash)
     }
 
     override suspend fun hasPin(profileId: String): Boolean = profileDao.getById(profileId)?.pinHash != null
@@ -122,11 +123,12 @@ companion object {
     override suspend fun getProfile(profileId: String): Profile? = profileDao.getById(profileId)?.toDomain()
 
     override suspend fun saveProfile(profile: Profile): Result<Unit> {
+        val existing = profileDao.getById(profile.id)
         val entity = ProfileEntity(
             id = profile.id,
             name = profile.displayName,
             avatarUrl = profile.avatarUrl,
-            pinHash = if (profile.hasPin) "has_pin" else null,
+            pinHash = existing?.pinHash ?: profile.pinHash,
             isActive = profile.isActive,
             isPremium = profile.isPremium,
             preferredLanguage = profile.preferredLanguage,
@@ -148,8 +150,7 @@ companion object {
     }
 
     private fun hashPin(pin: String): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        return digest.digest("$PIN_SALT$pin".toByteArray()).joinToString("") { "%02x".format(it) }
+        return BCrypt.hashpw(pin, BCrypt.gensalt(12))
     }
 
     private fun ProfileEntity.toDomain() = Profile(

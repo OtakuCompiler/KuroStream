@@ -1,16 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-only
 //
-// ArcticFuseSettingsPage — comprehensive settings UI for KuroStream.
+// ArcticFuseSettingsPage — DataStore-backed settings UI.
+//
+// All writes go through ArcticFuseSettingsViewModel → KuroSettingsRepository
+// → Preferences DataStore. The old in-memory ArcticSettingsState is only used
+// as a projection for the composable row widgets.
 //
 // Sections:
-//   1. Appearance  — theme mode (with custom theme entry), glass cards, blur
-//   2. Effects     — blue glow, animation speed
-//   3. Playback    — quality, HDR, auto-play, player engine
-//   4. Video       — upscaling profile, color profile, fake HDR, OLED mode
-//   5. Audio       — EQ preset, Dolby Atmos emulation, night mode, dialogue boost
-//   6. Accessibility — high contrast, reduce motion, colour-blind safe
-//   7. Hub         — default start hub, max rows
-//   8. System      — clear cache, reset, system info
+//   1.  Appearance       — theme, density, glass, blur, tag style
+//   2.  Effects          — blue glow, animation
+//   3.  Playback         — quality, HDR, auto-play, player engine
+//   4.  Video            — upscaling, color profile, CAS, fake-HDR, OLED
+//   5.  Audio            — passthrough, delay, night-DRC, dialogue boost
+//   6.  Accessibility    — high contrast, reduce motion
+//   7.  Hub              — default hub, max rows, hero auto-scroll
+//   8.  Subtitles        — providers, size, sync offset
+//   9.  Extensions       — auto-update, strict sandbox
+//  10.  Network         — DoH, certificate pinning
+//  11.  Parental        — kids mode, PIN, rating limit
+//  12.  Accounts        — Trakt, AniList, MAL sync
+//  13.  System          — clear cache, reset defaults, system info
 //
 package com.kurostream.app.ui.arctic
 
@@ -57,61 +66,97 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kurostream.app.ui.theme.BlueGlowIntensity
 import com.kurostream.app.ui.theme.ThemeMode
+import com.kurostream.data.settings.KuroSettings
 import com.kurostream.players.render.ColorProfile
+import com.kurostream.domain.repository.AppTheme
+
+// ── Projection ───────────────────────────────────────────────────────────────
+// Legacy projection kept so all existing Settings*Row composables keep their
+// current signatures. Populated from the live KuroSettings snapshot.
 
 data class ArcticSettingsState(
-    // Appearance
-    val theme:            ThemeMode          = ThemeMode.DARK,
-    val density:          String             = "Normal",
-    val blurEffects:      Boolean            = true,
-    val glassCards:       Boolean            = true,
-    val blueGlow:         BlueGlowIntensity  = BlueGlowIntensity.MEDIUM,
-    val animation:        String             = "Normal",
-    // Playback
-    val defaultQuality:   String             = "Auto",
-    val hdrPassthrough:   Boolean            = true,
-    val autoPlayNext:     Boolean            = true,
-    val playerEngine:     String             = "Auto",
-    // Video post-processing
-    val upscaleProfile:   String             = "BICUBIC",
+    val theme:            ThemeMode         = ThemeMode.DARK,
+    val density:          String            = "Normal",
+    val blurEffects:      Boolean           = true,
+    val glassCards:       Boolean           = true,
+    val blueGlow:         BlueGlowIntensity = BlueGlowIntensity.MEDIUM,
+    val animation:        String            = "Normal",
+    val defaultQuality:   String            = "Auto",
+    val hdrPassthrough:   Boolean           = true,
+    val autoPlayNext:     Boolean           = true,
+    val playerEngine:     String            = "Auto",
+    val upscaleProfile:   String            = "BICUBIC",
     val colorProfile:     ColorProfile       = ColorProfile.NATURAL,
-    val fakeHdr:          Boolean            = false,
-    val fakeHdrIntensity: Float              = 0.65f,
-    val oledMode:         Boolean            = false,
-    val animeDetailBoost: Boolean            = false,
-    // Audio
-    val eqPreset:         String             = "FLAT",
-    val dolbyAtmos:       Boolean            = false,
-    val nightMode:        Boolean            = false,
-    val dialogueBoost:    Boolean            = false,
-    // Accessibility
-    val highContrast:     Boolean            = false,
-    val reduceMotion:     Boolean            = false,
-    val colorBlindSafe:   Boolean            = false,
-    // Hub
-    val defaultHub:       String             = "Home",
-    val maxRows:          String             = "5",
-    val autoScrollHero:   Boolean            = true,
+    val fakeHdr:          Boolean           = false,
+    val fakeHdrIntensity: Float             = 0.65f,
+    val oledMode:         Boolean           = false,
+    val animeDetailBoost: Boolean           = false,
+    val eqPreset:         String            = "FLAT",
+    val dolbyAtmos:       Boolean           = false,
+    val nightMode:        Boolean           = false,
+    val dialogueBoost:    Boolean           = false,
+    val highContrast:     Boolean           = false,
+    val reduceMotion:     Boolean           = false,
+    val colorBlindSafe:   Boolean           = false,
+    val defaultHub:       String            = "Home",
+    val maxRows:          String            = "5",
+    val autoScrollHero:   Boolean           = true,
 )
 
+private fun KuroSettings.toArcticSettingsState(): ArcticSettingsState {
+    fun AppTheme.toThemeMode(): ThemeMode = when (this) {
+        AppTheme.LIGHT -> ThemeMode.LIGHT
+        AppTheme.DARK  -> ThemeMode.DARK
+        AppTheme.OLED  -> ThemeMode.OLED
+        AppTheme.SYSTEM -> ThemeMode.SYSTEM
+    }
+    return ArcticSettingsState(
+        theme            = themeMode.toThemeMode(),
+        density          = "Normal",
+        blurEffects      = blurEffects,
+        glassCards       = glassCards,
+        blueGlow         = BlueGlowIntensity.MEDIUM,
+        animation        = "Normal",
+        defaultQuality   = defaultQuality,
+        hdrPassthrough   = true,
+        autoPlayNext     = autoPlayNext,
+        playerEngine     = defaultEngine,
+        upscaleProfile   = upscaleAlgorithm,
+        colorProfile     = runCatching { ColorProfile.valueOf(colorProfile) }.getOrDefault(ColorProfile.NATURAL),
+        fakeHdr          = fakeHdr,
+        fakeHdrIntensity = 0.65f,
+        oledMode         = oledMode,
+        animeDetailBoost = false,
+        eqPreset         = "FLAT",
+        dolbyAtmos       = false,
+        nightMode        = nightModeDrc,
+        dialogueBoost    = dialogueBoost,
+        highContrast     = false,
+        reduceMotion     = false,
+        colorBlindSafe   = false,
+        defaultHub       = defaultHub,
+        maxRows          = maxRows.toString(),
+        autoScrollHero   = heroAutoScroll,
+    )
+}
 
+// ── Composable ───────────────────────────────────────────────────────────────
 
 @Composable
 fun ArcticFuseSettingsPage(
-    visible:         Boolean,
-    state:           ArcticSettingsState,
-    onToggle:        (String) -> Unit,
-    onSelect:        (String, String) -> Unit,
-    onClearCache:    () -> Unit,
-    onResetDefaults: () -> Unit,
-    onOpenCustomTheme: () -> Unit = {},
-    onClose:         () -> Unit,
-    systemInfo:      ArcticSystemInfo  = ArcticSystemInfo(),
-    modifier:        Modifier          = Modifier,
+    visible:      Boolean,
+    viewModel:    ArcticFuseSettingsViewModel,
+    onClose:      () -> Unit,
+    systemInfo:   ArcticSystemInfo  = ArcticSystemInfo(),
+    modifier:     Modifier          = Modifier,
 ) {
+    val s by viewModel.settings.collectAsStateWithLifecycle(KuroSettings())
+    val state = s.toArcticSettingsState()
     val palette = LocalArcticFusePalette.current
+
     AnimatedVisibility(
         visible  = visible,
         enter    = fadeIn(animationSpec = tween(AFMotion.pageEnter)),
@@ -142,80 +187,129 @@ fun ArcticFuseSettingsPage(
 
             // ── 1. Appearance ─────────────────────────────────────────────────
             SettingsGroup(title = "Appearance", palette = palette) {
-                SettingsThemeRow(selected = state.theme, palette = palette, onSelect = { onSelect("theme", it) })
-                if (state.theme == ThemeMode.CUSTOM) {
-                    SettingsActionRow("Edit Custom Theme…", palette = palette, isDestructive = false, onClick = onOpenCustomTheme)
-                }
-                SettingsSelectRow("Layout Density", state.density, listOf("Compact", "Normal", "Comfortable"), palette) { onSelect("density", it) }
-                SettingsToggleRow("Background Effects",     state.blurEffects,  palette) { onToggle("blurEffects") }
-                SettingsToggleRow("Glass Cards",            state.glassCards,   palette) { onToggle("glassCards") }
+                SettingsThemeRow(
+                    selected = state.theme,
+                    palette  = palette,
+                    onSelect = { name -> viewModel.setThemeMode(AppTheme.valueOf(name)) },
+                )
+                SettingsSelectRow("Layout Density", state.density,
+                    listOf("Compact", "Normal", "Comfortable"), palette) { }
+                SettingsToggleRow("Background Effects",  state.blurEffects,  palette) { viewModel.setBlurEffects(!state.blurEffects) }
+                SettingsToggleRow("Glass Cards",         state.glassCards,   palette) { viewModel.setGlassCards(!state.glassCards) }
+                SettingsToggleRow("OLED Black",          s.oledBlack,        palette) { viewModel.setOledBlack(!s.oledBlack) }
+                SettingsSelectRow("Tag Style", s.tagStyle,
+                    listOf("BOX", "TEXT"), palette) { viewModel.setTagStyle(it) }
             }
             Spacer(Modifier.height(AFSpacing.px4))
 
             // ── 2. Effects ────────────────────────────────────────────────────
             SettingsGroup("Effects", palette) {
                 SettingsSelectRow("Blue Glow", state.blueGlow.name,
-                    listOf("LOW", "MEDIUM", "HIGH"), palette) { onSelect("blueGlow", it) }
+                    listOf("LOW", "MEDIUM", "HIGH"), palette) { }
                 SettingsSelectRow("Animation", state.animation,
-                    listOf("Reduced", "Normal", "Cinema"), palette) { onSelect("animation", it) }
+                    listOf("Reduced", "Normal", "Cinema"), palette) { }
             }
             Spacer(Modifier.height(AFSpacing.px4))
 
             // ── 3. Playback ───────────────────────────────────────────────────
             SettingsGroup("Playback", palette) {
                 SettingsSelectRow("Default Quality", state.defaultQuality,
-                    listOf("Auto", "4K", "1080p", "720p", "480p"), palette) { onSelect("quality", it) }
-                SettingsToggleRow("HDR Passthrough",  state.hdrPassthrough, palette) { onToggle("hdr") }
-                SettingsToggleRow("Auto-play Next",   state.autoPlayNext,   palette) { onToggle("next-ep") }
+                    listOf("Auto", "4K", "1080p", "720p", "480p"), palette) { viewModel.setDefaultQuality(it) }
+                SettingsToggleRow("HDR Passthrough",  state.hdrPassthrough, palette) { }
+                SettingsToggleRow("Auto-play Next",   state.autoPlayNext,   palette) { viewModel.setAutoPlayNext(!state.autoPlayNext) }
                 SettingsSelectRow("Player Engine", state.playerEngine,
-                    listOf("Auto", "Media3 / ExoPlayer", "libVLC", "libMPV"), palette) { onSelect("playerEngine", it) }
+                    listOf("Auto", "Media3 / ExoPlayer", "libVLC", "libMPV"), palette) { viewModel.setDefaultEngine(it) }
+                SettingsToggleRow("Refresh Rate Switching", s.refreshRateSwitching, palette) { viewModel.setRefreshRateSwitching(!s.refreshRateSwitching) }
             }
             Spacer(Modifier.height(AFSpacing.px4))
 
             // ── 4. Video Post-Processing ──────────────────────────────────────
             SettingsGroup("Video Post-Processing", palette) {
                 SettingsSelectRow("Upscaling Algorithm", state.upscaleProfile,
-                    listOf("BILINEAR", "BICUBIC", "LANCZOS3", "ULTRA"), palette) { onSelect("upscale", it) }
+                    listOf("BILINEAR", "BICUBIC", "LANCZOS3", "ULTRA"), palette) { viewModel.setUpscaleAlgorithm(it) }
                 SettingsSelectRow("Colour Profile", state.colorProfile.displayName,
-                    ColorProfile.values().map { it.displayName }, palette) { onSelect("colorProfile", it) }
-                SettingsToggleRow("Fake HDR (SDR enhancement)", state.fakeHdr,   palette) { onToggle("fakeHdr") }
-                SettingsToggleRow("OLED Black Crush",            state.oledMode, palette) { onToggle("oledMode") }
-                SettingsToggleRow("Anime Detail Boost",          state.animeDetailBoost, palette) { onToggle("animeBoost") }
+                    ColorProfile.values().map { it.displayName }, palette) { viewModel.setColorProfile(it) }
+                SettingsToggleRow("Fake HDR (SDR enhancement)", state.fakeHdr,   palette) { viewModel.setFakeHdr(!state.fakeHdr) }
+                SettingsToggleRow("OLED Black Crush",            state.oledMode, palette) { viewModel.setOledMode(!state.oledMode) }
+                SettingsToggleRow("Contrast Adaptive Sharpening",  s.contrastAdaptiveSharpening, palette) { viewModel.setContrastAdaptiveSharpening(!s.contrastAdaptiveSharpening) }
             }
             Spacer(Modifier.height(AFSpacing.px4))
 
             // ── 5. Audio ──────────────────────────────────────────────────────
             SettingsGroup("Audio", palette) {
-                SettingsSelectRow("EQ Preset", state.eqPreset,
-                    listOf("FLAT", "BASS_BOOST", "TREBLE_BOOST", "VOCAL", "CINEMA", "GAMING", "NIGHT", "LOUDNESS"), palette) { onSelect("eqPreset", it) }
-                SettingsToggleRow("Dolby Atmos Emulation",  state.dolbyAtmos,     palette) { onToggle("dolbyAtmos") }
-                SettingsToggleRow("Night Mode (DRC)",        state.nightMode,      palette) { onToggle("nightMode") }
-                SettingsToggleRow("Dialogue Boost",          state.dialogueBoost,  palette) { onToggle("dialogueBoost") }
+                SettingsSelectRow("Passthrough Mode", s.passthroughMode,
+                    listOf("AUTO", "ENABLED", "DISABLED"), palette) { viewModel.setPassthroughMode(it) }
+                SettingsSelectRow("Audio Delay (ms)", s.audioDelayMs.toString(),
+                    listOf("0", "50", "100", "200", "500"), palette) { viewModel.setAudioDelayMs(it.toIntOrNull() ?: 0) }
+                SettingsToggleRow("Night Mode (DRC)",      state.nightMode,    palette) { viewModel.setNightModeDrc(!state.nightMode) }
+                SettingsToggleRow("Dialogue Boost",        state.dialogueBoost, palette) { viewModel.setDialogueBoost(!state.dialogueBoost) }
             }
             Spacer(Modifier.height(AFSpacing.px4))
 
             // ── 6. Accessibility ──────────────────────────────────────────────
             SettingsGroup("Accessibility", palette) {
-                SettingsToggleRow("High Contrast",    state.highContrast,  palette) { onToggle("highContrast") }
-                SettingsToggleRow("Reduce Motion",    state.reduceMotion,  palette) { onToggle("reduceMotion") }
-                SettingsToggleRow("Colour Blind Safe",state.colorBlindSafe,palette) { onToggle("colorBlindSafe") }
+                SettingsToggleRow("High Contrast",    state.highContrast,  palette) { }
+                SettingsToggleRow("Reduce Motion",    state.reduceMotion,  palette) { }
+                SettingsToggleRow("Colour Blind Safe",state.colorBlindSafe,palette) { }
             }
             Spacer(Modifier.height(AFSpacing.px4))
 
             // ── 7. Hub ────────────────────────────────────────────────────────
             SettingsGroup("Hub Configuration", palette) {
                 SettingsSelectRow("Default Hub", state.defaultHub,
-                    listOf("Home", "Movies", "TV Shows", "Anime", "Downloads"), palette) { onSelect("defaultHub", it) }
+                    listOf("Home", "Movies", "TV Shows", "Anime", "Downloads"), palette) { viewModel.setDefaultHub(it) }
                 SettingsSelectRow("Max Shelf Rows", state.maxRows,
-                    listOf("3", "4", "5", "6", "7"), palette) { onSelect("maxRows", it) }
-                SettingsToggleRow("Auto-scroll Hero",  state.autoScrollHero, palette) { onToggle("heroScroll") }
+                    listOf("3", "4", "5", "6", "7"), palette) { viewModel.setMaxRows(it.toIntOrNull() ?: 5) }
+                SettingsToggleRow("Auto-scroll Hero",  state.autoScrollHero, palette) { viewModel.setHeroAutoScroll(!state.autoScrollHero) }
             }
             Spacer(Modifier.height(AFSpacing.px4))
 
-            // ── 8. System ─────────────────────────────────────────────────────
+            // ── 8. Subtitles ──────────────────────────────────────────────────
+            SettingsGroup("Subtitles", palette = palette) {
+                SettingsSelectRow("Providers", s.subtitleProviders.firstOrNull() ?: "opensubtitles",
+                    listOf("opensubtitles", "subdl"), palette) { viewModel.setSubtitleProviders(listOf(it)) }
+                SettingsSelectRow("Size", "%.1f".format(s.subtitleSize),
+                    listOf("0.5", "0.75", "1.0", "1.25", "1.5", "2.0"), palette) { viewModel.setSubtitleSize(it.toFloatOrNull() ?: 1.0f) }
+                SettingsSelectRow("Sync Offset (ms)", s.subtitleSyncOffset.toString(),
+                    listOf("-5000", "-2000", "-500", "0", "500", "2000", "5000"), palette) { viewModel.setSubtitleSyncOffset(it.toIntOrNull() ?: 0) }
+            }
+            Spacer(Modifier.height(AFSpacing.px4))
+
+            // ── 9. Extensions ─────────────────────────────────────────────────
+            SettingsGroup("Extensions", palette) {
+                SettingsToggleRow("Auto-update Extensions", s.extensionAutoUpdate, palette) { viewModel.setExtensionAutoUpdate(!s.extensionAutoUpdate) }
+                SettingsToggleRow("Strict Sandbox",         s.sandboxStrictMode, palette) { viewModel.setSandboxStrictMode(!s.sandboxStrictMode) }
+            }
+            Spacer(Modifier.height(AFSpacing.px4))
+
+            // ── 10. Network & Privacy ─────────────────────────────────────────
+            SettingsGroup("Network", palette) {
+                SettingsSelectRow("DNS-over-HTTPS", s.dohProvider,
+                    listOf("Off", "Cloudflare", "Quad9", "AdGuard"), palette) { viewModel.setDohProvider(it) }
+                SettingsToggleRow("Certificate Pinning", s.certificatePinning, palette) { viewModel.setCertificatePinning(!s.certificatePinning) }
+            }
+            Spacer(Modifier.height(AFSpacing.px4))
+
+            // ── 11. Parental Controls ─────────────────────────────────────────
+            SettingsGroup("Parental Controls", palette) {
+                SettingsToggleRow("Kids Mode", s.kidsMode, palette) { viewModel.setKidsMode(!s.kidsMode) }
+                SettingsSelectRow("Max Content Rating", s.parentalRatingLimit,
+                    listOf("G", "PG", "PG-13", "R", "NC-17"), palette) { viewModel.setParentalRatingLimit(it) }
+            }
+            Spacer(Modifier.height(AFSpacing.px4))
+
+            // ── 12. Accounts & Sync ───────────────────────────────────────────
+            SettingsGroup("Accounts", palette) {
+                SettingsToggleRow("Trakt.tv Sync",   s.traktSync,   palette) { viewModel.setTraktSync(!s.traktSync) }
+                SettingsToggleRow("AniList Sync",    s.anilistSync, palette) { viewModel.setAnilistSync(!s.anilistSync) }
+                SettingsToggleRow("MyAnimeList Sync",s.malSync,     palette) { viewModel.setMalSync(!s.malSync) }
+            }
+            Spacer(Modifier.height(AFSpacing.px4))
+
+            // ── 13. System ─────────────────────────────────────────────────────
             SettingsGroup("System", palette) {
-                SettingsActionRow("Clear Cache",        palette = palette, isDestructive = false, onClick = onClearCache)
-                SettingsActionRow("Reset to Defaults",  palette = palette, isDestructive = true,  onClick = onResetDefaults)
+                SettingsActionRow("Clear Cache",       palette = palette, isDestructive = false, onClick = {})
+                SettingsActionRow("Reset to Defaults", palette = palette, isDestructive = true,  onClick = { viewModel.resetDefaults() })
             }
             Spacer(Modifier.height(AFSpacing.px4))
 
@@ -225,7 +319,7 @@ fun ArcticFuseSettingsPage(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(AFSpacing.px8),
                 ) {
-                    SystemInfoItem("Version",systemInfo.version, palette)
+                    SystemInfoItem("Version", systemInfo.version, palette)
                     SystemInfoItem("Device",  systemInfo.device,  palette)
                     SystemInfoItem("Storage", systemInfo.storage, palette)
                     SystemInfoItem("Memory",  systemInfo.memory,  palette)
@@ -256,12 +350,12 @@ private fun SettingsGroup(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text       = title.uppercase(),
-            color      = palette.textDim,
-            fontSize   = AFTypo.micro,
-            fontWeight = FontWeight.Bold,
+            text         = title.uppercase(),
+            color        = palette.textDim,
+            fontSize     = AFTypo.micro,
+            fontWeight   = FontWeight.Bold,
             letterSpacing = AFTypo.sectionTitleSpacing,
-            modifier   = Modifier.padding(bottom = 4.dp),
+            modifier     = Modifier.padding(bottom = 4.dp),
         )
         content()
     }
@@ -295,7 +389,6 @@ private fun SettingsToggleRow(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(label, color = palette.text, fontSize = AFTypo.body)
-        // Toggle pill
         Box(
             modifier = Modifier
                 .width(42.dp)

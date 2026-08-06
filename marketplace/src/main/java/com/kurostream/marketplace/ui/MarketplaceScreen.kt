@@ -102,7 +102,13 @@ fun MarketplaceScreen(
                     onClick = {
                         if (item.canPurchase) {
                             val url = viewModel.getCheckoutUrl(item.item.id)
-                            // Open web checkout
+                            url?.let {
+                                val intent = android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse(it)
+                                )
+                                context.startActivity(intent)
+                            }
                         } else if (item.isOwned && !item.isActive) {
                             viewModel.setActiveSkin(item.item.skinId ?: item.item.id)
                         }

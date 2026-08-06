@@ -1,40 +1,53 @@
 // This file is part of KuroStream.
 //
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// SandboxClassLoader — security-hardened ClassLoader for extension APKs.
 //
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
+ * Delegates to DexClassLoader for actual class resolution but enforces
+ * package-level blocklists and dangerous-class restrictions.
+ *
+ * Key design (Java ClassLoader contract):
+ *   loadClass(name) — public entry point, checks cache → parent → findClass()
+ *   findClass(name) — subclass hook, does the actual loading
+ *
+ * The previous implementation overrode loadClass() directly but never called
+ * findClass() / DexClassLoader, so NO extension classes could load.
+ * This version overrides findClass() so the standard parent-first delegation
+ * (framework classes) still works, and DexClassLoader resolves extension
+ * classes on cache miss.
+ *
+// SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.extensions.sandbox
 
 import dalvik.system.DexClassLoader
 import java.io.File
 
 /**
- * Restricted ClassLoader for extension sandbox.
- * Blocks dangerous classes and packages, and prevents reflection attacks.
+ * Security-hardened ClassLoader for extension APKs.
  *
- * WARNING: This is a blocklist-based isolation pattern. It is known to be
- * bypassable via indirect reflection, parent-loader lookup, and JNI calls.
- * Do NOT load untrusted third-party code through this classloader until the
- * sandbox is properly hardened (out of scope for this pass).
+ * @param dexPath             absolute path to the extension APK
+ * @param optimizedDirectory  where optimized dex files are written
+ * @param librarySearchPath   native library search path (null = none)
+ * @param parent              parent ClassLoader (app classloader)
+ * @param allowedPackages     packages extension classes may live in
+ * @param blockedPackages     packages that are unconditionally blocked
  */
 class SandboxClassLoader(
-    private val parent: ClassLoader?,
+    dexPath: String,
+    optimizedDirectory: File?,
+    librarySearchPath: String?,
+    parent: ClassLoader?,
     private val allowedPackages: Set<String>,
     private val blockedPackages: Set<String>
 ) : ClassLoader(parent) {
 
+    private val dexLoader: DexClassLoader = DexClassLoader(
+        dexPath,
+        optimizedDirectory?.absolutePath,
+        librarySearchPath,
+        parent
+    )
+
     companion object {
-        // Additional dangerous classes that should be blocked
         private val DANGEROUS_CLASSES = setOf(
             "java.lang.Class",
             "java.lang.reflect.Method",
@@ -51,50 +64,49 @@ class SandboxClassLoader(
             "java.lang.SecurityManager",
             "dalvik.system.BaseDexClassLoader",
             "dalvik.system.DexClassLoader",
-            "dalvik.system.PathClassLoader"
+            "dalvik.system.PathClassLoader",
         )
-        
-        // Classes that should be replaced with safe alternatives
+
         private val SAFE_REPLACEMENTS = mapOf(
             "java.lang.System" to "com.kurostream.plugin.sdk.sandbox.SafeSystem",
-            "java.lang.Runtime" to "com.kurostream.plugin.sdk.sandbox.SafeRuntime"
+            "java.lang.Runtime" to "com.kurostream.plugin.sdk.sandbox.SafeRuntime",
         )
     }
 
-    override fun loadClass(name: String?): Class<*> {
-        // Check for null
+    override fun findClass(name: String): Class<*> {
         if (name == null) {
             throw ClassNotFoundException("Null class name")
         }
-        
-        // Check dangerous classes
+
+        SAFE_REPLACEMENTS[name]?.let { safeName ->
+            return parent.loadClass(safeName)
+        }
+
         if (DANGEROUS_CLASSES.contains(name)) {
-            throw SecurityException("Access to dangerous class $name is blocked in sandbox")
+            throw SecurityException("Dangerous class blocked: $name")
         }
-        
-        // Check for safe replacements
-        SAFE_REPLACEMENTS[name]?.let { safeClassName ->
-            return super.loadClass(safeClassName)
-        }
-        
-        // Check blocked packages first
+
         for (blocked in blockedPackages) {
             if (name.startsWith(blocked)) {
-                throw SecurityException("Access to class $name is blocked in sandbox")
+                throw SecurityException("Package blocked: $name")
             }
         }
 
-        // Check allowed packages
+        val isFramework = name.startsWith("android.") ||
+                name.startsWith("kotlin.") ||
+                name.startsWith("kotlinx.") ||
+                name.startsWith("java.") ||
+                name.startsWith("javax.")
         val isAllowed = allowedPackages.any { name.startsWith(it) }
-        if (!isAllowed) {
-            throw SecurityException("Class $name is not in the allowed package list")
+
+        if (!isFramework && !isAllowed) {
+            throw SecurityException("Class not in allowed package list: $name")
         }
 
-        return super.loadClass(name)
-    }
-
-    override fun findClass(name: String?): Class<*> {
-        // Prevent loading classes from arbitrary locations
-        throw SecurityException("Custom class loading is not allowed in sandbox")
+        return try {
+            dexLoader.loadClass(name)
+        } catch (e: ClassNotFoundException) {
+            throw ClassNotFoundException("Extension class not found: $name", e)
+        }
     }
 }

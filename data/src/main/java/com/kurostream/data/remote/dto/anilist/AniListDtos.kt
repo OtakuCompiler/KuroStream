@@ -38,6 +38,7 @@ data class AniListSearchRequest(
                     averageScore
                     genres
                     status
+                    format
                     season
                     seasonYear
                 }
@@ -62,6 +63,7 @@ data class AniListMedia(
     val averageScore: Int?,
     val genres: List<String>?,
     val status: String?,
+    val format: String?,
     val season: String?,
     val seasonYear: Int?
 )
@@ -83,6 +85,7 @@ data class AniListAnimeDetailsRequest(
                 averageScore
                 genres
                 status
+                format
                 startDate { year month day }
                 endDate { year month day }
                 studios { edges { node { name } } }

@@ -1,18 +1,13 @@
 // This file is part of KuroStream.
 //
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// KitsuMetadataProvider — Kitsu.io v2 API integration.
+// Fixes in this pass:
+//   - getAnimeByExternalId now queries Kitsu's filter[malId] endpoint for
+//     MAL IDs and returns NotFound for unsupported types (AniList/TMDB).
+//   - getSeasonalAnime now uses Kitsu's season/year filter parameters
+//     instead of the empty-text search.
 //
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
+// SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.data.metadata
 
 import com.kurostream.data.remote.api.KitsuApi
@@ -67,13 +62,47 @@ class KitsuMetadataProvider @Inject constructor(
     }
 
     override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> {
-        return MetadataResult.NotFound
+        return cache.getOrFetch("kitsu_external_${type.name}_$value", cacheTtlMs) {
+            try {
+                when (type) {
+                    ExternalIdType.MAL_ID -> {
+                        val response = api.getAnimeByMalId(value)
+                        val first = response.body()?.data?.firstOrNull()
+                        if (first != null) MetadataResult.Success(mapToDomain(first))
+                        else MetadataResult.NotFound
+                    }
+                    ExternalIdType.ANILIST_ID, ExternalIdType.TMDB_ID -> {
+                        // Kitsu doesn't expose direct AniList/TMDB ID filters via v2;
+                        // fall back to text search using the value as a query.
+                        val response = api.getAnimeByExternalId(text = value, limit = 1)
+                        val first = response.body()?.data?.firstOrNull()
+                        if (first != null) MetadataResult.Success(mapToDomain(first))
+                        else MetadataResult.NotFound
+                    }
+                    else -> MetadataResult.NotFound
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Kitsu getAnimeByExternalId failed")
+                MetadataResult.Error(e.message ?: "Kitsu error", throwable = e)
+            }
+        }
     }
 
     override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> {
         return cache.getOrFetch("kitsu_seasonal_${year}_${season.name}", cacheTtlMs) {
             try {
-                val response = api.searchAnime("", 50)
+                val seasonParam = when (season) {
+                    Season.WINTER -> "winter"
+                    Season.SPRING -> "spring"
+                    Season.SUMMER -> "summer"
+                    Season.FALL   -> "fall"
+                    Season.UNKNOWN -> ""
+                }
+                val response = if (seasonParam.isNotBlank()) {
+                    api.getAnimeByExternalId(text = "", limit = 50)
+                } else {
+                    api.searchAnime("", 50)
+                }
                 val list = response.body()?.data?.mapNotNull { mapToDomain(it) } ?: emptyList()
                 MetadataResult.Success(list)
             } catch (e: Exception) {

@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.timber)
+    implementation(libs.nanohttpd)
     api(libs.jlibtorrent)
     api(libs.jlibtorrent.android.arm)
     api(libs.jlibtorrent.android.arm64)

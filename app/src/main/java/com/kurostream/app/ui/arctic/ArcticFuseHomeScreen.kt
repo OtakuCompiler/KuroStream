@@ -34,9 +34,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.hiltViewModel
 import com.kurostream.app.model.MediaItem
+import com.kurostream.app.ui.arctic.ArcticFuseSettingsViewModel
 import com.kurostream.app.ui.screens.home.RowState
-import com.kurostream.app.ui.theme.ThemeMode
 import kotlinx.coroutines.delay
 
 /**
@@ -77,6 +78,8 @@ fun ArcticFuseHomeScreen(
     var activeHub by remember { mutableStateOf(ArcticHub.Home) }
     var activeHubTab by remember { mutableStateOf(ArcticHubTab.Home) }
 
+    val settingsViewModel: ArcticFuseSettingsViewModel = hiltViewModel()
+
     // Overlay state
     var showSearch by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
@@ -88,8 +91,8 @@ fun ArcticFuseHomeScreen(
     var contextMenuOffset by remember { mutableStateOf(IntOffset.Zero) }
     var toasts by remember { mutableStateOf(listOf<ArcticToast>()) }
 
-    // Settings state
-    var settingsState by remember { mutableStateOf(ArcticSettingsState()) }
+    // Settings state — migrated to DataStore via ArcticFuseSettingsViewModel
+    // (removed the in-memory `settingsState` remember block)
 
     // Sidebar expanded
     var sidebarExpanded by remember { mutableStateOf(false) }
@@ -469,35 +472,10 @@ fun ArcticFuseHomeScreen(
 
     // ===== SETTINGS PAGE OVERLAY =====
     ArcticFuseSettingsPage(
-        visible = showSettings,
-        state = settingsState,
-        onToggle = { key ->
-            settingsState = when (key) {
-                "blurEffects" -> settingsState.copy(blurEffects = !settingsState.blurEffects)
-                "autoScrollHero" -> settingsState.copy(autoScrollHero = !settingsState.autoScrollHero)
-                "hdr" -> settingsState.copy(hdrPassthrough = !settingsState.hdrPassthrough)
-                "next-ep" -> settingsState.copy(autoPlayNext = !settingsState.autoPlayNext)
-                else -> settingsState
-            }
-        },
-        onSelect = { key, value ->
-            settingsState = when (key) {
-                "theme" -> settingsState.copy(theme = ThemeMode.valueOf(value))
-                "density" -> settingsState.copy(density = value)
-                "default" -> settingsState.copy(defaultHub = value)
-                "rows" -> settingsState.copy(maxRows = value)
-                "quality" -> settingsState.copy(defaultQuality = value)
-                else -> settingsState
-            }
-        },
-        onClearCache = {
-            addToast(ArcticToastType.Success, "Cache cleared")
-        },
-        onResetDefaults = {
-            settingsState = ArcticSettingsState()
-            addToast(ArcticToastType.Info, "Settings reset to defaults")
-        },
-        onClose = { showSettings = false },
+        visible    = showSettings,
+        viewModel  = settingsViewModel,
+        onClose    = { showSettings = false },
+        systemInfo = ArcticSystemInfo(),
     )
 
     // ===== PLAYER OVERLAY =====

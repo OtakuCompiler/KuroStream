@@ -1,18 +1,16 @@
 // This file is part of KuroStream.
 //
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// CloudstreamPluginLoader — loads CloudStream 3-compatible extension APKs
+// into the SandboxClassLoader and instantiates the plugin class.
 //
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// Fixes in this pass:
+//   - Passes apkFile.absolutePath as dexPath to SandboxClassLoader so
+//     DexClassLoader can resolve extension classes (previously unset).
+//   - Instantiates the plugin class via classLoader.loadClass() and stores
+//     the instance in LoadedPlugin (previously LoadedPlugin only held the
+//     manifest + classloader, no live plugin object).
 //
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
+// SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.extensions.cloudstream
 
 import android.content.Context
@@ -50,20 +48,24 @@ class CloudstreamPluginLoader @Inject constructor(
 
     suspend fun loadPluginFromApk(apkFile: File): Result<CloudstreamManifest> = withContext(Dispatchers.IO) {
         try {
-            // Verify signature before loading
             val verificationResult = signatureVerifier.verify(apkFile.absolutePath)
             if (verificationResult.isFailure) {
                 return@withContext Result.failure(Exception("Signature verification failed: ${verificationResult.exceptionOrNull()?.message}"))
             }
-            
+
             val manifest = extractManifest(apkFile)
                 ?: return@withContext Result.failure(Exception("No manifest found in APK"))
 
             val optimizedDir = File(pluginDir, "optimized").apply { mkdirs() }
-            val classLoader = SandboxClassLoader(
+
+            val sandboxLoader = SandboxClassLoader(
+                dexPath = apkFile.absolutePath,
+                optimizedDirectory = optimizedDir,
+                librarySearchPath = null,
                 parent = context.classLoader,
                 allowedPackages = setOf(
                     "com.kurostream.extension.api",
+                    "com.lagradost.cloudstream3",
                     "kotlin",
                     "kotlinx.coroutines",
                     "java.lang",
@@ -78,10 +80,23 @@ class CloudstreamPluginLoader @Inject constructor(
                 )
             )
 
+            val pluginClass = try {
+                sandboxLoader.loadClass(manifest.pluginClassName)
+            } catch (e: ClassNotFoundException) {
+                return@withContext Result.failure(Exception("Plugin class not found: ${manifest.pluginClassName}"))
+            }
+
+            val pluginInstance = try {
+                pluginClass.getDeclaredConstructor().newInstance()
+            } catch (e: Exception) {
+                return@withContext Result.failure(Exception("Failed to instantiate plugin class: ${e.message}"))
+            }
+
             val plugin = LoadedPlugin(
                 manifest = manifest,
-                classLoader = classLoader,
-                apkFile = apkFile
+                classLoader = sandboxLoader,
+                apkFile = apkFile,
+                instance = pluginInstance,
             )
 
             loadedPlugins[manifest.id] = plugin
@@ -104,16 +119,14 @@ class CloudstreamPluginLoader @Inject constructor(
                 return@withContext Result.failure(Exception("Download failed: ${response.code}"))
             }
 
-            // Get checksum from headers if available
             val expectedChecksum = response.header("X-Checksum-SHA256")
-            
+
             response.body?.byteStream()?.use { input ->
                 tempFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
 
-            // Verify checksum if provided
             if (expectedChecksum != null) {
                 val actualChecksum = calculateFileChecksum(tempFile)
                 if (actualChecksum != expectedChecksum) {
@@ -130,7 +143,7 @@ class CloudstreamPluginLoader @Inject constructor(
             Result.failure(e)
         }
     }
-    
+
     private fun calculateFileChecksum(file: File): String {
         val digest = java.security.MessageDigest.getInstance("SHA-256")
         file.inputStream().use { input ->
@@ -207,5 +220,6 @@ data class CloudstreamManifest(
 data class LoadedPlugin(
     val manifest: CloudstreamManifest,
     val classLoader: ClassLoader,
-    val apkFile: File
+    val apkFile: File,
+    val instance: Any? = null,
 )

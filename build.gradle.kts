@@ -60,6 +60,24 @@ subprojects {
     configurations.all {
         resolutionStrategy.force("org.xerial:sqlite-jdbc:3.49.1.0")
     }
+
+    // Pin the Java toolchain for every module that has a Java/Kotlin compile.
+    //
+    // Without an explicit toolchain, Gradle probes the *current* JVM for a
+    // JAVA_COMPILER capability. On JDK distributions that ship without the
+    // jdk.compiler module visible to Gradle's toolchain service (several
+    // OpenJDK 17 builds, including Alpine's), that probe fails with
+    // "No matching toolchain / JAVA_COMPILER capability missing" before any
+    // source is compiled. Declaring the toolchain explicitly short-circuits
+    // the probe. 17 matches compileOptions/jvmTarget in every module and the
+    // temurin@17 JDK used by CI, so no auto-provisioning is triggered.
+    pluginManager.withPlugin("java-base") {
+        extensions.configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(17))
+            }
+        }
+    }
 }
 
 

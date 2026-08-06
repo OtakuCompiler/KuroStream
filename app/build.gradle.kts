@@ -128,6 +128,32 @@ android {
     }
 }
 
+// ── Protobuf / Firebase duplicate-class hardening ────────────────────────────
+//
+// firebase-firestore drags in protobuf-javalite AND protolite-well-known-types.
+// The :data module already pulls the full protobuf-java runtime via
+// protobuf-kotlin. Both jars declare com.google.protobuf.AbstractMessageLite &
+// friends, so D8 fails the merge with "Duplicate class ... found in modules".
+//
+// Declared at project scope (NOT inside `dependencies { }`, where it silently
+// depended on Kotlin-DSL scope leakage) and applied to every configuration so
+// it also covers test/androidTest/lint classpaths:
+//   1. drop protolite-well-known-types outright
+//   2. substitute any protobuf-javalite request with protobuf-java
+//   3. force a single protobuf-java version so transitive bumps can't reopen
+//      the conflict
+configurations.all {
+    exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+    exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    resolutionStrategy {
+        dependencySubstitution {
+            substitute(module("com.google.protobuf:protobuf-javalite"))
+                .using(module("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}"))
+        }
+        force("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}")
+    }
+}
+
 dependencies {
     implementation(project(":common"))
     implementation(project(":domain"))
@@ -192,18 +218,6 @@ dependencies {
         exclude(group = "com.google.protobuf", module = "protobuf-javalite")
     }
     implementation("com.google.firebase:firebase-messaging")
-
-    // Resolve protobuf duplicate-class conflict: redirect any protobuf-javalite
-    // request to the full protobuf-java runtime (already present via protobuf-kotlin
-    // in the data module). Also exclude protolite-well-known-types which bundles
-    // duplicate protobuf classes. This eliminates the duplicate AbstractMessageLite etc.
-    configurations.all {
-        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
-        resolutionStrategy.dependencySubstitution {
-            substitute(module("com.google.protobuf:protobuf-javalite"))
-                .using(module("com.google.protobuf:protobuf-java:${libs.versions.protobuf.get()}"))
-        }
-    }
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")

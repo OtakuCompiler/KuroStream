@@ -39,8 +39,9 @@ class TorrentsViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val handles = LinkedHashMap<String, TorrentHandle>()
-    private var pollJob: Job? = null
+    // magnet -> (handle, streamUrl)
+    private val entries = LinkedHashMap<String, Pair<TorrentHandle, String>>()
+    private var pollJob: kotlinx.coroutines.Job? = null
 
     init {
         startEngine()
@@ -64,18 +65,23 @@ class TorrentsViewModel @Inject constructor(
     fun addMagnet(magnet: String) {
         val trimmed = magnet.trim()
         if (trimmed.isEmpty()) return
-        if (handles.containsKey(trimmed)) {
+        if (entries.containsKey(trimmed)) {
             _error.value = "Torrent already added"
             return
         }
         viewModelScope.launch {
             try {
                 val savePath = context.filesDir.absolutePath
-                val handle = engine.addStreamingTorrent(trimmed, savePath)
-                handles[trimmed] = handle
-                _torrents.value = _torrents.value + TorrentUi(trimmed, handle.name())
+                val stream = engine.addStreamingTorrent(trimmed, savePath)
+                val handle = try {
+                    com.frostwire.jlibtorrent.SessionManager().find(
+                        com.frostwire.jlibtorrent.AddTorrentParams.parseMagnetUri(trimmed).infoHash()
+                    )
+                } catch (t: Throwable) { null }
+                entries[trimmed] = (handle ?: com.frostwire.jlibtorrent.TorrentHandle()) to stream.url
+                _torrents.value = _torrents.value + TorrentUi(trimmed, stream.url, 0, "starting")
                 _error.value = null
-                Log.i("Torrents", "Added torrent ${handle.name()}")
+                Log.i("Torrents", "Added torrent: ${stream.url}")
             } catch (t: Throwable) {
                 _error.value = "Failed to add torrent: ${t.message}"
                 Log.e("Torrents", "Add torrent failed", t)

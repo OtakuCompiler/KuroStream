@@ -21,5 +21,9 @@ data class MediaItem(
     val episodes: List<Episode> = emptyList(),
     val source: String = "",
     val isFavorite: Boolean = false,
-    val watchProgress: Long = 0L
+    val watchProgress: Long = 0L,
+    val has4k: Boolean = false,
+    val hasDolbyVision: Boolean = false,
+    val hasHdr: Boolean = false,
+    val audioCodec: String = "",
 ) : Parcelable

@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.jsoup)
     implementation(libs.sqlcipher)
     implementation(libs.androidx.security.crypto)
+    implementation(libs.jbcrypt)
     implementation(libs.tensorflow.lite)
 
     coreLibraryDesugaring(libs.android.desugarJdkLibs)
