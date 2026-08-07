@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Tizen .wgt package config. Build with:
+    tizen package-web -s smarttv/webapp -t wgt -o build/
+    tizen install --pkg build/KuroStream.wgt -s <device>
+-->
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:tizen="http://tizen.org/ns/widgets"
+        id="https://github.com/OtakuCompiler/KuroStream"
+        version="1.0.0"
+        viewmodes="fullscreen">
+
+    <author href="https://github.com/OtakuCompiler/KuroStream">KuroStream</author>
+    <name>KuroStream</name>
+    <description lang="en">Privacy-focused streaming for anime, movies, and TV shows.</description>
+    <license href="https://github.com/OtakuCompiler/KuroStream/blob/main/LICENSE">GPL-3.0-only</license>
+
+    <icon src="icon-128.png" />
+    <content src="index.html" type="text/html" />
+
+    <feature name="http://tizen.org/feature/network.internet" required="true" />
+    <feature name="http://tizen.org/feature/network.proxy" required="false" />
+    <feature name="http://tizen.org/feature/multimedia.player" required="true" />
+    <feature name="http://tizen.org/feature/media.video_codec.h264" required="true" />
+    <feature name="http://tizen.org/feature/media.video_codec.hevc" required="false" />
+    <feature name="http://tizen.org/feature/media.audio_codec.aac" required="true" />
+    <feature name="http://tizen.org/feature.media.audio_codec.ac3" required="false" />
+
+    <tizen:setting input-method-support="true"
+                    background-support="disabled"
+                    encryption="decrypted"
+                    hwkey-event="enabled" />
+
+    <tizen:profile name="tv-samsung" version="4.0" />
+
+    <tizen:application
+        id="kurostream.app"
+        appid="kurostream.app"
+        type="webapp"
+        exec="index.html"
+        hwkey-event="enabled">
+        <tizen:content src="index.html" />
+        <tizen:icon src="icon-128.png" />
+    </tizen:application>
+
+    <tizen:privilege name="http://tizen.org/privilege/internet" />
+    <tizen:privilege name="http://tizen.org/privilege/network.get" />
+    <tizen:privilege name="http://tizen.org/privilege/network.post" />
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice" />
+    <tizen:privilege name="http://tizen.org/privilege/tv.audio" />
+    <tizen:privilege name="http://tizen.org/privilege/tv.display" />
+    <tizen:privilege name="http://tizen.org/privilege/mediacontroller" />
+</widget>

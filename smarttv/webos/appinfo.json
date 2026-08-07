@@ -1,0 +1,21 @@
+{
+  "id": "kurostream",
+  "version": "1.0.0",
+  "vendor": "KuroStream",
+  "type": "web",
+  "main": "index.html",
+  "title": "KuroStream",
+  "icon": "icon-128.png",
+  "iconColor": "#E94560",
+  "largeIcon": "icon-256.png",
+  "splashBackground": "#121212",
+  "handlesRelaunch": false,
+  "disableBackHistoryAPI": false,
+  "disableTextSelection": true,
+  "supportTouchMode": "none",
+  "uiRevision": "2",
+  "accessibility": {
+    "supportsAudioGuidance": false,
+    "highContrastSupport": false
+  }
+}

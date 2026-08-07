@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#121212" />
+  <title>KuroStream</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>KuroStream</h1>
+      <p id="status">Booting…</p>
+    </header>
+
+    <main>
+      <section class="player-shell">
+        <!-- Offscreen video element used by MSE; we render to the
+             upscale canvas instead so we can apply WebGL shaders. -->
+        <video id="player-video" autoplay muted playsinline style="display:none"></video>
+        <canvas id="upscale-canvas" width="1280" height="720"></canvas>
+      </section>
+
+      <section class="search-shell">
+        <input id="search" type="search"
+               placeholder="Search anime, movies, shows…"
+               aria-label="Search" />
+        <ul id="results"></ul>
+      </section>
+
+      <details>
+        <summary>Platform diagnostics</summary>
+        <pre id="details"></pre>
+      </details>
+    </main>
+  </div>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
