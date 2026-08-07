@@ -2,7 +2,7 @@
 // Manages WebSocket connections for real-time cross-device sync
 
 interface SyncMessage {
-  type: "sync" | "ping" | "pong";
+  type: "sync" | "ping" | "pong" | "user_left";
   payload?: any;
 }
 
@@ -23,13 +23,14 @@ export class SyncRoom {
       return new Response("Expected WebSocket", { status: 426 });
     }
 
-    const pair = new WebSocketPair();
-    const [client, server] = Object.values(pair);
+    const pair: WebSocketPair = new WebSocketPair();
+    const client = pair[0];
+    const server = pair[1];
 
     server.accept();
     this.sessions.add(server);
 
-    server.addEventListener("message", (event) => {
+    server.addEventListener("message", (event: MessageEvent) => {
       try {
         const message: SyncMessage = JSON.parse(event.data as string);
         this.handleMessage(server, message);
@@ -43,7 +44,7 @@ export class SyncRoom {
       this.broadcast({ type: "user_left", payload: { timestamp: Date.now() } }, server);
     });
 
-    return new Response(null, { status: 101, webSocket: client });
+    return new Response(null, { status: 101, webSocket: client } as any);
   }
 
   private async handleMessage(ws: WebSocket, message: SyncMessage) {

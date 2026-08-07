@@ -5,6 +5,7 @@ interface TorrentFile {
   length: number
   progress: number
   done: boolean
+  getBlobURL(cb: (err: any, url: string) => void): void
 }
 
 interface Torrent {

@@ -31,9 +31,9 @@ export default function ArcticPlayer({ title, episode, source, onNext, onPrev, o
   const upscalerRef = useRef<ReturnType<typeof createWebGLUpscaler> | null>(null)
   const webglFailedRef = useRef(false)
   const hlsRef = useRef<Hls | null>(null)
-  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
-  const skipCheckRef = useRef<ReturnType<typeof setInterval>>()
-  const statsIntervalRef = useRef<ReturnType<typeof setInterval>>()
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const skipCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const statsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const { preferences, updatePreferences, addWatchHistory } = useStore()
   const [isPlaying, setIsPlaying] = useState(false)

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, getDB, getKV, checkRateLimit } from "@/lib/kuro-api";
 
-export const Route = createFileRoute("/api/public/v1/sync/devices")({
+export const Route = createFileRoute("/api/public/v1/sync/devices" as any)({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),

@@ -1,6 +1,11 @@
 declare global {
   interface Window {
     __arctic_cast_api?: any
+    chrome?: {
+      cast?: {
+        isAvailable?: boolean
+      }
+    }
   }
 }
 

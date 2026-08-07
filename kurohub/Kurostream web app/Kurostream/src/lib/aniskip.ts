@@ -1,4 +1,4 @@
-import type { IntroSkipData } from '../types'
+import type { IntroSkipData } from './types'
 
 // ─── AniSkip API ───
 export async function fetchSkipTimes(malId: number, episode: number): Promise<IntroSkipData | null> {

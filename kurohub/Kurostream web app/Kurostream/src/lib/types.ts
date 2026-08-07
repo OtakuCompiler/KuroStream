@@ -26,6 +26,9 @@ export interface Title {
     tmdb?: number
     imdb?: string
     tvdb?: number
+    kitsu?: string | number
+    trakt?: number
+    simkl?: number
   }
   episodes?: Episode[]
   recommendations?: string[]
@@ -147,6 +150,7 @@ export interface DownloadItem {
   downloaded: number
   path: string
   createdAt: number
+  peers?: number
 }
 
 export interface IntroSkipData {

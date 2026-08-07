@@ -211,6 +211,29 @@ declare module "@cloudflare/workers-types" {
   }
 }
 
+declare module "cloudflare:workers" {
+  export interface DurableObjectState {
+    id: { id: string; toString: () => string };
+    waitUntil(promise: Promise<any>): void;
+  }
+  export interface ExecutionContext {
+    waitUntil(promise: Promise<any>): void;
+    passThroughOnException(): void;
+  }
+  export interface WebSocket {
+    readonly readyState: number;
+    accept(): void;
+    send(data: string | ArrayBuffer | Blob): void;
+    close(code?: number, reason?: string): void;
+    addEventListener(type: string, listener: (event: any) => void): void;
+  }
+  export interface WebSocketPair {
+    0: WebSocket;
+    1: WebSocket;
+  }
+  export { WebSocket, WebSocketPair, DurableObjectState, ExecutionContext };
+}
+
 declare module "react-day-picker" {
   export const DayPicker: any;
   export const DayButton: any;

@@ -1,5 +1,5 @@
-import type { Title, WatchHistory } from '../types'
-import { useStore } from '../store'
+import type { Title, WatchHistory } from './types'
+import { useStore } from './store'
 
 interface ScoredTitle {
   title: Title

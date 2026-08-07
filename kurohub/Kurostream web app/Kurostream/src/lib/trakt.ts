@@ -1,4 +1,4 @@
-import type { WatchHistory } from '../types'
+import type { WatchHistory } from './types'
 
 const TRAKT_API = 'https://api.trakt.tv'
 
