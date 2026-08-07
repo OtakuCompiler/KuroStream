@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -58,7 +57,6 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -76,6 +74,7 @@ fun ArcticFuseMediaCard(
     onClick: () -> Unit = {},
     onFocus: (() -> Unit)? = null,
     onLongPress: (() -> Unit)? = null,
+    textColor: Color = Color.White,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     var glowAlpha by remember { mutableStateOf(0f) }
@@ -212,9 +211,9 @@ fun ArcticFuseMediaCard(
             }
             // Resolution stack
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                if (item.has4k) Badge("4K", AFBadges.uhd)
-                if (item.hasDolbyVision) Badge("DV", AFBadges.dolbyVision)
-                if (item.hasHdr) Badge("HDR", AFBadges.hdr10)
+                if (item.has4k) Badge("4K", AFBadges.uhd, textColor)
+                if (item.hasDolbyVision) Badge("DV", AFBadges.dolbyVision, textColor)
+                if (item.hasHdr) Badge("HDR", AFBadges.hdr10, textColor)
             }
         }
 
