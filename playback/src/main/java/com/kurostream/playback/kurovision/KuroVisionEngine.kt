@@ -27,7 +27,6 @@ import androidx.annotation.Keep
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -42,7 +41,7 @@ class KuroVisionEngine @Inject constructor(
     private val inspector: AndroidDeviceInspector,
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val engineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private val engineScope = CoroutineScope(Dispatchers.Default + Job())
 
     @Volatile private var profile: KuroVisionDeviceProfile? = null
     @Volatile private var activeMode: KuroVisionQualityMode = KuroVisionQualityMode.CINEMA
@@ -112,7 +111,6 @@ class KuroVisionEngine @Inject constructor(
 
     fun release() {
         try {
-            engineScope.cancel()
             renderer?.release()
             eglContext?.let {
                 EGL14.eglDestroyContext(EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY), it)
@@ -139,5 +137,10 @@ class KuroVisionEngine @Inject constructor(
 
     companion object {
         private const val TAG = "KuroVisionEngine"
+        @Volatile private var INSTANCE: KuroVisionEngine? = null
+        fun getInstance(context: Context): KuroVisionEngine =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: throw IllegalStateException("Inject via Hilt, not manual instantiation")
+            }
     }
 }
