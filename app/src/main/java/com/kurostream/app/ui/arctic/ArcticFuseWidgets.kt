@@ -120,6 +120,7 @@ fun ArcticFuseWidgetRow(
                     progress = item.watchProgress.toFloat(),
                     onClick = { onItemClick(item) },
                     onFocus = { onItemFocus?.invoke(item) },
+                    textColor = Color.White,
                 )
             }
         }
@@ -203,6 +204,7 @@ fun ArcticFuseWidgetWall(
                     item = item,
                     view = CardView.Poster,
                     onClick = { onItemClick(item) },
+                    textColor = Color.White,
                 )
             }
         }

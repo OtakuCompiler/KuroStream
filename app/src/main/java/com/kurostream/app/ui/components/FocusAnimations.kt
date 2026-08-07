@@ -407,12 +407,15 @@ fun AnimatedContentSize(
 ) {
     androidx.compose.animation.AnimatedContent(
         targetState = targetState,
-        animationSpec = tween(300),
         modifier = modifier,
         label = "animatedContentSize",
     ) { expanded ->
         if (expanded) {
-            content()
+            @Composable
+            fun Content() {
+                content()
+            }
+            Content()
         } else {
             Box(modifier = Modifier.size(0.dp))
         }
