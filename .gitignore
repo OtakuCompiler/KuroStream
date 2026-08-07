@@ -1,78 +1,31 @@
 # Gradle
 .gradle/
 build/
-*/build/
-!**/src/main/**/build.gradle.kts
-
-# Local configuration
 local.properties
-*.keystore
-*.jks
-*.properties
-google-services.json
 
 # IDE
 .idea/
 *.iml
-*.iws
 *.ipr
-.vscode/
-*.swp
-*.swo
+*.iws
 
-# OS
-.DS_Store
-Thumbs.db
+# Environment
+.env
+.env.local
+.env.*.local
 
-# Build outputs
-*.apk
-*.aab
-*.ap_
-*.dex
-*.class
-
-# Generated files
-*/build/generated/
-*/build/tmp/
-*/build/intermediates/
-
-# Logs
+# Generated
+.generated/
 *.log
 
-# Firebase
-google-services.json
-firebase-*.json
+# Kilo/stack local
+.kilo/
+.tanstack/
+.wrangler/
+dist/
 
-# Keystore
-*.jks
-*.keystore
-keystore.properties
+# Node/web artifacts
+node_modules/
 
-# Server (not used by Android app)
-server/
-
-# Kotlin
-.kotlin/
-
-# Temporary
-*.tmp
-*.temp
-temp/
-tmp/
-
-# Backup files
-*.bak
-
-# Clutter / generated docs (not source of truth)
-FINAL_PRODUCTION_AUDIT.md
-IMPLEMENTATION_SUMMARY.md
-ISSUES_LEDGER.md
-PRODUCTION_IMPLEMENTATION_REPORT.md
-
-# Deployment / infra clutter
-docker-compose.yml
-nginx/kurostream.zip
-kurohub/node_modules/
-
-# Kilo agent config (local only)
-kilo.json
+# KuroHub removed from repo tracking, kept locally
+kurohub/
