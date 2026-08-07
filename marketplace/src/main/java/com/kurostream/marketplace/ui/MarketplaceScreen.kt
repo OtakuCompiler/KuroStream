@@ -52,6 +52,7 @@ fun MarketplaceScreen(
     onBack: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -108,7 +109,7 @@ fun MarketplaceScreen(
                                     android.content.Intent.ACTION_VIEW,
                                     android.net.Uri.parse(it)
                                 )
-                                LocalContext.current.startActivity(intent)
+                                context.startActivity(intent)
                             }
                         } else if (item.isOwned && !item.isActive) {
                             viewModel.setActiveSkin(item.item.skinId ?: item.item.id)

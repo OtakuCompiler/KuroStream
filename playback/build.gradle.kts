@@ -56,10 +56,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     
-    // ML for intro detection
-    implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.gpu)
-    implementation(libs.tensorflow.lite.support)
+    // ML runtime for skip detection and upscaling
     implementation(libs.onnx.runtime)
     
     // Tests
