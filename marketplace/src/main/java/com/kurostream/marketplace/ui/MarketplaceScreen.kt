@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
@@ -107,7 +108,7 @@ fun MarketplaceScreen(
                                     android.content.Intent.ACTION_VIEW,
                                     android.net.Uri.parse(it)
                                 )
-                                context.startActivity(intent)
+                                LocalContext.current.startActivity(intent)
                             }
                         } else if (item.isOwned && !item.isActive) {
                             viewModel.setActiveSkin(item.item.skinId ?: item.item.id)
