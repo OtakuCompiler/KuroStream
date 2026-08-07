@@ -78,7 +78,7 @@ class TorrentsViewModel @Inject constructor(
                         com.frostwire.jlibtorrent.AddTorrentParams.parseMagnetUri(trimmed).infoHash()
                     )
                 } catch (t: Throwable) { null }
-                entries[trimmed] = handle!! to stream.url
+                entries[trimmed] = (handle ?: com.frostwire.jlibtorrent.TorrentHandle()) to stream.url
                 _torrents.value = _torrents.value + TorrentUi(trimmed, stream.url, 0, "starting")
                 _error.value = null
                 Log.i("Torrents", "Added torrent: ${stream.url}")

@@ -40,7 +40,6 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import com.kurostream.app.model.MediaItem
@@ -121,7 +120,6 @@ fun ArcticFuseWidgetRow(
                     progress = item.watchProgress.toFloat(),
                     onClick = { onItemClick(item) },
                     onFocus = { onItemFocus?.invoke(item) },
-                    textColor = Color.White,
                 )
             }
         }
@@ -205,7 +203,6 @@ fun ArcticFuseWidgetWall(
                     item = item,
                     view = CardView.Poster,
                     onClick = { onItemClick(item) },
-                    textColor = Color.White,
                 )
             }
         }
