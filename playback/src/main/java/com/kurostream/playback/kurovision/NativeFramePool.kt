@@ -49,7 +49,18 @@ class NativeFramePool @Inject constructor(
 
     private fun allocate(width: Int, height: Int): PooledFrame {
         val size = width * height * 4
-        val buffer = ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder())
+        val buffer = try {
+            ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder())
+        } catch (oom: OutOfMemoryError) {
+            Log.w(TAG, "OOM allocating ${size / 1024 / 1024}MB, retrying half size")
+            val halfSize = size / 2
+            try {
+                ByteBuffer.allocateDirect(halfSize).order(ByteOrder.nativeOrder())
+            } catch (oom2: OutOfMemoryError) {
+                Log.w(TAG, "OOM on retry, returning null frame")
+                return PooledFrame(0, width, height, null)
+            }
+        }
         val texIds = IntArray(1)
         GLES20.glGenTextures(1, texIds, 0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texIds[0])

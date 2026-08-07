@@ -14,6 +14,8 @@ import android.opengl.EGLDisplay
 import android.opengl.GLES20
 import android.util.Log
 import com.kurostream.players.render.EnhancedUpscaleEngine
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -82,7 +84,11 @@ class OpenGLRenderer @Inject constructor(
             EGL14.eglMakeCurrent(eglDisplay, pbuffer, pbuffer, eglContextHandle)
 
             upscaler = EnhancedUpscaleEngine(profile).also { it.initialize() }
-            createPassthroughProgram()
+            runBlocking {
+                withContext(Dispatchers.Default) {
+                    createPassthroughProgram()
+                }
+            }
 
             isInit = true
             Log.i(TAG, "OpenGLRenderer init OK (GL ES ${if (profile.supportsOpenGlEs3) 3 else 2})")
