@@ -15,6 +15,7 @@ package com.kurostream.app.ui.arctic
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -72,6 +74,7 @@ fun ArcticFuseMediaCard(
     onClick: () -> Unit = {},
     onFocus: (() -> Unit)? = null,
     onLongPress: (() -> Unit)? = null,
+    textColor: Color = Color.White,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     var glowAlpha by remember { mutableStateOf(0f) }

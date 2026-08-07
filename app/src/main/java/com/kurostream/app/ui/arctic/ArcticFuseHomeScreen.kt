@@ -34,7 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.ui.arctic.ArcticFuseSettingsViewModel
 import com.kurostream.app.ui.screens.home.RowState
@@ -124,8 +124,9 @@ fun ArcticFuseHomeScreen(
                     ArcticHub.TVShows -> { activeHubTab = ArcticHubTab.TVShows }
                     ArcticHub.YouTube -> { /* future */ }
                     ArcticHub.Addons -> onAddonsClick()
-                    ArcticHub.Favourites -> onFavoritesClick()
+                    ArcticHub.Favorites -> onFavoritesClick()
                     ArcticHub.System -> { showSettings = true }
+                    else -> { /* no-op */ }
                 }
             },
             initialExpanded = sidebarExpanded,
