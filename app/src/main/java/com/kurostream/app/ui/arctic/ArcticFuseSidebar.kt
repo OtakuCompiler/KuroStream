@@ -8,6 +8,8 @@
 package com.kurostream.app.ui.arctic
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -89,7 +91,10 @@ fun ArcticFuseSidebar(
 
     val width by androidx.compose.animation.core.animateDpAsState(
         targetValue = if (expanded) AFSidebar.expandedWidth else AFSidebar.collapsedWidth,
-        animationSpec = tween(AFMotion.fast),
+        animationSpec = spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+        ),
         label = "sidebarWidth",
     )
 

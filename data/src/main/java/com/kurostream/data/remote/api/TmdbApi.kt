@@ -37,6 +37,7 @@ interface TmdbApi {
         @Query("query") query: String,
         @Query("page") page: Int = 1,
         @Query("language") language: String = "en-US",
+        @Query("region") region: String? = null,
     ): Response<SearchResponse>
 
     @GET("discover/tv")
@@ -47,6 +48,7 @@ interface TmdbApi {
         @Query("air_date.lte") airDateLte: String? = null,
         @Query("page") page: Int = 1,
         @Query("language") language: String = "en-US",
+        @Query("region") region: String? = null,
     ): Response<DiscoverResponse>
 
     @GET("find/{external_id}")
@@ -59,5 +61,22 @@ interface TmdbApi {
     @GET("trending/tv/week")
     suspend fun getTrendingTv(
         @Query("language") language: String = "en-US",
+        @Query("region") region: String? = null,
     ): Response<TrendingResponse>
+
+    @GET("discover/tv")
+    suspend fun discoverTvByProvider(
+        @Query("with_watch_providers") withWatchProviders: String,
+        @Query("watch_region") watchRegion: String = "US",
+        @Query("page") page: Int = 1,
+        @Query("language") language: String = "en-US",
+    ): Response<DiscoverResponse>
+
+    @GET("discover/movie")
+    suspend fun discoverMovieByProvider(
+        @Query("with_watch_providers") withWatchProviders: String,
+        @Query("watch_region") watchRegion: String = "US",
+        @Query("page") page: Int = 1,
+        @Query("language") language: String = "en-US",
+    ): Response<DiscoverResponse>
 }

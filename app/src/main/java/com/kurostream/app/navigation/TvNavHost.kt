@@ -36,6 +36,7 @@ import com.kurostream.app.ui.screens.search.SearchScreen
 import com.kurostream.app.ui.screens.settings.SettingsScreen
 import com.kurostream.app.ui.screens.settings.SourceLockSettingsScreen
 import com.kurostream.app.ui.screens.torrents.TorrentsScreen
+import com.kurostream.app.ui.screens.onboarding.OnboardingScreen
 import com.kurostream.backup.ui.BackupSettingsScreen
 import com.kurostream.marketplace.ui.MarketplaceScreen as KuroStoreScreen
 
@@ -186,6 +187,21 @@ fun TvNavHost(
             LibraryScreen(
                 onMediaClick = { mediaId -> navController.navigate(DetailsRoute(mediaId)) },
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable<OnboardingRoute> {
+            OnboardingScreen(
+                onComplete = {
+                    navController.navigate(HomeRoute) {
+                        popUpTo(OnboardingRoute) { inclusive = true }
+                    }
+                },
+                onSkip = {
+                    navController.navigate(HomeRoute) {
+                        popUpTo(OnboardingRoute) { inclusive = true }
+                    }
+                },
             )
         }
     }

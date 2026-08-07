@@ -6,6 +6,7 @@ package com.kurostream.data.metadata
 import com.kurostream.domain.result.Result
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.model.SourceLockSettings
+import androidx.datastore.preferences.core.MutablePreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -45,6 +46,11 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
     private val tmdbProvider:     TmdbMetadataProvider,
     private val tvdbProvider:     TvdbMetadataProvider,
     private val imdbProvider:     ImdbMetadataProvider,
+    private val anidbProvider:    AniDbMetadataProvider,
+    private val annProvider:      AnnMetadataProvider,
+    private val netflixProvider:  NetflixMetadataProvider,
+    private val primeVideoProvider: PrimeVideoMetadataProvider,
+    private val disneyPlusProvider: DisneyPlusMetadataProvider,
     private val cache:            MetadataCache,
     private val settingsDataStore: com.kurostream.data.local.preferences.SettingsDataStore,
 ) : UnifiedMetadataRepository {
@@ -53,7 +59,8 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
     val enabledProviders = _enabledProviders.asStateFlow()
 
     private val allProviders: List<MetadataProvider> = listOf(
-        kitsuProvider, anilistProvider, malProvider, tmdbProvider, tvdbProvider, imdbProvider
+        kitsuProvider, anilistProvider, malProvider, tmdbProvider, tvdbProvider, imdbProvider,
+        anidbProvider, annProvider, netflixProvider, primeVideoProvider, disneyPlusProvider
     ).sortedBy { it.priority }
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -361,7 +368,7 @@ class UnifiedMetadataRepositoryImpl @Inject constructor(
         settingsDataStore.data
             .map { prefs ->
                 (prefs[com.kurostream.data.local.preferences.SettingsDataStore.Keys.METADATA_PROVIDERS_ENABLED]
-                    ?: "kitsu,anilist,mal,tmdb").split(",").toSet()
+                    ?: "kitsu,anilist,mal,tmdb,anidb,ann,netflix,primevideo,disneyplus").split(",").toSet()
             }
             .first()
 

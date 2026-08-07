@@ -187,8 +187,6 @@ class AniListMetadataProvider @Inject constructor(
         "SPECIAL" -> MediaType.SPECIAL
         "MUSIC" -> MediaType.MUSIC
         "ONE_SHOT" -> MediaType.SPECIAL
-        "MANGA" -> MediaType.MANGA
-        "NOVEL" -> MediaType.NOVEL
         else -> MediaType.UNKNOWN
     }
 

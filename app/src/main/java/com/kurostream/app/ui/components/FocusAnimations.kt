@@ -397,3 +397,63 @@ fun DebouncedKeyHandler(
         content()
     }
 }
+
+// ===== 11. Animated content size =====
+@Composable
+fun AnimatedContentSize(
+    targetState: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    androidx.compose.animation.AnimatedContent(
+        targetState = targetState,
+        animationSpec = tween(300),
+        modifier = modifier,
+        label = "animatedContentSize",
+    ) { expanded ->
+        if (expanded) {
+            content()
+        } else {
+            Box(modifier = Modifier.size(0.dp))
+        }
+    }
+}
+
+// ===== 12. Pulse animation for notifications =====
+@Composable
+fun PulseAnimation(
+    pulse: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = if (pulse) 1f else 0.5f,
+        targetValue = if (pulse) 0.5f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "pulseAlpha",
+    )
+
+    Box(modifier = modifier.graphicsLayer { this.alpha = alpha }) {
+        content()
+    }
+}
+
+// ===== 13. Fade through transition =====
+@Composable
+fun FadeThroughTransition(
+    targetState: Any?,
+    modifier: Modifier = Modifier,
+    content: @Composable (Any?) -> Unit,
+) {
+    androidx.compose.animation.Crossfade(
+        targetState = targetState,
+        animationSpec = tween(300),
+        modifier = modifier,
+        label = "fadeThrough",
+        content = content,
+    )
+}

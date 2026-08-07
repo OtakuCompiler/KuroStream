@@ -2,19 +2,19 @@
 //
 // SandboxClassLoader — security-hardened ClassLoader for extension APKs.
 //
- * Delegates to DexClassLoader for actual class resolution but enforces
- * package-level blocklists and dangerous-class restrictions.
- *
- * Key design (Java ClassLoader contract):
- *   loadClass(name) — public entry point, checks cache → parent → findClass()
- *   findClass(name) — subclass hook, does the actual loading
- *
- * The previous implementation overrode loadClass() directly but never called
- * findClass() / DexClassLoader, so NO extension classes could load.
- * This version overrides findClass() so the standard parent-first delegation
- * (framework classes) still works, and DexClassLoader resolves extension
- * classes on cache miss.
- *
+// Delegates to DexClassLoader for actual class resolution but enforces
+// package-level blocklists and dangerous-class restrictions.
+//
+// Key design (Java ClassLoader contract):
+//   loadClass(name) — public entry point, checks cache → parent → findClass()
+//   findClass(name) — subclass hook, does the actual loading
+//
+// The previous implementation overrode loadClass() directly but never called
+// findClass() / DexClassLoader, so NO extension classes could load.
+// This version overrides findClass() so the standard parent-first delegation
+// (framework classes) still works, and DexClassLoader resolves extension
+// classes on cache miss.
+//
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.extensions.sandbox
 

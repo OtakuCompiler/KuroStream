@@ -5,6 +5,7 @@ import com.kurostream.domain.entity.MediaItem
 import com.kurostream.domain.entity.VideoSource
 import com.kurostream.extensions.cloudstream.CloudStreamAdapter
 import com.kurostream.extensions.cloudstream.CloudStreamPlugin
+import com.kurostream.extensions.consumet.ConsumetAdapter
 import com.kurostream.extensions.jellyfin.JellyfinAdapter
 import com.kurostream.extensions.kodi.KodiAdapter
 import com.kurostream.extensions.plex.PlexAdapter
@@ -24,6 +25,7 @@ class SmartSourceAggregator @Inject constructor(
     private val healthMonitor: ExtensionHealthMonitor,
     private val stremioAdapter: StremioAdapter,
     private val cloudStreamAdapter: CloudStreamAdapter,
+    private val consumetAdapter: ConsumetAdapter,
     private val jellyfinAdapter: JellyfinAdapter,
     private val kodiAdapter: KodiAdapter,
     private val plexAdapter: PlexAdapter,
@@ -133,6 +135,7 @@ class SmartSourceAggregator @Inject constructor(
         return when (ext.sourceFormat) {
             ExtensionSourceFormat.STREMIO_ADDON -> searchStremio(ext, query, types)
             ExtensionSourceFormat.CLOUDSTREAM_REPO -> searchCloudStream(ext, query, types)
+            ExtensionSourceFormat.CONSUMET_ADDON -> searchConsumet(ext, query, types)
             ExtensionSourceFormat.JELLYFIN_SERVER -> searchJellyfin(ext, query, types)
             ExtensionSourceFormat.KODI_REPOSITORY -> searchKodi(ext, query, types)
             ExtensionSourceFormat.PLEX_SERVER -> searchPlex(ext, query, types)
@@ -150,6 +153,7 @@ class SmartSourceAggregator @Inject constructor(
             ExtensionSourceFormat.PLEX_SERVER -> streamsFromPlex(ext, mediaId)
             ExtensionSourceFormat.KODI_REPOSITORY -> streamsFromKodi(ext, mediaId)
             ExtensionSourceFormat.CLOUDSTREAM_REPO -> streamsFromCloudStream(ext, mediaId, type)
+            ExtensionSourceFormat.CONSUMET_ADDON -> streamsFromConsumet(ext, mediaId, type)
             else -> emptyList()
         }
     }
@@ -159,7 +163,8 @@ class SmartSourceAggregator @Inject constructor(
             ExtensionSourceFormat.STREMIO_ADDON -> homeRowsFromStremio(ext)
             ExtensionSourceFormat.JELLYFIN_SERVER -> homeRowsFromJellyfin(ext)
             ExtensionSourceFormat.PLEX_SERVER -> homeRowsFromPlex(ext)
-            ExtensionSourceFormat.CLOUDSTREAM_REPO -> emptyList() // CloudStream repos don't expose home rows
+            ExtensionSourceFormat.CONSUMET_ADDON -> emptyList()
+            ExtensionSourceFormat.CLOUDSTREAM_REPO -> emptyList()
             ExtensionSourceFormat.KODI_REPOSITORY -> emptyList()
             else -> emptyList()
         }
@@ -219,7 +224,6 @@ class SmartSourceAggregator @Inject constructor(
     private suspend fun searchCloudStream(ext: UnifiedExtension, query: String, types: Set<ContentType>): List<MediaSearchResult> {
         return try {
             val plugin = json.decodeFromString<CloudStreamPlugin>(ext.rawManifest)
-            // CloudStream plugins expose a /search endpoint via their plugin URL
             val searchUrl = "${plugin.url}/search?q=${java.net.URLEncoder.encode(query, "UTF-8")}"
             cloudStreamAdapter.fetchRepository(searchUrl)
                 .map { repo ->
@@ -245,7 +249,6 @@ class SmartSourceAggregator @Inject constructor(
         return try {
             val plugin = json.decodeFromString<CloudStreamPlugin>(ext.rawManifest)
             val streamsUrl = "${plugin.url}/streams/${type.toStremioType()}/$mediaId.json"
-            // Fetch stream list from CloudStream plugin endpoint
             val results = cloudStreamAdapter.fetchRepository(streamsUrl).getOrNull()
             results?.plugins?.map { p ->
                 StreamAggregateResult(
@@ -257,6 +260,65 @@ class SmartSourceAggregator @Inject constructor(
             } ?: emptyList()
         } catch (e: Exception) {
             Timber.w(e, "CloudStream getStreams failed for ${ext.id}")
+            emptyList()
+        }
+    }
+
+    // ── Consumet ─────────────────────────────────────────────────────────────
+
+    private suspend fun searchConsumet(ext: UnifiedExtension, query: String, types: Set<ContentType>): List<MediaSearchResult> {
+        return try {
+            val manifest = json.decodeFromString<Map<String, String>>(ext.rawManifest)
+            val baseUrl = manifest["baseUrl"] ?: return emptyList()
+            val result = consumetAdapter.fetchAnime(baseUrl, query)
+            result.map { anime ->
+                listOf(
+                    MediaSearchResult(
+                        media = MediaItem(
+                            id = "consumet_${ext.id}_${anime.id}",
+                            title = anime.title,
+                            description = anime.description ?: "",
+                            posterUrl = anime.image ?: "",
+                            backdropUrl = anime.banner ?: "",
+                            genre = anime.genres,
+                            rating = anime.score?.toFloat() ?: 0f,
+                            year = anime.seasonYear ?: 0,
+                            source = "consumet",
+                        ),
+                        confidence = 0.85f,
+                        sourceExtensionId = ext.id,
+                    )
+                )
+            }.getOrElse { emptyList() }
+        } catch (e: Exception) {
+            Timber.w(e, "Consumet search failed for ${ext.id}")
+            emptyList()
+        }
+    }
+
+    private suspend fun streamsFromConsumet(ext: UnifiedExtension, mediaId: String, type: ContentType): List<StreamAggregateResult> {
+        return try {
+            val manifest = json.decodeFromString<Map<String, String>>(ext.rawManifest)
+            val baseUrl = manifest["baseUrl"] ?: return emptyList()
+            val episodeId = mediaId.removePrefix("consumet_${ext.id}_")
+            val result = consumetAdapter.fetchStreams(baseUrl, episodeId)
+            result.map { streamResponse ->
+                streamResponse.sources.map { source ->
+                    StreamAggregateResult(
+                        source = ext,
+                        stream = VideoSource(
+                            url = source.url,
+                            quality = source.quality ?: "Unknown",
+                            isHls = source.isM3U8,
+                            headers = source.headers,
+                        ),
+                        qualityScore = parseQualityScore(source.quality),
+                        debridCached = false,
+                    )
+                }
+            }.getOrElse { emptyList() }
+        } catch (e: Exception) {
+            Timber.w(e, "Consumet getStreams failed for ${ext.id}")
             emptyList()
         }
     }
@@ -474,5 +536,13 @@ class SmartSourceAggregator @Inject constructor(
             source      = "plex",
             watchProgress = viewOffset ?: 0L,
         )
+    }
+
+    private fun parseQualityScore(quality: String?): Float = when (quality?.lowercase()) {
+        "4k", "uhd" -> 1.0f
+        "1080p", "fhd" -> 0.9f
+        "720p", "hd" -> 0.7f
+        "480p", "sd" -> 0.5f
+        else -> 0.3f
     }
 }

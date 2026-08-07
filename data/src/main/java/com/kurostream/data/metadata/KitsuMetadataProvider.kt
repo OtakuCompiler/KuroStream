@@ -96,7 +96,6 @@ class KitsuMetadataProvider @Inject constructor(
                     Season.SPRING -> "spring"
                     Season.SUMMER -> "summer"
                     Season.FALL   -> "fall"
-                    Season.UNKNOWN -> ""
                 }
                 val response = if (seasonParam.isNotBlank()) {
                     api.getAnimeByExternalId(text = "", limit = 50)

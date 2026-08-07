@@ -18,6 +18,8 @@ package com.kurostream.data.di
 import com.kurostream.data.BuildConfig
 import retrofit2.converter.gson.GsonConverterFactory
 import com.kurostream.data.remote.api.AniListApi
+import com.kurostream.data.remote.api.AniDbApi
+import com.kurostream.data.remote.api.AnnApi
 import com.kurostream.data.remote.api.KitsuApi
 import com.kurostream.data.remote.api.MalApi
 import com.kurostream.data.remote.api.OpenSubtitlesApi
@@ -54,6 +56,8 @@ object NetworkModule {
     private const val YOUTUBE_BASE_URL = "https://www.googleapis.com/youtube/v3/"
     private const val TVDB_BASE_URL = "https://api.thetvdb.com/"
     private const val IMDB_BASE_URL = "https://imdb-api.com/"
+    private const val ANIDB_BASE_URL = "https://api.anidb.net/"
+    private const val ANN_BASE_URL = "https://cdn.animenewsnetwork.com/"
 
 
     @Provides
@@ -216,5 +220,27 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         return retrofit.create(ImdbApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAniDbApi(client: OkHttpClient): AniDbApi {
+        val retrofit = Retrofit.Builder()
+            .baseUrl(ANIDB_BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        return retrofit.create(AniDbApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnnApi(client: OkHttpClient): AnnApi {
+        val retrofit = Retrofit.Builder()
+            .baseUrl(ANN_BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        return retrofit.create(AnnApi::class.java)
     }
 }

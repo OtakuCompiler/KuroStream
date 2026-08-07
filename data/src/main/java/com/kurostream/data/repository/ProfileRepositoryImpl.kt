@@ -128,7 +128,7 @@ class ProfileRepositoryImpl @Inject constructor(
             id = profile.id,
             name = profile.displayName,
             avatarUrl = profile.avatarUrl,
-            pinHash = existing?.pinHash ?: profile.pinHash,
+            pinHash = existing?.pinHash,
             isActive = profile.isActive,
             isPremium = profile.isPremium,
             preferredLanguage = profile.preferredLanguage,

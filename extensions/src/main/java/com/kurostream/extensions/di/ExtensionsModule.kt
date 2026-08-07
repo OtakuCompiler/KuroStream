@@ -5,6 +5,8 @@ import com.kurostream.domain.extension.*
 import com.kurostream.extensions.aggregator.SmartSourceAggregator
 import com.kurostream.extensions.cloudstream.CloudStreamAdapter
 import com.kurostream.extensions.cloudstream.CloudStreamImporter
+import com.kurostream.extensions.consumet.ConsumetAdapter
+import com.kurostream.extensions.consumet.ConsumetImporter
 import com.kurostream.extensions.debrid.DebridManagerImpl
 import com.kurostream.extensions.health.ExtensionHealthMonitorImpl
 import com.kurostream.extensions.kodi.KodiAdapter
@@ -62,6 +64,14 @@ object ExtensionsProvidesModule {
     @Provides
     @Singleton
     fun provideCloudStreamImporter(adapter: CloudStreamAdapter): CloudStreamImporter = CloudStreamImporter(adapter)
+
+    @Provides
+    @Singleton
+    fun provideConsumetAdapter(client: OkHttpClient): ConsumetAdapter = ConsumetAdapter(client)
+
+    @Provides
+    @Singleton
+    fun provideConsumetImporter(adapter: ConsumetAdapter): ConsumetImporter = ConsumetImporter(adapter)
 
     @Provides
     @Singleton

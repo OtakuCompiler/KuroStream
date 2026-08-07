@@ -1,129 +1,96 @@
 // This file is part of KuroStream.
 //
-// KuroStream is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// Shared base for TMDB watch-provider-backed metadata providers.
+// Netflix, Prime Video, and Disney+ all resolve via TMDB's
+// `discoverTvByProvider` endpoint and map the same TvShow DTO shape.
 //
-// KuroStream is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KuroStream.  If not, see <https://www.gnu.org/licenses/>.
-
+// SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.data.metadata
 
 import com.kurostream.data.remote.api.TmdbApi
 import com.kurostream.data.remote.dto.tmdb.TvShow
 import com.kurostream.domain.metadata.*
 import com.kurostream.domain.repository.CacheRepository
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
-@Singleton
-class TmdbMetadataProvider @Inject constructor(
+abstract class TmdbWatchProviderMetadataProvider(
     private val api: TmdbApi,
     private val cache: CacheRepository,
-    private val settingsDataStore: com.kurostream.data.local.preferences.SettingsDataStore,
+    providerId: String,
+    providerName: String,
+    priority: Int,
+    private val watchProviderId: String,
 ) : MetadataProvider {
 
-    override val providerId = "tmdb"
-    override val providerName = "TMDB"
-    override val priority = 4
+    override val providerId = providerId
+    override val providerName = providerName
+    override val priority = priority
     override val isEnabled = true
 
     private val cacheTtlMs = 24 * 60 * 60 * 1000L
-    private var currentRegion: String = "US"
-
-    init {
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default + kotlinx.coroutines.SupervisorJob()).launch {
-            currentRegion = settingsDataStore.userRegion.first()
-        }
-    }
 
     override suspend fun getAnime(id: String): MetadataResult<AnimeMetadata> {
-        val cacheKey = "tmdb_anime_$id"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch("${providerId}_anime_$id", cacheTtlMs) {
             try {
-                val response = api.getTvDetails(id.toIntOrNull() ?: return@getOrFetch MetadataResult.NotFound, appendToResponse = "external_ids,credits,videos,content_ratings")
+                val tmdbId = id.removePrefix("tmdb_").toIntOrNull() ?: return@getOrFetch MetadataResult.NotFound
+                val response = api.getTvDetails(tmdbId)
                 response.body()?.let { MetadataResult.Success(mapToDomain(it)) } ?: MetadataResult.NotFound
             } catch (e: Exception) {
-                Timber.e(e, "TMDB getAnime failed")
-                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
+                Timber.e(e, "$providerName getAnime failed")
+                MetadataResult.Error(e.message ?: "$providerName error", throwable = e)
             }
         }
     }
 
     override suspend fun searchAnime(query: String, page: Int, limit: Int): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "tmdb_search_${query}_$page"
-        return cache.getOrFetch(cacheKey, 60 * 60 * 1000L) {
+        return cache.getOrFetch("${providerId}_search_${query}_$page", 60 * 60 * 1000L) {
             try {
-                val response = api.searchTv(query, page, language = "en-US", region = currentRegion)
+                val response = api.searchTv(query, page)
                 MetadataResult.Success(response.body()?.results?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
-                Timber.e(e, "TMDB searchAnime failed")
-                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
+                Timber.e(e, "$providerName searchAnime failed")
+                MetadataResult.Error(e.message ?: "$providerName error", throwable = e)
             }
         }
     }
 
     override suspend fun getAnimeByExternalId(type: ExternalIdType, value: String): MetadataResult<AnimeMetadata> {
-        val cacheKey = "tmdb_external_${type.name}_$value"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
-            try {
-                val source = when (type) {
-                    ExternalIdType.IMDB_ID -> "imdb_id"
-                    ExternalIdType.TVDB_ID -> "tvdb_id"
-                    else -> return@getOrFetch MetadataResult.NotFound
-                }
-                val response = api.findByExternalId(value, source)
-                response.body()?.tvResults?.firstOrNull()?.let { MetadataResult.Success(mapToDomain(it)) } ?: MetadataResult.NotFound
-            } catch (e: Exception) {
-                Timber.e(e, "TMDB getAnimeByExternalId failed")
-                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
-            }
-        }
+        return MetadataResult.NotFound
     }
 
     override suspend fun getSeasonalAnime(year: Int, season: Season): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "tmdb_seasonal_${year}_${season.name}"
-        return cache.getOrFetch(cacheKey, cacheTtlMs) {
+        return cache.getOrFetch("${providerId}_seasonal_${year}_${season.name}", cacheTtlMs) {
             try {
-                val response = api.discoverTv(
+                val response = api.discoverTvByProvider(
+                    withWatchProviders = watchProviderId,
+                    watchRegion = "US",
                     page = 1,
-                    withKeywords = "anime",
-                    firstAirDateYear = year,
-                    airDateGte = "${year}-${seasonStartMonth(season)}-01",
-                    airDateLte = "${year}-${seasonEndMonth(season)}-31",
-                    region = currentRegion,
                 )
                 MetadataResult.Success(response.body()?.results?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
-                Timber.e(e, "TMDB getSeasonalAnime failed")
-                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
+                Timber.e(e, "$providerName getSeasonalAnime failed")
+                MetadataResult.Error(e.message ?: "$providerName error", throwable = e)
             }
         }
     }
 
     override suspend fun getTrendingAnime(limit: Int): MetadataResult<List<AnimeMetadata>> {
-        val cacheKey = "tmdb_trending_$limit"
-        return cache.getOrFetch(cacheKey, 6 * 60 * 60 * 1000L) {
+        return cache.getOrFetch("${providerId}_trending_$limit", 6 * 60 * 60 * 1000L) {
             try {
-                val response = api.getTrendingTv(language = "en-US", region = currentRegion)
+                val response = api.discoverTvByProvider(
+                    withWatchProviders = watchProviderId,
+                    watchRegion = "US",
+                    page = 1,
+                )
                 MetadataResult.Success(response.body()?.results?.take(limit)?.map { mapToDomain(it) } ?: emptyList())
             } catch (e: Exception) {
-                Timber.e(e, "TMDB getTrendingAnime failed")
-                MetadataResult.Error(e.message ?: "TMDB error", throwable = e)
+                Timber.e(e, "$providerName getTrendingAnime failed")
+                MetadataResult.Error(e.message ?: "$providerName error", throwable = e)
             }
         }
     }
 
-    private fun mapToDomain(dto: TvShow): AnimeMetadata {
+    protected fun mapToDomain(dto: TvShow): AnimeMetadata {
         val posterPath = dto.posterPath
         val backdropPath = dto.backdropPath
         val coverImage = posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
@@ -137,13 +104,6 @@ class TmdbMetadataProvider @Inject constructor(
                 ids.twitterId?.let { add(ExternalLink("twitter", "https://twitter.com/$it")) }
             }
         } ?: emptyList()
-
-        val stats = AnimeStatistics(
-            scoreDistribution = emptyMap(),
-            statusDistribution = emptyMap(),
-            totalMembers = dto.numberOfEpisodes ?: 0,
-            totalFavorites = dto.voteCount ?: 0,
-        )
 
         return AnimeMetadata(
             id = "tmdb_${dto.id}",
@@ -177,7 +137,7 @@ class TmdbMetadataProvider @Inject constructor(
             staff = emptyList(),
             relations = emptyList(),
             themes = AnimeThemes(),
-            statistics = stats,
+            statistics = null,
             providerId = providerId,
         )
     }
@@ -205,19 +165,5 @@ class TmdbMetadataProvider @Inject constructor(
             7, 8, 9 -> Season.SUMMER
             else -> Season.FALL
         }
-    }
-
-    private fun seasonStartMonth(season: Season): String = when (season) {
-        Season.WINTER -> "01"
-        Season.SPRING -> "04"
-        Season.SUMMER -> "07"
-        Season.FALL -> "10"
-    }
-
-    private fun seasonEndMonth(season: Season): String = when (season) {
-        Season.WINTER -> "03"
-        Season.SPRING -> "06"
-        Season.SUMMER -> "09"
-        Season.FALL -> "12"
     }
 }

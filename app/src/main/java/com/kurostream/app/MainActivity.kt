@@ -36,11 +36,16 @@ import com.kurostream.app.ui.theme.AnimeStreamTVTheme
 import com.kurostream.app.ui.theme.DynamicThemeProvider
 import com.kurostream.app.ui.theme.TvDarkColorScheme
 import com.kurostream.app.ui.theme.toDynamicPalette
+import com.kurostream.data.local.preferences.SettingsDataStore
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 @OptIn(ExperimentalTvMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var settingsDataStore: SettingsDataStore
 
     private var deepLinkMediaId: String? = null
     private var deepLinkEpisodeId: String? = null
@@ -61,12 +66,23 @@ class MainActivity : ComponentActivity() {
         setContent {
             var showSplash by remember { mutableStateOf(true) }
             val defaultPalette = remember { TvDarkColorScheme.toDynamicPalette() }
+            var onboardingCompleted by remember { mutableStateOf<Boolean?>(null) }
+
+            LaunchedEffect(Unit) {
+                onboardingCompleted = settingsDataStore.onboardingCompleted.first()
+            }
 
             AnimeStreamTVTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (showSplash) {
                         SplashScreen(
                             onTimeout = { showSplash = false },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else if (onboardingCompleted == false) {
+                        val navController = rememberNavController()
+                        TvNavHost(
+                            navController = navController,
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {

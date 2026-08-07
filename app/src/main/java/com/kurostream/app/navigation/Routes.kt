@@ -59,3 +59,6 @@ object TorrentsRoute
 
 @Serializable
 object MarketplaceRoute
+
+@Serializable
+object OnboardingRoute

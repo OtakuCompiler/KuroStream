@@ -64,6 +64,7 @@ enum class ExtensionSourceFormat {
     KUROSTREAM_NATIVE,
     JELLYFIN_SERVER,
     PLEX_SERVER,
+    CONSUMET_ADDON,
 }
 
 @Serializable

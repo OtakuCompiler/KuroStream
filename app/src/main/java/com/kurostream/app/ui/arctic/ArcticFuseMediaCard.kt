@@ -95,8 +95,19 @@ fun ArcticFuseMediaCard(
     )
     val scale by animateFloatAsState(
         targetValue = if (isFocused) 1.05f else 1f,
-        animationSpec = tween(durationMillis = 150),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
         label = "afCardScale",
+    )
+    val elevation by animateDpAsState(
+        targetValue = if (isFocused) 16.dp else 0.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "afCardElevation",
     )
 
     Box(
@@ -105,7 +116,7 @@ fun ArcticFuseMediaCard(
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
-                shadowElevation = if (isFocused) 8f else 0f
+                shadowElevation = elevation.toPx()
             }
             .drawBehind {
                 // Outer glow ring — spec §6.2/11.2: 0 0 0 4px rgba(accent, 0.3)
