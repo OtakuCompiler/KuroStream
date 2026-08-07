@@ -11,8 +11,11 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="com.google.firebase.messaging.RECEIVE" />
     
-    <!-- TV requirements -->
-    <uses-feature android:name="android.software.leanback" android:required="true" />
+    <!-- Cross-device launcher support:
+         leanback is OPTIONAL so the app still shows on phones & tablets.
+         Touchscreen is OPTIONAL so it works on TVs without touch.
+         Microphone is OPTIONAL but ENABLED so voice search works where present. -->
+    <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" tools:overrideLibrary="androidx.tvprovider,dev.jdtech.mpv" />
@@ -22,6 +25,10 @@
 
     <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA" />
     <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
+
+    <!-- Voice search / Fire TV / Alexa integration -->
+    <uses-permission android:name="com.amazon.permission.voice" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <application
         android:name=".AnimeStreamTvApplication"
@@ -61,14 +68,15 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.AnimeStreamTV.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -76,6 +84,25 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kurostream" />
             </intent-filter>
+
+            <!-- Global Android TV / Fire TV / mobile voice search target.
+                 "android.intent.action.SEARCH" is routed here from system search bars
+                 (Android TV launcher mic button, Fire TV Alexa button, Gboard mic, etc.).
+                 The query is delivered via SearchManager.QUERY extra. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- Amazon Fire TV hands-free Alexa query delivery -->
+            <intent-filter>
+                <action android:name="com.amazon.action.voice" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
         </activity>
 
         <activity
@@ -91,7 +118,22 @@
         <activity
             android:name="com.kurostream.app.voice.VoiceSearchActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@android:style/Theme.NoDisplay">
+            <!-- Direct voice-launch entry point (long-press mic on Android TV remote,
+                 or fire TV voice button). Receives RecognizerIntent.EXTRA_RESULTS. -->
+            <intent-filter>
+                <action android:name="android.speech.RecognitionService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VOICE_COMMAND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.amazon.action.voice" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
             <meta-data
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />

@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android TV banner shown on the leanback launcher.
+  Required size: 320x180 (or 1280x720 for xhdpi). Adaptive rendering handles scaling.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/tv_background" />
-    <item>
-        <bitmap android:src="@mipmap/ic_launcher_foreground" android:gravity="center" />
+    <item android:gravity="center">
+        <bitmap android:src="@drawable/ic_launcher_foreground" />
     </item>
 </layer-list>

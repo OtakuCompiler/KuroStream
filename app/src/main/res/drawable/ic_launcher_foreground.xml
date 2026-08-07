@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  KuroStream launcher foreground — adaptive icon.
+  108x108dp canvas; the central 72x72dp is the safe zone for masks.
+  The "K" is the brand mark for KuroStream.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Subtle cyan glow disc behind the mark -->
+    <path
+        android:fillColor="#2210E5FF"
+        android:pathData="M54,18 m -32,0 a 32,32 0 1,0 64,0 a 32,32 0 1,0 -64,0" />
+
+    <!-- Left vertical stroke of the K -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M34,30 h10 v18 l16,-18 h13 l-19,21 21,27 h-14 l-17,-22 v22 h-10 z" />
+
+    <!-- Cyan accent dot — represents streaming/play -->
+    <path
+        android:fillColor="#FFE94560"
+        android:pathData="M76,30 m -6,0 a 6,6 0 1,0 12,0 a 6,6 0 1,0 -12,0" />
+</vector>

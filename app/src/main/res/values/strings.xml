@@ -126,4 +126,13 @@
     <string name="no_internet">No internet connection</string>
     <string name="tap_to_retry">Tap to retry</string>
     <string name="perm_run_extension_desc">Allows KuroStream extensions to run in an isolated sandbox for enhanced security.</string>
+
+    <!-- Voice search & TV launcher integration -->
+    <string name="search_description">Search KuroStream for anime, movies, and TV shows</string>
+    <string name="search_voice_prompt">Try saying \"Search for attack on titan\"</string>
+    <string name="search_launcher_label">Search KuroStream</string>
+    <string name="channel_recommendations">Recommended for you</string>
+    <string name="channel_continue_watching">Continue Watching</string>
+    <string name="channel_new_releases">New Releases</string>
+    <string name="action_play_next">Play Next Episode</string>
 </resources>
