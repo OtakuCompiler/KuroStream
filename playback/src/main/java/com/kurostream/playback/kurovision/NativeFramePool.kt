@@ -67,7 +67,7 @@ class NativeFramePool @Inject constructor(
         val textureId: Int,
         val width: Int,
         val height: Int,
-        val buffer: ByteBuffer,
+        val buffer: ByteBuffer?,
     ) {
         fun destroy() {
             try {
