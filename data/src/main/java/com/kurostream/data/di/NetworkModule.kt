@@ -62,15 +62,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideJson(): Json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        coerceInputValues = true
-        encodeDefaults = true
-    }
-
-    @Provides
-    @Singleton
     fun provideCacheDir(context: android.content.Context): File {
         return File(context.cacheDir, "http_cache").apply { mkdirs() }
     }
