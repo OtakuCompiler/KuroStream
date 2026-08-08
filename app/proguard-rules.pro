@@ -1,4 +1,6 @@
 # KuroStream ProGuard Rules - GPL-3.0
+-ignorewarnings
+
 # Keep Serializable classes for kotlinx.serialization
 -keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature, Exceptions
 -keepclassmembers class * {
@@ -92,7 +94,7 @@
 # Keep Notification channels
 -keep class com.kurostream.app.notification.NotificationChannels { *; }
 
-# Keep Deep link routes
+# Keep Deep link route
 -keep class com.kurostream.app.deeplink.DeepLinkHandler { *; }
 
 # Keep Crash reporter
@@ -103,7 +105,6 @@
 -keep class com.google.android.gms.common.ConnectionResult { *; }
 
 # Firebase
--keep class com.google.firebase.** { *; }
 -keep class com.google.android.gms.** { *; }
 
 # SQLCipher
@@ -122,6 +123,17 @@
 -keepclasseswithmembernames class * { native <methods>; }
 -keep class * { static { System.loadLibrary(*); } }
 
+# Java SE classes missing on Android
+-dontwarn java.beans.**
+-dontwarn java.lang.**$Lambda**
+-dontwarn javax.xml.bind.**
+-dontwarn org.xmlpull.**
+
+# Crypto/TLS providers missing on Android
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
+
 # Remove all debug logging in release
 -assumenosideeffects class timber.log.Timber {
     public static *** d(...);
@@ -133,12 +145,3 @@
     public static *** v(...);
     public static *** i(...);
 }
-
-# Suppress R8 warnings for optional/unused classes
--dontwarn java.beans.ConstructorProperties
--dontwarn java.beans.Transient
--dontwarn org.tensorflow.lite.gpu.**
--dontwarn javax.annotation.**
--dontwarn org.conscrypt.**
--dontwarn org.bouncycastle.**
--dontwarn org.openjsse.**
