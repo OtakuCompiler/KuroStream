@@ -14,9 +14,6 @@ import android.opengl.EGLDisplay
 import android.opengl.GLES20
 import android.util.Log
 import com.kurostream.players.render.EnhancedUpscaleEngine
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 

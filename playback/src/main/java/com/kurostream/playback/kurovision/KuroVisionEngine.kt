@@ -20,14 +20,10 @@ package com.kurostream.playback.kurovision
 import android.content.Context
 import android.opengl.EGL14
 import android.opengl.EGLContext
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import androidx.annotation.Keep
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -42,7 +38,6 @@ class KuroVisionEngine @Inject constructor(
     private val settings: KuroVisionSettings,
     private val inspector: AndroidDeviceInspector,
 ) {
-    private val mainHandler = Handler(Looper.getMainLooper())
     private val engineScope = CoroutineScope(Dispatchers.Default + Job())
 
     @Volatile private var profile: KuroVisionDeviceProfile? = null
@@ -138,6 +133,6 @@ class KuroVisionEngine @Inject constructor(
     }
 
 companion object {
-    private const val TAG = "KuroVisionEngine"
-  }
+        private const val TAG = "KuroVisionEngine"
+    }
 }

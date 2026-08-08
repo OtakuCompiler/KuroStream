@@ -8,51 +8,45 @@
  *
  * Each platform produces a profile via `PlatformProfiles`; this tuner
  * is the only Android-specific glue between the shared domain and the
- * device hardware. Keeping it thin means the same logic ships to webOS
- * and Tizen (where the implementation will use a similar thin adapter
- * against their respective player APIs).
+ * device hardware.
  */
 package com.kurostream.playback.kurovision
 
 import com.kurostream.domain.platform.AtmosTranscodeStrategy
-import com.kurostream.domain.platform.KuroVisionQualityMode
+import com.kurostream.domain.platform.PlatformKind
 import com.kurostream.domain.platform.PlatformProfile
-import com.kurostream.domain.platform.UpscaleAlgorithm
+import kotlinx.coroutines.runBlocking
 
 object PlatformTuner {
 
-    /**
-     * Translate the shared profile into KuroVision engine settings.
-     */
     fun tuneKuroVision(profile: PlatformProfile, settings: KuroVisionSettings) {
-        settings.setQualityMode(translateQualityMode(profile.defaultQualityMode))
-        settings.setUpscaleAlgorithm(translateUpscale(profile.defaultUpscaleAlgorithm))
-        settings.setFrameInterpolation(profile.kind in setOf(
-            com.kurostream.domain.platform.PlatformKind.ANDROID_TV,
-            com.kurostream.domain.platform.PlatformKind.FIRE_TV,
-            com.kurostream.domain.platform.PlatformKind.LINUX_DESKTOP,
-            com.kurostream.domain.platform.PlatformKind.WINDOWS_DESKTOP,
-            com.kurostream.domain.platform.PlatformKind.MACOS_DESKTOP,
-        ))
-        settings.setDolbyPassthrough(profile.supportsDolbyAtmosPassthrough)
+        runBlocking {
+            settings.setQualityMode(mapQualityMode(profile.defaultQualityMode))
+            settings.setUpscaleAlgorithm(mapUpscaleAlgorithm(profile.defaultUpscaleAlgorithm))
+            settings.setFrameInterpolation(profile.kind in setOf(
+                PlatformKind.ANDROID_TV,
+                PlatformKind.FIRE_TV,
+                PlatformKind.LINUX_DESKTOP,
+                PlatformKind.WINDOWS_DESKTOP,
+                PlatformKind.MACOS_DESKTOP,
+            ))
+            settings.setDolbyPassthrough(profile.supportsDolbyAtmosPassthrough)
+        }
     }
 
-    /**
-     * Buffer sizes for ExoPlayer. Aggressive caps on TV, generous on desktop.
-     */
     fun exoBufferSettings(profile: PlatformProfile): ExoBufferSettings {
         val minBufferMs = profile.initialBufferSeconds * 1000
         val maxBufferMs = when (profile.kind) {
-            com.kurostream.domain.platform.PlatformKind.WEBOS_TV,
-            com.kurostream.domain.platform.PlatformKind.TIZEN_TV -> minBufferMs * 3
-            com.kurostream.domain.platform.PlatformKind.ANDROID_PHONE,
-            com.kurostream.domain.platform.PlatformKind.ANDROID_TABLET -> minBufferMs * 5
+            PlatformKind.WEBOS_TV,
+            PlatformKind.TIZEN_TV -> minBufferMs * 3
+            PlatformKind.ANDROID_PHONE,
+            PlatformKind.ANDROID_TABLET -> minBufferMs * 5
             else -> minBufferMs * 8
         }
         val bufferForPlaybackMs = minBufferMs
         val bufferForPlaybackAfterRebufferMs = when (profile.kind) {
-            com.kurostream.domain.platform.PlatformKind.WEBOS_TV,
-            com.kurostream.domain.platform.PlatformKind.TIZEN_TV -> minBufferMs
+            PlatformKind.WEBOS_TV,
+            PlatformKind.TIZEN_TV -> minBufferMs
             else -> minBufferMs * 2
         }
         return ExoBufferSettings(
@@ -63,9 +57,6 @@ object PlatformTuner {
         )
     }
 
-    /**
-     * Pick the audio track strategy from the profile.
-     */
     fun audioStrategy(profile: PlatformProfile): AudioStrategy {
         return when (profile.dolbyAtmosTranscode) {
             AtmosTranscodeStrategy.PASSTHROUGH -> AudioStrategy.PASSTHROUGH
@@ -75,25 +66,25 @@ object PlatformTuner {
         }
     }
 
-    private fun translateQualityMode(m: KuroVisionQualityMode): KuroVisionQualityModeDto {
+    private fun mapQualityMode(m: com.kurostream.domain.platform.KuroVisionQualityMode): KuroVisionQualityMode {
         return when (m) {
-            KuroVisionQualityMode.HARDWARE_PASSTHROUGH -> KuroVisionQualityModeDto.HARDWARE
-            KuroVisionQualityMode.SD_TO_HD -> KuroVisionQualityModeDto.CINEMA
-            KuroVisionQualityMode.HD_TO_4K -> KuroVisionQualityModeDto.HDR_ULTRA
-            KuroVisionQualityMode.ANIME_4K -> KuroVisionQualityModeDto.ANIME_PRO
-            KuroVisionQualityMode.AI_NEURAL -> KuroVisionQualityModeDto.ULTRA_DESKTOP
-            KuroVisionQualityMode.DESKTOP_FULL -> KuroVisionQualityModeDto.ULTRA_DESKTOP
+            com.kurostream.domain.platform.KuroVisionQualityMode.HARDWARE_PASSTHROUGH -> KuroVisionQualityMode.HARDWARE
+            com.kurostream.domain.platform.KuroVisionQualityMode.SD_TO_HD -> KuroVisionQualityMode.CINEMA
+            com.kurostream.domain.platform.KuroVisionQualityMode.HD_TO_4K -> KuroVisionQualityMode.HDR_ULTRA
+            com.kurostream.domain.platform.KuroVisionQualityMode.ANIME_4K -> KuroVisionQualityMode.ANIME_4K
+            com.kurostream.domain.platform.KuroVisionQualityMode.AI_NEURAL -> KuroVisionQualityMode.ULTRA_DESKTOP
+            com.kurostream.domain.platform.KuroVisionQualityMode.DESKTOP_FULL -> KuroVisionQualityMode.ULTRA_DESKTOP
         }
     }
 
-    private fun translateUpscale(a: UpscaleAlgorithm): UpscaleAlgorithmDto {
+    private fun mapUpscaleAlgorithm(a: com.kurostream.domain.platform.UpscaleAlgorithm): UpscaleAlgorithm {
         return when (a) {
-            UpscaleAlgorithm.NEAREST -> UpscaleAlgorithmDto.BILINEAR
-            UpscaleAlgorithm.BILINEAR -> UpscaleAlgorithmDto.BILINEAR
-            UpscaleAlgorithm.BICUBIC -> UpscaleAlgorithmDto.BICUBIC
-            UpscaleAlgorithm.LANCZOS3 -> UpscaleAlgorithmDto.LANCZOS3
-            UpscaleAlgorithm.WAIFU2X -> UpscaleAlgorithmDto.WAIFU2X
-            UpscaleAlgorithm.AI_REAL_ESRGAN -> UpscaleAlgorithmDto.ULTRA
+            com.kurostream.domain.platform.UpscaleAlgorithm.NEAREST -> UpscaleAlgorithm.BILINEAR
+            com.kurostream.domain.platform.UpscaleAlgorithm.BILINEAR -> UpscaleAlgorithm.BILINEAR
+            com.kurostream.domain.platform.UpscaleAlgorithm.BICUBIC -> UpscaleAlgorithm.BICUBIC
+            com.kurostream.domain.platform.UpscaleAlgorithm.LANCZOS3 -> UpscaleAlgorithm.LANCZOS3
+            com.kurostream.domain.platform.UpscaleAlgorithm.WAIFU2X -> UpscaleAlgorithm.WAIFU2X
+            com.kurostream.domain.platform.UpscaleAlgorithm.AI_REAL_ESRGAN -> UpscaleAlgorithm.ULTRA
         }
     }
 }
