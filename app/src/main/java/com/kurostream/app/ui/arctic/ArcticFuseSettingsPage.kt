@@ -110,8 +110,8 @@ private fun KuroSettings.toArcticSettingsState(): ArcticSettingsState {
     fun AppTheme.toThemeMode(): ThemeMode = when (this) {
         AppTheme.LIGHT -> ThemeMode.LIGHT
         AppTheme.DARK  -> ThemeMode.DARK
-        AppTheme.OLED  -> ThemeMode.OLED
-        AppTheme.SYSTEM -> ThemeMode.SYSTEM
+        AppTheme.OLED  -> ThemeMode.AMOLED_BLACK
+        AppTheme.SYSTEM -> ThemeMode.AUTO
     }
     return ArcticSettingsState(
         theme            = themeMode.toThemeMode(),
