@@ -43,6 +43,7 @@
 
 # Keep ML models
 -keep class org.tensorflow.** { *; }
+-dontwarn org.tensorflow.lite.gpu.**
 -keep class com.microsoft.onnxruntime.** { *; }
 
 # Keep Playback engines
