@@ -58,12 +58,14 @@ class MetadataFusionEngine @Inject constructor(
 
         coroutineScope {
             val deferreds = listOf(
-                async { withTimeout(PROVIDER_TIMEOUT_MS) { tmdbProvider.searchAnime(mediaId, 1, 10) } },
-                async { withTimeout(PROVIDER_TIMEOUT_MS) { anilistProvider.searchAnime(mediaId, 1, 10) } },
-                async { withTimeout(PROVIDER_TIMEOUT_MS) { malProvider.searchAnime(mediaId, 1, 10) } },
-                async { withTimeout(PROVIDER_TIMEOUT_MS) { kitsuProvider.searchAnime(mediaId, 1, 10) } },
+                async { tmdbProvider.searchAnime(mediaId, 1, 10) },
+                async { anilistProvider.searchAnime(mediaId, 1, 10) },
+                async { malProvider.searchAnime(mediaId, 1, 10) },
+                async { kitsuProvider.searchAnime(mediaId, 1, 10) },
             )
-            val results = deferreds.awaitAll().flatMap { it.successfulData() }
+            val results = deferreds.awaitAll()
+                .mapNotNull { withTimeoutOrNull(PROVIDER_TIMEOUT_MS) { it } }
+                .flatMap { it.successfulData() }
 
             if (results.isEmpty()) return@coroutineScope null
 
@@ -86,11 +88,13 @@ class MetadataFusionEngine @Inject constructor(
 
         coroutineScope {
             val deferreds = listOf(
-                async { withTimeout(PROVIDER_TIMEOUT_MS) { anilistProvider.searchAnime(mediaId, 1, 10) } },
-                async { withTimeout(PROVIDER_TIMEOUT_MS) { malProvider.searchAnime(mediaId, 1, 10) } },
-                async { withTimeout(PROVIDER_TIMEOUT_MS) { kitsuProvider.searchAnime(mediaId, 1, 10) } },
+                async { anilistProvider.searchAnime(mediaId, 1, 10) },
+                async { malProvider.searchAnime(mediaId, 1, 10) },
+                async { kitsuProvider.searchAnime(mediaId, 1, 10) },
             )
-            val results = deferreds.awaitAll().flatMap { it.successfulData() }
+            val results = deferreds.awaitAll()
+                .mapNotNull { withTimeoutOrNull(PROVIDER_TIMEOUT_MS) { it } }
+                .flatMap { it.successfulData() }
             val base = results.firstOrNull() ?: return@coroutineScope null
             val merged = base.copy(
                 score = results.mapNotNull { it.score }.maxOrNull() ?: base.score,
@@ -122,9 +126,6 @@ class MetadataFusionEngine @Inject constructor(
         cache.put(key, CachedMetadata(item))
         cacheTimestamps[key] = System.currentTimeMillis()
     }
-
-    private suspend fun <T> withTimeout(ms: Long, block: suspend () -> T): T? =
-        withTimeoutOrNull(ms) { block() }
 
     private fun MetadataResult<List<AnimeMetadata>>.successfulData(): List<AnimeMetadata> = when (this) {
         is MetadataResult.Success -> data
