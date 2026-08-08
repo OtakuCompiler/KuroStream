@@ -15,14 +15,13 @@ package com.kurostream.app.ui.arctic
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -76,10 +75,16 @@ fun ArcticFuseMediaCard(
     onClick: () -> Unit = {},
     onFocus: (() -> Unit)? = null,
     onLongPress: (() -> Unit)? = null,
-    textColor: Color = Color.White,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    var glowAlpha by remember { mutableStateOf(0f) }
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (isFocused) 0.35f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "glowAlpha",
+    )
     val focusRequester = remember { FocusRequester() }
 
     val cardWidth: Dp = when (view) {
@@ -213,9 +218,9 @@ fun ArcticFuseMediaCard(
             }
             // Resolution stack
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                if (item.has4k) Badge("4K", AFBadges.uhd, textColor)
-                if (item.hasDolbyVision) Badge("DV", AFBadges.dolbyVision, textColor)
-                if (item.hasHdr) Badge("HDR", AFBadges.hdr10, textColor)
+                if (item.has4k) Badge("4K", AFBadges.uhd)
+                if (item.hasDolbyVision) Badge("DV", AFBadges.dolbyVision)
+                if (item.hasHdr) Badge("HDR", AFBadges.hdr10)
             }
         }
 

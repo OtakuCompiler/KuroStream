@@ -21,7 +21,6 @@ import com.kurostream.data.remote.dto.mal.SeasonalResponse
 import com.kurostream.data.remote.dto.mal.TopAnimeResponse
 import retrofit2.Response
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -29,8 +28,6 @@ interface MalApi {
     @GET("anime/{id}")
     suspend fun getAnimeDetails(
         @Path("id") id: String,
-        @Header("X-MAL-CLIENT-ID") clientId: String = "",
-        @Header("Authorization") authorization: String = "",
         @Query("fields") fields: String = "id,title,main_picture,alternative_titles,start_date,end_date,synopsis,mean,rank,popularity,num_list_users,num_scoring_users,nsfw,created_at,updated_at,media_type,status,genres,num_episodes,start_season,broadcast,source,average_episode_duration,rating,pictures,background,related_anime,related_manga,recommendations,studios,statistics",
     ): Response<Anime>
 

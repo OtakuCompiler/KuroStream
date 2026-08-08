@@ -108,6 +108,7 @@ object NetworkModule {
             .connectionPool(connectionPool)
             .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
             .addInterceptor(authInterceptor)
+            .addInterceptor(com.kurostream.data.network.RetryInterceptor())
             .addInterceptor(loggingInterceptor)
             .addNetworkInterceptor { chain ->
                 val request = chain.request()

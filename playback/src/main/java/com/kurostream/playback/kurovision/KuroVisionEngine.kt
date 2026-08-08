@@ -66,7 +66,7 @@ class KuroVisionEngine @Inject constructor(
             Log.i(TAG, "KuroVision init: device=${profile!!.modelLabel} class=${profile!!.deviceClass} mode=$activeMode")
         }
         try {
-            renderer = OpenGLRenderer(currentProfile)
+            renderer = OpenGLRenderer(currentProfile, settings)
             val eglOk = renderer!!.initialize()
             if (!eglOk) {
                 Log.w(TAG, "KuroVision: OpenGL init failed, falling back to passthrough")

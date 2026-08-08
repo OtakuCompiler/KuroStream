@@ -14,8 +14,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.app.ui.arctic
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -101,23 +104,36 @@ fun ArcticFuseHeroSpotlight(
 
     val item = items[active]
     Box(modifier = modifier.fillMaxWidth().height(AFHero.height)) {
-        // Backdrop
-        if (item.backdropUrl.isNotBlank()) {
-            AsyncImage(
-                model = item.backdropUrl,
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else if (item.posterUrl.isNotBlank()) {
-            AsyncImage(
-                model = item.posterUrl,
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            Box(modifier = Modifier.fillMaxSize().background(AFSurface))
+        // Backdrop with crossfade transition and subtle parallax scale
+        val heroScale by animateFloatAsState(
+            targetValue = 1.02f,
+            animationSpec = tween(durationMillis = SLIDE_INTERVAL_MS.toInt(), easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            label = "heroScale",
+        )
+        Crossfade(
+            targetState = item,
+            animationSpec = tween(durationMillis = 1200),
+            label = "heroCrossfade",
+        ) { currentItem ->
+            Box(modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = heroScale; scaleY = heroScale }) {
+                if (currentItem.backdropUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = currentItem.backdropUrl,
+                        contentDescription = currentItem.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else if (currentItem.posterUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = currentItem.posterUrl,
+                        contentDescription = currentItem.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxSize().background(AFSurface))
+                }
+            }
         }
 
         // Bottom 3/5 gradient fade
