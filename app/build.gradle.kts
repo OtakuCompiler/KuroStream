@@ -39,10 +39,13 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("UPLOAD_KEYSTORE_PATH") ?: "upload-keystore.jks")
-            storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("UPLOAD_KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("UPLOAD_KEY_PASSWORD") ?: ""
+            val ksFile = file(System.getenv("UPLOAD_KEYSTORE_PATH") ?: "upload-keystore.jks")
+            if (ksFile.exists()) {
+                storeFile = ksFile
+                storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("UPLOAD_KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("UPLOAD_KEY_PASSWORD") ?: ""
+            }
         }
     }
 
@@ -54,7 +57,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            val ksFile = file(System.getenv("UPLOAD_KEYSTORE_PATH") ?: "upload-keystore.jks")
+            signingConfig = if (ksFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             isCrunchPngs = true
             postprocessing {
                 isRemoveUnusedCode = true
