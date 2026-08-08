@@ -253,6 +253,7 @@ class AddonsViewModel @Inject constructor(
             iconUrl = "https://www.stremio.com/website/stremio-logo-small.png",
             author = "Stremio",
             category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+            isInstalled = false,
         ),
         AddonItem(
             id = "tmdb_popular",
@@ -261,6 +262,7 @@ class AddonsViewModel @Inject constructor(
             iconUrl = "",
             author = "Community",
             category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+            isInstalled = false,
         ),
         AddonItem(
             id = "anilist",
@@ -269,6 +271,7 @@ class AddonsViewModel @Inject constructor(
             iconUrl = "",
             author = "AniList",
             category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+            isInstalled = false,
         ),
         AddonItem(
             id = "torrentio",
@@ -277,6 +280,7 @@ class AddonsViewModel @Inject constructor(
             iconUrl = "",
             author = "Community",
             category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+            isInstalled = false,
         ),
         AddonItem(
             id = "opensubtitles",
@@ -285,6 +289,7 @@ class AddonsViewModel @Inject constructor(
             iconUrl = "",
             author = "OpenSubtitles",
             category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+            isInstalled = false,
         ),
     )
 }
