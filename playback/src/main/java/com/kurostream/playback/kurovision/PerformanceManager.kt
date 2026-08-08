@@ -8,7 +8,6 @@ package com.kurostream.playback.kurovision
 
 import android.os.Process
 import android.os.SystemClock
-import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

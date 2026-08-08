@@ -12,17 +12,13 @@ import android.opengl.EGLConfig
 import android.opengl.EGLContext
 import android.opengl.EGLDisplay
 import android.opengl.GLES20
-import android.util.Log
 import com.kurostream.players.render.EnhancedUpscaleEngine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class OpenGLRenderer @Inject constructor(
     private val profile: KuroVisionDeviceProfile,
-    private val settings: KuroVisionSettings,
 ) : VideoRenderer {
 
     private var eglDisplay: EGLDisplay = EGL14.EGL_NO_DISPLAY
@@ -30,6 +26,7 @@ class OpenGLRenderer @Inject constructor(
     private var upscaler: EnhancedUpscaleEngine? = null
     private var fboTexture = 0
     private var fboId = 0
+    private var passthroughProgram = 0
     @Volatile private var isInit = false
 
     companion object {
@@ -96,39 +93,24 @@ class OpenGLRenderer @Inject constructor(
         }
     }
 
-    override fun process(
-        inputTexture: Int,
-        width: Int,
-        height: Int,
-        mode: KuroVisionQualityMode,
-    ): KuroVisionEngine.ProcessedFrame {
-        if (!isInit || upscaler == null) {
-            return KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
-        }
-        return try {
-            upscaler!!.setMode(mode, profile.recommendedUpscaleAlgorithm)
-            runBlocking {
-                val colorProf = settings.colorProfile.first()
-                val hdrInt = settings.fakeHdrIntensity.first()
-                val oledInt = settings.oledBlackIntensity.first()
-                val sat = settings.saturation.first()
-                upscaler!!.configure(
-                    fakeHdr = mode.features.fakeHdr,
-                    hdrIntensity = hdrInt,
-                    oled = mode.features.oledBlack,
-                    oledInt = oledInt,
-                    profile = colorProf,
-                    satBoost = (sat - 1.0f).coerceIn(0f, 1f),
-                    sharp = settings.sharpening.first(),
-                )
-            }
-            upscaler!!.render(inputTexture, width, height, width, height)
-            KuroVisionEngine.ProcessedFrame(inputTexture, width, height, false)
-        } catch (t: Throwable) {
-            Log.w(TAG, "process failed: ${t.message}")
-            KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
-        }
+override fun process(
+    inputTexture: Int,
+    width: Int,
+    height: Int,
+    mode: KuroVisionQualityMode,
+  ): KuroVisionEngine.ProcessedFrame {
+    if (!isInit || upscaler == null) {
+      return KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
     }
+return try {
+    upscaler!!.setMode(mode, profile.recommendedUpscaleAlgorithm)
+    upscaler!!.render(inputTexture, width, height, width, height)
+    KuroVisionEngine.ProcessedFrame(inputTexture, width, height, false)
+  } catch (t: Throwable) {
+      Log.w(TAG, "process failed: ${t.message}")
+      KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
+    }
+  }
 
     override fun release() {
         try {
@@ -153,10 +135,8 @@ class OpenGLRenderer @Inject constructor(
     override val eglContext: EGLContext?
         get() = eglContextHandle
 
-    override val isInitialized: Boolean
-        get() = isInit
-
-    private var passthroughProgram = 0
+ override val isInitialized: Boolean
+    get() = isInit
 
     private fun createPassthroughProgram() {
         val vs = """

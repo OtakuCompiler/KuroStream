@@ -73,8 +73,9 @@ export const sendFCMNotification = functions.https.onCall(async (data, context) 
     const response = await admin.messaging().send(message);
     return { success: true, messageId: response };
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
     console.error("FCM send error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: msg };
   }
 });
 
@@ -151,7 +152,7 @@ export const verifyAppCheck = functions.https.onCall(async (data, context) => {
 
   try {
     const decodedToken = await admin.appCheck().verifyToken(appCheckToken);
-    return { valid: true, subject: decodedToken.subject };
+    return { valid: true, appId: decodedToken.appId, token: decodedToken.token };
   } catch (error) {
     console.error("App Check verification failed:", error);
     throw new functions.https.HttpsError("invalid-argument", "Invalid App Check token");

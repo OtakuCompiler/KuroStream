@@ -54,10 +54,9 @@ class TorrServerRepository @Inject constructor(
 
     suspend fun addTorrent(magnetLink: String, title: String? = null): Result<TorrServerTorrent> = try {
         val response = api.addTorrent(AddTorrentRequest(link = magnetLink, title = title))
-        if (response.isSuccessful && response.body() != null) {
-            Result.success(response.body()!!)
-        } else {
-            Result.failure(Exception("Failed to add torrent: ${response.code()}"))
+        if (response.isSuccessful) {
+            response.body()?.let { Result.success(it) } ?: Result.failure(Exception("Empty body"))
+        } else Result.failure(Exception("Failed to add torrent: ${response.code()}"))
         }
     } catch (e: Exception) {
         Result.failure(e)
@@ -66,8 +65,8 @@ class TorrServerRepository @Inject constructor(
     suspend fun addTorrentFile(fileData: ByteArray, title: String? = null): Result<TorrServerTorrent> = try {
         val base64Link = "data:application/x-bittorrent;base64," + android.util.Base64.encodeToString(fileData, android.util.Base64.NO_WRAP)
         val response = api.addTorrent(AddTorrentRequest(link = base64Link, title = title))
-        if (response.isSuccessful && response.body() != null) {
-            Result.success(response.body()!!)
+        if (response.isSuccessful) {
+            response.body()?.let { Result.success(it) } ?: Result.failure(Exception("Empty body"))
         } else {
             Result.failure(Exception("Failed to add torrent file: ${response.code()}"))
         }
@@ -99,8 +98,8 @@ class TorrServerRepository @Inject constructor(
 
     suspend fun getTorrentStat(hash: String): Result<TorrentStat> = try {
         val response = api.getTorrentStat(hash)
-        if (response.isSuccessful && response.body() != null) {
-            Result.success(response.body()!!)
+        if (response.isSuccessful) {
+            response.body()?.let { Result.success(it) } ?: Result.failure(Exception("Empty body"))
         } else {
             Result.failure(Exception("Failed to get stat: ${response.code()}"))
         }

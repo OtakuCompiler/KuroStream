@@ -1,7 +1,6 @@
 package com.kurostream.players.selector
 
 import android.content.Context
-import android.util.Log
 import com.kurostream.players.media3.Media3Player
 import com.kurostream.players.mpv.MpvPlayer
 import com.kurostream.players.vlc.VlcPlayer

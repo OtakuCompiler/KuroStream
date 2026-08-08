@@ -2,8 +2,6 @@
 package com.kurostream.players.render
 
 import android.opengl.GLES20
-import android.util.Log
-import com.kurostream.playback.kurovision.ColorProfile
 import com.kurostream.playback.kurovision.KuroVisionDeviceProfile
 import com.kurostream.playback.kurovision.KuroVisionQualityMode
 import com.kurostream.playback.kurovision.UpscaleAlgorithm
@@ -123,44 +121,28 @@ class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
 
         /** Color profile matrix applied after HDR/OLED processing. */
         private val FUNC_COLOR_PROFILE = """
-            // profile: 0=Natural, 1=Vivid, 2=Warm, 3=Cool, 4=Cinema, 5=Anime, 6=HDR_Vision
+            // profile: 0=Natural, 1=Cinema(teal-orange), 2=Vivid, 3=Cool, 4=Warm
             vec3 applyColorProfile(vec3 c, int profile) {
                 if (profile == 0) return c; // Natural — passthrough
                 float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
                 if (profile == 1) {
-                    // Vivid: increase saturation uniformly
-                    vec3 grey = vec3(lum);
-                    return clamp(mix(grey, c, 1.30), 0.0, 1.0);
+                    // Cinema: teal shadows, orange highlights (Lut-style grade)
+                    vec3 shadows = vec3(0.0, 0.04, 0.06) * (1.0 - lum);
+                    vec3 highs   = vec3(0.05, 0.02, -0.02) * lum;
+                    return clamp(c + shadows + highs, 0.0, 1.0);
                 }
                 if (profile == 2) {
-                    // Warm: shift toward amber
-                    return clamp(c + vec3(0.04, 0.01, -0.03), 0.0, 1.0);
+                    // Vivid: increase saturation uniformly
+                    vec3 grey = vec3(lum);
+                    return clamp(mix(grey, c, 1.25), 0.0, 1.0);
                 }
                 if (profile == 3) {
                     // Cool: shift white balance toward blue
                     return clamp(c + vec3(-0.02, -0.01, 0.04), 0.0, 1.0);
                 }
                 if (profile == 4) {
-                    // Cinema: teal shadows, orange highlights (Lut-style grade)
-                    vec3 shadows = vec3(0.0, 0.04, 0.06) * (1.0 - lum);
-                    vec3 highs   = vec3(0.05, 0.02, -0.02) * lum;
-                    return clamp(c + shadows + highs, 0.0, 1.0);
-                }
-                if (profile == 5) {
-                    // Anime: high saturation + slightly lifted blacks for cel-shaded look
-                    vec3 grey = vec3(lum);
-                    vec3 sat = clamp(mix(grey, c, 1.35), 0.0, 1.0);
-                    return clamp(sat + vec3(0.01, 0.01, 0.02), 0.0, 1.0);
-                }
-                if (profile == 6) {
-                    // HDR Vision: aggressive contrast stretch + highlight boost
-                    vec3 stretched = clamp((c - 0.08) / 0.84, 0.0, 1.0);
-                    vec3 boosted = clamp(stretched + stretched * stretched * 0.15, 0.0, 1.0);
-                    float lumNew = dot(boosted, vec3(0.2126, 0.7152, 0.0722));
-                    if (lumNew > 0.7) {
-                        boosted = mix(boosted, boosted * 1.08, (lumNew - 0.7) / 0.3);
-                    }
-                    return clamp(boosted, 0.0, 1.0);
+                    // Warm: shift toward amber
+                    return clamp(c + vec3(0.04, 0.01, -0.03), 0.0, 1.0);
                 }
                 return c;
             }
@@ -531,4 +513,13 @@ class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
             gl_FragColor = clamp(color, 0.0, 1.0);
         }
     """.trimIndent()
+}
+
+/** Color grading profile applied after HDR/OLED. Ordinal maps to shader int. */
+enum class ColorProfile(val displayName: String) {
+    NATURAL("Natural"),
+    CINEMA("Cinema"),
+    VIVID("Vivid"),
+    COOL("Cool"),
+    WARM("Warm"),
 }

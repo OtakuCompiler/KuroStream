@@ -7,7 +7,6 @@
 package com.kurostream.playback.kurovision
 
 import android.opengl.EGLContext
-import android.util.Log
 import androidx.annotation.Keep
 
 @Keep
