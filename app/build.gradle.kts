@@ -61,7 +61,6 @@ android {
             signingConfig = if (ksFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             isCrunchPngs = true
         }
-        }
         debug {
             isMinifyEnabled = false
             isDebuggable = true
