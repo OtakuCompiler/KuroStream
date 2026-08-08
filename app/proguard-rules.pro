@@ -113,7 +113,7 @@
 
 # === NATIVE ===
 -keepclasseswithmembernames class * { native <methods>; }
--keep class * { static { System.loadLibrary(*); } }
+-keep class * { static <fields>; }
 
 # === OPTIONAL / PLATFORM-SPECIFIC ===
 -dontwarn javax.annotation.**
