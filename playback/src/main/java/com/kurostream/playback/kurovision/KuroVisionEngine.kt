@@ -137,12 +137,7 @@ class KuroVisionEngine @Inject constructor(
         }
     }
 
-    companion object {
-        private const val TAG = "KuroVisionEngine"
-        @Volatile private var INSTANCE: KuroVisionEngine? = null
-        fun getInstance(context: Context): KuroVisionEngine =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: throw IllegalStateException("Inject via Hilt, not manual instantiation")
-            }
-    }
+companion object {
+    private const val TAG = "KuroVisionEngine"
+  }
 }

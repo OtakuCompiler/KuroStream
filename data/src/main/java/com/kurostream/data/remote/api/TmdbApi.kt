@@ -26,57 +26,58 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface TmdbApi {
-    @GET("tv/{id}")
-    suspend fun getTvDetails(
-        @Path("id") id: Int,
-        @Query("append_to_response") appendToResponse: String = "external_ids,credits,videos,content_ratings",
-    ): Response<TvShow>
+  @GET("tv/{id}")
+  suspend fun getTvDetails(
+    @Path("id") id: Int,
+    @Query("append_to_response") appendToResponse: String = "external_ids,credits,videos,content_ratings",
+  ): Response<TvShow>
 
-    @GET("search/tv")
-    suspend fun searchTv(
-        @Query("query") query: String,
-        @Query("page") page: Int = 1,
-        @Query("language") language: String = "en-US",
-        @Query("region") region: String? = null,
-    ): Response<SearchResponse>
+  @GET("search/tv")
+  suspend fun searchTv(
+    @Query("query") query: String,
+    @Query("page") page: Int = 1,
+    @Query("language") language: String = "en-US",
+    @Query("region") region: String? = null,
+  ): Response<SearchResponse>
 
-    @GET("discover/tv")
-    suspend fun discoverTv(
-        @Query("with_keywords") withKeywords: String = "anime",
-        @Query("first_air_date_year") firstAirDateYear: Int? = null,
-        @Query("air_date.gte") airDateGte: String? = null,
-        @Query("air_date.lte") airDateLte: String? = null,
-        @Query("page") page: Int = 1,
-        @Query("language") language: String = "en-US",
-        @Query("region") region: String? = null,
-    ): Response<DiscoverResponse>
+  @GET("discover/tv")
+  suspend fun discoverTv(
+    @Query("with_keywords") withKeywords: String = "anime",
+    @Query("first_air_date_year") firstAirDateYear: Int? = null,
+    @Query("air_date.gte") airDateGte: String? = null,
+    @Query("air_date.lte") airDateLte: String? = null,
+    @Query("page") page: Int = 1,
+    @Query("language") language: String = "en-US",
+    @Query("region") region: String? = null,
+  ): Response<DiscoverResponse>
 
-    @GET("find/{external_id}")
-    suspend fun findByExternalId(
-        @Path("external_id") externalId: String,
-        @Query("external_source") externalSource: String,
-        @Query("language") language: String = "en-US",
-    ): Response<FindByExternalIdResponse>
+  @GET("find/{external_id}")
+  suspend fun findByExternalId(
+    @Path("external_id") externalId: String,
+    @Query("external_source") externalSource: String,
+    @Query("language") language: String = "en-US",
+  ): Response<FindByExternalIdResponse>
 
-    @GET("trending/tv/week")
-    suspend fun getTrendingTv(
-        @Query("language") language: String = "en-US",
-        @Query("region") region: String? = null,
-    ): Response<TrendingResponse>
+  @GET("trending/tv/week")
+  suspend fun getTrendingTv(
+    @Query("page") page: Int = 1,
+    @Query("language") language: String = "en-US",
+    @Query("region") region: String? = null,
+  ): Response<TrendingResponse>
 
-    @GET("discover/tv")
-    suspend fun discoverTvByProvider(
-        @Query("with_watch_providers") withWatchProviders: String,
-        @Query("watch_region") watchRegion: String = "US",
-        @Query("page") page: Int = 1,
-        @Query("language") language: String = "en-US",
-    ): Response<DiscoverResponse>
+  @GET("discover/tv")
+  suspend fun discoverTvByProvider(
+    @Query("with_watch_providers") withWatchProviders: String,
+    @Query("watch_region") watchRegion: String = "US",
+    @Query("page") page: Int = 1,
+    @Query("language") language: String = "en-US",
+  ): Response<DiscoverResponse>
 
-    @GET("discover/movie")
-    suspend fun discoverMovieByProvider(
-        @Query("with_watch_providers") withWatchProviders: String,
-        @Query("watch_region") watchRegion: String = "US",
-        @Query("page") page: Int = 1,
-        @Query("language") language: String = "en-US",
-    ): Response<DiscoverResponse>
+  @GET("discover/movie")
+  suspend fun discoverMovieByProvider(
+    @Query("with_watch_providers") withWatchProviders: String,
+    @Query("watch_region") watchRegion: String = "US",
+    @Query("page") page: Int = 1,
+    @Query("language") language: String = "en-US",
+  ): Response<DiscoverResponse>
 }

@@ -30,6 +30,7 @@ class OpenGLRenderer @Inject constructor(
     private var upscaler: EnhancedUpscaleEngine? = null
     private var fboTexture = 0
     private var fboId = 0
+    private var passthroughProgram = 0
     @Volatile private var isInit = false
 
     companion object {
@@ -96,24 +97,24 @@ class OpenGLRenderer @Inject constructor(
         }
     }
 
-    override fun process(
-        inputTexture: Int,
-        width: Int,
-        height: Int,
-        mode: KuroVisionQualityMode,
-    ): KuroVisionEngine.ProcessedFrame {
-        if (!isInit || upscaler == null) {
-            return KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
-        }
-        return try {
-            upscaler!!.setMode(mode, profile.recommendedUpscaleAlgorithm)
-            upscaler!!.render(inputTexture, width, height, width, height)
-            KuroVisionEngine.ProcessedFrame(inputTexture, width, height, false)
-        } catch (t: Throwable) {
-            Log.w(TAG, "process failed: ${t.message}")
-            KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
-        }
+override fun process(
+    inputTexture: Int,
+    width: Int,
+    height: Int,
+    mode: KuroVisionQualityMode,
+  ): KuroVisionEngine.ProcessedFrame {
+    if (!isInit || upscaler == null) {
+      return KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
     }
+return try {
+    upscaler!!.setMode(mode, profile.recommendedUpscaleAlgorithm)
+    upscaler!!.render(inputTexture, width, height, width, height)
+    KuroVisionEngine.ProcessedFrame(inputTexture, width, height, false)
+  } catch (t: Throwable) {
+      Log.w(TAG, "process failed: ${t.message}")
+      KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
+    }
+  }
 
     override fun release() {
         try {
@@ -138,10 +139,8 @@ class OpenGLRenderer @Inject constructor(
     override val eglContext: EGLContext?
         get() = eglContextHandle
 
-    override val isInitialized: Boolean
-        get() = isInit
-
-    private var passthroughProgram = 0
+ override val isInitialized: Boolean
+    get() = isInit
 
     private fun createPassthroughProgram() {
         val vs = """
