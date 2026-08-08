@@ -44,6 +44,7 @@
 # Keep ML models
 -keep class org.tensorflow.** { *; }
 -dontwarn org.tensorflow.lite.gpu.**
+-dontwarn org.tensorflow.lite.**
 -keep class com.microsoft.onnxruntime.** { *; }
 
 # Keep Playback engines
@@ -133,3 +134,6 @@
     public static *** v(...);
     public static *** i(...);
 }
+
+# Suppress R8 warnings for optional/unused classes
+-ignorewarnings
