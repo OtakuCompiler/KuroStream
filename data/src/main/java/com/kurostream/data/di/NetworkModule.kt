@@ -72,15 +72,15 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideHttpCache(cacheDir: File): Cache {
-        // 50MB HTTP response cache with ETag support
-        return Cache(cacheDir, 50L * 1024 * 1024)
+        // 150MB HTTP response cache — enough for ~5000 trending page responses + poster thumbnails.
+        return Cache(cacheDir, 150L * 1024 * 1024)
     }
 
     @Provides
     @Singleton
     fun provideConnectionPool(): ConnectionPool {
-        // Keep connections alive for 5 minutes, max 10 idle connections
-        return ConnectionPool(10, 5, TimeUnit.MINUTES)
+        // 32 idle connections, 10-minute keep-alive — keeps HTTP/2 streams warm for instant reuse.
+        return ConnectionPool(32, 10, TimeUnit.MINUTES)
     }
 
     @Provides
@@ -117,18 +117,26 @@ object NetworkModule {
             .addNetworkInterceptor { chain ->
                 val request = chain.request()
                 val response = chain.proceed(request)
+                // Aggressive caching for fast metadata repeat-loads.
+                // GET requests without Authorization: cached 5min on disk + 1d stale-while-revalidate.
                 if (request.method == "GET" && request.header("Authorization").isNullOrBlank()) {
                     response.newBuilder()
-                        .header("Cache-Control", "public, max-age=300")
+                        .header("Cache-Control", "public, max-age=300, stale-while-revalidate=86400")
+                        .removeHeader("Pragma")
                         .build()
                 } else {
                     response
                 }
             }
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
-            .callTimeout(20, TimeUnit.SECONDS)
+            // Aggressive timeouts for fast networks (200 Mbps):
+            //   connectTimeout 3s   — TCP handshake over HTTP/2 is <100ms
+            //   readTimeout 5s      — JSON payloads arrive in <500ms
+            //   writeTimeout 5s     — POST bodies are small
+            //   callTimeout 8s      — hard ceiling including retries
+            .connectTimeout(3, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .writeTimeout(5, TimeUnit.SECONDS)
+            .callTimeout(8, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .apply {
                 try {

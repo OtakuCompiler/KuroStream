@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 @Singleton
 class NativeFramePool @Inject constructor(
@@ -63,7 +64,7 @@ class NativeFramePool @Inject constructor(
                 GLES20.glGetError()
             }
         } catch (t: Throwable) {
-            Log.w(TAG, "GL allocation failed: ${t.message}")
+            Timber.w(TAG, "GL allocation failed: ${t.message}")
         }
         return PooledFrame(texIds[0].takeIf { it != 0 }, width, height, buffer)
     }

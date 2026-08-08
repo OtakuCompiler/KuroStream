@@ -28,6 +28,8 @@ import com.kurostream.domain.metadata.AiringStatus
 import com.kurostream.domain.model.*
 import com.kurostream.domain.repository.MediaRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -103,8 +105,10 @@ class MediaRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun searchAllSources(query: String): List<MediaItem> {
-        return (searchAniList(query) + searchMal(query)).distinctBy { it.id }
+    private suspend fun searchAllSources(query: String): List<MediaItem> = coroutineScope {
+        val anilistDeferred = async { searchAniList(query) }
+        val malDeferred = async { searchMal(query) }
+        (anilistDeferred.await() + malDeferred.await()).distinctBy { it.id }
     }
 
     override suspend fun getRemoteDetails(mediaId: String, source: String): MediaItem? {
@@ -156,7 +160,11 @@ class MediaRepositoryImpl @Inject constructor(
         val results = when (source) {
             "anilist" -> getAniListTrending()
             "mal" -> getMalRanking()
-            else -> getAniListTrending() + getMalRanking()
+            else -> coroutineScope {
+                val a = async { getAniListTrending() }
+                val m = async { getMalRanking() }
+                (a.await() + m.await()).distinctBy { it.id }
+            }
         }
         cacheManager.searchResults.put(cacheKey, results, SEARCH_CACHE_TTL)
         return results

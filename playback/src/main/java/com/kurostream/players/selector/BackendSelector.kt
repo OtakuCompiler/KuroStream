@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 /**
  * Backend selection logic.
@@ -43,13 +44,13 @@ class BackendSelector @Inject constructor(
         try {
             return createMedia3()
         } catch (e: Exception) {
-            Log.w(TAG, "Media3 init failed", e)
+            Timber.w(TAG, "Media3 init failed", e)
         }
 
         try {
             return createMpv()
         } catch (e: Exception) {
-            Log.w(TAG, "MPV init failed", e)
+            Timber.w(TAG, "MPV init failed", e)
         }
 
         return createVlc()

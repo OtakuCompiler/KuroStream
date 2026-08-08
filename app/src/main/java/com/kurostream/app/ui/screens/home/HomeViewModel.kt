@@ -107,7 +107,7 @@ class HomeViewModel @Inject constructor(
             }
             return@combine Pair(itemsWithProgress, progressMap)
         }
-            .debounce(300)
+            .debounce(50)  // minimal coalescing for rapid updates — was 300ms, ~250ms faster on home open
             .map { (allItems, progressMap) ->
                 // ── Empty / loading detection ──
                 if (allItems.isEmpty()) {

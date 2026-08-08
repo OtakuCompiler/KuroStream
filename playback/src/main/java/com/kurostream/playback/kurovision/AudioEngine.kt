@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 /**
  * KuroAudioEngine — full audio enhancement pipeline.
@@ -72,9 +73,9 @@ class KuroAudioEngine @Inject constructor(
             }
             // Re-apply saved state
             applyState(_state.value)
-            Log.i(TAG, "KuroAudioEngine: initialized session=$audioSessionId")
+            Timber.i(TAG, "KuroAudioEngine: initialized session=$audioSessionId")
         } catch (t: Throwable) {
-            Log.w(TAG, "Audio init failed: ${t.message} (effects not available on this device)")
+            Timber.w(TAG, "Audio init failed: ${t.message} (effects not available on this device)")
         }
     }
 

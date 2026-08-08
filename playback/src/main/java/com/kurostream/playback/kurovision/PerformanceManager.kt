@@ -19,6 +19,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 @Singleton
 class KuroPerformanceManager @Inject constructor(
@@ -78,7 +79,7 @@ class KuroPerformanceManager @Inject constructor(
                 KuroVisionQualityMode.ANIME_PRO -> KuroVisionQualityMode.CINEMA
                 else -> KuroVisionQualityMode.HARDWARE
             }
-            Log.w(TAG, "Auto-downgrade: $current → $downgrade (fps=$fps)")
+            Timber.w(TAG, "Auto-downgrade: $current → $downgrade (fps=$fps)")
             downgrade
         } else if (mem.availMemMb < 90 && current != KuroVisionQualityMode.HARDWARE) {
             KuroVisionQualityMode.HARDWARE

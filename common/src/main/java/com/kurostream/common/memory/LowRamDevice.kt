@@ -60,9 +60,9 @@ object LowRamDevice {
 
     val coilDiskCacheSize: Long
         get() = when (ramTier) {
-            RamTier.LOW  -> 25L * 1024 * 1024
-            RamTier.MID  -> 50L * 1024 * 1024
-            RamTier.HIGH -> 100L * 1024 * 1024
+            RamTier.LOW  -> 75L * 1024 * 1024
+            RamTier.MID  -> 150L * 1024 * 1024
+            RamTier.HIGH -> 250L * 1024 * 1024
         }
 
     val maxSimultaneousImages: Int
@@ -143,8 +143,8 @@ object LowRamDevice {
     /** Max entries in the metadata in-memory LRU cache. */
     val metadataLruSize: Int
         get() = when (ramTier) {
-            RamTier.LOW  -> 20
-            RamTier.MID  -> 60
-            RamTier.HIGH -> 150
+            RamTier.LOW  -> 50
+            RamTier.MID  -> 200
+            RamTier.HIGH -> 500
         }
 }

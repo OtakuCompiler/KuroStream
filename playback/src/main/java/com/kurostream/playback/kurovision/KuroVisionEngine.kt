@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 @Singleton
 class KuroVisionEngine @Inject constructor(
@@ -59,19 +60,19 @@ class KuroVisionEngine @Inject constructor(
         withContext(Dispatchers.Main) {
             profile = inspector.inspect()
             activeMode = profile!!.recommendedQualityMode
-            Log.i(TAG, "KuroVision init: device=${profile!!.modelLabel} class=${profile!!.deviceClass} mode=$activeMode")
+            Timber.i(TAG, "KuroVision init: device=${profile!!.modelLabel} class=${profile!!.deviceClass} mode=$activeMode")
         }
         try {
             renderer = OpenGLRenderer(currentProfile)
             val eglOk = renderer!!.initialize()
             if (!eglOk) {
-                Log.w(TAG, "KuroVision: OpenGL init failed, falling back to passthrough")
+                Timber.w(TAG, "KuroVision: OpenGL init failed, falling back to passthrough")
                 activeMode = KuroVisionQualityMode.HARDWARE
             } else {
                 eglContext = renderer!!.eglContext
             }
         } catch (t: Throwable) {
-            Log.w(TAG, "KuroVision init failed: ${t.message}")
+            Timber.w(TAG, "KuroVision init failed: ${t.message}")
             activeMode = KuroVisionQualityMode.HARDWARE
         }
         initialized = true
@@ -94,7 +95,7 @@ class KuroVisionEngine @Inject constructor(
                 }
             }
         } catch (t: Throwable) {
-            Log.w(TAG, "Settings observation failed", t)
+            Timber.w(TAG, "Settings observation failed", t)
         }
     }
 
@@ -112,7 +113,7 @@ class KuroVisionEngine @Inject constructor(
                 EGL14.eglDestroyContext(EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY), it)
             }
         } catch (t: Throwable) {
-            Log.w(TAG, "release failed", t)
+            Timber.w(TAG, "release failed", t)
         } finally {
             renderer = null
             eglContext = null

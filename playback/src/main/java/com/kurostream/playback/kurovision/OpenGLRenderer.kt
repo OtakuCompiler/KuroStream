@@ -15,6 +15,7 @@ import android.opengl.GLES20
 import com.kurostream.players.render.EnhancedUpscaleEngine
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 @Singleton
 class OpenGLRenderer @Inject constructor(
@@ -37,12 +38,12 @@ class OpenGLRenderer @Inject constructor(
         return try {
             eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
             if (eglDisplay == EGL14.EGL_NO_DISPLAY) {
-                Log.w(TAG, "No EGL display")
+                Timber.w(TAG, "No EGL display")
                 return false
             }
             val version = IntArray(2)
             if (!EGL14.eglInitialize(eglDisplay, version, 0, version, 1)) {
-                Log.w(TAG, "EGL init failed")
+                Timber.w(TAG, "EGL init failed")
                 return false
             }
             val configAttribs = intArrayOf(
@@ -59,7 +60,7 @@ class OpenGLRenderer @Inject constructor(
             val numConfigs = IntArray(1)
             EGL14.eglChooseConfig(eglDisplay, configAttribs, 0, configs, 0, 1, numConfigs, 0)
             val config = configs[0] ?: run {
-                Log.w(TAG, "No EGL config")
+                Timber.w(TAG, "No EGL config")
                 return false
             }
 
@@ -69,14 +70,14 @@ class OpenGLRenderer @Inject constructor(
             )
             eglContextHandle = EGL14.eglCreateContext(eglDisplay, config, EGL14.EGL_NO_CONTEXT, contextAttribs, 0)
             if (eglContextHandle == null || eglContextHandle == EGL14.EGL_NO_CONTEXT) {
-                Log.w(TAG, "EGL context creation failed")
+                Timber.w(TAG, "EGL context creation failed")
                 return false
             }
 
             val surfaceAttribs = intArrayOf(EGL14.EGL_NONE)
             val pbuffer = EGL14.eglCreatePbufferSurface(eglDisplay, config, surfaceAttribs, 0)
             if (pbuffer == null || pbuffer == EGL14.EGL_NO_SURFACE) {
-                Log.w(TAG, "Pbuffer creation failed")
+                Timber.w(TAG, "Pbuffer creation failed")
                 return false
             }
             EGL14.eglMakeCurrent(eglDisplay, pbuffer, pbuffer, eglContextHandle)
@@ -85,10 +86,10 @@ class OpenGLRenderer @Inject constructor(
             createPassthroughProgram()
 
             isInit = true
-            Log.i(TAG, "OpenGLRenderer init OK (GL ES ${if (profile.supportsOpenGlEs3) 3 else 2})")
+            Timber.i(TAG, "OpenGLRenderer init OK (GL ES ${if (profile.supportsOpenGlEs3) 3 else 2})")
             true
         } catch (t: Throwable) {
-            Log.w(TAG, "initialize failed: ${t.message}")
+            Timber.w(TAG, "initialize failed: ${t.message}")
             false
         }
     }
@@ -107,7 +108,7 @@ return try {
     upscaler!!.render(inputTexture, width, height, width, height)
     KuroVisionEngine.ProcessedFrame(inputTexture, width, height, false)
   } catch (t: Throwable) {
-      Log.w(TAG, "process failed: ${t.message}")
+      Timber.w(TAG, "process failed: ${t.message}")
       KuroVisionEngine.ProcessedFrame.passthrough(inputTexture, width, height)
     }
   }
@@ -124,7 +125,7 @@ return try {
             eglContextHandle?.let { EGL14.eglDestroyContext(eglDisplay, it) }
             upscaler?.release()
         } catch (t: Throwable) {
-            Log.w(TAG, "release error", t)
+            Timber.w(TAG, "release error", t)
         } finally {
             eglContextHandle = null
             upscaler = null

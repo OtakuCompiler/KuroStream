@@ -8,6 +8,7 @@ import com.kurostream.playback.kurovision.UpscaleAlgorithm
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import timber.log.Timber
 
 /**
  * EnhancedUpscaleEngine — production-grade OpenGL ES 2.0 upscaler.
@@ -233,7 +234,7 @@ class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
         GLES20.glDisableVertexAttribArray(tex)
 
         val err = GLES20.glGetError()
-        if (err != GLES20.GL_NO_ERROR) Log.w(TAG, "GL error: 0x${err.toString(16)}")
+        if (err != GLES20.GL_NO_ERROR) Timber.w(TAG, "GL error: 0x${err.toString(16)}")
     }
 
     fun release() {
@@ -255,7 +256,7 @@ class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
             val status = IntArray(1)
             GLES20.glGetProgramiv(prog, GLES20.GL_LINK_STATUS, status, 0)
             if (status[0] == 0) {
-                Log.e(TAG, "Link error: ${GLES20.glGetProgramInfoLog(prog)}")
+                Timber.e(TAG, "Link error: ${GLES20.glGetProgramInfoLog(prog)}")
                 GLES20.glDeleteProgram(prog)
                 return 0
             }
@@ -268,7 +269,7 @@ class EnhancedUpscaleEngine(private val profile: KuroVisionDeviceProfile) {
             val ok = IntArray(1)
             GLES20.glGetShaderiv(it, GLES20.GL_COMPILE_STATUS, ok, 0)
             if (ok[0] == 0) {
-                Log.e(TAG, "Shader error: ${GLES20.glGetShaderInfoLog(it)}")
+                Timber.e(TAG, "Shader error: ${GLES20.glGetShaderInfoLog(it)}")
                 GLES20.glDeleteShader(it)
                 throw IllegalStateException("Shader compile failed")
             }

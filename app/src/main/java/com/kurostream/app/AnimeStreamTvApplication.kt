@@ -274,6 +274,7 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
             }
             .respectCacheHeaders(false)
             .crossfade(false)
+            .allowHardware(true)
             .build()
     }
 }
