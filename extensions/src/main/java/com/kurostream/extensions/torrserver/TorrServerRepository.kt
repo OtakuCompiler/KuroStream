@@ -56,7 +56,8 @@ class TorrServerRepository @Inject constructor(
         val response = api.addTorrent(AddTorrentRequest(link = magnetLink, title = title))
         if (response.isSuccessful) {
             response.body()?.let { Result.success(it) } ?: Result.failure(Exception("Empty body"))
-        } else Result.failure(Exception("Failed to add torrent: ${response.code()}"))
+        } else {
+            Result.failure(Exception("Failed to add torrent: ${response.code()}"))
         }
     } catch (e: Exception) {
         Result.failure(e)
