@@ -135,4 +135,10 @@
 }
 
 # Suppress R8 warnings for optional/unused classes
--ignorewarnings
+-dontwarn java.beans.ConstructorProperties
+-dontwarn java.beans.Transient
+-dontwarn org.tensorflow.lite.gpu.**
+-dontwarn javax.annotation.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
