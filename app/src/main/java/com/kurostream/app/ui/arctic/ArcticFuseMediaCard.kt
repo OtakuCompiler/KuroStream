@@ -22,6 +22,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -218,9 +219,9 @@ fun ArcticFuseMediaCard(
             }
             // Resolution stack
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                if (item.has4k) Badge("4K", AFBadges.uhd)
-                if (item.hasDolbyVision) Badge("DV", AFBadges.dolbyVision)
-                if (item.hasHdr) Badge("HDR", AFBadges.hdr10)
+                if (item.has4k) Badge("4K", AFBadges.uhd, Color.White)
+                if (item.hasDolbyVision) Badge("DV", AFBadges.dolbyVision, Color.White)
+                if (item.hasHdr) Badge("HDR", AFBadges.hdr10, Color.White)
             }
         }
 

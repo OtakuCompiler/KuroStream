@@ -70,7 +70,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kurostream.app.ui.theme.BlueGlowIntensity
 import com.kurostream.app.ui.theme.ThemeMode
 import com.kurostream.data.settings.KuroSettings
-import com.kurostream.players.render.ColorProfile
+import com.kurostream.playback.kurovision.ColorProfile
 import com.kurostream.domain.repository.AppTheme
 
 // ── Projection ───────────────────────────────────────────────────────────────
@@ -110,8 +110,8 @@ private fun KuroSettings.toArcticSettingsState(): ArcticSettingsState {
     fun AppTheme.toThemeMode(): ThemeMode = when (this) {
         AppTheme.LIGHT -> ThemeMode.LIGHT
         AppTheme.DARK  -> ThemeMode.DARK
-        AppTheme.OLED  -> ThemeMode.OLED_CINEMA
-        AppTheme.SYSTEM -> ThemeMode.AUTO
+        AppTheme.OLED  -> ThemeMode.OLED
+        AppTheme.SYSTEM -> ThemeMode.SYSTEM
     }
     return ArcticSettingsState(
         theme            = themeMode.toThemeMode(),
