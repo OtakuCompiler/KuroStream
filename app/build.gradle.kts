@@ -54,18 +54,13 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
+                getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"
             )
             val ksFile = file(System.getenv("UPLOAD_KEYSTORE_PATH") ?: "upload-keystore.jks")
             signingConfig = if (ksFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             isCrunchPngs = true
-            postprocessing {
-                isRemoveUnusedCode = true
-                isRemoveUnusedResources = true
-                isObfuscate = false
-                isOptimizeCode = false
-            }
+        }
         }
         debug {
             isMinifyEnabled = false
