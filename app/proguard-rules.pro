@@ -1,150 +1,129 @@
 # KuroStream ProGuard Rules - GPL-3.0
--ignorewarnings
 
-# Keep Serializable classes for kotlinx.serialization
+# === MISSING CLASS SUPPRESSION (R8 full mode) ===
+# These exact rules are required by R8's missing class check.
+# Do NOT remove or reorder these.
+-dontwarn java.beans.ConstructorProperties
+-dontwarn java.beans.Transient
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options$GpuBackend
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
+
+# === SERIALIZATION ===
 -keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature, Exceptions
 -keepclassmembers class * {
     @kotlinx.serialization.Serializable <fields>;
 }
 -keep @kotlinx.serialization.Serializable class * { *; }
 
-# Keep Room entities
+# === ROOM ===
 -keep class com.kurostream.data.local.entity.** { *; }
 -keepclassmembers class com.kurostream.data.local.entity.** { *; }
 
-# Keep Retrofit models
+# === RETROFIT DTOs ===
 -keep class com.kurostream.data.remote.dto.** { *; }
 -keepclassmembers class com.kurostream.data.remote.dto.** { <fields>; }
 
-# Keep Hilt
+# === HILT ===
 -keep class dagger.hilt.** { *; }
 -keep class * extends dagger.hilt.internal.GeneratedComponent { *; }
 -keepclassmembers @dagger.hilt.android.HiltAndroidApp class * { *; }
 
-# Keep Navigation Routes
+# === NAVIGATION ===
 -keep @kotlinx.serialization.Serializable class com.kurostream.app.navigation.** { *; }
 
-# Keep Domain models
+# === DOMAIN MODELS ===
 -keep class com.kurostream.domain.entity.** { *; }
 -keep class com.kurostream.domain.network.** { *; }
 -keep class com.kurostream.domain.metadata.** { *; }
 
-# Keep Timber
+# === LOGGING ===
 -dontwarn timber.log.Timber
 
-# Keep ExoPlayer/Media3
+# === MEDIA ===
 -keep class androidx.media3.** { *; }
 -dontwarn androidx.media3.**
-
-# Keep VLC/MPV JNI
 -keep class org.videolan.libvlc.** { *; }
 -keep class is.xyz.mpv.** { *; }
 
-# Keep AniList models
+# === ANILIST ===
 -keep class com.kurostream.data.anilist.** { *; }
 
-# Keep ML models (only JNI-accessed classes, not GPU delegate internals)
+# === ML ===
 -keep class org.tensorflow.lite.Interpreter { *; }
 -keep class org.tensorflow.lite.InterpreterFactory { *; }
 -keep class org.tensorflow.lite.support.** { *; }
--dontwarn org.tensorflow.lite.gpu.**
--dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
--dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options$GpuBackend
 -keep class com.microsoft.onnxruntime.** { *; }
 
-# Keep Playback engines
+# === PLAYBACK ===
 -keep class com.kurostream.playback.** { *; }
 -keep class com.kurostream.players.** { *; }
 
-# Keep Arctic Fuse UI
+# === UI ===
 -keep class com.kurostream.app.ui.arctic.** { *; }
 
-# Keep common utilities
+# === COMMON ===
 -keep class com.kurostream.common.** { *; }
 
-# OkHttp
+# === NETWORKING ===
 -dontwarn okhttp3.**
 -dontwarn okio.**
 -dontwarn javax.annotation.**
 -keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase
 
-# Coil
+# === IMAGE LOADING ===
 -keep class coil.** { *; }
 
-# Firebase (if used)
+# === FIREBASE ===
 -keep class com.google.firebase.** { *; }
 -dontwarn com.google.firebase.**
+-keep class com.google.android.gms.** { *; }
 
-# JSoup
+# === JSOUP ===
 -keep class org.jsoup.** { *; }
 
-# Keep Compose @Immutable / @Stable
+# === COMPOSE ===
 -keepattributes RuntimeVisibleAnnotations
 -keepclassmembers class * {
     @androidx.compose.runtime.Immutable <fields>;
     @androidx.compose.runtime.Stable <fields>;
 }
 
-# Keep BaselineProfile
+# === ANDROIDX ===
 -keep class androidx.profileinstaller.** { *; }
-
-# Keep WorkManager
 -keep class * extends androidx.work.Worker
 -keep class * extends androidx.work.CoroutineWorker
-
-# Keep Hilt Worker
 -keep class * extends androidx.hilt.work.HiltWorker
-
-# Keep Notification channels
--keep class com.kurostream.app.notification.NotificationChannels { *; }
-
-# Keep Deep link route
--keep class com.kurostream.app.deeplink.DeepLinkHandler { *; }
-
-# Keep Crash reporter
--keep class com.kurostream.app.analytics.CrashReporter { *; }
-
-# Play Integrity
--keep class com.google.android.play.core.integrity.** { *; }
--keep class com.google.android.gms.common.ConnectionResult { *; }
-
-# Firebase
--keep class com.google.android.gms.** { *; }
-
-# SQLCipher
--keep class net.sqlcipher.** { *; }
-
-# EncryptedSharedPreferences
 -keep class androidx.security.crypto.** { *; }
 
-# Cast
+# === APP SPECIFIC ===
+-keep class com.kurostream.app.notification.NotificationChannels { *; }
+-keep class com.kurostream.app.deeplink.DeepLinkHandler { *; }
+-keep class com.kurostream.app.analytics.CrashReporter { *; }
+
+# === PLAY INTEGRITY ===
+-keep class com.google.android.play.core.integrity.** { *; }
+-keep class com.google.android.gms.common.ConnectionResult { *; }
 -keep class com.google.android.gms.cast.** { *; }
 
-# WebRTC
+# === SQLCIPHER ===
+-keep class net.sqlcipher.** { *; }
+
+# === WEBRTC ===
 -keep class org.webrtc.** { *; }
 
-# 16KB page size
+# === NATIVE ===
 -keepclasseswithmembernames class * { native <methods>; }
 -keep class * { static { System.loadLibrary(*); } }
 
-# Java SE classes missing on Android (Jackson references these)
--dontwarn java.beans.ConstructorProperties
--dontwarn java.beans.Transient
--dontwarn java.beans.**
-
-# TFLite GPU delegate inner classes (reference from kept GpuDelegate)
--dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory
--dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
--dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options$GpuBackend
--dontwarn org.tensorflow.lite.gpu.GpuDelegate
--dontwarn org.tensorflow.lite.gpu.**
-
-# Crypto/TLS providers missing on Android
+# === OPTIONAL / PLATFORM-SPECIFIC ===
+-dontwarn javax.annotation.**
 -dontwarn org.conscrypt.**
 -dontwarn org.bouncycastle.**
 -dontwarn org.openjsse.**
+-dontwarn javax.xml.bind.**
+-dontwarn org.xmlpull.**
 
-# Remove all debug logging in release
+# === STRIP DEBUG LOGGING ===
 -assumenosideeffects class timber.log.Timber {
     public static *** d(...);
     public static *** v(...);
