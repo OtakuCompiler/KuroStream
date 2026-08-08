@@ -42,8 +42,7 @@
 -keep class com.kurostream.data.anilist.** { *; }
 
 # Keep ML models
--keep class org.tensorflow.** { *; }
--dontwarn org.tensorflow.lite.gpu.**
+-keep class org.tensorflow.lite.** { *; }
 -dontwarn org.tensorflow.lite.**
 -keep class com.microsoft.onnxruntime.** { *; }
 
