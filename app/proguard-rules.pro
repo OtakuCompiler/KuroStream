@@ -3,8 +3,36 @@
 # === MISSING CLASS SUPPRESSION (R8 full mode) ===
 # These exact rules are required by R8's missing class check.
 # Do NOT remove or reorder these.
+-dontwarn com.google.api.client.http.GenericUrl
+-dontwarn com.google.api.client.http.HttpHeaders
+-dontwarn com.google.api.client.http.HttpRequest
+-dontwarn com.google.api.client.http.HttpRequestFactory
+-dontwarn com.google.api.client.http.HttpResponse
+-dontwarn com.google.api.client.http.HttpTransport
+-dontwarn com.google.api.client.http.javanet.NetHttpTransport$Builder
+-dontwarn com.google.api.client.http.javanet.NetHttpTransport
+-dontwarn com.google.rpc.Status
+-dontwarn com.google.type.LatLng$Builder
+-dontwarn com.google.type.LatLng
+-dontwarn java.beans.BeanInfo
 -dontwarn java.beans.ConstructorProperties
+-dontwarn java.beans.FeatureDescriptor
+-dontwarn java.beans.IntrospectionException
+-dontwarn java.beans.Introspector
+-dontwarn java.beans.PropertyDescriptor
 -dontwarn java.beans.Transient
+-dontwarn org.graalvm.polyglot.Context$Builder
+-dontwarn org.graalvm.polyglot.Context
+-dontwarn org.graalvm.polyglot.Value
+-dontwarn org.jcodings.Encoding
+-dontwarn org.jcodings.specific.UTF8Encoding
+-dontwarn org.joda.time.Instant
+-dontwarn org.joni.Matcher
+-dontwarn org.joni.Regex
+-dontwarn org.joni.Syntax$MetaCharTable
+-dontwarn org.joni.Syntax
+-dontwarn org.joni.exception.SyntaxException
+-dontwarn org.jspecify.annotations.NullMarked
 -dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options$GpuBackend
 -dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
 
