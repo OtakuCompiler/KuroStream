@@ -26,21 +26,21 @@ class RpdbAdapter @Inject constructor(
     val isConfigured: Boolean get() = apiKey.isNotBlank()
 
     suspend fun getPoster(tmdbId: String, type: String = "movie"): Result<RpdbPosterResponse> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<RpdbPosterResponse> {
             val body = get("https://ratingposterdb.com/api/poster/$type/$tmdbId?apikey=$apiKey")
             json.decodeFromString(body)
         }.onFailure { Timber.e(it, "RpdbAdapter.getPoster($tmdbId)") }
     }
 
     suspend fun getPostersByImdb(imdbId: String): Result<List<RpdbPoster>> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<List<RpdbPoster>> {
             val body = get("https://ratingposterdb.com/api/poster/imdb/$imdbId?apikey=$apiKey")
             json.decodeFromString(body)
         }.onFailure { Timber.e(it, "RpdbAdapter.getPostersByImdb($imdbId)") }
     }
 
     suspend fun getRatings(imdbId: String): Result<RpdbRatings> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<RpdbRatings> {
             val body = get("https://ratingposterdb.com/api/ratings/$imdbId?apikey=$apiKey")
             json.decodeFromString(body)
         }.onFailure { Timber.e(it, "RpdbAdapter.getRatings($imdbId)") }

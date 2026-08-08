@@ -26,7 +26,7 @@ class SimklAdapter @Inject constructor(
     val isConfigured: Boolean get() = clientId.isNotBlank()
 
     suspend fun search(query: String): Result<List<SimklSearchResult>> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<List<SimklSearchResult>> {
             val encoded = java.net.URLEncoder.encode(query, "UTF-8")
             val body = get("https://api.simkl.com/search?q=$encoded&type=movie,show")
             json.decodeFromString<SimklSearchResponse>(body).results
@@ -34,21 +34,21 @@ class SimklAdapter @Inject constructor(
     }
 
     suspend fun getShowInfo(imdbId: String): Result<SimklShow> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<SimklShow> {
             val body = get("https://api.simkl.com/tv/$imdbId?extended=full")
             json.decodeFromString(body)
         }.onFailure { Timber.e(it, "SimklAdapter.getShowInfo($imdbId)") }
     }
 
     suspend fun getProgress(imdbId: String): Result<List<SimklProgressItem>> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<List<SimklProgressItem>> {
             val body = get("https://api.simkl.com/sync/activities/history/$imdbId")
             json.decodeFromString<List<SimklProgressItem>>(body)
         }.onFailure { Timber.e(it, "SimklAdapter.getProgress($imdbId)") }
     }
 
     suspend fun getWatchlist(): Result<List<SimklListItem>> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<List<SimklListItem>> {
             val body = get("https://api.simkl.com/users/me/lists/watchlist")
             json.decodeFromString(body)
         }.onFailure { Timber.e(it, "SimklAdapter.getWatchlist()") }

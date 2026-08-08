@@ -26,7 +26,7 @@ class MdblistAdapter @Inject constructor(
     val isConfigured: Boolean get() = apiKey.isNotBlank()
 
     suspend fun searchLists(query: String): Result<List<MdblistList>> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<List<MdblistList>> {
             val encoded = java.net.URLEncoder.encode(query, "UTF-8")
             val body = get("https://api.mdblist.com/lists/search/$encoded")
             json.decodeFromString(body)
@@ -34,21 +34,21 @@ class MdblistAdapter @Inject constructor(
     }
 
     suspend fun getList(listId: Int): Result<MdblistListDetail> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<MdblistListDetail> {
             val body = get("https://api.mdblist.com/list/$listId?apikey=$apiKey")
             json.decodeFromString(body)
         }.onFailure { Timber.e(it, "MdblistAdapter.getList($listId)") }
     }
 
     suspend fun getUserLists(): Result<List<MdblistList>> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<List<MdblistList>> {
             val body = get("https://api.mdblist.com/user/lists?apikey=$apiKey")
             json.decodeFromString(body)
         }.onFailure { Timber.e(it, "MdblistAdapter.getUserLists()") }
     }
 
     suspend fun searchItem(query: String): Result<List<MdblistSearchResult>> = withContext(Dispatchers.IO) {
-        runCatching {
+        runCatching<List<MdblistSearchResult>> {
             val encoded = java.net.URLEncoder.encode(query, "UTF-8")
             val body = get("https://api.mdblist.com/search/$encoded?apikey=$apiKey")
             json.decodeFromString<MdblistSearchResponse>(body).results
