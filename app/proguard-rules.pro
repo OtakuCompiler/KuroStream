@@ -43,9 +43,13 @@
 # Keep AniList models
 -keep class com.kurostream.data.anilist.** { *; }
 
-# Keep ML models
--keep class org.tensorflow.lite.** { *; }
--dontwarn org.tensorflow.lite.**
+# Keep ML models (only JNI-accessed classes, not GPU delegate internals)
+-keep class org.tensorflow.lite.Interpreter { *; }
+-keep class org.tensorflow.lite.InterpreterFactory { *; }
+-keep class org.tensorflow.lite.support.** { *; }
+-dontwarn org.tensorflow.lite.gpu.**
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options$GpuBackend
 -keep class com.microsoft.onnxruntime.** { *; }
 
 # Keep Playback engines
