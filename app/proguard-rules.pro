@@ -127,11 +127,17 @@
 -keepclasseswithmembernames class * { native <methods>; }
 -keep class * { static { System.loadLibrary(*); } }
 
-# Java SE classes missing on Android
+# Java SE classes missing on Android (Jackson references these)
+-dontwarn java.beans.ConstructorProperties
+-dontwarn java.beans.Transient
 -dontwarn java.beans.**
--dontwarn java.lang.**$Lambda**
--dontwarn javax.xml.bind.**
--dontwarn org.xmlpull.**
+
+# TFLite GPU delegate inner classes (reference from kept GpuDelegate)
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options$GpuBackend
+-dontwarn org.tensorflow.lite.gpu.GpuDelegate
+-dontwarn org.tensorflow.lite.gpu.**
 
 # Crypto/TLS providers missing on Android
 -dontwarn org.conscrypt.**

@@ -80,5 +80,7 @@ jobs:
         if: always()
         with:
           name: release-build-reports
-          path: '**/build/reports/**'
+          path: |
+            **/build/reports/**
+            **/build/outputs/mapping/**
           retention-days: 7

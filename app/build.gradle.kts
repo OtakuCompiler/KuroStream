@@ -63,8 +63,8 @@ android {
             postprocessing {
                 isRemoveUnusedCode = true
                 isRemoveUnusedResources = true
-                isObfuscate = true
-                isOptimizeCode = true
+                isObfuscate = false
+                isOptimizeCode = false
             }
         }
         debug {
