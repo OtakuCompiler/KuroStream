@@ -140,14 +140,7 @@ object NetworkModule {
             .build()
     }
 
-    @Provides
-    @Singleton
-    fun provideJson(): Json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        coerceInputValues = true
-        encodeDefaults = true
-    }
+    // Json is provided by DataModule to avoid duplicate bindings.
 
     @Provides
     @Singleton
