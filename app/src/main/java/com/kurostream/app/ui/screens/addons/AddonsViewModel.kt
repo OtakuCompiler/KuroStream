@@ -27,9 +27,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
 import androidx.compose.runtime.Immutable
+
+/**
+ * Extension to convert Room entity into a UI [AddonItem].
+ */
+private fun com.kurostream.data.local.entity.AddonConfigEntity.toAddonItem(isInstalled: Boolean): AddonItem {
+    val name = runCatching { JSONObject(configJson).optString("name") }.getOrNull()?.takeIf { it.isNotBlank() }
+        ?: extensionId
+    val iconUrl = runCatching { JSONObject(configJson).optString("icon") }.getOrNull() ?: ""
+    return AddonItem(
+        id = extensionId,
+        name = name,
+        description = "Installed add-on",
+        category = AddonCategory.STREMIO,
+        isInstalled = isInstalled,
+        iconUrl = iconUrl,
+    )
+}
 
 /**
  * UI State for the Addons screen.

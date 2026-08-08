@@ -205,7 +205,7 @@ fun AddonsScreen(
                             .clip(RoundedCornerShape(8.dp))
                             .background(AFCyan)
                             .padding(horizontal = 20.dp, vertical = 10.dp)
-                            .clickable { viewModel.refreshAddons() },
+                            .clickable { viewModel.loadAddons() },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -486,15 +486,15 @@ private fun ManifestUrlInput(
         )
         Spacer(modifier = Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            androidx.tv.material3.OutlinedTextField(
+            androidx.compose.material3.OutlinedTextField(
                 value = url,
                 onValueChange = { url = it; if (error != null) onClearError() },
                 modifier = Modifier
                     .weight(1f)
                     .onFocusChanged { localFocused = it.isFocused },
-                placeholder = "https://example.com/manifest.json",
+                placeholder = { Text("https://example.com/manifest.json") },
                 singleLine = true,
-                colors = androidx.tv.material3.OutlinedTextFieldDefaults.colors(
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color(0xFFE0E0E0),
                     unfocusedTextColor = Color(0xFFE0E0E0),
                     focusedContainerColor = AFBg,
