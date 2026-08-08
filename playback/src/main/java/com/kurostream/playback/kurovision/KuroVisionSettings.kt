@@ -54,6 +54,10 @@ class KuroVisionSettings @Inject constructor(
     val contrast: Flow<Float> = ds.data.map { it[KEY_CONTRAST] ?: 1.05f }
     val frameInterpolation: Flow<Boolean> = ds.data.map { it[KEY_FRAME_INTERP] ?: false }
     val dolbyPassthrough: Flow<Boolean> = ds.data.map { it[KEY_DOLBY_PASSTHROUGH] ?: true }
+    val colorProfile: Flow<ColorProfile> = ds.data.map {
+        val name = it[KEY_COLOR_PROFILE]
+        ColorProfile.fromName(name)
+    }
 
     suspend fun setEnabled(value: Boolean) = ds.edit { it[KEY_ENABLED] = value }
     suspend fun setQualityMode(mode: KuroVisionQualityMode) = ds.edit { it[KEY_QUALITY_MODE] = mode.name }
@@ -68,6 +72,7 @@ class KuroVisionSettings @Inject constructor(
     suspend fun setContrast(v: Float) = ds.edit { it[KEY_CONTRAST] = v }
     suspend fun setFrameInterpolation(v: Boolean) = ds.edit { it[KEY_FRAME_INTERP] = v }
     suspend fun setDolbyPassthrough(v: Boolean) = ds.edit { it[KEY_DOLBY_PASSTHROUGH] = v }
+    suspend fun setColorProfile(profile: ColorProfile) = ds.edit { it[KEY_COLOR_PROFILE] = profile.name }
 
     companion object {
         val KEY_ENABLED = booleanPreferencesKey("kv_enabled")
@@ -83,5 +88,6 @@ class KuroVisionSettings @Inject constructor(
         val KEY_CONTRAST = floatPreferencesKey("kv_contrast")
         val KEY_FRAME_INTERP = booleanPreferencesKey("kv_frame_interp")
         val KEY_DOLBY_PASSTHROUGH = booleanPreferencesKey("kv_dolby_passthrough")
+        val KEY_COLOR_PROFILE = stringPreferencesKey("kv_color_profile")
     }
 }

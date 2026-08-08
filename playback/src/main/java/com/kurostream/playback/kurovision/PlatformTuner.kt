@@ -1,52 +1,52 @@
-/*
- * PlatformTuner — Android-side adapter that takes the shared
- * `PlatformProfile` and configures:
- *   - KuroVision engine quality mode & upscale algorithm
- *   - Media3 ExoPlayer buffer sizes, codec priorities
- *   - Memory optimizer for the playback frame cache
- *   - Dolby Atmos / DTS audio track selection
- *
- * Each platform produces a profile via `PlatformProfiles`; this tuner
- * is the only Android-specific glue between the shared domain and the
- * device hardware.
- */
+// SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.playback.kurovision
 
-import com.kurostream.domain.platform.AtmosTranscodeStrategy
-import com.kurostream.domain.platform.PlatformKind
-import com.kurostream.domain.platform.PlatformProfile
-import kotlinx.coroutines.runBlocking
+import android.os.Handler
+import android.os.Looper
+
+data class ProcessedFrame(
+    val texture: Int,
+    val width: Int,
+    val height: Int,
+    val isPassthrough: Boolean,
+) {
+    companion object {
+        fun passthrough(tex: Int, w: Int, h: Int) = ProcessedFrame(tex, w, h, true)
+    }
+}
 
 object PlatformTuner {
 
-    fun tuneKuroVision(profile: PlatformProfile, settings: KuroVisionSettings) {
-        runBlocking {
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    fun tuneKuroVision(profile: com.kurostream.domain.platform.PlatformProfile, settings: KuroVisionSettings) {
+        val job = kotlinx.coroutines.runBlocking {
             settings.setQualityMode(mapQualityMode(profile.defaultQualityMode))
             settings.setUpscaleAlgorithm(mapUpscaleAlgorithm(profile.defaultUpscaleAlgorithm))
             settings.setFrameInterpolation(profile.kind in setOf(
-                PlatformKind.ANDROID_TV,
-                PlatformKind.FIRE_TV,
-                PlatformKind.LINUX_DESKTOP,
-                PlatformKind.WINDOWS_DESKTOP,
-                PlatformKind.MACOS_DESKTOP,
+                com.kurostream.domain.platform.PlatformKind.ANDROID_TV,
+                com.kurostream.domain.platform.PlatformKind.FIRE_TV,
+                com.kurostream.domain.platform.PlatformKind.LINUX_DESKTOP,
+                com.kurostream.domain.platform.PlatformKind.WINDOWS_DESKTOP,
+                com.kurostream.domain.platform.PlatformKind.MACOS_DESKTOP,
             ))
             settings.setDolbyPassthrough(profile.supportsDolbyAtmosPassthrough)
         }
     }
 
-    fun exoBufferSettings(profile: PlatformProfile): ExoBufferSettings {
+    fun exoBufferSettings(profile: com.kurostream.domain.platform.PlatformProfile): ExoBufferSettings {
         val minBufferMs = profile.initialBufferSeconds * 1000
         val maxBufferMs = when (profile.kind) {
-            PlatformKind.WEBOS_TV,
-            PlatformKind.TIZEN_TV -> minBufferMs * 3
-            PlatformKind.ANDROID_PHONE,
-            PlatformKind.ANDROID_TABLET -> minBufferMs * 5
+            com.kurostream.domain.platform.PlatformKind.WEBOS_TV,
+            com.kurostream.domain.platform.PlatformKind.TIZEN_TV -> minBufferMs * 3
+            com.kurostream.domain.platform.PlatformKind.ANDROID_PHONE,
+            com.kurostream.domain.platform.PlatformKind.ANDROID_TABLET -> minBufferMs * 5
             else -> minBufferMs * 8
         }
         val bufferForPlaybackMs = minBufferMs
         val bufferForPlaybackAfterRebufferMs = when (profile.kind) {
-            PlatformKind.WEBOS_TV,
-            PlatformKind.TIZEN_TV -> minBufferMs
+            com.kurostream.domain.platform.PlatformKind.WEBOS_TV,
+            com.kurostream.domain.platform.PlatformKind.TIZEN_TV -> minBufferMs
             else -> minBufferMs * 2
         }
         return ExoBufferSettings(
@@ -57,12 +57,12 @@ object PlatformTuner {
         )
     }
 
-    fun audioStrategy(profile: PlatformProfile): AudioStrategy {
+    fun audioStrategy(profile: com.kurostream.domain.platform.PlatformProfile): AudioStrategy {
         return when (profile.dolbyAtmosTranscode) {
-            AtmosTranscodeStrategy.PASSTHROUGH -> AudioStrategy.PASSTHROUGH
-            AtmosTranscodeStrategy.TRANSCODE_TO_EAC3 -> AudioStrategy.DOWNMIX_EAC3
-            AtmosTranscodeStrategy.TRANSCODE_TO_STEREO -> AudioStrategy.DOWNMIX_STEREO
-            AtmosTranscodeStrategy.NATIVE_FALLBACK -> AudioStrategy.NATIVE_FALLBACK
+            com.kurostream.domain.platform.AtmosTranscodeStrategy.PASSTHROUGH -> AudioStrategy.PASSTHROUGH
+            com.kurostream.domain.platform.AtmosTranscodeStrategy.TRANSCODE_TO_EAC3 -> AudioStrategy.DOWNMIX_EAC3
+            com.kurostream.domain.platform.AtmosTranscodeStrategy.TRANSCODE_TO_STEREO -> AudioStrategy.DOWNMIX_STEREO
+            com.kurostream.domain.platform.AtmosTranscodeStrategy.NATIVE_FALLBACK -> AudioStrategy.NATIVE_FALLBACK
         }
     }
 

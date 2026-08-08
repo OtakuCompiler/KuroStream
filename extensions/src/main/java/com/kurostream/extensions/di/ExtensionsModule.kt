@@ -8,10 +8,14 @@ import com.kurostream.extensions.cloudstream.CloudStreamImporter
 import com.kurostream.extensions.consumet.ConsumetAdapter
 import com.kurostream.extensions.consumet.ConsumetImporter
 import com.kurostream.extensions.debrid.DebridManagerImpl
+import com.kurostream.extensions.emby.EmbyAdapter
 import com.kurostream.extensions.health.ExtensionHealthMonitorImpl
 import com.kurostream.extensions.kodi.KodiAdapter
 import com.kurostream.extensions.kodi.KodiImporter
 import com.kurostream.extensions.marketplace.UnifiedMarketplace
+import com.kurostream.extensions.mdblist.MdblistAdapter
+import com.kurostream.extensions.rpdb.RpdbAdapter
+import com.kurostream.extensions.simkl.SimklAdapter
 import com.kurostream.extensions.stremio.StremioAdapter
 import com.kurostream.extensions.stremio.StremioImporter
 import dagger.Binds
@@ -80,6 +84,22 @@ object ExtensionsProvidesModule {
     @Provides
     @Singleton
     fun provideKodiImporter(adapter: KodiAdapter): KodiImporter = KodiImporter(adapter)
+
+    @Provides
+    @Singleton
+    fun provideEmbyAdapter(client: OkHttpClient): EmbyAdapter = EmbyAdapter(client)
+
+    @Provides
+    @Singleton
+    fun provideSimklAdapter(client: OkHttpClient): SimklAdapter = SimklAdapter(client)
+
+    @Provides
+    @Singleton
+    fun provideMdblistAdapter(client: OkHttpClient): MdblistAdapter = MdblistAdapter(client)
+
+    @Provides
+    @Singleton
+    fun provideRpdbAdapter(client: OkHttpClient): RpdbAdapter = RpdbAdapter(client)
 
     @Provides
     @Singleton

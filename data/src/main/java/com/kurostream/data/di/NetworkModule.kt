@@ -16,7 +16,6 @@
 package com.kurostream.data.di
 
 import com.kurostream.data.BuildConfig
-import retrofit2.converter.gson.GsonConverterFactory
 import com.kurostream.data.remote.api.AniListApi
 import com.kurostream.data.remote.api.AniDbApi
 import com.kurostream.data.remote.api.AnnApi
@@ -27,18 +26,20 @@ import com.kurostream.data.remote.api.TmdbApi
 import com.kurostream.data.remote.api.TvdbApi
 import com.kurostream.data.remote.api.ImdbApi
 import com.kurostream.data.remote.api.YouTubeApi
-import com.kurostream.data.network.security.CertificatePinningConfig
+import com.kurostream.data.network.security.AuthInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.Json
 import okhttp3.Cache
 import okhttp3.ConnectionPool
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
-import okhttp3.brotli.BrotliInterceptor
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import timber.log.Timber
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -59,6 +60,14 @@ object NetworkModule {
     private const val ANIDB_BASE_URL = "https://api.anidb.net/"
     private const val ANN_BASE_URL = "https://cdn.animenewsnetwork.com/"
 
+    @Provides
+    @Singleton
+    fun provideJson(): Json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        coerceInputValues = true
+        encodeDefaults = true
+    }
 
     @Provides
     @Singleton
@@ -69,14 +78,12 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideHttpCache(cacheDir: File): Cache {
-        // 50MB HTTP response cache with ETag support
         return Cache(cacheDir, 50L * 1024 * 1024)
     }
 
     @Provides
     @Singleton
     fun provideConnectionPool(): ConnectionPool {
-        // Keep connections alive for 5 minutes, max 10 idle connections
         return ConnectionPool(10, 5, TimeUnit.MINUTES)
     }
 
@@ -92,7 +99,8 @@ object NetworkModule {
     fun provideOkHttpClient(
         cache: Cache,
         connectionPool: ConnectionPool,
-        context: android.content.Context
+        context: android.content.Context,
+        authInterceptor: AuthInterceptor,
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor { message ->
             if (BuildConfig.DEBUG) Timber.tag("OkHttp").d(message)
@@ -108,6 +116,7 @@ object NetworkModule {
             .cache(cache)
             .connectionPool(connectionPool)
             .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
+            .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .addNetworkInterceptor { chain ->
                 val request = chain.request()
@@ -136,110 +145,110 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAniListApi(client: OkHttpClient): AniListApi {
+    fun provideAniListApi(client: OkHttpClient, json: Json): AniListApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(ANILIST_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(AniListApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideMalApi(client: OkHttpClient): MalApi {
+    fun provideMalApi(client: OkHttpClient, json: Json): MalApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(MAL_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(MalApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideTmdbApi(client: OkHttpClient): TmdbApi {
+    fun provideTmdbApi(client: OkHttpClient, json: Json): TmdbApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(TMDB_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(TmdbApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideKitsuApi(client: OkHttpClient): KitsuApi {
+    fun provideKitsuApi(client: OkHttpClient, json: Json): KitsuApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(KITSU_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(KitsuApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideOpenSubtitlesApi(client: OkHttpClient): OpenSubtitlesApi {
+    fun provideOpenSubtitlesApi(client: OkHttpClient, json: Json): OpenSubtitlesApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(OPENSUBTITLES_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(OpenSubtitlesApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideYouTubeApi(client: OkHttpClient): YouTubeApi {
+    fun provideYouTubeApi(client: OkHttpClient, json: Json): YouTubeApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(YOUTUBE_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(YouTubeApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideTvdbApi(client: OkHttpClient): TvdbApi {
+    fun provideTvdbApi(client: OkHttpClient, json: Json): TvdbApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(TVDB_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(TvdbApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideImdbApi(client: OkHttpClient): ImdbApi {
+    fun provideImdbApi(client: OkHttpClient, json: Json): ImdbApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(IMDB_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(ImdbApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideAniDbApi(client: OkHttpClient): AniDbApi {
+    fun provideAniDbApi(client: OkHttpClient, json: Json): AniDbApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(ANIDB_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(AniDbApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideAnnApi(client: OkHttpClient): AnnApi {
+    fun provideAnnApi(client: OkHttpClient, json: Json): AnnApi {
         val retrofit = Retrofit.Builder()
             .baseUrl(ANN_BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         return retrofit.create(AnnApi::class.java)
     }

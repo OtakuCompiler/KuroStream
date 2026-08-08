@@ -6,9 +6,13 @@ import com.kurostream.domain.entity.VideoSource
 import com.kurostream.extensions.cloudstream.CloudStreamAdapter
 import com.kurostream.extensions.cloudstream.CloudStreamPlugin
 import com.kurostream.extensions.consumet.ConsumetAdapter
+import com.kurostream.extensions.emby.EmbyAdapter
 import com.kurostream.extensions.jellyfin.JellyfinAdapter
 import com.kurostream.extensions.kodi.KodiAdapter
+import com.kurostream.extensions.mdblist.MdblistAdapter
 import com.kurostream.extensions.plex.PlexAdapter
+import com.kurostream.extensions.rpdb.RpdbAdapter
+import com.kurostream.extensions.simkl.SimklAdapter
 import com.kurostream.extensions.stremio.StremioAdapter
 import com.kurostream.extensions.stremio.StremioManifest
 import kotlinx.coroutines.*
@@ -29,6 +33,10 @@ class SmartSourceAggregator @Inject constructor(
     private val jellyfinAdapter: JellyfinAdapter,
     private val kodiAdapter: KodiAdapter,
     private val plexAdapter: PlexAdapter,
+    private val embyAdapter: EmbyAdapter,
+    private val simklAdapter: SimklAdapter,
+    private val mdblistAdapter: MdblistAdapter,
+    private val rpdbAdapter: RpdbAdapter,
 ) : SourceAggregator {
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
@@ -139,7 +147,11 @@ class SmartSourceAggregator @Inject constructor(
             ExtensionSourceFormat.JELLYFIN_SERVER -> searchJellyfin(ext, query, types)
             ExtensionSourceFormat.KODI_REPOSITORY -> searchKodi(ext, query, types)
             ExtensionSourceFormat.PLEX_SERVER -> searchPlex(ext, query, types)
-            else -> emptyList()
+            ExtensionSourceFormat.EMBY_SERVER -> searchEmby(ext, query, types)
+            ExtensionSourceFormat.SIMKL_ADDON -> searchSimkl(ext, query, types)
+            ExtensionSourceFormat.MDBLIST_ADDON -> searchMdblist(ext, query, types)
+            ExtensionSourceFormat.RPDB_ADDON -> emptyList()
+            ExtensionSourceFormat.KUROSTREAM_NATIVE -> emptyList()
         }
     }
 
@@ -154,6 +166,7 @@ class SmartSourceAggregator @Inject constructor(
             ExtensionSourceFormat.KODI_REPOSITORY -> streamsFromKodi(ext, mediaId)
             ExtensionSourceFormat.CLOUDSTREAM_REPO -> streamsFromCloudStream(ext, mediaId, type)
             ExtensionSourceFormat.CONSUMET_ADDON -> streamsFromConsumet(ext, mediaId, type)
+            ExtensionSourceFormat.EMBY_SERVER -> streamsFromEmby(ext, mediaId)
             else -> emptyList()
         }
     }
@@ -163,10 +176,14 @@ class SmartSourceAggregator @Inject constructor(
             ExtensionSourceFormat.STREMIO_ADDON -> homeRowsFromStremio(ext)
             ExtensionSourceFormat.JELLYFIN_SERVER -> homeRowsFromJellyfin(ext)
             ExtensionSourceFormat.PLEX_SERVER -> homeRowsFromPlex(ext)
+            ExtensionSourceFormat.EMBY_SERVER -> homeRowsFromEmby(ext)
             ExtensionSourceFormat.CONSUMET_ADDON -> emptyList()
             ExtensionSourceFormat.CLOUDSTREAM_REPO -> emptyList()
             ExtensionSourceFormat.KODI_REPOSITORY -> emptyList()
-            else -> emptyList()
+            ExtensionSourceFormat.SIMKL_ADDON -> emptyList()
+            ExtensionSourceFormat.MDBLIST_ADDON -> emptyList()
+            ExtensionSourceFormat.RPDB_ADDON -> emptyList()
+            ExtensionSourceFormat.KUROSTREAM_NATIVE -> emptyList()
         }
     }
 
@@ -389,21 +406,125 @@ class SmartSourceAggregator @Inject constructor(
         }
     }
 
+    // ── Emby ──────────────────────────────────────────────────────────────────
+
+    private suspend fun searchEmby(ext: UnifiedExtension, query: String, types: Set<ContentType>): List<MediaSearchResult> {
+        return try {
+            embyAdapter.search(query)
+                .getOrElse { emptyList() }
+                .map { item ->
+                    MediaSearchResult(
+                        media = item.toMediaItem(embyAdapter),
+                        confidence = 0.85f,
+                        sourceExtensionId = ext.id,
+                    )
+                }
+        } catch (e: Exception) {
+            Timber.w(e, "Emby search failed for ${ext.id}")
+            emptyList()
+        }
+    }
+
+    private suspend fun streamsFromEmby(ext: UnifiedExtension, mediaId: String): List<StreamAggregateResult> {
+        return try {
+            buildList {
+                add(StreamAggregateResult(
+                    source = ext,
+                    stream = VideoSource(url = embyAdapter.getDirectPlayUrl(mediaId), quality = "Direct Play"),
+                    qualityScore = 95f,
+                    debridCached = false,
+                ))
+                add(StreamAggregateResult(
+                    source = ext,
+                    stream = VideoSource(url = embyAdapter.getTranscodedUrl(mediaId), quality = "Transcoded", isHls = true),
+                    qualityScore = 75f,
+                    debridCached = false,
+                ))
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Emby getStreams failed for ${ext.id}")
+            emptyList()
+        }
+    }
+
+    private suspend fun homeRowsFromEmby(ext: UnifiedExtension): List<HomeRowResult> {
+        return try {
+            val rows = mutableListOf<HomeRowResult>()
+            embyAdapter.getMovies(limit = 20).getOrNull()
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { rows.add(HomeRowResult("Latest Movies", it.map { i -> i.toMediaItem(embyAdapter) }, ext.id)) }
+            embyAdapter.getSeries(limit = 20).getOrNull()
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { rows.add(HomeRowResult("Latest Series", it.map { i -> i.toMediaItem(embyAdapter) }, ext.id)) }
+            embyAdapter.getResumeItems().getOrNull()
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { rows.add(HomeRowResult("Continue Watching", it.map { i -> i.toMediaItem(embyAdapter) }, ext.id)) }
+            rows
+        } catch (e: Exception) {
+            Timber.w(e, "Emby getHomeRows failed for ${ext.id}")
+            emptyList()
+        }
+    }
+
+    // ── Simkl ─────────────────────────────────────────────────────────────────
+
+    private suspend fun searchSimkl(ext: UnifiedExtension, query: String, types: Set<ContentType>): List<MediaSearchResult> {
+        return try {
+            simklAdapter.search(query)
+                .getOrElse { emptyList() }
+                .map { result ->
+                    MediaSearchResult(
+                        media = MediaItem(
+                            id = "simkl_${result.imdbId ?: result.title.hashCode()}",
+                            title = result.title,
+                            posterUrl = result.poster ?: "",
+                            year = result.year ?: 0,
+                            rating = result.ratings?.simkl?.rating ?: 0f,
+                            source = "simkl",
+                        ),
+                        confidence = 0.75f,
+                        sourceExtensionId = ext.id,
+                    )
+                }
+        } catch (e: Exception) {
+            Timber.w(e, "Simkl search failed for ${ext.id}")
+            emptyList()
+        }
+    }
+
+    // ── Mdblist ───────────────────────────────────────────────────────────────
+
+    private suspend fun searchMdblist(ext: UnifiedExtension, query: String, types: Set<ContentType>): List<MediaSearchResult> {
+        return try {
+            mdblistAdapter.searchItem(query)
+                .getOrElse { emptyList() }
+                .map { result ->
+                    MediaSearchResult(
+                        media = MediaItem(
+                            id = "mdblist_${result.id}",
+                            title = result.title,
+                            posterUrl = result.posterPath ?: "",
+                            year = result.year ?: 0,
+                            source = "mdblist",
+                        ),
+                        confidence = 0.70f,
+                        sourceExtensionId = ext.id,
+                    )
+                }
+        } catch (e: Exception) {
+            Timber.w(e, "Mdblist search failed for ${ext.id}")
+            emptyList()
+        }
+    }
+
     // ── Kodi ──────────────────────────────────────────────────────────────────
-    // KodiAdapter exposes repository discovery; individual stream resolution
-    // is delegated to Kodi's JSON-RPC API via the extension's configured URL.
 
     private suspend fun searchKodi(ext: UnifiedExtension, query: String, types: Set<ContentType>): List<MediaSearchResult> {
-        // Kodi repository addons don't expose a search endpoint in the
-        // standard repo format; the search URL is addon-specific.
-        // Return empty and let other engines handle search for now.
         Timber.d("Kodi search not supported for ${ext.id} (repo-level addon)")
         return emptyList()
     }
 
     private suspend fun streamsFromKodi(ext: UnifiedExtension, mediaId: String): List<StreamAggregateResult> {
-        // Kodi addons expose streams via their plugin:// URI scheme.
-        // Construct a best-effort plugin URL from the stored manifest.
         return try {
             val addon = json.decodeFromString<com.kurostream.extensions.kodi.KodiAddon>(ext.rawManifest)
             val pluginUrl = "plugin://${addon.id}/stream?id=$mediaId"
@@ -440,9 +561,8 @@ class SmartSourceAggregator @Inject constructor(
 
     private suspend fun streamsFromPlex(ext: UnifiedExtension, mediaId: String): List<StreamAggregateResult> {
         return try {
-            // Look up the item to get the partKey needed for direct-play URL
             val items = plexAdapter.search(mediaId).getOrElse { emptyList() }
-            val item  = items.firstOrNull()
+            val item = items.firstOrNull()
             val partKey = item?.firstPart
 
             buildList {
@@ -516,6 +636,24 @@ class SmartSourceAggregator @Inject constructor(
             year        = ProductionYear ?: 0,
             duration    = (durationMs / 1_000).toInt(),
             source      = "jellyfin",
+            watchProgress = (UserData?.PlaybackPositionTicks ?: 0L) / 10_000,
+        )
+    }
+
+    private fun com.kurostream.extensions.emby.EmbyItem.toMediaItem(
+        adapter: EmbyAdapter,
+    ): com.kurostream.domain.entity.MediaItem {
+        return com.kurostream.domain.entity.MediaItem(
+            id          = Id,
+            title       = Name,
+            description = Overview ?: "",
+            posterUrl   = if (hasPoster) adapter.getImageUrl(Id) else "",
+            backdropUrl = if (hasBackdrop) adapter.getImageUrl(Id, com.kurostream.extensions.emby.EmbyImageType.Backdrop) else "",
+            genre       = Genres,
+            rating      = CommunityRating ?: 0f,
+            year        = ProductionYear ?: 0,
+            duration    = (durationMs / 1_000).toInt(),
+            source      = "emby",
             watchProgress = (UserData?.PlaybackPositionTicks ?: 0L) / 10_000,
         )
     }

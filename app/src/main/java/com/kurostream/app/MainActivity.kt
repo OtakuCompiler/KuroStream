@@ -15,11 +15,9 @@
 
 package com.kurostream.app
 
-import android.app.SearchManager
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.speech.RecognizerIntent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,7 +25,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
-import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
@@ -53,12 +50,6 @@ class MainActivity : ComponentActivity() {
     private var deepLinkMediaId: String? = null
     private var deepLinkEpisodeId: String? = null
 
-    /**
-     * Initial query from system search (Android TV launcher mic, Fire TV Alexa,
-     * Gboard "search this app" etc.). Routed to the search screen on first frame.
-     */
-    private var initialSearchQuery: String? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -71,7 +62,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         handleDeepLink(intent)
-        handleSearchIntent(intent)
 
         setContent {
             var showSplash by remember { mutableStateOf(true) }
@@ -128,25 +118,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         handleDeepLink(intent)
-        handleSearchIntent(intent)
-    }
-
-    private fun handleSearchIntent(intent: Intent?) {
-        if (intent == null) return
-        val query = when (intent.action) {
-            Intent.ACTION_SEARCH -> intent.getStringExtra(SearchManager.QUERY)
-            RecognizerIntent.ACTION_RECOGNIZE_SPEECH -> {
-                intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
-            }
-            "com.amazon.action.voice" -> {
-                intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
-                    ?: intent.getStringExtra("query")
-            }
-            else -> null
-        }
-        if (!query.isNullOrBlank()) {
-            initialSearchQuery = query
-        }
     }
 
     private fun handleDeepLink(intent: Intent?) {

@@ -65,6 +65,10 @@ enum class ExtensionSourceFormat {
     JELLYFIN_SERVER,
     PLEX_SERVER,
     CONSUMET_ADDON,
+    EMBY_SERVER,
+    SIMKL_ADDON,
+    MDBLIST_ADDON,
+    RPDB_ADDON,
 }
 
 @Serializable

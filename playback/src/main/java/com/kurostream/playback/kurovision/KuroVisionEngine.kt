@@ -20,11 +20,13 @@ package com.kurostream.playback.kurovision
 import android.content.Context
 import android.opengl.EGL14
 import android.opengl.EGLContext
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import androidx.annotation.Keep
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -38,6 +40,7 @@ class KuroVisionEngine @Inject constructor(
     private val settings: KuroVisionSettings,
     private val inspector: AndroidDeviceInspector,
 ) {
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val engineScope = CoroutineScope(Dispatchers.Default + Job())
 
     @Volatile private var profile: KuroVisionDeviceProfile? = null
@@ -132,7 +135,12 @@ class KuroVisionEngine @Inject constructor(
         }
     }
 
-companion object {
+    companion object {
         private const val TAG = "KuroVisionEngine"
+        @Volatile private var INSTANCE: KuroVisionEngine? = null
+        fun getInstance(context: Context): KuroVisionEngine =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: throw IllegalStateException("Inject via Hilt, not manual instantiation")
+            }
     }
 }
