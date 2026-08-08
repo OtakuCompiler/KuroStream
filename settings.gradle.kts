@@ -16,12 +16,11 @@ dependencyResolutionManagement {
 }
 rootProject.name = "KuroStream"
 include(":app")
-// include(":baseline-profile")
-// include(":benchmark")
 include(":cache")
 include(":common")
 include(":config")
 include(":data")
+include(":desktop")
 include(":domain")
 include(":extensions")
 include(":marketplace")

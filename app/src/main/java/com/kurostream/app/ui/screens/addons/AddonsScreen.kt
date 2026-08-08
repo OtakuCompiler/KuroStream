@@ -168,6 +168,17 @@ fun AddonsScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // ===== MANIFEST URL INSTALLER =====
+        ManifestUrlInput(
+            isLoading = uiState.isLoading,
+            progress = uiState.installProgress,
+            error = uiState.error,
+            onInstall = { url -> viewModel.installByManifestUrl(url) },
+            onClearError = { viewModel.clearMessages() },
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // ===== LOADING STATE =====
         if (uiState.isLoading) {
             Box(
@@ -421,6 +432,117 @@ private fun AddonCard(
                 color = Color(0xFFE0E0E0),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+/**
+ * Inline manifest-URL install row.
+ *
+ * Lets the user paste any Stremio-compatible `https://host/manifest.json` URL
+ * and install it without leaving the Addons screen. This is the primary way
+ * to add third-party add-ons like Torrentio, Public Domain, TMDB Scraper, etc.
+ */
+@Composable
+private fun ManifestUrlInput(
+    isLoading: Boolean,
+    progress: String?,
+    error: String?,
+    onInstall: (String) -> Unit,
+    onClearError: () -> Unit,
+) {
+    var url by remember { mutableStateOf("") }
+    var localFocused by remember { mutableStateOf(false) }
+    val borderAlpha by animateFloatAsState(
+        targetValue = if (localFocused) 1f else 0.3f,
+        animationSpec = spring(dampingRatio = 0.8f),
+        label = "manifestBorder"
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(AFSurface)
+            .border(
+                width = 1.dp,
+                color = AFCyan.copy(alpha = borderAlpha),
+                shape = RoundedCornerShape(12.dp),
+            )
+            .padding(horizontal = 20.dp, vertical = 16.dp)
+    ) {
+        Text(
+            text = "Install add-on by manifest URL",
+            color = Color(0xFFE0E0E0),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Paste any Stremio, TMDB, Torrentio, or other add-on manifest URL.",
+            color = Color(0xFFE0E0E0).copy(alpha = 0.6f),
+            fontSize = 12.sp,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            androidx.tv.material3.OutlinedTextField(
+                value = url,
+                onValueChange = { url = it; if (error != null) onClearError() },
+                modifier = Modifier
+                    .weight(1f)
+                    .onFocusChanged { localFocused = it.isFocused },
+                placeholder = "https://example.com/manifest.json",
+                singleLine = true,
+                colors = androidx.tv.material3.OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color(0xFFE0E0E0),
+                    unfocusedTextColor = Color(0xFFE0E0E0),
+                    focusedContainerColor = AFBg,
+                    unfocusedContainerColor = AFBg,
+                    focusedBorderColor = AFCyan,
+                    unfocusedBorderColor = Color(0xFFE0E0E0).copy(alpha = 0.3f),
+                ),
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (url.isBlank() || isLoading) Color(0xFF2A2A2A) else AFCyan)
+                    .clickable(enabled = url.isNotBlank() && !isLoading) {
+                        onInstall(url.trim())
+                    }
+                    .padding(horizontal = 24.dp, vertical = 14.dp)
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = Color(0xFFE0E0E0),
+                    )
+                } else {
+                    Text(
+                        text = "Install",
+                        color = Color(0xFFE0E0E0),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+        if (progress != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = progress,
+                color = AFCyan,
+                fontSize = 12.sp,
+            )
+        }
+        if (error != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = error,
+                color = Color(0xFFFF6B6B),
+                fontSize = 12.sp,
             )
         }
     }

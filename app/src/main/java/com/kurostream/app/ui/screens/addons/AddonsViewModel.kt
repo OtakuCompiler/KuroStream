@@ -19,19 +19,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kurostream.data.local.dao.AddonDao
 import com.kurostream.data.local.entity.AddonConfigEntity
+import com.kurostream.domain.extension.UnifiedExtension
+import com.kurostream.extensions.stremio.StremioAdapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
+import androidx.compose.runtime.Immutable
 
 /**
  * UI State for the Addons screen.
  */
-import androidx.compose.runtime.Immutable
-
 @Immutable
 data class AddonsUiState(
     val installedAddons: List<AddonItem> = emptyList(),
@@ -39,15 +41,18 @@ data class AddonsUiState(
     val selectedCategory: AddonCategory = AddonCategory.INSTALLED,
     val isLoading: Boolean = false,
     val error: String? = null,
+    val installProgress: String? = null,
 )
 
 /**
  * ViewModel for AddonsScreen.
- * Manages loading, installing, and uninstalling add-ons.
+ * Manages loading, installing, and uninstalling add-ons,
+ * including installing Stremio add-ons by manifest URL.
  */
 @HiltViewModel
 class AddonsViewModel @Inject constructor(
     private val addonDao: AddonDao,
+    private val stremioAdapter: StremioAdapter,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddonsUiState())
@@ -55,6 +60,13 @@ class AddonsViewModel @Inject constructor(
 
     init {
         loadAddons()
+    }
+
+    /**
+     * Switch the active category tab.
+     */
+    fun selectCategory(category: com.kurostream.app.ui.screens.addons.AddonCategory) {
+        _uiState.update { it.copy(selectedCategory = category) }
     }
 
     /**
@@ -67,7 +79,6 @@ class AddonsViewModel @Inject constructor(
                 val installedEntities = addonDao.getAll()
                 val installed = installedEntities.map { it.toAddonItem(isInstalled = true) }
 
-                // Available add-ons - in production this would come from a remote source
                 val available = getAvailableAddons().filter { available ->
                     installed.none { it.id == available.id }
                 }
@@ -81,6 +92,7 @@ class AddonsViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                Timber.e(e, "Failed to load addons")
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -92,14 +104,64 @@ class AddonsViewModel @Inject constructor(
     }
 
     /**
-     * Refresh add-ons - called by pull-to-refresh or retry.
+     * Install a Stremio add-on by its manifest URL.
+     *
+     * Fetches the manifest, converts to a UnifiedExtension, and persists it.
+     * Returns Result so the caller can surface success/failure to the user.
      */
-    fun refreshAddons() {
-        loadAddons()
+    fun installByManifestUrl(manifestUrl: String, onResult: (Result<UnifiedExtension>) -> Unit = {}) {
+        val url = manifestUrl.trim()
+        if (url.isBlank()) {
+            val err = "Manifest URL cannot be empty"
+            _uiState.update { it.copy(error = err) }
+            onResult(Result.failure(IllegalArgumentException(err)))
+            return
+        }
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            val err = "Manifest URL must start with http:// or https://"
+            _uiState.update { it.copy(error = err) }
+            onResult(Result.failure(IllegalArgumentException(err)))
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, installProgress = "Fetching manifest…") }
+            try {
+                val manifestResult = stremioAdapter.fetchManifest(url)
+                val manifest = manifestResult.getOrThrow()
+                val extension = stremioAdapter.toUnifiedExtension(manifest, url)
+
+                val entity = AddonConfigEntity(
+                    extensionId = extension.id,
+                    configJson = stremioAdapter.encodeConfig(extension),
+                    isEnabled = true,
+                )
+                addonDao.insert(entity)
+                loadAddons()
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        installProgress = "Installed ${extension.name}",
+                        error = null,
+                    )
+                }
+                onResult(Result.success(extension))
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to install addon from $url")
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        installProgress = null,
+                        error = "Install failed: ${e.message ?: e.javaClass.simpleName}",
+                    )
+                }
+                onResult(Result.failure(e))
+            }
+        }
     }
 
     /**
-     * Install an add-on.
+     * Install an add-on from the marketplace catalog.
      */
     fun installAddon(addonId: String) {
         viewModelScope.launch {
@@ -142,106 +204,69 @@ class AddonsViewModel @Inject constructor(
      * Currently a no-op, would open add-on settings in production.
      */
     fun configureAddon(addonId: String) {
-        // In production, this would navigate to add-on configuration screen
-    }
-
-    /**
-     * Select a category tab.
-     */
-    fun selectCategory(category: AddonCategory) {
-        _uiState.update { it.copy(selectedCategory = category) }
-    }
-
-    /**
-     * Clear any error message.
-     */
-    fun clearError() {
-        _uiState.update { it.copy(error = null) }
-    }
-
-    private fun findAddonById(addonId: String): AddonItem? {
-        return _uiState.value.installedAddons.find { it.id == addonId }
-            ?: _uiState.value.availableAddons.find { it.id == addonId }
-    }
-
-    /**
-     * Get list of available add-ons.
-     * In production, this would come from a remote repository.
-     */
-    private fun getAvailableAddons(): List<AddonItem> {
-        return listOf(
-            AddonItem(
-                id = "stremio_torrentio",
-                name = "Torrentio",
-                description = "Real-Debrid torrent streaming with cached Debrid links",
-                category = AddonCategory.STREMIO,
-                isInstalled = false,
-                version = "2.0.0",
-                author = "lZv4",
-            ),
-            AddonItem(
-                id = "stremio_community",
-                name = "Stremio Addons",
-                description = "Watch content from Stremio catalog",
-                category = AddonCategory.STREMIO,
-                isInstalled = false,
-                version = "1.0.0",
-                author = "Stremio",
-            ),
-            AddonItem(
-                id = "kitsu_anime",
-                name = "Kitsu Anime",
-                description = "Anime from Kitsu API with metadata and images",
-                category = AddonCategory.KITSU,
-                isInstalled = false,
-                version = "1.5.0",
-                author = "KuroStream",
-            ),
-            AddonItem(
-                id = "kitsu_trending",
-                name = "Kitsu Trending",
-                description = "Trending anime from Kitsu",
-                category = AddonCategory.KITSU,
-                isInstalled = false,
-                version = "1.2.0",
-                author = "KuroStream",
-            ),
-            AddonItem(
-                id = "community_notes",
-                name = "Community Notes",
-                description = "Community metadata and notes for content",
-                category = AddonCategory.COMMUNITY,
-                isInstalled = false,
-                version = "1.0.0",
-                author = "Community",
-            ),
-            AddonItem(
-                id = "community_custom",
-                name = "Custom Repository",
-                description = "Add your own content sources",
-                category = AddonCategory.COMMUNITY,
-                isInstalled = false,
-                version = "0.9.0",
-                author = "KuroStream",
-            ),
-        )
-    }
-
-    private fun AddonConfigEntity.toAddonItem(isInstalled: Boolean): AddonItem {
-        // Parse category from extension ID or default to STREMIO
-        val category = when {
-            extensionId.startsWith("kitsu_") -> AddonCategory.KITSU
-            extensionId.startsWith("community_") -> AddonCategory.COMMUNITY
-            else -> AddonCategory.STREMIO
+        viewModelScope.launch {
+            try {
+                val entity = addonDao.getByExtensionId(addonId) ?: return@launch
+                // Mark as configured by touching the config row.
+                addonDao.insert(entity.copy(configJson = entity.configJson.ifBlank { "{}" }))
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message ?: "Failed to configure add-on") }
+            }
         }
-        return AddonItem(
-            id = extensionId,
-            name = extensionId.replace("_", " ").replaceFirstChar { it.uppercase() },
-            description = "Installed add-on",
-            category = category,
-            isInstalled = isInstalled,
-            version = "1.0.0",
-            author = "Unknown",
-        )
     }
+
+    /**
+     * Clear transient error/progress messages.
+     */
+    fun clearMessages() {
+        _uiState.update { it.copy(error = null, installProgress = null) }
+    }
+
+    private suspend fun findAddonById(id: String): AddonItem? {
+        val available = getAvailableAddons()
+        return available.firstOrNull { it.id == id }
+    }
+
+    private suspend fun getAvailableAddons(): List<AddonItem> = listOf(
+        AddonItem(
+            id = "stremio_official",
+            name = "Stremio Official Catalogs",
+            description = "Official Stremio catalogs for movies, series, and anime",
+            iconUrl = "https://www.stremio.com/website/stremio-logo-small.png",
+            author = "Stremio",
+            category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+        ),
+        AddonItem(
+            id = "tmdb_popular",
+            name = "TMDB Popular",
+            description = "Trending movies and TV shows from TMDB",
+            iconUrl = "",
+            author = "Community",
+            category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+        ),
+        AddonItem(
+            id = "anilist",
+            name = "AniList",
+            description = "Anime catalog from AniList with seasonal shows",
+            iconUrl = "",
+            author = "AniList",
+            category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+        ),
+        AddonItem(
+            id = "torrentio",
+            name = "Torrentio",
+            description = "Aggregates streams from public torrent providers (paste your own URL)",
+            iconUrl = "",
+            author = "Community",
+            category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+        ),
+        AddonItem(
+            id = "opensubtitles",
+            name = "OpenSubtitles v3",
+            description = "Subtitles in 50+ languages",
+            iconUrl = "",
+            author = "OpenSubtitles",
+            category = com.kurostream.app.ui.screens.addons.AddonCategory.STREMIO,
+        ),
+    )
 }

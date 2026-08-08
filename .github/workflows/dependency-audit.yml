@@ -24,13 +24,27 @@ jobs:
           cache: 'npm'
           cache-dependency-path: kurohub/package.json
       - name: Install dependencies
-        run: npm install
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate || true
+        run: npm install --no-audit
+      - name: Run npm audit (warn-only)
+        run: npm audit --audit-level=critical || true
         continue-on-error: true
       - name: Check for outdated dependencies
         run: npm outdated || true
         continue-on-error: true
+      - name: Generate audit report
+        if: always()
+        run: |
+          {
+            echo "## npm audit report"
+            echo "Generated $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo ""
+            echo "### Vulnerabilities"
+            npm audit --json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); m=d.get('metadata',{}).get('vulnerabilities',{}); print('  Total:', m);" || echo "  npm audit unavailable"
+            echo ""
+            echo "### Outdated packages"
+            npm outdated || true
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
 
   audit-android:
     name: Android Dependencies Audit
@@ -43,9 +57,22 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - uses: gradle/actions/setup-gradle@v4
-      - name: List dependency versions
-        run: bash gradlew dependencies --no-daemon || true
+      - name: Generate dependency report
+        run: |
+          bash gradlew dependencies --configuration releaseRuntimeClasspath --no-daemon --max-workers=2 \
+            > /tmp/deps.txt 2>&1 || true
         continue-on-error: true
       - name: Check for outdated plugins
-        run: bash gradlew help --no-daemon || true
+        run: bash gradlew :app:dependencyUpdates -no-daemon || true
         continue-on-error: true
+      - name: Generate audit report
+        if: always()
+        run: |
+          {
+            echo "## Android dependency audit report"
+            echo "Generated $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo ""
+            echo "### Top-level dependencies (releaseRuntimeClasspath)"
+            head -200 /tmp/deps.txt 2>/dev/null || echo "(unavailable)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0

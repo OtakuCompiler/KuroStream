@@ -16,6 +16,9 @@
 package com.kurostream.data.di
 
 import com.kurostream.data.BuildConfig
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.kurostream.data.remote.api.AniListApi
 import com.kurostream.data.remote.api.AniDbApi
 import com.kurostream.data.remote.api.AnnApi
@@ -27,19 +30,18 @@ import com.kurostream.data.remote.api.TvdbApi
 import com.kurostream.data.remote.api.ImdbApi
 import com.kurostream.data.remote.api.YouTubeApi
 import com.kurostream.data.network.security.AuthInterceptor
+import com.kurostream.data.network.security.CertificatePinningConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.serialization.json.Json
 import okhttp3.Cache
 import okhttp3.ConnectionPool
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
+import okhttp3.brotli.BrotliInterceptor
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import timber.log.Timber
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -60,6 +62,7 @@ object NetworkModule {
     private const val ANIDB_BASE_URL = "https://api.anidb.net/"
     private const val ANN_BASE_URL = "https://cdn.animenewsnetwork.com/"
 
+
     @Provides
     @Singleton
     fun provideCacheDir(context: android.content.Context): File {
@@ -69,12 +72,14 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideHttpCache(cacheDir: File): Cache {
+        // 50MB HTTP response cache with ETag support
         return Cache(cacheDir, 50L * 1024 * 1024)
     }
 
     @Provides
     @Singleton
     fun provideConnectionPool(): ConnectionPool {
+        // Keep connections alive for 5 minutes, max 10 idle connections
         return ConnectionPool(10, 5, TimeUnit.MINUTES)
     }
 
@@ -107,9 +112,8 @@ object NetworkModule {
             .cache(cache)
             .connectionPool(connectionPool)
             .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
-            .addInterceptor(authInterceptor)
-            .addInterceptor(com.kurostream.data.network.RetryInterceptor())
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
             .addNetworkInterceptor { chain ->
                 val request = chain.request()
                 val response = chain.proceed(request)
@@ -121,9 +125,10 @@ object NetworkModule {
                     response
                 }
             }
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .callTimeout(20, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .apply {
                 try {
@@ -133,6 +138,15 @@ object NetworkModule {
                 }
             }
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideJson(): Json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        coerceInputValues = true
+        encodeDefaults = true
     }
 
     @Provides

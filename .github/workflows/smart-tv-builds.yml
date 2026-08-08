@@ -1,0 +1,152 @@
+name: Smart TV & Desktop Builds
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  webos-ipk:
+    name: webOS .ipk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Build webapp
+        run: |
+          cd smarttv/webapp
+          if [[ -f package.json ]]; then
+            npm install
+            npm run build 2>&1 || true
+          fi
+          echo "Webapp ready"
+      - name: Package .ipk
+        run: |
+          chmod +x scripts/build-ipk.sh
+          ./scripts/build-ipk.sh --version "${GITHUB_REF_NAME#v}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kurostream-webos
+          path: build/*.ipk
+          retention-days: 30
+
+  tizen-wgt:
+    name: Tizen .wgt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Build webapp
+        run: |
+          cd smarttv/webapp
+          if [[ -f package.json ]]; then
+            npm install
+            npm run build 2>&1 || true
+          fi
+          echo "Webapp ready"
+      - name: Package .wgt
+        run: |
+          chmod +x scripts/build-wgt.sh
+          ./scripts/build-wgt.sh --version "${GITHUB_REF_NAME#v}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kurostream-tizen
+          path: build/*.wgt
+          retention-days: 30
+
+  windows-exe:
+    name: Windows .exe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build Windows installer
+        run: |
+          bash gradlew :desktop:packageExe --no-daemon --no-build-cache --max-workers=2 \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
+        env:
+          GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kurostream-windows
+          path: desktop/build/compose/binaries/main/exe/**/*.exe
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kurostream-windows-msi
+          path: desktop/build/compose/binaries/main/msi/**/*.msi
+          retention-days: 30
+
+  linux-appimage:
+    name: Linux .AppImage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build Linux installer
+        run: |
+          bash gradlew :desktop:packageAppImage :desktop:packageDeb --no-daemon --no-build-cache --max-workers=2 \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
+        env:
+          GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kurostream-linux
+          path: |
+            desktop/build/compose/binaries/main/appimage/*.AppImage
+            desktop/build/compose/binaries/main/deb/*.deb
+          retention-days: 30
+
+  macos-dmg:
+    name: macOS .dmg
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build macOS installer
+        run: |
+          bash gradlew :desktop:packageDmg --no-daemon --no-build-cache --max-workers=2 \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
+        env:
+          GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kurostream-macos
+          path: desktop/build/compose/binaries/main/dmg/*.dmg
+          retention-days: 30

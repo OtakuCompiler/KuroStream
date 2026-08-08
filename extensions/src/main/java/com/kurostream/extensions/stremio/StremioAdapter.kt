@@ -163,4 +163,23 @@ class StremioAdapter @Inject constructor(
         "480p", "sd" -> 0.5f
         else -> 0.3f
     }
+
+    /**
+     * Encode an extension as a config JSON for persistence in the Room DB.
+     * Used by the Addons screen to save the manifest alongside the install row.
+     */
+    fun encodeConfig(extension: UnifiedExtension): String {
+        val config = buildString {
+            append("{\"manifestUrl\":")
+            append(json.encodeToString(kotlinx.serialization.serializer<String>(), extension.originUrl))
+            append(",\"name\":")
+            append(json.encodeToString(kotlinx.serialization.serializer<String>(), extension.name))
+            append(",\"version\":")
+            append(json.encodeToString(kotlinx.serialization.serializer<String>(), extension.version))
+            append(",\"icon\":")
+            append(json.encodeToString(kotlinx.serialization.serializer<String>(), extension.iconUrl))
+            append("}")
+        }
+        return config
+    }
 }
