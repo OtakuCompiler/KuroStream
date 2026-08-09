@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -336,7 +338,7 @@ private fun PhoneTopBar(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp),
         ) {
-            items(DefaultHubs.size) { idx ->
+            items(DefaultHubs.size, key = { DefaultHubs[it].id }) { idx ->
                 val hub = DefaultHubs[idx]
                 Af3PillButton(
                     label = "${hub.icon} ${hub.label}",
@@ -353,14 +355,14 @@ private fun PhoneTopBar(
         }
         Spacer(Modifier.height(4.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(5) { idx ->
-                val (label, onClick) = when (idx) {
-                    0 -> "Library" to onLibraryClick
-                    1 -> "History" to onHistoryClick
-                    2 -> "Favorites" to onFavoritesClick
-                    3 -> "Add-ons" to onAddonsClick
-                    else -> "Torrents" to onTorrentsClick
-                }
+            val actions = listOf(
+                "Library" to onLibraryClick,
+                "History" to onHistoryClick,
+                "Favorites" to onFavoritesClick,
+                "Add-ons" to onAddonsClick,
+                "Torrents" to onTorrentsClick,
+            )
+            items(actions, key = { it.first }) { (label, onClick) ->
                 Af3PillButton(label = label, primary = false, onClick = onClick)
             }
         }
