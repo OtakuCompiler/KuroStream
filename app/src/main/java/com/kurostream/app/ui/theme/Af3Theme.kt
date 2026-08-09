@@ -243,6 +243,27 @@ data class Af3AspectRatio(
 val LocalAf3AspectRatio = staticCompositionLocalOf { Af3AspectRatio.Widescreen }
 
 /**
+ * Form-factor detection. AF3 has separate phone vs TV layouts.
+ * - Phone: screenWidthDp < 600dp OR touch screen without TV leanback
+ * - Tablet: 600dp ≤ screenWidthDp < 840dp
+ * - TV: ≥ 840dp OR android.ui.mode.tv
+ */
+enum class Af3FormFactor { Phone, Tablet, Tv }
+
+@Composable
+fun rememberAf3FormFactor(): Af3FormFactor {
+    val cfg = LocalConfiguration.current
+    val w = cfg.screenWidthDp
+    return remember(w) {
+        when {
+            w >= 840 -> Af3FormFactor.Tv
+            w >= 600 -> Af3FormFactor.Tablet
+            else -> Af3FormFactor.Phone
+        }
+    }
+}
+
+/**
  * Detect the current screen aspect ratio and return the matching AF3 preset.
  * Snap-to-grid: ratios within 0.05 of a preset bucket are matched.
  */

@@ -133,6 +133,29 @@ fun TvNavHost(
             SettingsScreen(
                 onBackClick = { navController.popBackStack() },
                 onMarketplaceClick = { navController.navigate(MarketplaceRoute) },
+                onExtensionsClick = { navController.navigate(AddonsRoute) },
+                onSourceLockClick = { navController.navigate(SourceLockSettingsRoute) },
+                onPlaybackClick = { navController.navigate(PlaybackSettingsRoute) },
+                onPrivacyClick = { navController.navigate(PrivacySettingsRoute) },
+                onDisplayClick = { navController.navigate(DisplaySettingsRoute) },
+                onNetworkClick = { navController.navigate(NetworkSettingsRoute) },
+                onAccountClick = { navController.navigate(AccountSettingsRoute) },
+                onStorageClick = { navController.navigate(StorageSettingsRoute) },
+                onDebridClick = { navController.navigate(DebridRoute) },
+                onAboutClick = { navController.navigate(AboutRoute) },
+                onDiagnosticsClick = { navController.navigate(DiagnosticsRoute) },
+                onBackupClick = { navController.navigate(BackupRoute) },
+                onTorrentsClick = { navController.navigate(TorrentsRoute) },
+                onTraktClick = { navController.navigate(TraktRoute) },
+                onRealDebridClick = { navController.navigate(DebridRoute) },
+                onAllDebridClick = { navController.navigate(DebridRoute) },
+                onOpenSubtitlesClick = { navController.navigate(OpenSubtitlesRoute) },
+                onTmdbClick = { navController.navigate(TmdbRoute) },
+                onTvdbClick = { navController.navigate(TvdbRoute) },
+                onKitsuClick = { navController.navigate(KitsuRoute) },
+                onSimklClick = { navController.navigate(SimklRoute) },
+                onAniListClick = { navController.navigate(AniListRoute) },
+                onMalClick = { navController.navigate(MalRoute) },
             )
         }
 
@@ -202,6 +225,55 @@ fun TvNavHost(
                     }
                 },
             )
+        }
+
+        composable<PlaybackSettingsRoute> {
+            com.kurostream.app.ui.screens.settings.PlaybackSettingsScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<PrivacySettingsRoute> {
+            com.kurostream.app.ui.screens.settings.PrivacySettingsScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<DisplaySettingsRoute> {
+            com.kurostream.app.ui.screens.settings.DisplaySettingsScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<NetworkSettingsRoute> {
+            com.kurostream.app.ui.screens.settings.NetworkSettingsScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<AccountSettingsRoute> {
+            com.kurostream.app.ui.screens.settings.AccountSettingsScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<StorageSettingsRoute> {
+            com.kurostream.app.ui.screens.settings.StorageSettingsScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<AboutRoute> {
+            com.kurostream.app.ui.screens.settings.AboutScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<DiagnosticsRoute> {
+            com.kurostream.app.ui.screens.settings.DiagnosticsScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<TraktRoute> {
+            com.kurostream.app.ui.screens.settings.TraktConfigScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<OpenSubtitlesRoute> {
+            com.kurostream.app.ui.screens.settings.OpenSubtitlesConfigScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<TmdbRoute> {
+            com.kurostream.app.ui.screens.settings.TmdbConfigScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<TvdbRoute> {
+            com.kurostream.app.ui.screens.settings.TvdbConfigScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<KitsuRoute> {
+            com.kurostream.app.ui.screens.settings.KitsuConfigScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<SimklRoute> {
+            com.kurostream.app.ui.screens.settings.SimklConfigScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<AniListRoute> {
+            com.kurostream.app.ui.screens.settings.AniListConfigScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<MalRoute> {
+            com.kurostream.app.ui.screens.settings.MalConfigScreen(onBackClick = { navController.popBackStack() })
         }
     }
 }

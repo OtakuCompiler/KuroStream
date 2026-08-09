@@ -59,4 +59,25 @@ object InputSanitizer {
         if (id.length > 32) return false
         return id.all { it.isLetterOrDigit() || it == '_' || it == '-' }
     }
+
+    /**
+     * Sanitize a free-form overview/synopsis text for safe rendering.
+     * Strips HTML, control characters, and excessive whitespace.
+     * Result is plain text suitable for display.
+     */
+    fun sanitizeOverview(raw: String?): String? {
+        if (raw.isNullOrBlank()) return null
+        if (raw.length > 4_000) return null
+        val noHtml = raw
+            .replace(Regex("<[^>]+>"), " ")
+            .replace("&nbsp;", " ")
+            .replace("&", "&")
+            .replace("<", "<")
+            .replace(">", ">")
+            .replace(""", "\"")
+            .replace("'", "'")
+        val cleaned = noHtml.filter { ch -> ch.code >= 0x20 && ch.code != 0x7F }
+        val collapsed = cleaned.replace(Regex("\\s+"), " ").trim()
+        return collapsed.take(1_500).ifBlank { null }
+    }
 }

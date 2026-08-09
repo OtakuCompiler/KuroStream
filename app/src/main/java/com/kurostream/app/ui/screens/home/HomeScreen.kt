@@ -41,8 +41,10 @@ import com.kurostream.app.ui.components.Af3HubSwitcher
 import com.kurostream.app.ui.components.Af3PillButton
 import com.kurostream.app.ui.components.Af3WidgetRow
 import com.kurostream.app.ui.theme.Af3AspectRatio
+import com.kurostream.app.ui.theme.Af3FormFactor
 import com.kurostream.app.ui.theme.Af3Theme
 import com.kurostream.app.ui.theme.rememberAf3AspectRatio
+import com.kurostream.app.ui.theme.rememberAf3FormFactor
 import kotlinx.coroutines.delay
 
 private val DefaultHubs = listOf(
@@ -73,6 +75,8 @@ fun HomeScreen(
     val firstFocus = remember { FocusRequester() }
     var activeHub by remember { mutableIntStateOf(0) }
     val aspect = rememberAf3AspectRatio()
+    val formFactor = rememberAf3FormFactor()
+    val isPhone = formFactor == Af3FormFactor.Phone
 
     LaunchedEffect(Unit) {
         Timber.tag("HomeScreen").i("HomeScreen composed: isInitialLoading=${uiState.isInitialLoading} hero=${uiState.heroItems.size} trending=${(uiState.trending as? RowState.Success)?.items?.size ?: -1}")
@@ -89,36 +93,39 @@ fun HomeScreen(
         Af3Backdrop(backdropUrl = uiState.heroItems.firstOrNull()?.backdropUrl)
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // ===== TOP BAR (KuroStream logo + hub switcher + settings) =====
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = space.safeH, end = space.safeH, top = space.s12, bottom = space.s4),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "KuroStream",
-                    color = palette.text,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
+            // ===== TOP BAR =====
+            if (isPhone) {
+                PhoneTopBar(
+                    activeHub = activeHub,
+                    onHubSelected = { idx ->
+                        activeHub = idx
+                        when (DefaultHubs[idx].id) {
+                            "search" -> onSearchClick()
+                            "favorites" -> onFavoritesClick()
+                            else -> Unit
+                        }
+                    },
+                    onSearchClick = onSearchClick,
+                    onFavoritesClick = onFavoritesClick,
+                    onHistoryClick = onHistoryClick,
+                    onLibraryClick = onLibraryClick,
+                    onAddonsClick = onAddonsClick,
+                    onTorrentsClick = onTorrentsClick,
+                    onSettingsClick = onSettingsClick,
                 )
-                Spacer(Modifier.width(space.s24))
-                Box(modifier = Modifier.weight(1f)) {
-                    Af3HubSwitcher(
-                        hubs = DefaultHubs,
-                        activeIndex = activeHub,
-                        onHubSelected = { idx ->
-                            activeHub = idx
-                            when (DefaultHubs[idx].id) {
-                                "search" -> onSearchClick()
-                                "favorites" -> onFavoritesClick()
-                                else -> Unit
-                            }
-                        },
-                    )
-                }
-                Spacer(Modifier.width(space.s12))
-                Af3PillButton("Settings", primary = false, onClick = onSettingsClick)
+            } else {
+                TvTopBar(
+                    activeHub = activeHub,
+                    onHubSelected = { idx ->
+                        activeHub = idx
+                        when (DefaultHubs[idx].id) {
+                            "search" -> onSearchClick()
+                            "favorites" -> onFavoritesClick()
+                            else -> Unit
+                        }
+                    },
+                    onSettingsClick = onSettingsClick,
+                )
             }
 
             // ===== MAIN CONTENT — never returns early, always renders visible =====
@@ -158,10 +165,13 @@ private fun HomeContent(
 ) {
     val palette = Af3Theme.palette
     val space = Af3Theme.space
+    val formFactor = rememberAf3FormFactor()
+    val isPhone = formFactor == Af3FormFactor.Phone
 
-    // Compute aspect-aware sizes
-    val heroHeight = (aspect.heightFraction * 720).dp.coerceIn(380.dp, 700.dp)
-    val heroH = aspect.heroHeight.coerceAtLeast(380.dp)
+    val heroH = when {
+        isPhone -> 220.dp
+        else -> aspect.heroHeight.coerceAtLeast(380.dp)
+    }
 
     val anyItems = uiState.heroItems.isNotEmpty() ||
         rowHasItems(uiState.continueWatching) ||
@@ -250,6 +260,109 @@ private fun androidx.compose.foundation.lazy.LazyListScope.renderRow(
                 onItemClick = { onMediaClick(it.id) },
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+    }
+}
+
+@Composable
+private fun TvTopBar(
+    activeHub: Int,
+    onHubSelected: (Int) -> Unit,
+    onSettingsClick: () -> Unit,
+) {
+    val palette = Af3Theme.palette
+    val space = Af3Theme.space
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = space.safeH, end = space.safeH, top = space.s12, bottom = space.s4),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "KuroStream",
+            color = palette.text,
+            fontWeight = FontWeight.Bold,
+            fontSize = 22.sp,
+        )
+        Spacer(Modifier.width(space.s24))
+        Box(modifier = Modifier.weight(1f)) {
+            Af3HubSwitcher(
+                hubs = DefaultHubs,
+                activeIndex = activeHub,
+                onHubSelected = onHubSelected,
+            )
+        }
+        Spacer(Modifier.width(space.s12))
+        Af3PillButton("Settings", primary = false, onClick = onSettingsClick)
+    }
+}
+
+@Composable
+private fun PhoneTopBar(
+    activeHub: Int,
+    onHubSelected: (Int) -> Unit,
+    onSearchClick: () -> Unit,
+    onFavoritesClick: () -> Unit,
+    onHistoryClick: () -> Unit,
+    onLibraryClick: () -> Unit,
+    onAddonsClick: () -> Unit,
+    onTorrentsClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+) {
+    val palette = Af3Theme.palette
+    val space = Af3Theme.space
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "KuroStream",
+                color = palette.text,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                modifier = Modifier.weight(1f),
+            )
+            Af3PillButton("Search", primary = false, onClick = onSearchClick)
+            Spacer(Modifier.width(6.dp))
+            Af3PillButton("Settings", primary = false, onClick = onSettingsClick)
+        }
+        Spacer(Modifier.height(8.dp))
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp),
+        ) {
+            items(DefaultHubs.size) { idx ->
+                val hub = DefaultHubs[idx]
+                Af3PillButton(
+                    label = "${hub.icon} ${hub.label}",
+                    primary = activeHub == idx,
+                    onClick = {
+                        onHubSelected(idx)
+                        when (hub.id) {
+                            "favorites" -> onFavoritesClick()
+                            else -> Unit
+                        }
+                    },
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(5) { idx ->
+                val (label, onClick) = when (idx) {
+                    0 -> "Library" to onLibraryClick
+                    1 -> "History" to onHistoryClick
+                    2 -> "Favorites" to onFavoritesClick
+                    3 -> "Add-ons" to onAddonsClick
+                    else -> "Torrents" to onTorrentsClick
+                }
+                Af3PillButton(label = label, primary = false, onClick = onClick)
+            }
         }
     }
 }

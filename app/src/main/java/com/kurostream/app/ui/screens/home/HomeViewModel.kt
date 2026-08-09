@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.repository.TvRepositories
+import com.kurostream.app.security.InputSanitizer
+import com.kurostream.extensions.aggregator.MetadataFusionService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -50,6 +53,7 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val mediaRepository: TvRepositories.MediaRepository,
     private val watchProgressRepository: TvRepositories.WatchProgressRepository,
+    private val metadataFusion: MetadataFusionService,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -61,6 +65,7 @@ class HomeViewModel @Inject constructor(
     init {
         loadHomeData()
         viewModelScope.launch { mediaRepository.refreshTrending() }
+        viewModelScope.launch { loadFusedMetadata() }
         viewModelScope.launch {
             kotlinx.coroutines.delay(3_000)
             if (_uiState.value.isInitialLoading) {
@@ -73,7 +78,52 @@ class HomeViewModel @Inject constructor(
     fun retry() {
         loadHomeData()
         viewModelScope.launch { mediaRepository.refreshTrending() }
+        viewModelScope.launch { loadFusedMetadata() }
     }
+
+    private suspend fun loadFusedMetadata() {
+        runCatching {
+            val feed = metadataFusion.loadFusedFeed()
+            Timber.i("MetadataFusion: queried=${feed.providersQueried} failed=${feed.providersFailed} trending=${feed.trending.size} anime=${feed.anime.size} movies=${feed.movies.size}")
+            if (feed.trending.isEmpty() && feed.anime.isEmpty() && feed.movies.isEmpty() && feed.tv.isEmpty()) return@runCatching
+
+            val hero = feed.trending.take(5).map { it.toMediaItem() }
+            val trending = feed.trending.map { it.toMediaItem() }
+            val anime = feed.anime.map { it.toMediaItem() }
+            val movies = feed.movies.map { it.toMediaItem() }
+            val tv = feed.tv.map { it.toMediaItem() }
+            val genres = feed.trending.flatMap { it.genres }.distinct().take(12).map { g ->
+                MediaItem(id = "g_$g", title = g, type = "genre", genre = listOf(g))
+            }
+            val providersLabel = feed.providersQueried.joinToString { it.label }
+
+            _uiState.update { current ->
+                val merged = current.copy(
+                    heroItems = if (current.heroItems.isEmpty()) hero else current.heroItems,
+                    trending = RowState.Success(if ((current.trending as? RowState.Success)?.items?.isEmpty() != false) trending else (current.trending as RowState.Success).items),
+                    seasonal = RowState.Success(anime.ifEmpty { (current.seasonal as? RowState.Success)?.items ?: emptyList() }),
+                    popular = RowState.Success(movies.ifEmpty { (current.popular as? RowState.Success)?.items ?: emptyList() }),
+                    newReleases = RowState.Success(tv.ifEmpty { (current.newReleases as? RowState.Success)?.items ?: emptyList() }),
+                    becauseYouWatchedSource = providersLabel,
+                    genres = RowState.Success(genres.ifEmpty { (current.genres as? RowState.Success)?.items ?: emptyList() }),
+                    isInitialLoading = false,
+                )
+                merged
+            }
+        }.onFailure { Timber.e(it, "MetadataFusion load failed") }
+    }
+
+    private fun MetadataFusionService.MetadataRow.toMediaItem(): MediaItem = MediaItem(
+        id = externalId,
+        title = InputSanitizer.sanitizeOverview(title) ?: "Untitled",
+        posterUrl = posterUrl.orEmpty(),
+        backdropUrl = backdropUrl.orEmpty(),
+        description = overview.orEmpty(),
+        rating = score,
+        genre = genres,
+        year = year ?: 0,
+        source = provider.label,
+    )
 
     private fun loadHomeData() {
         loadJob?.cancel()

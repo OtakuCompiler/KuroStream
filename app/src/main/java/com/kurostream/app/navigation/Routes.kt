@@ -68,3 +68,51 @@ object MarketplaceRoute
 
 @Serializable
 object OnboardingRoute
+
+@Serializable
+object PlaybackSettingsRoute
+
+@Serializable
+object PrivacySettingsRoute
+
+@Serializable
+object DisplaySettingsRoute
+
+@Serializable
+object NetworkSettingsRoute
+
+@Serializable
+object AccountSettingsRoute
+
+@Serializable
+object StorageSettingsRoute
+
+@Serializable
+object AboutRoute
+
+@Serializable
+object DiagnosticsRoute
+
+@Serializable
+object TraktRoute
+
+@Serializable
+object OpenSubtitlesRoute
+
+@Serializable
+object TmdbRoute
+
+@Serializable
+object TvdbRoute
+
+@Serializable
+object KitsuRoute
+
+@Serializable
+object SimklRoute
+
+@Serializable
+object AniListRoute
+
+@Serializable
+object MalRoute
