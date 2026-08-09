@@ -5,9 +5,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Shapes
+import com.kurostream.app.ui.arctic.ArcticFuse3Extras
+import com.kurostream.app.ui.arctic.ArcticFuse3Tokens
+import com.kurostream.app.ui.arctic.ArcticFusePalette
+import com.kurostream.app.ui.arctic.LocalArcticFuse3Extras
+import com.kurostream.app.ui.arctic.LocalArcticFuse3Tokens
+import com.kurostream.app.ui.arctic.LocalArcticFusePalette
 
 private val AmoledScheme = generateAmoledBlackScheme()
 private val TvShapes = Shapes(
@@ -38,7 +45,14 @@ fun AnimeStreamTVTheme(content: @Composable () -> Unit) {
         onSurface = dp.onSurface,
         surfaceVariant = dp.surfaceVariant, onSurfaceVariant = dp.onSurfaceVariant,
     )
-    MaterialTheme(colorScheme = scheme, shapes = TvShapes, typography = TvTypography, content = content)
+    // Provide AF3 design tokens globally so any composable can use them
+    CompositionLocalProvider(
+        LocalArcticFusePalette provides ArcticFusePalette(),
+        LocalArcticFuse3Tokens provides ArcticFuse3Tokens(),
+        LocalArcticFuse3Extras provides ArcticFuse3Extras(),
+    ) {
+        MaterialTheme(colorScheme = scheme, shapes = TvShapes, typography = TvTypography, content = content)
+    }
 }
 
 @Composable

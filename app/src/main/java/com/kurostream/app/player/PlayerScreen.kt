@@ -91,6 +91,14 @@ import androidx.compose.material3.VerticalDivider
 import android.util.TypedValue
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
+import com.kurostream.app.ui.arctic.AbrQuality
+import com.kurostream.app.ui.arctic.Af3AbrPicker
+import com.kurostream.app.ui.arctic.Af3PipToggleButton
+import com.kurostream.app.ui.arctic.Af3SleepTimerCountdown
+import com.kurostream.app.ui.arctic.Af3SleepTimerPanel
+import com.kurostream.app.ui.arctic.SleepTimerEvent
+import com.kurostream.app.ui.arctic.SleepTimerOption
+import com.kurostream.app.ui.arctic.rememberAf3SleepTimer
 import kotlinx.coroutines.delay
 
 @UnstableApi
@@ -107,6 +115,18 @@ fun PlayerScreen(
     var controlsVisible by remember { mutableStateOf(true) }
     var showSettings by remember { mutableStateOf(false) }
     var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
+    // AF3 playback state
+    var abrQuality by remember { mutableStateOf(AbrQuality.Auto) }
+    var isPipActive by remember { mutableStateOf(false) }
+    var sleepTimerOption by remember { mutableStateOf<SleepTimerOption?>(null) }
+    var sleepRemainingMs by remember { mutableLongStateOf(0L) }
+    var showSleepPanel by remember { mutableStateOf(false) }
+    rememberAf3SleepTimer(option = sleepTimerOption ?: SleepTimerOption.Off) { evt ->
+        when (evt) {
+            is SleepTimerEvent.Tick -> sleepRemainingMs = evt.remainingMs
+            SleepTimerEvent.Expired -> { sleepTimerOption = null; sleepRemainingMs = 0L }
+        }
+    }
 
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
@@ -287,6 +307,15 @@ fun PlayerScreen(
                 onNext = { viewModel.playNextEpisode() },
                 onSettings = { showSettings = !showSettings },
                 onBack = onBackPressed,
+                abrQuality = abrQuality,
+                onAbrQualityChange = { abrQuality = it },
+                isPipActive = isPipActive,
+                onPipToggle = { isPipActive = !isPipActive },
+                sleepTimerOption = sleepTimerOption,
+                sleepRemainingMs = sleepRemainingMs,
+                showSleepPanel = showSleepPanel,
+                onSleepTimerClick = { showSleepPanel = !showSleepPanel },
+                onSleepTimerOptionChange = { sleepTimerOption = it },
                 focusRequester = focusRequester,
                 modifier = Modifier.fillMaxSize()
             )
@@ -332,6 +361,16 @@ private fun PlayerControlsOverlay(
     onSettings: () -> Unit,
     onBack: () -> Unit,
     focusRequester: FocusRequester,
+    // AF3 playback features
+    abrQuality: AbrQuality,
+    onAbrQualityChange: (AbrQuality) -> Unit,
+    isPipActive: Boolean,
+    onPipToggle: () -> Unit,
+    sleepTimerOption: SleepTimerOption?,
+    sleepRemainingMs: Long,
+    showSleepPanel: Boolean,
+    onSleepTimerClick: () -> Unit,
+    onSleepTimerOptionChange: (SleepTimerOption) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val progress = if (duration > 0) currentPosition.toFloat() / duration else 0f
@@ -456,7 +495,7 @@ private fun PlayerControlsOverlay(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onNext) {
                         Icon(
                             imageVector = Icons.Default.SkipNext,
@@ -464,22 +503,58 @@ private fun PlayerControlsOverlay(
                             tint = Color.White
                         )
                     }
+                    // AF3 PiP toggle
+                    Af3PipToggleButton(
+                        isPipActive = isPipActive,
+                        onToggle = onPipToggle,
+                    )
+                    // AF3 sleep timer countdown (only shown when active)
+                    if (sleepTimerOption != null) {
+                        Af3SleepTimerCountdown(remainingMs = sleepRemainingMs)
+                    }
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // AF3 ABR quality picker
+                    Af3AbrPicker(
+                        current = abrQuality,
+                        onChange = onAbrQualityChange,
+                    )
                     IconButton(onClick = onSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings",
                             tint = Color.White
                         )
-    }
-    }
-    }
+                    }
+                    IconButton(onClick = onSleepTimerClick) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Sleep Timer",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+            // AF3 sleep timer panel overlay
+            AnimatedVisibility(
+                visible = showSleepPanel,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                Af3SleepTimerPanel(
+                    currentOption = sleepTimerOption ?: SleepTimerOption.Off,
+                    onOptionChange = { onSleepTimerOptionChange(it) },
+                    onClose = onSleepTimerClick,
+                )
+            }
+        }
     }
 }
-}
- 
+  
 private fun formatDuration(ms: Long): String {
     val totalSeconds = ms / 1000
     val hours = totalSeconds / 3600

@@ -159,7 +159,11 @@ fun ArcticFuseTheme(
     content: @Composable () -> Unit,
 ) {
     val palette = ArcticFusePalette.forMode(themeMode, customTheme)
-    CompositionLocalProvider(LocalArcticFusePalette provides palette) {
+    CompositionLocalProvider(
+        LocalArcticFusePalette provides palette,
+        LocalArcticFuse3Tokens provides ArcticFuse3Tokens(),
+        LocalArcticFuse3Extras provides ArcticFuse3Extras(),
+    ) {
         content()
     }
 }
