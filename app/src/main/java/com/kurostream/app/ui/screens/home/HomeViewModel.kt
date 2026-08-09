@@ -93,7 +93,7 @@ class HomeViewModel @Inject constructor(
             val movies = feed.movies.map { it.toMediaItem() }
             val tv = feed.tv.map { it.toMediaItem() }
             val genres = feed.trending.flatMap { it.genres }.distinct().take(12).map { g ->
-                MediaItem(id = "g_$g", title = g, type = "genre", genre = listOf(g))
+                MediaItem(id = "g_$g", title = g, genre = listOf(g), source = "genre")
             }
             val providersLabel = feed.providersQueried.joinToString { it.label }
 
