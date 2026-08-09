@@ -158,8 +158,8 @@ class MetadataFusionService @Inject constructor(
     private suspend fun safeTvdb(block: suspend () -> List<com.kurostream.extensions.tvdb.TvdbResult>) =
         safeList(Provider.TVDB) { block().map { it.toRow() } }
 
-    private suspend fun safeSimkl(block: suspend () -> List<com.kurostream.extensions.simkl.SimklSearchResult>) =
-        safeList(Provider.SIMKL) { block().map { it.simklToRow() } }
+    private suspend fun safeSimkl(block: suspend () -> List<MetadataRow>) =
+        safeList(Provider.SIMKL, block)
 
     private suspend fun safeList(provider: Provider, block: suspend () -> List<MetadataRow>): List<MetadataRow> =
         runCatching {

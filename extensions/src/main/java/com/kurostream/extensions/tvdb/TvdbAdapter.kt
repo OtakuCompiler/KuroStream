@@ -6,8 +6,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -98,10 +100,8 @@ class TvdbAdapter @Inject constructor(
         }.onFailure { Timber.e(it, "TVDB GET $path") }
     }
 
-    private fun String.toRequestJson(): okhttp3.RequestBody {
-        val mt = okhttp3.MediaType.Companion.parse("application/json")
-        return okhttp3.RequestBody.create(mt, this)
-    }
+    private fun String.toRequestJson(): okhttp3.RequestBody =
+        toRequestBody("application/json".toMediaType())
 
     private fun kotlinx.serialization.json.JsonElement.jsonObjectOrNull() =
         runCatching { this as kotlinx.serialization.json.JsonObject }.getOrNull()
