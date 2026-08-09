@@ -34,7 +34,7 @@ class TmdbAdapter @Inject constructor(
     fun backdropUrl(path: String?, size: String = "w1280"): String? =
         if (path.isNullOrBlank()) null else "$imageBase$size$path"
 
-    suspend fun trending(mediaType: String = "all", window: String = "week"): Result<List<TmdbResult>> =
+    suspend fun trending(mediaType: String = "all", window: String = "week"): Result<TmdbPage> =
         get("/trending/$mediaType/$window")
 
     suspend fun popularMovies(page: Int = 1): Result<TmdbPage> =
@@ -58,24 +58,49 @@ class TmdbAdapter @Inject constructor(
     suspend fun search(query: String, page: Int = 1): Result<TmdbPage> =
         get("/search/multi?query=${java.net.URLEncoder.encode(query, "UTF-8")}&page=$page", asPage = true)
 
-    suspend fun movieDetails(id: Int): Result<TmdbMovie> = get("/movie/$id", asPage = false)
-    suspend fun tvDetails(id: Int): Result<TmdbTv> = get("/tv/$id", asPage = false)
+    suspend fun movieDetails(id: Int): Result<TmdbMovie> = withContext(Dispatchers.IO) {
+        runCatching {
+            val req = Request.Builder()
+                .url("https://api.themoviedb.org/3/movie/$id?api_key=$apiKey")
+                .header("Accept", "application/json")
+                .build()
+            client.newCall(req).execute().use { response ->
+                val body = response.body?.string() ?: throw Exception("Empty body")
+                if (!response.isSuccessful) throw Exception("TMDB HTTP ${response.code}: $body")
+                json.decodeFromString<TmdbMovie>(body)
+            }
+        }.onFailure { Timber.e(it, "TMDB movieDetails($id)") }
+    }
+
+    suspend fun tvDetails(id: Int): Result<TmdbTv> = withContext(Dispatchers.IO) {
+        runCatching {
+            val req = Request.Builder()
+                .url("https://api.themoviedb.org/3/tv/$id?api_key=$apiKey")
+                .header("Accept", "application/json")
+                .build()
+            client.newCall(req).execute().use { response ->
+                val body = response.body?.string() ?: throw Exception("Empty body")
+                if (!response.isSuccessful) throw Exception("TMDB HTTP ${response.code}: $body")
+                json.decodeFromString<TmdbTv>(body)
+            }
+        }.onFailure { Timber.e(it, "TMDB tvDetails($id)") }
+    }
 
     suspend fun movieGenres(): Result<List<TmdbGenre>> = withContext(Dispatchers.IO) {
         runCatching {
-            val body = get("/genre/movie/list", asPage = false).getOrThrow()
+            val body = getString("/genre/movie/list").getOrThrow()
             json.decodeFromString<TmdbGenreList>(body).genres
         }.onFailure { Timber.e(it, "TMDB movieGenres") }
     }
 
     suspend fun tvGenres(): Result<List<TmdbGenre>> = withContext(Dispatchers.IO) {
         runCatching {
-            val body = get("/genre/tv/list", asPage = false).getOrThrow()
+            val body = getString("/genre/tv/list").getOrThrow()
             json.decodeFromString<TmdbGenreList>(body).genres
         }.onFailure { Timber.e(it, "TMDB tvGenres") }
     }
 
-    private suspend fun get(path: String, asPage: Boolean = false): Result<TmdbPage> = withContext(Dispatchers.IO) {
+    private suspend fun get(path: String, asPage: Boolean = true): Result<TmdbPage> = withContext(Dispatchers.IO) {
         runCatching {
             val sep = if (path.contains("?")) "&" else "?"
             val url = "https://api.themoviedb.org/3$path${sep}api_key=$apiKey"
@@ -83,10 +108,22 @@ class TmdbAdapter @Inject constructor(
             client.newCall(req).execute().use { response ->
                 val body = response.body?.string() ?: throw Exception("Empty body")
                 if (!response.isSuccessful) throw Exception("TMDB HTTP ${response.code}: $body")
-                if (asPage) json.decodeFromString<TmdbPage>(body)
-                else TmdbPage(results = listOf(json.decodeFromString<TmdbResult>(body)))
+                json.decodeFromString<TmdbPage>(body)
             }
         }.onFailure { Timber.e(it, "TMDB GET $path") }
+    }
+
+    private suspend fun getString(path: String): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val sep = if (path.contains("?")) "&" else "?"
+            val url = "https://api.themoviedb.org/3$path${sep}api_key=$apiKey"
+            val req = Request.Builder().url(url).header("Accept", "application/json").build()
+            client.newCall(req).execute().use { response ->
+                val body = response.body?.string() ?: throw Exception("Empty body")
+                if (!response.isSuccessful) throw Exception("TMDB HTTP ${response.code}: $body")
+                body
+            }
+        }.onFailure { Timber.e(it, "TMDB GET string $path") }
     }
 }
 

@@ -99,7 +99,7 @@ class TvdbAdapter @Inject constructor(
     }
 
     private fun String.toRequestJson(): okhttp3.RequestBody {
-        val mt = "application/json".toMediaTypeOrNull()
+        val mt = okhttp3.MediaType.Companion.parse("application/json")
         return okhttp3.RequestBody.create(mt, this)
     }
 

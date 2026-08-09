@@ -78,38 +78,38 @@ class MetadataFusionService @Inject constructor(
      */
     suspend fun loadFusedFeed(): FusedHomeFeed = withContext(Dispatchers.IO) {
         coroutineScope {
-            val aniTrending = async { safeCall(Provider.ANILIST) { anilist.getTrending(perPage = 15).getOrThrow() } }
-            val aniCurrent  = async { safeCall(Provider.ANILIST) { anilist.getCurrentSeason(perPage = 15).getOrThrow() } }
-            val aniTopRated = async { safeCall(Provider.ANILIST) { anilist.getTopRated(perPage = 15).getOrThrow() } }
+            val aniTrending = async { safeAniList { anilist.getTrending(perPage = 15).getOrThrow() } }
+            val aniCurrent  = async { safeAniList { anilist.getCurrentSeason(perPage = 15).getOrThrow() } }
+            val aniTopRated = async { safeAniList { anilist.getTopRated(perPage = 15).getOrThrow() } }
 
-            val malSeasonal = async { safeCall(Provider.MAL) { mal.seasonalNow(limit = 15).getOrThrow() } }
-            val malPopular  = async { safeCall(Provider.MAL) { mal.popular(limit = 15).getOrThrow() } }
-            val malTop      = async { safeCall(Provider.MAL) { mal.topAnime(limit = 15).getOrThrow() } }
+            val malSeasonal = async { safeMal { mal.seasonalNow(limit = 15).getOrThrow() } }
+            val malPopular  = async { safeMal { mal.popular(limit = 15).getOrThrow() } }
+            val malTop      = async { safeMal { mal.topAnime(limit = 15).getOrThrow() } }
 
-            val kitsuTrending = async { safeCall(Provider.KITSU) { kitsu.trending(limit = 15).getOrThrow() } }
-            val kitsuSeasonal = async { safeCall(Provider.KITSU) { kitsu.currentSeason(limit = 15).getOrThrow() } }
-            val kitsuUpcoming = async { safeCall(Provider.KITSU) { kitsu.upcoming(limit = 15).getOrThrow() } }
+            val kitsuTrending = async { safeKitsu { kitsu.trending(limit = 15).getOrThrow() } }
+            val kitsuSeasonal = async { safeKitsu { kitsu.currentSeason(limit = 15).getOrThrow() } }
+            val kitsuUpcoming = async { safeKitsu { kitsu.upcoming(limit = 15).getOrThrow() } }
 
-            val tmdbTrending  = async { safeCall(Provider.TMDB) {
-                if (tmdb.isConfigured) tmdb.trending().getOrThrow().map { tmdb.tmdbToRow(it) }
+            val tmdbTrending  = async { safeTmdb {
+                if (tmdb.isConfigured) tmdb.trending().getOrThrow().results.map { tmdb.tmdbToRow(it) }
                 else emptyList()
             } }
-            val tmdbTopMovies = async { safeCall(Provider.TMDB) {
+            val tmdbTopMovies = async { safeTmdb {
                 if (tmdb.isConfigured) tmdb.topRatedMovies().getOrThrow().results.map { tmdb.tmdbToRow(it) }
                 else emptyList()
             } }
-            val tmdbTopTv     = async { safeCall(Provider.TMDB) {
+            val tmdbTopTv     = async { safeTmdb {
                 if (tmdb.isConfigured) tmdb.topRatedTv().getOrThrow().results.map { tmdb.tmdbToRow(it) }
                 else emptyList()
             } }
 
-            val tvdbTrending = async { safeCall(Provider.TVDB) {
+            val tvdbTrending = async { safeTvdb {
                 if (tvdb.isConfigured) tvdb.trending().getOrThrow()
                 else emptyList()
             } }
 
-            val simklTrending = async { safeCall(Provider.SIMKL) {
-                if (simkl.isConfigured) simkl.search("").getOrThrow().map { it.toRow() }
+            val simklTrending = async { safeSimkl {
+                if (simkl.isConfigured) simkl.search("").getOrThrow().map { it.simklToRow() }
                 else emptyList()
             } }
 
@@ -143,27 +143,38 @@ class MetadataFusionService @Inject constructor(
         }
     }
 
-    private suspend fun <T> safeCall(provider: Provider, block: suspend () -> T): List<MetadataRow> =
+    private suspend fun safeAniList(block: suspend () -> List<com.kurostream.extensions.anilist.AniListMedia>) =
+        safeList(Provider.ANILIST) { block().map { it.toRow() } }
+
+    private suspend fun safeMal(block: suspend () -> List<com.kurostream.extensions.mal.MalAnime>) =
+        safeList(Provider.MAL) { block().map { it.toRow() } }
+
+    private suspend fun safeKitsu(block: suspend () -> List<com.kurostream.extensions.kitsu.KitsuAnime>) =
+        safeList(Provider.KITSU) { block().map { it.toRow() } }
+
+    private suspend fun safeTmdb(block: suspend () -> List<MetadataRow>) =
+        safeList(Provider.TMDB, block)
+
+    private suspend fun safeTvdb(block: suspend () -> List<com.kurostream.extensions.tvdb.TvdbResult>) =
+        safeList(Provider.TVDB) { block().map { it.toRow() } }
+
+    private suspend fun safeSimkl(block: suspend () -> List<com.kurostream.extensions.simkl.SimklSearchResult>) =
+        safeList(Provider.SIMKL) { block().map { it.simklToRow() } }
+
+    private suspend fun safeList(provider: Provider, block: suspend () -> List<MetadataRow>): List<MetadataRow> =
         runCatching {
             kotlinx.coroutines.withTimeout(4_000) { block() }
         }.onFailure { Timber.w(it, "MetadataFusionService: $provider failed") }
-            .getOrNull()
-            ?.let { result ->
-                @Suppress("UNCHECKED_CAST")
-                when (result) {
-                    is List<*> -> (result as? List<MetadataRow>) ?: emptyList()
-                    else -> emptyList()
-                }
-            }
-            ?: emptyList()
+            .getOrDefault(emptyList())
 
     private fun normalizeTitle(t: String): String =
         t.lowercase().replace(Regex("[^a-z0-9]"), "").take(40)
 }
 
-// ── Provider → MetadataRow converters ─────────────────────────────────────────
+// ── Provider → MetadataRow converters (no app-level imports — sanitization
+//    happens at the HomeViewModel boundary instead) ─────────────────────────────
 
-private fun com.kurostream.extensions.tmdb.TmdbAdapter.tmdbToRow(r: com.kurostream.extensions.tmdb.TmdbResult): MetadataFusionService.MetadataRow =
+fun com.kurostream.extensions.tmdb.TmdbAdapter.tmdbToRow(r: com.kurostream.extensions.tmdb.TmdbResult): MetadataFusionService.MetadataRow =
     MetadataFusionService.MetadataRow(
         provider = MetadataFusionService.Provider.TMDB,
         externalId = "tmdb:${r.id}",
@@ -171,7 +182,7 @@ private fun com.kurostream.extensions.tmdb.TmdbAdapter.tmdbToRow(r: com.kurostre
         year = r.displayDate.take(4).toIntOrNull(),
         posterUrl = posterUrl(r.posterPath, "w500"),
         backdropUrl = backdropUrl(r.backdropPath, "w1280"),
-        overview = r.overview?.let { com.kurostream.app.security.InputSanitizer.sanitizeOverview(it) },
+        overview = r.overview,
         score = r.voteAverage,
         genres = emptyList(),
         type = r.mediaType ?: if (r.firstAirDate != null) "tv" else "movie",
@@ -185,7 +196,7 @@ private fun com.kurostream.extensions.anilist.AniListMedia.toRow(): MetadataFusi
         year = seasonYear,
         posterUrl = posterUrl,
         backdropUrl = bannerImage,
-        overview = description?.let { com.kurostream.app.security.InputSanitizer.sanitizeOverview(it) },
+        overview = description,
         score = scoreFloat,
         genres = genres,
         type = "anime",
@@ -199,7 +210,7 @@ private fun com.kurostream.extensions.mal.MalAnime.toRow(): MetadataFusionServic
         year = year,
         posterUrl = images.jpg.largeImageUrl ?: images.jpg.imageUrl,
         backdropUrl = images.jpg.largeImageUrl,
-        overview = synopsis?.let { com.kurostream.app.security.InputSanitizer.sanitizeOverview(it) },
+        overview = synopsis,
         score = score ?: 0f,
         genres = genres.map { it.name },
         type = "anime",
@@ -213,28 +224,10 @@ private fun com.kurostream.extensions.kitsu.KitsuAnime.toRow(): MetadataFusionSe
         year = attributes.startDate?.take(4)?.toIntOrNull(),
         posterUrl = attributes.posterImage?.large ?: attributes.posterImage?.medium,
         backdropUrl = attributes.coverImage?.large ?: attributes.coverImage?.original,
-        overview = attributes.synopsis?.let { com.kurostream.app.security.InputSanitizer.sanitizeOverview(it) },
+        overview = attributes.synopsis,
         score = attributes.scoreFloat,
         genres = emptyList(),
         type = "anime",
-    )
-
-private fun com.kurostream.extensions.tmdb.TmdbResult.toRow(): MetadataFusionService.MetadataRow =
-    MetadataFusionService.MetadataRow(
-        provider = MetadataFusionService.Provider.TMDB,
-        externalId = "tmdb:$id",
-        title = displayTitle,
-        year = displayDate.take(4).toIntOrNull(),
-        posterUrl = posterUrl(null, "w500").let { com.kurostream.extensions.tmdb.TmdbAdapter::class }?.let { _ -> null } ?: null,
-        backdropUrl = null,
-        overview = overview?.let { com.kurostream.app.security.InputSanitizer.sanitizeOverview(it) },
-        score = voteAverage,
-        genres = emptyList(),
-        type = when (mediaType ?: if (firstAirDate != null) "tv" else "movie") {
-            "movie" -> "movie"
-            "tv" -> "tv"
-            else -> "movie"
-        },
     )
 
 private fun com.kurostream.extensions.tvdb.TvdbResult.toRow(): MetadataFusionService.MetadataRow =
@@ -245,13 +238,13 @@ private fun com.kurostream.extensions.tvdb.TvdbResult.toRow(): MetadataFusionSer
         year = year?.toIntOrNull(),
         posterUrl = image,
         backdropUrl = image,
-        overview = overview?.let { com.kurostream.app.security.InputSanitizer.sanitizeOverview(it) },
+        overview = overview,
         score = score,
         genres = genres,
         type = "tv",
     )
 
-private fun com.kurostream.extensions.simkl.SimklSearchResult.toRow(): MetadataFusionService.MetadataRow =
+fun com.kurostream.extensions.simkl.SimklSearchResult.simklToRow(): MetadataFusionService.MetadataRow =
     MetadataFusionService.MetadataRow(
         provider = MetadataFusionService.Provider.SIMKL,
         externalId = "simkl:${imdbId ?: title}",
