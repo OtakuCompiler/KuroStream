@@ -12,20 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
       - name: Build webapp
         run: |
           cd smarttv/webapp
-          if [[ -f package.json ]]; then
-            npm install
+          if [[ -f package.json && -f package-lock.json ]]; then
+            npm ci
             npm run build 2>&1 || true
+          else
+            echo "No package-lock.json — skipping npm install (webapp is pre-built)"
           fi
           echo "Webapp ready"
       - name: Package .ipk
@@ -44,20 +43,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
       - name: Build webapp
         run: |
           cd smarttv/webapp
-          if [[ -f package.json ]]; then
-            npm install
+          if [[ -f package.json && -f package-lock.json ]]; then
+            npm ci
             npm run build 2>&1 || true
+          else
+            echo "No package-lock.json — skipping npm install (webapp is pre-built)"
           fi
           echo "Webapp ready"
       - name: Package .wgt
