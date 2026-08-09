@@ -77,10 +77,19 @@ fun Af3Card(
 ) {
     val palette = Af3Theme.palette
     val sizes = Af3Theme.size
+    val aspect = Af3Theme.aspect
 
     val (width, height, focusScale) = when (layout) {
-        Af3CardLayout.Poster -> Triple(sizes.posterW, sizes.posterH, sizes.posterFocusScale)
-        Af3CardLayout.Landscape -> Triple(sizes.landscapeW, sizes.landscapeH, sizes.landscapeFocusScale)
+        Af3CardLayout.Poster -> Triple(
+            sizes.posterW * aspect.posterScale,
+            sizes.posterH * aspect.posterScale,
+            sizes.posterFocusScale,
+        )
+        Af3CardLayout.Landscape -> Triple(
+            sizes.landscapeW * aspect.landscapeScale,
+            sizes.landscapeH * aspect.landscapeScale,
+            sizes.landscapeFocusScale,
+        )
         Af3CardLayout.Icon -> Triple(sizes.iconW, sizes.iconH, 1.10f)
     }
 
@@ -211,12 +220,13 @@ fun Af3WidgetRow(
     if (items.isEmpty()) return
     val palette = Af3Theme.palette
     val space = Af3Theme.space
+    val aspect = Af3Theme.aspect
     Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = space.safeH, top = space.s12, bottom = space.s8),
+                .padding(start = aspect.safeH, top = space.s12, bottom = space.s8),
         ) {
             Box(
                 Modifier
@@ -229,11 +239,11 @@ fun Af3WidgetRow(
                 text = title,
                 color = palette.text,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
+                fontSize = aspect.widgetTitleSize.sp,
             )
         }
         LazyRow(
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = space.safeH),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = aspect.safeH),
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(space.s12),
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -263,6 +273,7 @@ fun Af3HeroSpotlight(
     val palette = Af3Theme.palette
     val sizes = Af3Theme.size
     val motion = Af3Theme.motion
+    val aspect = Af3Theme.aspect
 
     var currentIndex by remember { mutableIntStateOf(0) }
     LaunchedEffect(items.size) {
@@ -277,7 +288,7 @@ fun Af3HeroSpotlight(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(sizes.heroH)
+            .height(aspect.heroHeight.coerceAtLeast(sizes.heroH))
             .clip(RoundedCornerShape(sizes.heroRadius))
             .background(palette.surfaceVariant),
     ) {
@@ -418,9 +429,10 @@ fun Af3HubSwitcher(
 ) {
     val palette = Af3Theme.palette
     val space = Af3Theme.space
+    val aspect = Af3Theme.aspect
     LazyRow(
         modifier = modifier,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = space.safeH),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = aspect.safeH),
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(space.s8),
     ) {
         items(hubs.size) { index ->

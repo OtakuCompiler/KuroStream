@@ -10,6 +10,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -142,12 +143,133 @@ data class Af3Size(
     val hubRadius: Dp = 50.dp,
 )
 
+/**
+ * AF3 aspect ratio presets matching jurialmunkey's Arctic Fuse 3.
+ * - 16:9   default TV (1920×1080, 3840×2160)
+ * - 16:10  tablets
+ * - 4:3    older TVs
+ * - 3:2    iPad
+ * - 17:9/18:9/19.5:9/21:9  ultrawide
+ *
+ * Each preset defines:
+ * - heightFraction: hero height as fraction of screen height
+ * - heroHeight: explicit hero Dp
+ * - posterScale: multiplier on poster card width/height
+ * - safeH: horizontal safe zone for TV overscan
+ * - rowGap: vertical spacing between widget rows
+ */
+@Immutable
+data class Af3AspectRatio(
+    val name: String,
+    val heightFraction: Float,
+    val heroHeight: Dp,
+    val posterScale: Float,
+    val landscapeScale: Float,
+    val safeH: Dp,
+    val rowGap: Dp,
+    val widgetTitleSize: Float,
+) {
+    companion object {
+        // 16:9 — default TV
+        val Widescreen = Af3AspectRatio(
+            name = "16:9",
+            heightFraction = 0.55f,
+            heroHeight = 460.dp,
+            posterScale = 1f,
+            landscapeScale = 1f,
+            safeH = 48.dp,
+            rowGap = 20.dp,
+            widgetTitleSize = 16f,
+        )
+        // 4:3 — older TVs (1024×768, 1440×1080)
+        val Standard = Af3AspectRatio(
+            name = "4:3",
+            heightFraction = 0.50f,
+            heroHeight = 420.dp,
+            posterScale = 0.92f,
+            landscapeScale = 0.95f,
+            safeH = 24.dp,
+            rowGap = 16.dp,
+            widgetTitleSize = 15f,
+        )
+        // 16:10 — tablets, laptops
+        val Widescreen16x10 = Af3AspectRatio(
+            name = "16:10",
+            heightFraction = 0.53f,
+            heroHeight = 440.dp,
+            posterScale = 0.96f,
+            landscapeScale = 0.98f,
+            safeH = 32.dp,
+            rowGap = 18.dp,
+            widgetTitleSize = 15f,
+        )
+        // 21:9 — ultrawide
+        val Ultrawide = Af3AspectRatio(
+            name = "21:9",
+            heightFraction = 0.62f,
+            heroHeight = 520.dp,
+            posterScale = 1.05f,
+            landscapeScale = 1.08f,
+            safeH = 80.dp,
+            rowGap = 24.dp,
+            widgetTitleSize = 18f,
+        )
+        // 3:2 — iPad-like
+        val ThreeByTwo = Af3AspectRatio(
+            name = "3:2",
+            heightFraction = 0.50f,
+            heroHeight = 420.dp,
+            posterScale = 0.94f,
+            landscapeScale = 0.97f,
+            safeH = 28.dp,
+            rowGap = 18.dp,
+            widgetTitleSize = 15f,
+        )
+        // 17:9 — modern phones
+        val Phone17x9 = Af3AspectRatio(
+            name = "17:9",
+            heightFraction = 0.45f,
+            heroHeight = 380.dp,
+            posterScale = 0.95f,
+            landscapeScale = 0.95f,
+            safeH = 16.dp,
+            rowGap = 16.dp,
+            widgetTitleSize = 14f,
+        )
+    }
+}
+
+val LocalAf3AspectRatio = staticCompositionLocalOf { Af3AspectRatio.Widescreen }
+
+/**
+ * Detect the current screen aspect ratio and return the matching AF3 preset.
+ * Snap-to-grid: ratios within 0.05 of a preset bucket are matched.
+ */
+@Composable
+fun rememberAf3AspectRatio(): Af3AspectRatio {
+    val cfg = LocalConfiguration.current
+    val w = cfg.screenWidthDp.toFloat().coerceAtLeast(1f)
+    val h = cfg.screenHeightDp.toFloat().coerceAtLeast(1f)
+    val ratio = w / h
+    return remember(ratio) {
+        when {
+            ratio < 1.50f -> Af3AspectRatio.Standard         // 4:3 ~ 1.33
+            ratio < 1.65f -> Af3AspectRatio.ThreeByTwo      // 3:2 = 1.50
+            ratio < 1.78f -> Af3AspectRatio.Widescreen16x10 // 16:10 ~ 1.60
+            ratio < 1.90f -> Af3AspectRatio.Widescreen      // 16:9 ~ 1.78
+            ratio < 2.00f -> Af3AspectRatio.Phone17x9       // 17:9 ~ 1.89
+            else -> Af3AspectRatio.Ultrawide                // 21:9 ~ 2.33
+        }
+    }
+}
+
 @Immutable
 data class Af3Tokens(
     val palette: Af3Palette,
     val space: Af3Spacing = Af3Spacing(),
     val motion: Af3Motion = Af3Motion(),
     val size: Af3Size = Af3Size(),
+    val aspect: Af3AspectRatio = Af3AspectRatio.Widescreen,
 )
 
 val LocalAf3Tokens = staticCompositionLocalOf { Af3Tokens(Af3Palettes.Dark) }
@@ -161,6 +283,8 @@ object Af3Theme {
         @Composable @ReadOnlyComposable get() = LocalAf3Tokens.current.motion
     val size: Af3Size
         @Composable @ReadOnlyComposable get() = LocalAf3Tokens.current.size
+    val aspect: Af3AspectRatio
+        @Composable @ReadOnlyComposable get() = LocalAf3Tokens.current.aspect
 }
 
 // =============================================================================
@@ -207,7 +331,8 @@ fun Af3Theme(
         Af3ThemeMode.Light -> false
     }
     val palette = if (isDark) Af3Palettes.Dark else Af3Palettes.Light
-    val tokens = Af3Tokens(palette = palette)
+    val aspect = rememberAf3AspectRatio()
+    val tokens = Af3Tokens(palette = palette, aspect = aspect)
     val scheme = androidx.tv.material3.darkColorScheme(
         primary = palette.accent,
         onPrimary = palette.bgDeep,
