@@ -74,7 +74,7 @@ object InputSanitizer {
             .replace("&", "&")
             .replace("<", "<")
             .replace(">", ">")
-            .replace(""", "\"")
+            .replace("\"", "\"")
             .replace("'", "'")
         val cleaned = noHtml.filter { ch -> ch.code >= 0x20 && ch.code != 0x7F }
         val collapsed = cleaned.replace(Regex("\\s+"), " ").trim()
