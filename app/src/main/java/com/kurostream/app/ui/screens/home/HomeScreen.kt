@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import timber.log.Timber
 import com.kurostream.app.model.MediaItem
 import com.kurostream.app.ui.components.Af3Backdrop
 import com.kurostream.app.ui.components.Af3CardLayout
@@ -72,6 +73,10 @@ fun HomeScreen(
     val firstFocus = remember { FocusRequester() }
     var activeHub by remember { mutableIntStateOf(0) }
     val aspect = rememberAf3AspectRatio()
+
+    LaunchedEffect(Unit) {
+        Timber.tag("HomeScreen").i("HomeScreen composed: isInitialLoading=${uiState.isInitialLoading} hero=${uiState.heroItems.size} trending=${(uiState.trending as? RowState.Success)?.items?.size ?: -1}")
+    }
 
     LaunchedEffect(uiState.isInitialLoading) {
         if (!uiState.isInitialLoading) {

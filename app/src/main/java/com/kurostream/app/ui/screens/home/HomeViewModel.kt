@@ -61,6 +61,13 @@ class HomeViewModel @Inject constructor(
     init {
         loadHomeData()
         viewModelScope.launch { mediaRepository.refreshTrending() }
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(3_000)
+            if (_uiState.value.isInitialLoading) {
+                Timber.w("Home: forcing isInitialLoading=false after 3s timeout")
+                _uiState.value = _uiState.value.copy(isInitialLoading = false)
+            }
+        }
     }
 
     fun retry() {
@@ -76,7 +83,22 @@ class HomeViewModel @Inject constructor(
         ) { items, progress -> items to progress }
             .debounce(50)
             .map { (allItems, progressMap) ->
-                if (allItems.isEmpty()) return@map HomeUiState(isInitialLoading = false)
+                if (allItems.isEmpty()) {
+                    return@map _uiState.value.copy(
+                        heroItems = emptyList(),
+                        continueWatching = RowState.Success(emptyList()),
+                        trending = RowState.Success(emptyList()),
+                        newReleases = RowState.Success(emptyList()),
+                        seasonal = RowState.Success(emptyList()),
+                        becauseYouWatched = RowState.Success(emptyList()),
+                        popular = RowState.Success(emptyList()),
+                        recentlyAdded = RowState.Success(emptyList()),
+                        recommended = RowState.Success(emptyList()),
+                        genres = RowState.Success(emptyList()),
+                        myList = RowState.Success(emptyList()),
+                        isInitialLoading = false,
+                    )
+                }
 
                 val itemsWithProgress = allItems.map { item ->
                     item.copy(watchProgress = progressMap[item.id] ?: 0L)
@@ -112,7 +134,7 @@ class HomeViewModel @Inject constructor(
             .catch { e ->
                 Timber.e(e, "Home pipeline error")
                 emit(
-                    HomeUiState(
+                    _uiState.value.copy(
                         continueWatching = RowState.Error(e.localizedMessage ?: "Failed"),
                         trending = RowState.Error(e.localizedMessage ?: "Failed"),
                         isInitialLoading = false,
