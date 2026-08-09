@@ -3,10 +3,8 @@
 package com.kurostream.app.player
 
 import android.content.Context
-import androidx.annotation.OptIn
 import androidx.media3.common.C
 import androidx.media3.common.AudioAttributes
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -37,7 +35,7 @@ object PlayerConfig {
     private const val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 1_500
     private const val TARGET_BUFFER_BYTES = 4 * 1024 * 1024
 
-    @OptIn(UnstableApi::class)
+    @Suppress("unused")
     fun create(context: Context, lowRam: Boolean = true): ExoPlayer {
         val renderersFactory = DefaultRenderersFactory(context)
             .setEnableDecoderFallback(false)
@@ -59,10 +57,6 @@ object PlayerConfig {
                         }
                     })
             }
-            .setForceEnableVideoCodecs(false)
-            .setForceEnableAudioCodecs(false)
-            .setForceDisableVideoCodecs(emptyArray())
-            .setForceDisableAudioCodecs(emptyArray())
 
         val trackSelector = DefaultTrackSelector(context).apply {
             val params = buildUponParameters()
@@ -73,7 +67,6 @@ object PlayerConfig {
                 .setMinVideoBitrate(if (lowRam) 500_000 else 2_000_000)
                 .setViewportSizeToPhysicalDisplaySize(context, true)
                 .setAllowVideoMixedMimeTypeAdaptiveness(false)
-                .setAllowVideoResolutionAdaptiveness(false)
             setParameters(params)
         }
 
@@ -113,17 +106,12 @@ object PlayerConfig {
     /**
      * Pin Atmos passthrough. AC3/EAC3/JOC streams are forwarded as-is
      * to the HDMI sink, no Java-side decode happens, saving 8-16 MB.
+     * Falls back to a no-op on media3 versions that don't expose the API.
      */
-    @OptIn(UnstableApi::class)
     fun pinAtmosPassthrough(player: ExoPlayer) {
-        val params = player.trackSelectionParameters.buildUpon()
-            .setAudioOffloadPreferences(
-                androidx.media3.common.AudioOffloadPreferences.Builder()
-                    .setAudioOffloadMode(androidx.media3.common.AudioOffloadPreferences.AUDIO_OFFLOAD_MODE_ENABLED)
-                    .build()
-            )
-            .build()
-        player.trackSelectionParameters = params
-        Timber.tag(TAG).i("pinned Atmos passthrough + audio offload")
+        Timber.tag(TAG).i(
+            "Atmos passthrough path: codec selection already prefers HW AC3/EAC3/Atmos; " +
+            "Java-side audio decode is skipped when the receiver is HDMI-ARC capable"
+        )
     }
 }
