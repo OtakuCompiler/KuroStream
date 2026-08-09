@@ -32,6 +32,7 @@ import com.kurostream.app.ui.screens.addons.AddonsScreen
 import com.kurostream.app.ui.screens.debrid.DebridSetupScreen
 import com.kurostream.app.ui.screens.details.DetailsScreen
 import com.kurostream.app.ui.screens.extensions.ExtensionConfigScreen
+import com.kurostream.app.ui.screens.extensions.ExtensionsScreen
 import com.kurostream.app.ui.screens.home.HomeScreen
 import com.kurostream.app.ui.screens.favorites.FavoritesScreen
 import com.kurostream.app.ui.screens.history.HistoryScreen

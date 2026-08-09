@@ -3,6 +3,7 @@
 package com.kurostream.app.ui.screens.details
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -189,9 +192,10 @@ private fun DetailsContent(item: MediaItem, onPlay: (String) -> Unit) {
                         text = if (expanded) "Show less" else "Show more",
                         color = palette.accent,
                         fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 4.dp),
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .clickable { expanded = !expanded },
                     )
-                    expanded = !expanded
                 }
                 Spacer(Modifier.height(space.s16))
             }

@@ -22,6 +22,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusState
@@ -98,7 +102,7 @@ fun AddonsScreen(
 private fun AddonRow(addon: BundledAddon, onClick: () -> Unit) {
     val palette = Af3Theme.palette
     val space = Af3Theme.space
-    var focused by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var focused by remember { mutableStateOf(false) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
