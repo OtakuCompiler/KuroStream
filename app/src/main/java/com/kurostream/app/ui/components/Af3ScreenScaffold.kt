@@ -54,7 +54,7 @@ fun Af3ScreenScaffold(
             // Top bar
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(horizontal = space.safeH, vertical = space.s16)
                     .background(palette.bg.copy(alpha = 0.5f)),
                 verticalAlignment = Alignment.CenterVertically,

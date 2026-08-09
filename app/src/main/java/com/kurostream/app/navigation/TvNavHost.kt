@@ -160,7 +160,18 @@ fun TvNavHost(
         }
 
         composable<AddonsRoute> {
-            AddonsScreen(onBackClick = { navController.popBackStack() })
+            AddonsScreen(
+                onBackClick = { navController.popBackStack() },
+                onMarketplaceClick = { navController.navigate(MarketplaceRoute) },
+                onConfigure = { id -> navController.navigate(ExtensionConfigRoute(id)) },
+            )
+        }
+
+        composable<ExtensionsRoute> {
+            ExtensionsScreen(
+                onBackClick = { navController.popBackStack() },
+                onConfigure = { id -> navController.navigate(ExtensionConfigRoute(id)) },
+            )
         }
 
         composable<SourceLockSettingsRoute> {

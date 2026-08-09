@@ -33,6 +33,9 @@ object SettingsRoute
 object AddonsRoute
 
 @Serializable
+object ExtensionsRoute
+
+@Serializable
 data class PlayerRoute(
     val mediaId: String,
     val episodeId: String? = null,

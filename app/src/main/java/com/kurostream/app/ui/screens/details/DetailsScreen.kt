@@ -3,11 +3,6 @@
 package com.kurostream.app.ui.screens.details
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -27,10 +23,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,66 +36,173 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.kurostream.app.model.MediaItem
+import com.kurostream.app.ui.components.Af3EmptyState
 import com.kurostream.app.ui.components.Af3PillButton
 import com.kurostream.app.ui.components.Af3ScreenScaffold
 import com.kurostream.app.ui.theme.Af3Theme
-import kotlinx.coroutines.delay
 
-/**
- * Af3DetailsScreen — top-tier detail view with:
- *  - Parallax-style backdrop with strong vignette
- *  - Metadata column: title, year, runtime, genres, rating
- *  - Description text (truncates with "more" affordance)
- *  - Action bar: Play, Add to List, Trailer
- *  - Cast row (horizontal scroller)
- *  - Episodes section (horizontal scroller with thumbnails)
- *  - "More like this" recommendation row
- */
 @Composable
 fun DetailsScreen(
     mediaId: String,
     onBack: () -> Unit,
     onPlay: (String) -> Unit,
+    viewModel: DetailsViewModel = hiltViewModel(),
 ) {
-    val palette = Af3Theme.palette
-    val space = Af3Theme.space
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(mediaId) { viewModel.load(mediaId) }
 
     Af3ScreenScaffold(title = "Details", onBack = onBack) {
-        // The DetailsScreen signature requires mediaId. In a production build this
-        // would be replaced with a fully-real implementation that resolves the
-        // MediaItem via repository. For now the ID is shown and the action buttons
-        // route to playback.
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Hero header
+        val item = state.item
+        when {
+            state.isLoading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Af3EmptyState(
+                        icon = "⏳",
+                        title = "Loading…",
+                        subtitle = "Fetching details from ${state.provider.ifBlank { "the local repository" }}.",
+                    )
+                }
+            }
+            state.error != null -> {
+                Af3EmptyState(
+                    icon = "⚠",
+                    title = "Couldn't load details",
+                    subtitle = state.error,
+                )
+            }
+            item == null -> {
+                Af3EmptyState(
+                    icon = "🔎",
+                    title = "No details available",
+                    subtitle = "Media ID: $mediaId",
+                )
+            }
+            else -> DetailsContent(item, onPlay)
+        }
+    }
+}
+
+@Composable
+private fun DetailsContent(item: MediaItem, onPlay: (String) -> Unit) {
+    val palette = Af3Theme.palette
+    val space = Af3Theme.space
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 80.dp),
+    ) {
+        item("hero") {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(380.dp)
+                    .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(space.s16))
                     .background(palette.surfaceVariant),
             ) {
-                Text(
-                    text = "Loading…",
-                    color = palette.textDim,
-                    fontSize = 14.sp,
-                    modifier = Modifier.align(Alignment.Center),
+                val imgUrl = item.backdropUrl.ifBlank { item.posterUrl }
+                if (imgUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = imgUrl,
+                        contentDescription = item.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                0.6f to Color.Black.copy(alpha = 0.4f),
+                                1f to Color.Black.copy(alpha = 0.85f),
+                            ),
+                        ),
                 )
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(space.s16),
+                ) {
+                    if (item.year > 0) {
+                        Text(text = "${item.year}", color = palette.textSec, fontSize = 13.sp)
+                    }
+                    Text(
+                        text = item.title,
+                        color = palette.text,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (item.rating > 0f) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(text = "★ ${"%.1f".format(item.rating)}", color = palette.accent, fontSize = 14.sp)
+                    }
+                }
             }
+        }
+        item("actions") {
             Spacer(Modifier.height(space.s16))
-            // Action row
             Row(horizontalArrangement = Arrangement.spacedBy(space.s12)) {
-                Af3PillButton("▶  Play", primary = true, onClick = { onPlay(mediaId) })
-                Af3PillButton("Add to List", primary = false, onClick = {})
+                Af3PillButton("▶  Play", primary = true, onClick = { onPlay(item.id) })
+                Af3PillButton("+ My List", primary = false, onClick = {})
                 Af3PillButton("Trailer", primary = false, onClick = {})
             }
             Spacer(Modifier.height(space.s16))
+        }
+        if (item.genre.isNotEmpty()) {
+            item("genres") {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(space.s8),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    item.genre.take(5).forEach { g ->
+                        Box(
+                            modifier = Modifier
+                                .background(palette.surfaceVariant, CircleShape)
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                        ) {
+                            Text(text = g, color = palette.textSec, fontSize = 12.sp)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(space.s12))
+            }
+        }
+        if (item.description.isNotBlank()) {
+            item("description") {
+                var expanded by remember { mutableStateOf(item.description.length <= 240) }
+                Text(
+                    text = item.description,
+                    color = palette.textSec,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    maxLines = if (expanded) Int.MAX_VALUE else 4,
+                    overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
+                )
+                if (item.description.length > 240) {
+                    Text(
+                        text = if (expanded) "Show less" else "Show more",
+                        color = palette.accent,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                    expanded = !expanded
+                }
+                Spacer(Modifier.height(space.s16))
+            }
+        }
+        item("source") {
             Text(
-                text = "Details for ID: $mediaId will populate from the repository.",
-                color = palette.textSec,
-                fontSize = 13.sp,
+                text = "Source: ${item.source.ifBlank { "local" }}",
+                color = palette.textDim,
+                fontSize = 11.sp,
             )
+            Spacer(Modifier.height(space.s24))
         }
     }
 }

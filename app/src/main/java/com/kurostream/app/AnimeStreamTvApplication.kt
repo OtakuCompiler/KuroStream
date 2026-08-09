@@ -263,18 +263,20 @@ class AnimeStreamTvApplication : Application(), ImageLoaderFactory, ComponentCal
             }
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizeBytes(com.kurostream.common.memory.LowRamDevice.coilMemoryCacheSize)
+                    .maxSizePercent(0.10)
                     .build()
             }
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(com.kurostream.common.memory.LowRamDevice.coilDiskCacheSize)
+                    .maxSizePercent(0.02)
                     .build()
             }
             .respectCacheHeaders(false)
-            .crossfade(false)
-            .allowHardware(true)
+            .crossfade(true)
+            .crossfade(120)
+            .allowHardware(false)
+            .bitmapConfig(android.graphics.Bitmap.Config.RGB_565)
             .build()
     }
 }

@@ -123,6 +123,7 @@ fun Af3Card(
                 val url = if (layout == Af3CardLayout.Poster)
                     item.posterUrl.ifBlank { item.backdropUrl }
                 else item.backdropUrl.ifBlank { item.posterUrl }
+                Box(modifier = Modifier.fillMaxSize().background(palette.surfaceVariant))
                 AsyncImage(
                     model = url,
                     contentDescription = item.title,
@@ -268,6 +269,7 @@ fun Af3HeroSpotlight(
     onPlay: (MediaItem) -> Unit,
     onInfo: (MediaItem) -> Unit,
     modifier: Modifier = Modifier,
+    autoAdvanceMs: Long? = null,
 ) {
     if (items.isEmpty()) return
     val palette = Af3Theme.palette
@@ -276,10 +278,11 @@ fun Af3HeroSpotlight(
     val aspect = Af3Theme.aspect
 
     var currentIndex by remember { mutableIntStateOf(0) }
-    LaunchedEffect(items.size) {
-        if (items.size <= 1) return@LaunchedEffect
+    val tickMs = autoAdvanceMs ?: motion.heroAutoMs
+    LaunchedEffect(items.size, tickMs) {
+        if (items.size <= 1 || tickMs <= 0) return@LaunchedEffect
         while (true) {
-            delay(motion.heroAutoMs)
+            delay(tickMs)
             currentIndex = (currentIndex + 1) % items.size
         }
     }
@@ -292,6 +295,7 @@ fun Af3HeroSpotlight(
             .clip(RoundedCornerShape(sizes.heroRadius))
             .background(palette.surfaceVariant),
     ) {
+        Box(modifier = Modifier.fillMaxSize().background(palette.surfaceVariant))
         // Backdrop
         AsyncImage(
             model = current.backdropUrl.ifBlank { current.posterUrl },
