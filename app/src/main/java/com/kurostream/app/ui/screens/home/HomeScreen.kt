@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.app.ui.screens.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,50 +12,39 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import timber.log.Timber
 import com.kurostream.app.model.MediaItem
-import com.kurostream.app.ui.components.Af3Backdrop
-import com.kurostream.app.ui.components.Af3CardLayout
-import com.kurostream.app.ui.components.Af3EmptyState
-import com.kurostream.app.ui.components.Af3HeroSpotlight
-import com.kurostream.app.ui.components.Af3Hub
-import com.kurostream.app.ui.components.Af3HubSwitcher
-import com.kurostream.app.ui.components.Af3PillButton
-import com.kurostream.app.ui.components.Af3WidgetRow
-import com.kurostream.app.ui.theme.Af3AspectRatio
-import com.kurostream.app.ui.theme.Af3FormFactor
-import com.kurostream.app.ui.theme.Af3Theme
-import com.kurostream.app.ui.theme.rememberAf3AspectRatio
+import com.kurostream.app.ui.components.BottomNavItem
+import com.kurostream.app.ui.components.CardType
+import com.kurostream.app.ui.components.NuvioBottomNav
+import com.kurostream.app.ui.components.NuvioCatalogSection
+import com.kurostream.app.ui.components.NuvioHeroCard
+import com.kurostream.app.ui.components.NuvioTopAppBar
+import com.kurostream.app.ui.theme.NuvioTheme
 import com.kurostream.app.ui.theme.rememberAf3FormFactor
-import kotlinx.coroutines.delay
+import com.kurostream.app.ui.theme.Af3FormFactor
+import timber.log.Timber
 
-private val DefaultHubs = listOf(
-    Af3Hub("home", "Home", "⌂"),
-    Af3Hub("movies", "Movies", "🎬"),
-    Af3Hub("series", "Series", "📺"),
-    Af3Hub("anime", "Anime", "🌸"),
-    Af3Hub("favorites", "Favorites", "★"),
+private val DefaultBottomNav = listOf(
+    BottomNavItem("home",     "Home",     "⌂",  "●"),
+    BottomNavItem("search",   "Search",   "🔍", "🔎"),
+    BottomNavItem("library",  "Library",  "☰",  "≡"),
+    BottomNavItem("settings", "Settings", "⚙",  "✦"),
 )
 
 @Composable
@@ -71,85 +61,64 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val palette = Af3Theme.palette
-    val space = Af3Theme.space
-    val listState = rememberLazyListState()
-    val firstFocus = remember { FocusRequester() }
-    var activeHub by remember { mutableIntStateOf(0) }
-    val aspect = rememberAf3AspectRatio()
     val formFactor = rememberAf3FormFactor()
     val isPhone = formFactor == Af3FormFactor.Phone
+    val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        Timber.tag("HomeScreen").i("HomeScreen composed: isInitialLoading=${uiState.isInitialLoading} hero=${uiState.heroItems.size} trending=${(uiState.trending as? RowState.Success)?.items?.size ?: -1}")
+        Timber.tag("HomeScreen").i("Composed (formFactor=$formFactor)")
     }
 
-    LaunchedEffect(uiState.isInitialLoading) {
-        if (!uiState.isInitialLoading) {
-            delay(300)
-            runCatching { firstFocus.requestFocus() }
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Af3Backdrop(backdropUrl = uiState.heroItems.firstOrNull()?.backdropUrl)
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            // ===== TOP BAR =====
-            if (isPhone) {
-                PhoneTopBar(
-                    activeHub = activeHub,
-                    onHubSelected = { idx ->
-                        activeHub = idx
-                        when (DefaultHubs[idx].id) {
-                            "search" -> onSearchClick()
-                            "favorites" -> onFavoritesClick()
-                            else -> Unit
-                        }
-                    },
+    NuvioTheme {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            topBar = {
+                NuvioTopAppBar(
+                    title = "Home",
                     onSearchClick = onSearchClick,
-                    onFavoritesClick = onFavoritesClick,
-                    onHistoryClick = onHistoryClick,
-                    onLibraryClick = onLibraryClick,
-                    onAddonsClick = onAddonsClick,
-                    onTorrentsClick = onTorrentsClick,
                     onSettingsClick = onSettingsClick,
                 )
-            } else {
-                TvTopBar(
-                    activeHub = activeHub,
-                    onHubSelected = { idx ->
-                        activeHub = idx
-                        when (DefaultHubs[idx].id) {
-                            "search" -> onSearchClick()
-                            "favorites" -> onFavoritesClick()
-                            else -> Unit
-                        }
-                    },
-                    onSettingsClick = onSettingsClick,
-                )
-            }
-
-            // ===== MAIN CONTENT — never returns early, always renders visible =====
-            Box(modifier = Modifier.fillMaxSize()) {
+            },
+            bottomBar = {
+                if (isPhone) {
+                    NuvioBottomNav(
+                        items = DefaultBottomNav,
+                        currentRoute = "home",
+                        onItemClick = { item ->
+                            when (item.route) {
+                                "home" -> Unit
+                                "search" -> onSearchClick()
+                                "library" -> onLibraryClick()
+                                "settings" -> onSettingsClick()
+                            }
+                        },
+                    )
+                }
+            },
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+            ) {
                 when {
-                    uiState.isInitialLoading -> {
-                        Af3EmptyState(
-                            icon = "⏳",
-                            title = "Loading your library…",
-                            subtitle = "Fetching the latest trending titles.",
-                        )
+                    uiState.isInitialLoading && (uiState.heroItems.isEmpty() &&
+                        uiState.trending !is RowState.Success &&
+                        uiState.popular !is RowState.Success) -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
                     }
-                    else -> {
-                        HomeContent(
-                            uiState = uiState,
-                            aspect = aspect,
-                            firstFocus = firstFocus,
-                            listState = listState,
-                            onMediaClick = onMediaClick,
-                            onPlayClick = onPlayClick,
-                        )
-                    }
+                    else -> HomeContentNuvio(
+                        uiState = uiState,
+                        listState = listState,
+                        onMediaClick = onMediaClick,
+                        onPlayClick = onPlayClick,
+                        isPhone = isPhone,
+                    )
                 }
             }
         }
@@ -157,214 +126,112 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeContent(
+private fun HomeContentNuvio(
     uiState: HomeUiState,
-    aspect: Af3AspectRatio,
-    firstFocus: FocusRequester,
     listState: androidx.compose.foundation.lazy.LazyListState,
     onMediaClick: (String) -> Unit,
     onPlayClick: (MediaItem) -> Unit,
+    isPhone: Boolean,
 ) {
-    val palette = Af3Theme.palette
-    val space = Af3Theme.space
-    val formFactor = rememberAf3FormFactor()
-    val isPhone = formFactor == Af3FormFactor.Phone
-
-    val heroH = when {
-        isPhone -> 220.dp
-        else -> aspect.heroHeight.coerceAtLeast(380.dp)
-    }
-
-    val anyItems = uiState.heroItems.isNotEmpty() ||
-        rowHasItems(uiState.continueWatching) ||
-        rowHasItems(uiState.trending) ||
-        rowHasItems(uiState.newReleases) ||
-        rowHasItems(uiState.popular) ||
-        rowHasItems(uiState.seasonal) ||
-        rowHasItems(uiState.becauseYouWatched) ||
-        rowHasItems(uiState.genres)
-
-    if (!anyItems) {
-        Box(modifier = Modifier.fillMaxSize().padding(space.safeH)) {
-            Af3EmptyState(
-                icon = "📺",
-                title = "Welcome to KuroStream",
-                subtitle = "Add a media source in Settings → Add-ons to start streaming.",
-                actionLabel = "Open Add-ons",
-                onAction = null,
-            )
-        }
-        return
-    }
+    val cs = MaterialTheme.colorScheme
 
     LazyColumn(
         state = listState,
         modifier = Modifier
             .fillMaxSize()
-            .focusRequester(firstFocus),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 80.dp),
-        verticalArrangement = Arrangement.spacedBy(space.s20),
+            .background(cs.background),
+        verticalArrangement = Arrangement.spacedBy(if (isPhone) 4.dp else 12.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 24.dp),
     ) {
-        // ===== HERO SPOTLIGHT =====
+        // Hero
         if (uiState.heroItems.isNotEmpty()) {
             item("hero") {
-                Af3HeroSpotlight(
-                    items = uiState.heroItems,
-                    onPlay = { onPlayClick(it) },
-                    onInfo = { onMediaClick(it.id) },
-                    modifier = Modifier
-                        .padding(horizontal = space.safeH)
-                        .height(heroH),
+                NuvioHeroCard(
+                    item = uiState.heroItems.first(),
+                    onPlay = { onPlayClick(uiState.heroItems.first()) },
+                    onInfo = { onMediaClick(uiState.heroItems.first().id) },
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
         }
 
-        // ===== ROW: Continue Watching =====
-        renderRow(uiState.continueWatching, "continue_watching", "Continue Watching", Af3CardLayout.Landscape, onMediaClick)
-
-        // ===== ROW: Trending =====
-        renderRow(uiState.trending, "trending", "Trending Now", Af3CardLayout.Poster, onMediaClick)
-
-        // ===== ROW: New Releases =====
-        renderRow(uiState.newReleases, "new_releases", "New Releases", Af3CardLayout.Landscape, onMediaClick)
-
-        // ===== ROW: Popular =====
-        renderRow(uiState.popular, "popular", "Popular", Af3CardLayout.Poster, onMediaClick)
-
-        // ===== ROW: This Season =====
-        renderRow(uiState.seasonal, "seasonal", "This Season", Af3CardLayout.Poster, onMediaClick)
-
-        // ===== ROW: Recommended =====
-        renderRow(uiState.becauseYouWatched, "recommended", "Recommended for you", Af3CardLayout.Poster, onMediaClick)
-
-        // ===== ROW: Genres =====
-        renderRow(uiState.genres, "genres", "Browse by Genre", Af3CardLayout.Icon, onMediaClick)
-    }
-}
-
-private fun rowHasItems(state: RowState<MediaItem>): Boolean =
-    (state as? RowState.Success)?.items?.isNotEmpty() == true
-
-private fun androidx.compose.foundation.lazy.LazyListScope.renderRow(
-    state: RowState<MediaItem>,
-    key: String,
-    title: String,
-    layout: Af3CardLayout,
-    onMediaClick: (String) -> Unit,
-) {
-    val items = (state as? RowState.Success)?.items
-    if (!items.isNullOrEmpty()) {
-        item(key) {
-            Af3WidgetRow(
-                title = title,
-                items = items,
-                layout = layout,
+        // Continue Watching
+        item("continue_watching") {
+            NuvioCatalogSection(
+                title = "Continue Watching",
+                items = (uiState.continueWatching as? RowState.Success)?.items.orEmpty(),
                 onItemClick = { onMediaClick(it.id) },
-                modifier = Modifier.fillMaxWidth(),
+                cardType = CardType.Landscape,
+                emptyMessage = "Nothing in progress yet.",
             )
         }
-    }
-}
 
-@Composable
-private fun TvTopBar(
-    activeHub: Int,
-    onHubSelected: (Int) -> Unit,
-    onSettingsClick: () -> Unit,
-) {
-    val palette = Af3Theme.palette
-    val space = Af3Theme.space
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = space.safeH, end = space.safeH, top = space.s12, bottom = space.s4),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = "KuroStream",
-            color = palette.text,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-        )
-        Spacer(Modifier.width(space.s24))
-        Box(modifier = Modifier.weight(1f)) {
-            Af3HubSwitcher(
-                hubs = DefaultHubs,
-                activeIndex = activeHub,
-                onHubSelected = onHubSelected,
+        // Trending
+        item("trending") {
+            NuvioCatalogSection(
+                title = "Trending Now",
+                items = (uiState.trending as? RowState.Success)?.items.orEmpty(),
+                onItemClick = { onMediaClick(it.id) },
+                cardType = CardType.Poster,
+                emptyMessage = "No trending titles.",
             )
         }
-        Spacer(Modifier.width(space.s12))
-        Af3PillButton("Settings", primary = false, onClick = onSettingsClick)
-    }
-}
 
-@Composable
-private fun PhoneTopBar(
-    activeHub: Int,
-    onHubSelected: (Int) -> Unit,
-    onSearchClick: () -> Unit,
-    onFavoritesClick: () -> Unit,
-    onHistoryClick: () -> Unit,
-    onLibraryClick: () -> Unit,
-    onAddonsClick: () -> Unit,
-    onTorrentsClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-) {
-    val palette = Af3Theme.palette
-    val space = Af3Theme.space
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "KuroStream",
-                color = palette.text,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-                modifier = Modifier.weight(1f),
+        // New Releases
+        item("new_releases") {
+            NuvioCatalogSection(
+                title = "New Releases",
+                items = (uiState.newReleases as? RowState.Success)?.items.orEmpty(),
+                onItemClick = { onMediaClick(it.id) },
+                cardType = CardType.Landscape,
+                emptyMessage = "No new releases.",
             )
-            Af3PillButton("Search", primary = false, onClick = onSearchClick)
-            Spacer(Modifier.width(6.dp))
-            Af3PillButton("Settings", primary = false, onClick = onSettingsClick)
         }
-        Spacer(Modifier.height(8.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp),
-        ) {
-            items(DefaultHubs.size, key = { DefaultHubs[it].id }) { idx ->
-                val hub = DefaultHubs[idx]
-                Af3PillButton(
-                    label = "${hub.icon} ${hub.label}",
-                    primary = activeHub == idx,
-                    onClick = {
-                        onHubSelected(idx)
-                        when (hub.id) {
-                            "favorites" -> onFavoritesClick()
-                            else -> Unit
-                        }
-                    },
-                )
-            }
-        }
-        Spacer(Modifier.height(4.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            val actions = listOf(
-                "Library" to onLibraryClick,
-                "History" to onHistoryClick,
-                "Favorites" to onFavoritesClick,
-                "Add-ons" to onAddonsClick,
-                "Torrents" to onTorrentsClick,
+
+        // Popular
+        item("popular") {
+            NuvioCatalogSection(
+                title = "Popular",
+                items = (uiState.popular as? RowState.Success)?.items.orEmpty(),
+                onItemClick = { onMediaClick(it.id) },
+                cardType = CardType.Poster,
+                emptyMessage = "No popular titles.",
             )
-            items(actions, key = { it.first }) { (label, onClick) ->
-                Af3PillButton(label = label, primary = false, onClick = onClick)
-            }
+        }
+
+        // Seasonal
+        item("seasonal") {
+            NuvioCatalogSection(
+                title = "This Season",
+                items = (uiState.seasonal as? RowState.Success)?.items.orEmpty(),
+                onItemClick = { onMediaClick(it.id) },
+                cardType = CardType.Poster,
+                emptyMessage = "No seasonal picks.",
+            )
+        }
+
+        // Recommended
+        item("recommended") {
+            NuvioCatalogSection(
+                title = if (uiState.becauseYouWatchedSource.isNotBlank())
+                    "Because you watched ${uiState.becauseYouWatchedSource}"
+                else "Recommended for you",
+                items = (uiState.becauseYouWatched as? RowState.Success)?.items.orEmpty(),
+                onItemClick = { onMediaClick(it.id) },
+                cardType = CardType.Poster,
+                emptyMessage = "Watch something to get recommendations.",
+            )
+        }
+
+        // Genres
+        item("genres") {
+            NuvioCatalogSection(
+                title = "Browse by Genre",
+                items = (uiState.genres as? RowState.Success)?.items.orEmpty(),
+                onItemClick = { onMediaClick(it.id) },
+                cardType = CardType.Genre,
+                emptyMessage = "No genres.",
+            )
         }
     }
 }

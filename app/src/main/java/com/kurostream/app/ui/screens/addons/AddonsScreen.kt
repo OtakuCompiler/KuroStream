@@ -34,9 +34,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.kurostream.app.ui.components.Af3PillButton
 import com.kurostream.app.ui.components.Af3ScreenScaffold
+import com.kurostream.app.ui.components.InstallAddonFromUrlDialog
 import com.kurostream.app.ui.theme.Af3Theme
+import com.kurostream.extensions.stremio.StremioImporter
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import javax.inject.Inject
 
 private data class BundledAddon(
     val id: String,
@@ -61,14 +70,26 @@ private val DefaultBundledAddons = listOf(
     BundledAddon("consumet",     "Consumet",         "Multi-source anime/manga/movies aggregator",     "Built-in", "🔌"),
 )
 
+@HiltViewModel
+class AddonsViewModel @Inject constructor(
+    private val stremioImporter: StremioImporter,
+) : ViewModel() {
+    suspend fun installFromUrl(url: String): Result<Unit> = runCatching {
+        val ext = stremioImporter.importFromUrl(url).getOrThrow()
+        Timber.i("Installed addon: ${ext.id} ${ext.name}")
+    }
+}
+
 @Composable
 fun AddonsScreen(
     onBackClick: () -> Unit,
     onConfigure: (String) -> Unit = {},
     onMarketplaceClick: () -> Unit = {},
+    viewModel: AddonsViewModel = hiltViewModel(),
 ) {
     val palette = Af3Theme.palette
     val space = Af3Theme.space
+    var showInstallDialog by remember { mutableStateOf(false) }
 
     Af3ScreenScaffold(title = "Add-ons", onBack = onBackClick) {
         Column(modifier = Modifier.fillMaxSize().padding(space.safeH)) {
@@ -77,7 +98,7 @@ fun AddonsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Af3PillButton(label = "Browse Marketplace", primary = true, onClick = onMarketplaceClick)
-                Af3PillButton(label = "Install from URL", primary = false, onClick = {})
+                Af3PillButton(label = "Install from URL", primary = false, onClick = { showInstallDialog = true })
             }
             Spacer(Modifier.height(12.dp))
             Text(
@@ -95,6 +116,13 @@ fun AddonsScreen(
                 }
             }
         }
+    }
+
+    if (showInstallDialog) {
+        InstallAddonFromUrlDialog(
+            onDismiss = { showInstallDialog = false },
+            onInstall = { url -> viewModel.installFromUrl(url) },
+        )
     }
 }
 

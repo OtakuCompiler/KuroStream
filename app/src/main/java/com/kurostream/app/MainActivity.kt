@@ -34,6 +34,7 @@ import com.kurostream.app.player.PlayerActivity
 import com.kurostream.app.navigation.TvNavHost
 import com.kurostream.app.ui.screens.splash.SplashScreen
 import com.kurostream.app.ui.theme.Af3Theme
+import com.kurostream.app.ui.theme.NuvioTheme
 import com.kurostream.data.local.preferences.SettingsDataStore
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

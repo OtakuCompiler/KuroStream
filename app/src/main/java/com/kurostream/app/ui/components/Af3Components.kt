@@ -96,18 +96,11 @@ fun Af3Card(
     val interaction = remember(item.id) { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
 
-    val scale by animateFloatAsState(
-        targetValue = if (focused) focusScale else 1f,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = 320f),
-        label = "card_scale",
-    )
-
     Box(
         modifier = modifier
             .width(width)
             .height(height)
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .shadow(if (focused) 12.dp else 2.dp, RoundedCornerShape(sizes.cardRadius))
+            .shadow(if (focused) 6.dp else 1.dp, RoundedCornerShape(sizes.cardRadius))
             .clip(RoundedCornerShape(sizes.cardRadius))
             .background(palette.surface)
             .border(
@@ -278,15 +271,15 @@ fun Af3HeroSpotlight(
     val aspect = Af3Theme.aspect
 
     var currentIndex by remember { mutableIntStateOf(0) }
-    val tickMs = autoAdvanceMs ?: motion.heroAutoMs
-    LaunchedEffect(items.size, tickMs) {
+    val tickMs = autoAdvanceMs ?: 0L
+    LaunchedEffect(items.firstOrNull()?.id) {
         if (items.size <= 1 || tickMs <= 0) return@LaunchedEffect
         while (true) {
             delay(tickMs)
             currentIndex = (currentIndex + 1) % items.size
         }
     }
-    val current = items[currentIndex.coerceIn(0, items.lastIndex)]
+    val current = items.getOrNull(currentIndex) ?: items.firstOrNull() ?: return
 
     Box(
         modifier = modifier
@@ -407,7 +400,6 @@ fun Af3PillButton(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(RoundedCornerShape(50))
             .background(bg)
             .border(2.dp, palette.borderFocus, RoundedCornerShape(50))
@@ -476,7 +468,6 @@ private fun Af3HubChip(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .graphicsLayer { scaleX = if (focused) 1.06f else 1f; scaleY = if (focused) 1.06f else 1f }
             .clip(RoundedCornerShape(50))
             .background(bg)
             .border(if (focused || isActive) 2.dp else 1.dp, border, RoundedCornerShape(50))
