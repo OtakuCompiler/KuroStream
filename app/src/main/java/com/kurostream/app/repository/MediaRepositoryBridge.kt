@@ -42,7 +42,7 @@ class MediaRepositoryBridge @Inject constructor(
     override val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
     override val refreshError: StateFlow<String?> = _refreshError.asStateFlow()
 
-    suspend fun refreshTrending() {
+    override suspend fun refreshTrending() {
         _isRefreshing.value = true
         _refreshError.value = null
         try {

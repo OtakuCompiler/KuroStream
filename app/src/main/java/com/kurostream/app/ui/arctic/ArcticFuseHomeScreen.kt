@@ -3,10 +3,7 @@
 // ArcticFuseHomeScreen — pixel-perfect recreation of the Arctic Fuse Kodi skin
 // home screen.  Integrates all Arctic Fuse components:
 //   - Collapsible sidebar (left rail)
-//   - Hub switcher (top tabs)
-//   - Hero spotlight (auto-advancing)
-//   - Widget rows (horizontal carousels)
-//   - Widget wall (grid)
+//   - AF3 hub switcher + hero spotlight + combined widget rows
 //   - Info panel (slides in on card focus)
 //   - Overlays: Search, Detail, Settings, Player, ContextMenu, Toast
 //
@@ -15,15 +12,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package com.kurostream.app.ui.arctic
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,7 +29,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kurostream.app.model.MediaItem
-import com.kurostream.app.ui.arctic.ArcticFuseSettingsViewModel
 import com.kurostream.app.ui.screens.home.RowState
 import kotlinx.coroutines.delay
 
@@ -97,9 +89,6 @@ fun ArcticFuseHomeScreen(
     // Sidebar expanded
     var sidebarExpanded by remember { mutableStateOf(false) }
 
-    // List state for scroll
-    val listState = rememberLazyListState()
-
     // Auto-focus first item on launch
     LaunchedEffect(Unit) {
         delay(500)
@@ -144,296 +133,108 @@ fun ArcticFuseHomeScreen(
             )
 
             // Content area
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 80.dp),
-            ) {
-                // Hero spotlight
-                item(key = "hero") {
-                    ArcticFuseHeroSpotlight(
-                        items = heroItems,
-                        onPlay = { item ->
-                            selectedItem = item
-                            onPlay(item)
-                        },
-                        onInfo = { item ->
-                            selectedItem = item
-                            showDetail = true
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-
-                // Continue Watching
-                item(key = "continue_watching") {
-                    when (val state = continueWatching) {
-                        is RowState.Loading -> {
-                            ArcticFuseWidgetRow(
+            // ===== AF3 TOP-TIER HOME LAYOUT =====
+            // AF3-style: hub switcher (top), hero spotlight (auto-advancing),
+            // combined widget rows with parallax backdrop.
+            ArcticFuse3HomeLayout(
+                heroItems = heroItems,
+                hubs = listOf(
+                    Af3Hub("home", "Home", "⌂"),
+                    Af3Hub("movies", "Movies", "🎬"),
+                    Af3Hub("series", "TV", "📺"),
+                    Af3Hub("anime", "Anime", "🌸"),
+                    Af3Hub("favorites", "Favorites", "★"),
+                ),
+                widgets = buildList {
+                    // Continue Watching (landscape cards)
+                    val cwItems = (continueWatching as? RowState.Success)?.items ?: emptyList()
+                    if (cwItems.isNotEmpty()) {
+                        add(
+                            Af3WidgetRow(
+                                id = "continue_watching",
                                 title = "Continue Watching",
-                                items = emptyList(),
-                                onItemClick = {},
-                                view = CardView.Landscape,
-                                loading = true,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Error -> {
-                            ArcticFuseWidgetRow(
-                                title = "Continue Watching",
-                                items = emptyList(),
-                                onItemClick = {},
-                                view = CardView.Landscape,
-                                error = state.message,
-                                onRetry = onRetry,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Success -> {
-                            if (state.items.isNotEmpty()) {
-                                ArcticFuseWidgetRow(
-                                    title = "Continue Watching",
-                                    items = state.items,
-                                    onItemClick = { onMediaClick(it.id) },
-                                    onItemFocus = { focusedItem = it },
-                                    view = CardView.Landscape,
-                                    modifier = Modifier.padding(top = AFSpacing.px6),
-                                )
-                            }
-                        }
+                                items = cwItems,
+                                layout = Af3WidgetLayout.Landscape,
+                            ),
+                        )
                     }
-                }
-
-                // Anime Hub Grid
-                if (activeHub == ArcticHub.Anime) {
-                    item(key = "anime_grid") {
-                        when (val state = trending) {
-                            is RowState.Loading -> {
-                                ArcticFuseWidgetWall(
+                    // Trending (poster)
+                    val trItems = (trending as? RowState.Success)?.items ?: emptyList()
+                    if (trItems.isNotEmpty()) {
+                        add(
+                            Af3WidgetRow(
+                                id = "trending",
+                                title = "Trending Now",
+                                items = trItems.take(12),
+                                layout = Af3WidgetLayout.Poster,
+                            ),
+                        )
+                    }
+                    // Recently Added (landscape)
+                    val raItems = (newReleases as? RowState.Success)?.items ?: emptyList()
+                    if (raItems.isNotEmpty()) {
+                        add(
+                            Af3WidgetRow(
+                                id = "recently_added",
+                                title = "Recently Added",
+                                items = raItems.take(12),
+                                layout = Af3WidgetLayout.Landscape,
+                            ),
+                        )
+                    }
+                    // This Season (poster)
+                    val sItems = (seasonal as? RowState.Success)?.items ?: emptyList()
+                    if (sItems.isNotEmpty()) {
+                        add(
+                            Af3WidgetRow(
+                                id = "seasonal",
+                                title = "This Season",
+                                items = sItems.take(12),
+                                layout = Af3WidgetLayout.Poster,
+                            ),
+                        )
+                    }
+                    // Because You Watched (poster)
+                    val bywItems = (becauseYouWatched as? RowState.Success)?.items ?: emptyList()
+                    if (bywItems.isNotEmpty()) {
+                        add(
+                            Af3WidgetRow(
+                                id = "because_you_watched",
+                                title = if (becauseYouWatchedSource.isNotBlank())
+                                    "Because you watched $becauseYouWatchedSource"
+                                else "Recommended",
+                                items = bywItems.take(12),
+                                layout = Af3WidgetLayout.Poster,
+                            ),
+                        )
+                    }
+                    // Anime grid (poster)
+                    if (activeHub == ArcticHub.Anime) {
+                        val animeItems = trItems.filter { item ->
+                            item.genre.any { it.equals("Anime", ignoreCase = true) }
+                        }
+                        if (animeItems.isNotEmpty()) {
+                            add(
+                                Af3WidgetRow(
+                                    id = "anime_grid",
                                     title = "Trending Anime",
-                                    items = emptyList(),
-                                    onItemClick = {},
-                                    loading = true,
-                                    modifier = Modifier.padding(top = AFSpacing.px6),
-                                )
-                            }
-                            is RowState.Error -> {
-                                ArcticFuseWidgetWall(
-                                    title = "Trending Anime",
-                                    items = emptyList(),
-                                    onItemClick = {},
-                                    error = state.message,
-                                    onRetry = onRetry,
-                                    modifier = Modifier.padding(top = AFSpacing.px6),
-                                )
-                            }
-                            is RowState.Success -> {
-                                val animeItems = state.items.filter { item ->
-                                    item.genre.any { it.equals("Anime", ignoreCase = true) }
-                                }
-                                if (animeItems.isNotEmpty()) {
-                                    ArcticFuseWidgetWall(
-                                        title = "Trending Anime",
-                                        items = animeItems.take(18),
-                                        onItemClick = { onMediaClick(it.id) },
-                                        modifier = Modifier.padding(top = AFSpacing.px6),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Trending
-                item(key = "trending") {
-                    when (val state = trending) {
-                        is RowState.Loading -> {
-                            ArcticFuseWidgetRow(
-                                title = "Trending Now",
-                                items = emptyList(),
-                                onItemClick = {},
-                                loading = true,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Error -> {
-                            ArcticFuseWidgetRow(
-                                title = "Trending Now",
-                                items = emptyList(),
-                                onItemClick = {},
-                                error = state.message,
-                                onRetry = onRetry,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Success -> {
-                            ArcticFuseWidgetRow(
-                                title = "Trending Now",
-                                items = state.items,
-                                onItemClick = { onMediaClick(it.id) },
-                                onItemFocus = { focusedItem = it },
-                                modifier = Modifier.padding(top = AFSpacing.px6),
+                                    items = animeItems.take(18),
+                                    layout = Af3WidgetLayout.Poster,
+                                ),
                             )
                         }
                     }
-                }
-
-                // Recently Added
-                item(key = "recently_added") {
-                    when (val state = newReleases) {
-                        is RowState.Loading -> {
-                            ArcticFuseWidgetRow(
-                                title = "Recently Added",
-                                items = emptyList(),
-                                onItemClick = {},
-                                view = CardView.Landscape,
-                                loading = true,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Error -> {
-                            ArcticFuseWidgetRow(
-                                title = "Recently Added",
-                                items = emptyList(),
-                                onItemClick = {},
-                                view = CardView.Landscape,
-                                error = state.message,
-                                onRetry = onRetry,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Success -> {
-                            ArcticFuseWidgetRow(
-                                title = "Recently Added",
-                                items = state.items,
-                                onItemClick = { onMediaClick(it.id) },
-                                onItemFocus = { focusedItem = it },
-                                view = CardView.Landscape,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                    }
-                }
-
-                // Seasonal
-                item(key = "seasonal") {
-                    when (val state = seasonal) {
-                        is RowState.Loading -> {
-                            ArcticFuseWidgetRow(
-                                title = "This Season",
-                                items = emptyList(),
-                                onItemClick = {},
-                                loading = true,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Error -> {
-                            ArcticFuseWidgetRow(
-                                title = "This Season",
-                                items = emptyList(),
-                                onItemClick = {},
-                                error = state.message,
-                                onRetry = onRetry,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Success -> {
-                            ArcticFuseWidgetRow(
-                                title = "This Season",
-                                items = state.items,
-                                onItemClick = { onMediaClick(it.id) },
-                                onItemFocus = { focusedItem = it },
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                    }
-                }
-
-                // Because You Watched
-                item(key = "because_you_watched") {
-                    when (val state = becauseYouWatched) {
-                        is RowState.Loading -> {
-                            ArcticFuseWidgetRow(
-                                title = "Recommended",
-                                items = emptyList(),
-                                onItemClick = {},
-                                loading = true,
-                                modifier = Modifier.padding(top = AFSpacing.px2),
-                            )
-                        }
-                        is RowState.Error -> {
-                            ArcticFuseWidgetRow(
-                                title = "Recommended",
-                                items = emptyList(),
-                                onItemClick = {},
-                                error = state.message,
-                                onRetry = onRetry,
-                                modifier = Modifier.padding(top = AFSpacing.px2),
-                            )
-                        }
-                        is RowState.Success -> {
-                            if (state.items.isNotEmpty()) {
-                                Column {
-                                    if (becauseYouWatchedSource.isNotBlank()) {
-                                        Text(
-                                            text = "Because you watched $becauseYouWatchedSource",
-                                            color = AFText,
-                                            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
-                                            modifier = Modifier.padding(
-                                                horizontal = AFSpacing.safeZoneH,
-                                                vertical = AFSpacing.px3,
-                                            ),
-                                        )
-                                    }
-                                    ArcticFuseWidgetRow(
-                                        title = "Recommended",
-                                        items = state.items,
-                                        onItemClick = { onMediaClick(it.id) },
-                                        onItemFocus = { focusedItem = it },
-                                        modifier = Modifier.padding(top = AFSpacing.px2),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Recommended Wall (uses trending data)
-                item(key = "recommended_wall") {
-                    when (val state = trending) {
-                        is RowState.Loading -> {
-                            ArcticFuseWidgetWall(
-                                title = "Recommended For You",
-                                items = emptyList(),
-                                onItemClick = {},
-                                loading = true,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Error -> {
-                            ArcticFuseWidgetWall(
-                                title = "Recommended For You",
-                                items = emptyList(),
-                                onItemClick = {},
-                                error = state.message,
-                                onRetry = onRetry,
-                                modifier = Modifier.padding(top = AFSpacing.px6),
-                            )
-                        }
-                        is RowState.Success -> {
-                            val items = state.items.take(18)
-                            if (items.isNotEmpty()) {
-                                ArcticFuseWidgetWall(
-                                    title = "Recommended For You",
-                                    items = items,
-                                    onItemClick = { onMediaClick(it.id) },
-                                    modifier = Modifier.padding(top = AFSpacing.px6),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+                },
+                onMediaClick = { item ->
+                    selectedItem = item
+                    onMediaClick(item.id)
+                },
+                onHeroPlay = { item ->
+                    selectedItem = item
+                    onPlay(item)
+                },
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            )
         }
 
         // ===== INFO PANEL (right side, slides in on focus) =====

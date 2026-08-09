@@ -13,6 +13,7 @@ object TvRepositories {
         suspend fun search(query: String): List<MediaItem>
         suspend fun getPlaybackUrl(mediaId: String, episodeId: String? = null): Result<PlaybackUrl>
         suspend fun getNextEpisode(mediaId: String, episodeId: String?): Result<Episode>
+        suspend fun refreshTrending()
 
         val isRefreshing: StateFlow<Boolean>
         val refreshError: StateFlow<String?>

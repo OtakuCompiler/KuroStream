@@ -62,6 +62,8 @@ class HomeViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(skin = skin)
         }
         loadHomeData()
+        // Trigger initial metadata fetch — required for cold start when DB is empty
+        viewModelScope.launch { mediaRepository.refreshTrending() }
     }
 
     /**
@@ -69,6 +71,7 @@ class HomeViewModel @Inject constructor(
      */
     fun retry() {
         loadHomeData()
+        viewModelScope.launch { mediaRepository.refreshTrending() }
     }
 
     private val _shuffledCache = MutableStateFlow<List<MediaItem>>(emptyList())

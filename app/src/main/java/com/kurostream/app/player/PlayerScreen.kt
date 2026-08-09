@@ -96,8 +96,10 @@ import com.kurostream.app.ui.arctic.Af3AbrPicker
 import com.kurostream.app.ui.arctic.Af3PipToggleButton
 import com.kurostream.app.ui.arctic.Af3SleepTimerCountdown
 import com.kurostream.app.ui.arctic.Af3SleepTimerPanel
+import com.kurostream.app.ui.arctic.Af3TrackPicker
 import com.kurostream.app.ui.arctic.SleepTimerEvent
 import com.kurostream.app.ui.arctic.SleepTimerOption
+import com.kurostream.app.ui.arctic.TrackInfo
 import com.kurostream.app.ui.arctic.rememberAf3SleepTimer
 import kotlinx.coroutines.delay
 
@@ -735,28 +737,14 @@ private fun PlayerSettingsPanel(
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        audioTracks.forEach { track ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { selectedAudioTrack = track }
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = selectedAudioTrack == track,
-                                    onClick = { selectedAudioTrack = track },
-                                    colors = RadioButtonDefaults.colors(
-                                        selectedColor = MaterialTheme.colorScheme.primary
-                                    )
-                                )
-                                Text(
-                                    text = track,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
-                            }
-                        }
+                        Af3TrackPicker(
+                            title = "Audio Track",
+                            tracks = audioTracks.map {
+                                TrackInfo(id = it, label = it, isDefault = it == "Default")
+                            },
+                            selectedTrackId = selectedAudioTrack,
+                            onTrackSelected = { selectedAudioTrack = it.id },
+                        )
                     }
                 }
 
@@ -786,28 +774,14 @@ private fun PlayerSettingsPanel(
                         }
                         if (subtitleEnabled) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            subtitleTracks.forEach { track ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { selectedSubtitleTrack = track }
-                                        .padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = selectedSubtitleTrack == track,
-                                        onClick = { selectedSubtitleTrack = track },
-                                        colors = RadioButtonDefaults.colors(
-                                            selectedColor = MaterialTheme.colorScheme.primary
-                                        )
-                                    )
-                                    Text(
-                                        text = track,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(start = 8.dp)
-                                    )
-                                }
-                            }
+                            Af3TrackPicker(
+                                title = "Subtitle Track",
+                                tracks = subtitleTracks.map {
+                                    TrackInfo(id = it, label = it, isDefault = it == "Off")
+                                },
+                                selectedTrackId = selectedSubtitleTrack,
+                                onTrackSelected = { selectedSubtitleTrack = it.id },
+                            )
 
                             Spacer(modifier = Modifier.height(12.dp))
 
