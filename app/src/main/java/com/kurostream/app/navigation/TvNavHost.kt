@@ -15,19 +15,23 @@
 
 package com.kurostream.app.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.kurostream.app.player.PlayerActivity
 import com.kurostream.app.ui.screens.addons.AddonsScreen
+import com.kurostream.app.ui.screens.debrid.DebridSetupScreen
 import com.kurostream.app.ui.screens.details.DetailsScreen
+import com.kurostream.app.ui.screens.extensions.ExtensionConfigScreen
 import com.kurostream.app.ui.screens.home.HomeScreen
 import com.kurostream.app.ui.screens.favorites.FavoritesScreen
 import com.kurostream.app.ui.screens.history.HistoryScreen
@@ -45,8 +49,13 @@ private const val NAV_ANIM_DURATION = 300
 @Composable
 fun TvNavHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
+    // System back: navigate up if possible, else finish at Home (default Compose behavior)
+    BackHandler(enabled = navController.previousBackStackEntry != null) {
+        navController.popBackStack()
+    }
+
     NavHost(
         navController = navController,
         startDestination = HomeRoute,
@@ -55,66 +64,58 @@ fun TvNavHost(
             fadeIn(animationSpec = tween(NAV_ANIM_DURATION)) +
             slideIntoContainer(
                 AnimatedContentTransitionScope.SlideDirection.Start,
-                tween(NAV_ANIM_DURATION)
+                tween(NAV_ANIM_DURATION),
             )
         },
         exitTransition = {
             fadeOut(animationSpec = tween(NAV_ANIM_DURATION)) +
             slideOutOfContainer(
                 AnimatedContentTransitionScope.SlideDirection.Start,
-                tween(NAV_ANIM_DURATION)
+                tween(NAV_ANIM_DURATION),
             )
         },
         popEnterTransition = {
             fadeIn(animationSpec = tween(NAV_ANIM_DURATION)) +
             slideIntoContainer(
                 AnimatedContentTransitionScope.SlideDirection.End,
-                tween(NAV_ANIM_DURATION)
+                tween(NAV_ANIM_DURATION),
             )
         },
         popExitTransition = {
             fadeOut(animationSpec = tween(NAV_ANIM_DURATION)) +
             slideOutOfContainer(
                 AnimatedContentTransitionScope.SlideDirection.End,
-                tween(NAV_ANIM_DURATION)
+                tween(NAV_ANIM_DURATION),
             )
-        }
+        },
     ) {
         composable<HomeRoute> {
+            val ctx = LocalContext.current
             HomeScreen(
-                onMediaClick = { mediaId ->
-                    navController.navigate(DetailsRoute(mediaId))
+                onMediaClick = { mediaId -> navController.navigate(DetailsRoute(mediaId)) },
+                onPlayClick = { item ->
+                    PlayerActivity.createIntent(ctx, item.id, null, 0L).also {
+                        ctx.startActivity(it)
+                    }
                 },
-                onSearchClick = {
-                    navController.navigate(SearchRoute)
-                },
-                onSettingsClick = {
-                    navController.navigate(SettingsRoute)
-                },
-                onAddonsClick = {
-                    navController.navigate(AddonsRoute)
-                },
-                // Torrents wired in via :torrent module
-                onTorrentsClick = {
-                    navController.navigate(TorrentsRoute)
-                },
-                onBackupClick = {
-                    navController.navigate(BackupRoute)
-                },
+                onSearchClick = { navController.navigate(SearchRoute) },
+                onSettingsClick = { navController.navigate(SettingsRoute) },
+                onAddonsClick = { navController.navigate(AddonsRoute) },
+                onTorrentsClick = { navController.navigate(TorrentsRoute) },
                 onFavoritesClick = { navController.navigate(FavoritesRoute) },
                 onHistoryClick = { navController.navigate(HistoryRoute) },
-                onLibraryClick = { navController.navigate(LibraryRoute) }
+                onLibraryClick = { navController.navigate(LibraryRoute) },
             )
         }
 
         composable<DetailsRoute> { backStackEntry ->
             val route = backStackEntry.toRoute<DetailsRoute>()
-            val context = androidx.compose.ui.platform.LocalContext.current
+            val context = LocalContext.current
             DetailsScreen(
                 mediaId = route.mediaId,
                 onBack = { navController.popBackStack() },
                 onPlay = { mediaId ->
-                    PlayerActivity.createIntent(context, mediaId, null, 0L).let {
+                    PlayerActivity.createIntent(context, mediaId, null, 0L).also {
                         context.startActivity(it)
                     }
                 },
@@ -123,10 +124,8 @@ fun TvNavHost(
 
         composable<SearchRoute> {
             SearchScreen(
-                onMediaClick = { mediaId ->
-                    navController.navigate(DetailsRoute(mediaId))
-                },
-                onClose = { navController.popBackStack() }
+                onMediaClick = { mediaId -> navController.navigate(DetailsRoute(mediaId)) },
+                onClose = { navController.popBackStack() },
             )
         }
 
@@ -138,56 +137,56 @@ fun TvNavHost(
         }
 
         composable<AddonsRoute> {
-            AddonsScreen(
-                onBackClick = { navController.popBackStack() }
-            )
+            AddonsScreen(onBackClick = { navController.popBackStack() })
         }
 
         composable<SourceLockSettingsRoute> {
-            SourceLockSettingsScreen(
-                onBackClick = { navController.popBackStack() },
-            )
+            SourceLockSettingsScreen(onBackClick = { navController.popBackStack() })
         }
 
-        // Torrents screen — :torrent module (OptimizedTorrentEngine)
         composable<TorrentsRoute> {
-            TorrentsScreen(
-                onBackClick = { navController.popBackStack() }
-            )
+            TorrentsScreen(onBackClick = { navController.popBackStack() })
         }
 
-        // Premium skins marketplace — :marketplace module (KuroCloud)
         composable<MarketplaceRoute> {
-            KuroStoreScreen(
-                onBack = { navController.popBackStack() }
-            )
+            KuroStoreScreen(onBack = { navController.popBackStack() })
         }
 
         composable<BackupRoute> {
-            BackupSettingsScreen(
-                onBackClick = { navController.popBackStack() }
-            )
+            BackupSettingsScreen(onBackClick = { navController.popBackStack() })
         }
 
         composable<FavoritesRoute> {
             FavoritesScreen(
                 onMediaClick = { mediaId -> navController.navigate(DetailsRoute(mediaId)) },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
             )
         }
 
         composable<HistoryRoute> {
             HistoryScreen(
                 onMediaClick = { mediaId -> navController.navigate(DetailsRoute(mediaId)) },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
             )
         }
 
         composable<LibraryRoute> {
             LibraryScreen(
                 onMediaClick = { mediaId -> navController.navigate(DetailsRoute(mediaId)) },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
             )
+        }
+
+        composable<ExtensionConfigRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<ExtensionConfigRoute>()
+            ExtensionConfigScreen(
+                extensionId = route.extensionId,
+                onBackClick = { navController.popBackStack() },
+            )
+        }
+
+        composable<DebridRoute> {
+            DebridSetupScreen(onBack = { navController.popBackStack() })
         }
 
         composable<OnboardingRoute> {

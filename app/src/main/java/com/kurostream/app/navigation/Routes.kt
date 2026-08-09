@@ -43,6 +43,12 @@ data class PlayerRoute(
 object SourceLockSettingsRoute
 
 @Serializable
+data class ExtensionConfigRoute(val extensionId: String)
+
+@Serializable
+object DebridRoute
+
+@Serializable
 object FavoritesRoute
 
 @Serializable

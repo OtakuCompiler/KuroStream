@@ -112,6 +112,16 @@ object NetworkModule {
             .cache(cache)
             .connectionPool(connectionPool)
             .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
+            // Parallel connections tuned for fast home networks:
+            //   maxRequests = 64     — comfortably saturates a 200 Mbps link
+            //   maxRequestsPerHost = 16 — most CDNs serve up to 16 concurrent streams
+            //   dispatcher runs on its own executor so retry logic doesn't block main thread
+            .dispatcher(
+                okhttp3.Dispatcher().apply {
+                    maxRequests = 64
+                    maxRequestsPerHost = 16
+                },
+            )
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .addNetworkInterceptor { chain ->

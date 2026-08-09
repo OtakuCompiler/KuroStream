@@ -91,16 +91,16 @@ import androidx.compose.material3.VerticalDivider
 import android.util.TypedValue
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
-import com.kurostream.app.ui.arctic.AbrQuality
-import com.kurostream.app.ui.arctic.Af3AbrPicker
-import com.kurostream.app.ui.arctic.Af3PipToggleButton
-import com.kurostream.app.ui.arctic.Af3SleepTimerCountdown
-import com.kurostream.app.ui.arctic.Af3SleepTimerPanel
-import com.kurostream.app.ui.arctic.Af3TrackPicker
-import com.kurostream.app.ui.arctic.SleepTimerEvent
-import com.kurostream.app.ui.arctic.SleepTimerOption
-import com.kurostream.app.ui.arctic.TrackInfo
-import com.kurostream.app.ui.arctic.rememberAf3SleepTimer
+import com.kurostream.app.ui.components.AbrQuality
+import com.kurostream.app.ui.components.Af3AbrPicker
+import com.kurostream.app.ui.components.Af3PipToggleButton
+import com.kurostream.app.ui.components.Af3SleepTimerCountdown
+import com.kurostream.app.ui.components.Af3SleepTimerPanel
+import com.kurostream.app.ui.components.Af3TrackPicker
+import com.kurostream.app.ui.components.SleepTimerEvent
+import com.kurostream.app.ui.components.SleepTimerOption
+import com.kurostream.app.ui.components.TrackInfo
+import com.kurostream.app.ui.components.rememberAf3SleepTimer
 import kotlinx.coroutines.delay
 
 @UnstableApi

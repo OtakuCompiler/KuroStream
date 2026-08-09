@@ -36,7 +36,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
-import com.kurostream.app.ui.theme.AnimeStreamTVTheme
+import com.kurostream.app.ui.theme.Af3Theme
 import com.kurostream.app.player.HdrMode
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
@@ -146,7 +146,7 @@ class PlayerActivity : ComponentActivity() {
         wakeLock?.acquire(10 * 60 * 1000L)
 
         setContent {
-            AnimeStreamTVTheme {
+            Af3Theme {
                 PlayerScreen(
                     viewModel = viewModel,
                     onBackPressed = { finish() },

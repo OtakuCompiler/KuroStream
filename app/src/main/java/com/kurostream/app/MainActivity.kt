@@ -33,10 +33,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import com.kurostream.app.player.PlayerActivity
 import com.kurostream.app.navigation.TvNavHost
 import com.kurostream.app.ui.screens.splash.SplashScreen
-import com.kurostream.app.ui.theme.AnimeStreamTVTheme
-import com.kurostream.app.ui.theme.DynamicThemeProvider
-import com.kurostream.app.ui.theme.TvDarkColorScheme
-import com.kurostream.app.ui.theme.toDynamicPalette
+import com.kurostream.app.ui.theme.Af3Theme
 import com.kurostream.data.local.preferences.SettingsDataStore
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -66,49 +63,37 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var showSplash by remember { mutableStateOf(true) }
-            val defaultPalette = remember { TvDarkColorScheme.toDynamicPalette() }
             var onboardingCompleted by remember { mutableStateOf<Boolean?>(null) }
 
             LaunchedEffect(Unit) {
                 onboardingCompleted = settingsDataStore.onboardingCompleted.first()
             }
 
-            AnimeStreamTVTheme {
+            Af3Theme {
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (showSplash) {
                         SplashScreen(
                             onTimeout = { showSplash = false },
                             modifier = Modifier.fillMaxSize()
                         )
-                    } else if (onboardingCompleted == false) {
+                    } else {
                         val navController = rememberNavController()
                         TvNavHost(
                             navController = navController,
                             modifier = Modifier.fillMaxSize()
                         )
-                    } else {
-                        DynamicThemeProvider(
-                            palette = defaultPalette,
-                            isAmoled = false,
-                        ) {
-                            val navController = rememberNavController()
-                            TvNavHost(
-                                navController = navController,
-                                modifier = Modifier.fillMaxSize()
-                            )
 
-                            LaunchedEffect(Unit) {
-                                deepLinkMediaId?.let { mediaId ->
-                                    val intent = PlayerActivity.createIntent(
-                                        this@MainActivity,
-                                        mediaId,
-                                        deepLinkEpisodeId,
-                                        0L
-                                    )
-                                    startActivity(intent)
-                                    deepLinkMediaId = null
-                                    deepLinkEpisodeId = null
-                                }
+                        LaunchedEffect(Unit) {
+                            deepLinkMediaId?.let { mediaId ->
+                                val intent = PlayerActivity.createIntent(
+                                    this@MainActivity,
+                                    mediaId,
+                                    deepLinkEpisodeId,
+                                    0L
+                                )
+                                startActivity(intent)
+                                deepLinkMediaId = null
+                                deepLinkEpisodeId = null
                             }
                         }
                     }
