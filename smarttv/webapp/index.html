@@ -2,40 +2,99 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#121212" />
-  <title>KuroStream</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0e14" />
+  <meta name="description" content="KuroStream - Arctic Fuse 3 Inspired Media Player" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>KuroStream — Arctic Edition</title>
+  
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+  <!-- Inter Font from Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app">
-    <header>
+  <div id="app" role="application" aria-label="KuroStream Media Player">
+    <header role="banner">
       <h1>KuroStream</h1>
-      <p id="status">Booting…</p>
+      <p id="status"><span class="status-indicator">Initializing…</span></p>
     </header>
 
-    <main>
-      <section class="player-shell">
+    <main role="main">
+      <section class="player-shell" aria-label="Video Player">
         <!-- Offscreen video element used by MSE; we render to the
              upscale canvas instead so we can apply WebGL shaders. -->
-        <video id="player-video" autoplay muted playsinline style="display:none"></video>
-        <canvas id="upscale-canvas" width="1280" height="720"></canvas>
+        <video id="player-video" autoplay muted playsinline crossorigin="anonymous" style="display:none"></video>
+        <canvas id="upscale-canvas" width="1920" height="1080" aria-label="Video display"></canvas>
+        
+        <!-- Loading indicator overlay -->
+        <div class="player-overlay" hidden>
+          <div class="spinner"></div>
+          <span>Loading stream…</span>
+        </div>
       </section>
 
-      <section class="search-shell">
-        <input id="search" type="search"
-               placeholder="Search anime, movies, shows…"
-               aria-label="Search" />
-        <ul id="results"></ul>
+      <section class="search-shell" aria-label="Search">
+        <input 
+          id="search" 
+          type="search"
+          placeholder="Search anime, movies, shows…"
+          aria-label="Search for content"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          tabindex="1"
+        />
+        <ul id="results" role="listbox" aria-label="Search results" tabindex="2"></ul>
       </section>
 
-      <details>
-        <summary>Platform diagnostics</summary>
-        <pre id="details"></pre>
+      <details aria-label="Platform diagnostics">
+        <summary tabindex="3">
+          <span>Platform Diagnostics</span>
+        </summary>
+        <pre id="details" aria-live="polite"></pre>
       </details>
     </main>
+    
+    <!-- Footer with performance metrics (hidden by default) -->
+    <footer class="app-footer" hidden>
+      <div class="metrics">
+        <span class="metric-item">
+          <span class="metric-label">Init Time:</span>
+          <span id="init-time" class="metric-value">-- ms</span>
+        </span>
+        <span class="metric-item">
+          <span class="metric-label">Memory:</span>
+          <span id="memory-usage" class="metric-value">-- MB</span>
+        </span>
+      </div>
+    </footer>
   </div>
 
+  <!-- Main application script -->
   <script type="module" src="src/app.js"></script>
+  
+  <!-- Performance monitoring (optional) -->
+  <script>
+    // Report Web Vitals if available
+    if ('PerformanceObserver' in window) {
+      try {
+        const observer = new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry) => {
+            console.log('[Performance]', entry.name, entry.startTime.toFixed(2), 'ms');
+          });
+        });
+        observer.observe({ entryTypes: ['paint', 'largest-contentful-paint'] });
+      } catch (e) {
+        // Observer not supported on this platform
+      }
+    }
+  </script>
 </body>
 </html>

@@ -1,31 +1,83 @@
-# Gradle
-.gradle/
-build/
-local.properties
-
-# IDE
-.idea/
-*.iml
-*.ipr
-*.iws
-
-# Environment
-.env
-.env.local
-.env.*.local
-
-# Generated
-.generated/
-*.log
-
-# Kilo/stack local
-.kilo/
-.tanstack/
-.wrangler/
-dist/
-
-# Node/web artifacts
+```
+# Dependencies
 node_modules/
 
-# KuroHub removed from repo tracking, kept locally
-kurohub/
+# Build artifacts
+dist/
+build/
+target/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV
+.venv.bak/
+pip-log.txt
+pip-selfcheck.json
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*
+!.env.example
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+*.pytest_cache/
+
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+```
